@@ -212,7 +212,7 @@ function PersonalDashboard({ stats, isLoading }: { stats: DashboardStats | undef
         </div>
       </section>
 
-      <Card variant="sunken" padding="lg">
+      <Card variant="default" padding="lg">
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <CardTitle className="text-base">Track your billable progress</CardTitle>

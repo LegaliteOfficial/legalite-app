@@ -55,10 +55,10 @@
   --cream-white: #FDFBF7;
 
   /* ── Semantic surfaces ── */
-  --surface-page: #F2F1ED;
+  --surface-page: #F4F4F5;
   --surface-card: #FFFFFF;
-  --surface-card-hover: #FAFAF9;
-  --surface-sunken: #F5F4F1;
+  --surface-card-hover: #FAFAFA;
+  --surface-sunken: #F1F1F2;
   --surface-overlay: rgba(13, 27, 42, 0.04);
 
   /* ── Text scale ── */
