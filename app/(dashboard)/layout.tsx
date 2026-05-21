@@ -19,11 +19,11 @@ export default function DashboardLayout({
           backgroundRepeat: 'no-repeat',
         }}
       >
-        <div className="flex h-full overflow-hidden rounded-2xl">
+        <div className="flex h-full overflow-hidden gap-3">
           <NavigationProgress />
           <Sidebar />
           <main
-            className="flex-1 flex flex-col overflow-hidden rounded-r-2xl"
+            className="flex-1 flex flex-col overflow-hidden rounded-2xl"
             style={{ background: 'var(--surface-page)' }}
           >
             {children}

@@ -19,16 +19,16 @@ import { useDashboardStats } from '@/hooks/use-dashboard'
 import type { DashboardStats } from '@/types'
 
 const QUICK_ACTIONS = [
-  { label: 'Add new client',     Icon: UserPlus,  href: '/clients' },
-  { label: 'Open new case',      Icon: Scale,     href: '/cases' },
-  { label: 'Generate document',  Icon: FileText,  href: '/documents' },
-  { label: 'Calculate deadline', Icon: Timer,     href: '/deadline' },
+  { label: 'Add new client', Icon: UserPlus, href: '/clients' },
+  { label: 'Open new case', Icon: Scale, href: '/cases' },
+  { label: 'Generate document', Icon: FileText, href: '/documents' },
+  { label: 'Calculate deadline', Icon: Timer, href: '/deadline' },
 ]
 
 const TABS = [
   { id: 'personal', label: 'Personal' },
-  { id: 'firm',     label: 'Firm' },
-  { id: 'feed',     label: 'Activity' },
+  { id: 'firm', label: 'Firm' },
+  { id: 'feed', label: 'Activity' },
 ] as const
 
 type TabId = typeof TABS[number]['id']
@@ -69,8 +69,8 @@ export default function DashboardPage() {
 
         <div className="mt-6">
           {activeTab === 'personal' && <PersonalDashboard stats={stats} isLoading={isLoading} />}
-          {activeTab === 'firm'     && <FirmDashboard stats={stats} isLoading={isLoading} />}
-          {activeTab === 'feed'     && <FirmFeed activity={stats?.recent_activity} isLoading={isLoading} />}
+          {activeTab === 'firm' && <FirmDashboard stats={stats} isLoading={isLoading} />}
+          {activeTab === 'feed' && <FirmFeed activity={stats?.recent_activity} isLoading={isLoading} />}
         </div>
       </div>
     </div>
@@ -201,24 +201,14 @@ function TabBar({ active, onChange }: { active: TabId; onChange: (id: TabId) => 
 // ── Personal ───────────────────────────────────────────────────────────────
 
 function PersonalDashboard({ stats, isLoading }: { stats: DashboardStats | undefined; isLoading: boolean }) {
-  const personalCards = [
-    { label: 'Your clients',       value: stats?.personal_total_clients ?? 0, Icon: Users },
-    { label: 'Your active cases',  value: stats?.personal_active_cases ?? 0,  Icon: Scale },
-    { label: 'Your pending tasks', value: stats?.personal_pending_tasks ?? 0, Icon: CheckSquare },
-    { label: 'Your invoices due',  value: stats?.personal_invoices_due ?? 0,  Icon: FolderOpen },
-  ]
-
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-4 gap-4">
-        {personalCards.map((c) => <StatCard key={c.label} {...c} isLoading={isLoading} />)}
-      </div>
 
       <section>
         <SectionHeading title="Today’s agenda" />
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <AgendaCard count={0} label="Tasks due today"   emptyMessage="No tasks due today"          Icon={ListTodo}     addHref="/tasks" />
-          <AgendaCard count={0} label="Calendar events"   emptyMessage="No events scheduled today"   Icon={CalendarDays} addHref="/deadline" />
+          <AgendaCard count={0} label="Tasks due today" emptyMessage="No tasks due today" Icon={ListTodo} addHref="/tasks" />
+          <AgendaCard count={0} label="Calendar events" emptyMessage="No events scheduled today" Icon={CalendarDays} addHref="/deadline" />
         </div>
       </section>
 
@@ -240,42 +230,6 @@ function PersonalDashboard({ stats, isLoading }: { stats: DashboardStats | undef
         </div>
       </Card>
     </div>
-  )
-}
-
-function StatCard({
-  label, value, Icon, isLoading,
-}: {
-  label: string
-  value: number
-  Icon: typeof Users
-  isLoading: boolean
-}) {
-  return (
-    <Card padding="lg" className="transition-shadow hover:shadow-[var(--shadow-sm)]">
-      <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center mb-4"
-        style={{ background: 'var(--surface-sunken)' }}
-      >
-        <Icon size={16} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
-      </div>
-      {isLoading
-        ? <Skeleton className="h-8 w-16 mb-1.5" />
-        : (
-          <div
-            className="font-heading text-[28px] font-semibold leading-none tracking-tight"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {value}
-          </div>
-        )}
-      <div
-        className="mt-2 text-[12px] font-medium"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        {label}
-      </div>
-    </Card>
   )
 }
 
@@ -330,19 +284,15 @@ function AgendaCard({
 
 function FirmDashboard({ stats, isLoading }: { stats: DashboardStats | undefined; isLoading: boolean }) {
   const statCards = [
-    { label: 'Total clients', value: stats?.total_clients ?? 0,      Icon: Users },
-    { label: 'Active cases',  value: stats?.active_cases ?? 0,       Icon: Scale },
-    { label: 'Pending tasks', value: stats?.pending_tasks ?? 0,      Icon: CheckSquare },
-    { label: 'Invoices due',  value: stats?.total_invoices_due ?? 0, Icon: FolderOpen },
+    { label: 'Total clients', value: stats?.total_clients ?? 0, Icon: Users },
+    { label: 'Active cases', value: stats?.active_cases ?? 0, Icon: Scale },
+    { label: 'Pending tasks', value: stats?.pending_tasks ?? 0, Icon: CheckSquare },
+    { label: 'Invoices due', value: stats?.total_invoices_due ?? 0, Icon: FolderOpen },
   ]
 
   return (
     <div className="space-y-6">
       <FirmOverview />
-
-      <div className="grid grid-cols-4 gap-4">
-        {statCards.map((c) => <StatCard key={c.label} {...c} isLoading={isLoading} />)}
-      </div>
 
       <div className="grid grid-cols-3 gap-4">
         <Card padding="none" className="col-span-2 overflow-hidden">
@@ -427,15 +377,15 @@ function FirmDashboard({ stats, isLoading }: { stats: DashboardStats | undefined
 
 // ── Firm overview / utilisation ────────────────────────────────────────────
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const Y_TICKS = [1, 0.8, 0.6, 0.4, 0.2, 0]
 const UTILISATION_COLORS = {
-  billable:    '#0D1B2A',
+  billable: '#0D1B2A',
   nonBillable: '#9CA3AF',
-  untracked:   '#C0392B',
+  untracked: '#C0392B',
 }
 const UNIT_OPTIONS = [
-  { id: 'hr',  label: 'Hr.' },
+  { id: 'hr', label: 'Hr.' },
   { id: 'ghs', label: 'GHS' },
   { id: 'pct', label: '%' },
 ] as const
@@ -545,9 +495,9 @@ function FirmOverview() {
                   <HelpCircle size={11} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  <TotalsMini label="Billable"     color={UTILISATION_COLORS.billable} />
+                  <TotalsMini label="Billable" color={UTILISATION_COLORS.billable} />
                   <TotalsMini label="Non-billable" color={UTILISATION_COLORS.nonBillable} />
-                  <TotalsMini label="Untracked"    color={UTILISATION_COLORS.untracked} />
+                  <TotalsMini label="Untracked" color={UTILISATION_COLORS.untracked} />
                 </div>
               </div>
             </div>
@@ -623,12 +573,12 @@ function FirmOverview() {
                 className="mt-5 grid grid-cols-3 gap-x-6 gap-y-1.5 text-[10px] uppercase tracking-wider"
                 style={{ color: 'var(--text-muted)' }}
               >
-                <LegendSwatch color={UTILISATION_COLORS.billable}    label="Billable" />
+                <LegendSwatch color={UTILISATION_COLORS.billable} label="Billable" />
                 <LegendSwatch color={UTILISATION_COLORS.nonBillable} label="Non-billable" />
-                <LegendSwatch color={UTILISATION_COLORS.untracked}   label="Untracked" />
-                <LegendSwatch color={UTILISATION_COLORS.billable}    label={`${year - 1} billable`}     dashed />
+                <LegendSwatch color={UTILISATION_COLORS.untracked} label="Untracked" />
+                <LegendSwatch color={UTILISATION_COLORS.billable} label={`${year - 1} billable`} dashed />
                 <LegendSwatch color={UTILISATION_COLORS.nonBillable} label={`${year - 1} non-billable`} dashed />
-                <LegendSwatch color={UTILISATION_COLORS.untracked}   label={`${year - 1} untracked`}    dashed />
+                <LegendSwatch color={UTILISATION_COLORS.untracked} label={`${year - 1} untracked`} dashed />
               </div>
             </div>
           </div>

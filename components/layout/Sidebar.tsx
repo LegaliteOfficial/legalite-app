@@ -71,7 +71,7 @@ export function Sidebar() {
   return (
     <aside
       style={{ width: 248, background: 'transparent' }}
-      className="flex flex-col shrink-0 h-full relative overflow-hidden rounded-l-2xl"
+      className="flex flex-col shrink-0 h-full relative overflow-hidden rounded-2xl"
     >
       {/* Brand */}
       <div className="px-5 pt-6 pb-5">
