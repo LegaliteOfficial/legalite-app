@@ -1,84 +1,88 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
-import type { Case, ApiResponse } from '@/types'
+import { useMutation, useQuery } from '@apollo/client/react'
+import {
+  CaseQueryDoc,
+  CasesQueryDoc,
+  CreateCaseMutationDoc,
+  DeleteCaseMutationDoc,
+  UpdateCaseMutationDoc,
+} from '@/lib/graphql/operations'
 import type { CaseFormData } from '@/schemas'
-
-const CASES_KEY = ['cases'] as const
+import type { Case } from '@/types'
 
 export function useCases() {
-  return useQuery<Case[]>({
-    queryKey: CASES_KEY,
-    queryFn: async () => {
-      const res = await api.get<ApiResponse<Case[]>>('/cases')
-      if (!res.data.success) {
-        throw new Error('API returned success=false for GET /cases')
-      }
-      return res.data.data
-    },
-  })
+  const { data, loading, error, refetch } = useQuery(CasesQueryDoc)
+  return {
+    data: data?.cases as Case[] | undefined,
+    isLoading: loading,
+    error,
+    refetch,
+  }
 }
 
 export function useCase(id: string | undefined) {
-  return useQuery<Case>({
-    queryKey: [...CASES_KEY, id],
-    queryFn: async () => {
-      if (!id) throw new Error('Case ID is required')
-      const res = await api.get<ApiResponse<Case>>(`/cases/${id}`)
-      if (!res.data.success) {
-        throw new Error(`API returned success=false for GET /cases/${id}`)
-      }
-      return res.data.data
-    },
-    enabled: !!id,
+  const { data, loading, error } = useQuery(CaseQueryDoc, {
+    variables: { id: id ?? '' },
+    skip: !id,
   })
+  return {
+    data: data?.case as Case | undefined,
+    isLoading: loading,
+    error,
+  }
 }
 
 export function useCreateCase() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: CaseFormData) => {
-      const res = await api.post<ApiResponse<Case>>('/cases', data)
-      if (!res.data.success) {
-        throw new Error('API returned success=false for POST /cases')
-      }
-      return res.data.data
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CASES_KEY })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(CreateCaseMutationDoc, {
+    refetchQueries: [CasesQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (data: CaseFormData) => {
+      const res = await mutate({ variables: { input: data } })
+      return res.data?.createCase
+    },
+    mutate: (data: CaseFormData) => {
+      void mutate({ variables: { input: data } })
+    },
+  }
 }
 
 export function useUpdateCase() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<CaseFormData> }) => {
-      if (!id) throw new Error('Case ID is required for update')
-      const res = await api.patch<ApiResponse<Case>>(`/cases/${id}`, data)
-      if (!res.data.success) {
-        throw new Error(`API returned success=false for PATCH /cases/${id}`)
-      }
-      return res.data.data
-    },
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: CASES_KEY })
-      qc.invalidateQueries({ queryKey: [...CASES_KEY, variables.id] })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(UpdateCaseMutationDoc, {
+    refetchQueries: [CasesQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: Partial<CaseFormData>
+    }) => {
+      const res = await mutate({ variables: { id, input: data } })
+      return res.data?.updateCase
+    },
+    mutate: ({ id, data }: { id: string; data: Partial<CaseFormData> }) => {
+      void mutate({ variables: { id, input: data } })
+    },
+  }
 }
 
 export function useDeleteCase() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!id) throw new Error('Case ID is required for delete')
-      await api.delete(`/cases/${id}`)
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CASES_KEY })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(DeleteCaseMutationDoc, {
+    refetchQueries: [CasesQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (id: string) => {
+      await mutate({ variables: { id } })
+    },
+    mutate: (id: string) => {
+      void mutate({ variables: { id } })
+    },
+  }
 }

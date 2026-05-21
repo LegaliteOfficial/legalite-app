@@ -1,6 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useMutation, useQuery, useLazyQuery } from '@apollo/client/react'
+import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import {
+  CreateLibraryItemMutationDoc,
+  DeleteLibraryItemMutationDoc,
+  LibraryDownloadUrlQueryDoc,
+  LibraryItemsQueryDoc,
+  ToggleLibraryItemFavoriteMutationDoc,
+  UpdateLibraryItemMutationDoc,
+} from '@/lib/graphql/operations'
 
 export interface LibraryItem {
   id: string
@@ -20,85 +28,121 @@ export interface LibraryItem {
   updated_at: string
 }
 
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-}
-
-const LIBRARY_KEY = ['library'] as const
+type LibraryItemInput = Partial<Omit<LibraryItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 
 export function useLibrary(category?: string) {
-  return useQuery<LibraryItem[]>({
-    queryKey: [...LIBRARY_KEY, category ?? 'all'],
-    queryFn: async () => {
-      const params = category ? `?category=${category}` : ''
-      const res = await api.get<ApiResponse<LibraryItem[]>>(`/library${params}`)
-      return res.data.data
-    },
+  const { data, loading, error, refetch } = useQuery(LibraryItemsQueryDoc, {
+    variables: { category: category ?? null },
   })
+  return {
+    data: data?.libraryItems as LibraryItem[] | undefined,
+    isLoading: loading,
+    error,
+    refetch,
+  }
 }
 
 export function useCreateLibraryItem() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: Partial<LibraryItem>) => {
-      const res = await api.post<ApiResponse<LibraryItem>>('/library', data)
-      return res.data.data
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: LIBRARY_KEY }),
+  const [mutate, state] = useMutation(CreateLibraryItemMutationDoc, {
+    refetchQueries: [LibraryItemsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (data: LibraryItemInput) => {
+      const res = await mutate({
+        variables: { input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+      return res.data?.createLibraryItem
+    },
+    mutate: (data: LibraryItemInput) => {
+      void mutate({
+        variables: { input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+    },
+  }
 }
 
 export function useUpdateLibraryItem() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<LibraryItem> }) => {
-      const res = await api.patch<ApiResponse<LibraryItem>>(`/library/${id}`, data)
-      return res.data.data
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: LIBRARY_KEY }),
+  const [mutate, state] = useMutation(UpdateLibraryItemMutationDoc, {
+    refetchQueries: [LibraryItemsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async ({ id, data }: { id: string; data: LibraryItemInput }) => {
+      const res = await mutate({
+        variables: { id, input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+      return res.data?.updateLibraryItem
+    },
+    mutate: ({ id, data }: { id: string; data: LibraryItemInput }) => {
+      void mutate({
+        variables: { id, input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+    },
+  }
 }
 
 export function useToggleFavorite() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.post<ApiResponse<LibraryItem>>(`/library/${id}/favorite`)
-      return res.data.data
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: LIBRARY_KEY }),
+  const [mutate, state] = useMutation(ToggleLibraryItemFavoriteMutationDoc, {
+    refetchQueries: [LibraryItemsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (id: string) => {
+      const res = await mutate({ variables: { id } })
+      return res.data?.toggleLibraryItemFavorite
+    },
+    mutate: (id: string) => {
+      void mutate({ variables: { id } })
+    },
+  }
 }
 
 export function useDeleteLibraryItem() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/library/${id}`)
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: LIBRARY_KEY }),
+  const [mutate, state] = useMutation(DeleteLibraryItemMutationDoc, {
+    refetchQueries: [LibraryItemsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (id: string) => {
+      await mutate({ variables: { id } })
+    },
+    mutate: (id: string) => {
+      void mutate({ variables: { id } })
+    },
+  }
 }
 
 export function useDownloadLibraryItem() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.get<ApiResponse<{ url: string }>>(`/library/${id}/download`)
-      return res.data.data.url
+  const [exec, state] = useLazyQuery(LibraryDownloadUrlQueryDoc)
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (id: string) => {
+      const res = await exec({ variables: { id } })
+      const url = res.data?.libraryDownloadUrl.url
+      if (!url) throw new Error('No download URL returned')
+      return url
     },
-  })
+  }
 }
 
-// Direct Supabase upload for library files
+// Direct Supabase upload for library files — outside the GraphQL graph because
+// binary file upload via GraphQL multipart adds complexity for no benefit here.
 export function useUploadLibraryFile() {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   )
+  const [isPending, setIsPending] = useState(false)
 
-  return useMutation({
-    mutationFn: async ({
+  return {
+    isPending,
+    mutateAsync: async ({
       file,
       userId,
       category,
@@ -107,15 +151,12 @@ export function useUploadLibraryFile() {
       userId: string
       category: string
     }) => {
-      const ext = file.name.split('.').pop()
+      setIsPending(true)
+      try {
       const path = `${userId}/${category}/${Date.now()}_${file.name}`
-
       const { data, error } = await supabase.storage
         .from('library')
-        .upload(path, file, {
-          cacheControl: '3600',
-          upsert: false,
-        })
+        .upload(path, file, { cacheControl: '3600', upsert: false })
 
       if (error) throw new Error(`Upload failed: ${error.message}`)
 
@@ -129,6 +170,9 @@ export function useUploadLibraryFile() {
         file_type: file.type,
         file_size: file.size,
       }
+      } finally {
+        setIsPending(false)
+      }
     },
-  })
+  }
 }

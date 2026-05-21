@@ -4,7 +4,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterFormData } from '@/schemas'
 import { useAuthStore } from '@/stores/auth.store'
-import { api } from '@/lib/api'
+import { useMutation } from '@apollo/client/react'
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { RegisterMutationDoc } from '@/lib/graphql/operations'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -26,6 +28,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [registerMutation] = useMutation(RegisterMutationDoc)
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
@@ -50,14 +53,22 @@ export default function SignupPage() {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword: _, ...payload } = data
-      const res = await api.post('/auth/register', payload)
-      setAuth(res.data.data.user, res.data.data.token)
+      const res = await registerMutation({ variables: { input: payload } })
+      const out = res.data?.register
+      if (!out) throw new Error('Empty register response')
+      setAuth(
+        { ...out.user, firm: out.user.firm ?? undefined } as Parameters<typeof setAuth>[0],
+        out.token,
+      )
       router.push('/dashboard')
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setServerError(
-        error.response?.data?.message ?? 'Registration failed. Please try again.'
-      )
+      const message =
+        err instanceof CombinedGraphQLErrors
+          ? err.errors[0]?.message
+          : err instanceof Error
+            ? err.message
+            : null
+      setServerError(message ?? 'Registration failed. Please try again.')
     }
   }
 

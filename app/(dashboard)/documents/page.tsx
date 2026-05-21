@@ -645,10 +645,10 @@ export default function DocumentsPage() {
                             title="Delete draft"
                             onClick={() => {
                               if (confirm(`Delete "${doc.title || 'this draft'}"? This cannot be undone.`)) {
-                                deleteDocumentMutation.mutate(doc.id, {
-                                  onSuccess: () => toast.success('Draft deleted.'),
-                                  onError: () => toast.error('Unable to delete draft. Please try again.'),
-                                })
+                                deleteDocumentMutation
+                                  .mutateAsync(doc.id)
+                                  .then(() => toast.success('Draft deleted.'))
+                                  .catch(() => toast.error('Unable to delete draft. Please try again.'))
                               }
                             }}
                           >

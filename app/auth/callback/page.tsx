@@ -25,13 +25,15 @@ import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
-import { api } from '@/lib/api'
+import { useMutation } from '@apollo/client/react'
+import { GoogleAuthMutationDoc } from '@/lib/graphql/operations'
 
 function CallbackInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setAuth } = useAuthStore()
   const called = useRef(false)
+  const [googleAuth] = useMutation(GoogleAuthMutationDoc)
 
   useEffect(() => {
     if (called.current) return
@@ -59,10 +61,15 @@ function CallbackInner() {
           return
         }
         try {
-          const res = await api.post('/auth/google', {
-            accessToken: data.session.access_token,
+          const res = await googleAuth({
+            variables: { input: { accessToken: data.session.access_token } },
           })
-          setAuth(res.data.data.user, res.data.data.token)
+          const payload = res.data?.googleAuth
+          if (!payload) throw new Error('Empty googleAuth response')
+          setAuth(
+            { ...payload.user, firm: payload.user.firm ?? undefined } as Parameters<typeof setAuth>[0],
+            payload.token,
+          )
           router.replace('/dashboard')
         } catch (err: unknown) {
           const reason =
@@ -75,7 +82,7 @@ function CallbackInner() {
           err instanceof Error ? err.message : 'exchange_threw'
         router.replace(`/login?error=oauth_failed&reason=${encodeURIComponent(reason).slice(0, 200)}`)
       })
-  }, [router, searchParams, setAuth])
+  }, [router, searchParams, setAuth, googleAuth])
 
   return null
 }

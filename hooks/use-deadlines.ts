@@ -1,5 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useMutation, useQuery } from '@apollo/client/react'
+import {
+  CreateDeadlineMutationDoc,
+  DeadlineStatsQueryDoc,
+  DeadlinesQueryDoc,
+  DeleteDeadlineMutationDoc,
+  UpdateDeadlineMutationDoc,
+} from '@/lib/graphql/operations'
 
 export interface Deadline {
   id: string
@@ -16,63 +22,88 @@ export interface Deadline {
   updated_at: string
 }
 
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-}
-
-const DEADLINES_KEY = ['deadlines'] as const
+type DeadlineInput = Partial<Omit<Deadline, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 
 export function useDeadlines(status?: string) {
-  return useQuery<Deadline[]>({
-    queryKey: [...DEADLINES_KEY, status ?? 'all'],
-    queryFn: async () => {
-      const params = status ? `?status=${status}` : ''
-      const res = await api.get<ApiResponse<Deadline[]>>(`/deadlines${params}`)
-      return res.data.data
-    },
+  const { data, loading, error, refetch } = useQuery(DeadlinesQueryDoc, {
+    variables: { status: status ?? null, upcoming: null },
   })
+  return {
+    data: data?.deadlines as Deadline[] | undefined,
+    isLoading: loading,
+    error,
+    refetch,
+  }
 }
 
 export function useDeadlineStats() {
-  return useQuery<{ overdue_count: number; upcoming_this_week: Deadline[] }>({
-    queryKey: [...DEADLINES_KEY, 'stats'],
-    queryFn: async () => {
-      const res = await api.get<ApiResponse<{ overdue_count: number; upcoming_this_week: Deadline[] }>>('/deadlines/stats')
-      return res.data.data
-    },
-    refetchInterval: 60_000,
+  const { data, loading, error, refetch } = useQuery(DeadlineStatsQueryDoc, {
+    pollInterval: 60_000,
   })
+  return {
+    data: data?.deadlineStats as
+      | { overdue_count: number; upcoming_this_week: Deadline[] }
+      | undefined,
+    isLoading: loading,
+    error,
+    refetch,
+  }
 }
 
 export function useCreateDeadline() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: Partial<Deadline>) => {
-      const res = await api.post<ApiResponse<Deadline>>('/deadlines', data)
-      return res.data.data
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: DEADLINES_KEY }),
+  const [mutate, state] = useMutation(CreateDeadlineMutationDoc, {
+    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (data: DeadlineInput) => {
+      const res = await mutate({
+        variables: { input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+      return res.data?.createDeadline
+    },
+    mutate: (data: DeadlineInput) => {
+      void mutate({
+        variables: { input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+    },
+  }
 }
 
 export function useUpdateDeadline() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Deadline> }) => {
-      const res = await api.patch<ApiResponse<Deadline>>(`/deadlines/${id}`, data)
-      return res.data.data
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: DEADLINES_KEY }),
+  const [mutate, state] = useMutation(UpdateDeadlineMutationDoc, {
+    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async ({ id, data }: { id: string; data: DeadlineInput }) => {
+      const res = await mutate({
+        variables: { id, input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+      return res.data?.updateDeadline
+    },
+    mutate: ({ id, data }: { id: string; data: DeadlineInput }) => {
+      void mutate({
+        variables: { id, input: data as Parameters<typeof mutate>[0]['variables']['input'] },
+      })
+    },
+  }
 }
 
 export function useDeleteDeadline() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/deadlines/${id}`)
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: DEADLINES_KEY }),
+  const [mutate, state] = useMutation(DeleteDeadlineMutationDoc, {
+    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (id: string) => {
+      await mutate({ variables: { id } })
+    },
+    mutate: (id: string) => {
+      void mutate({ variables: { id } })
+    },
+  }
 }

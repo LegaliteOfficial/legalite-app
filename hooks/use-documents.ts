@@ -1,83 +1,88 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
-import type { Document, ApiResponse } from '@/types'
+import { useMutation, useQuery } from '@apollo/client/react'
+import {
+  CreateDocumentMutationDoc,
+  DeleteDocumentMutationDoc,
+  DocumentQueryDoc,
+  DocumentsQueryDoc,
+  UpdateDocumentMutationDoc,
+} from '@/lib/graphql/operations'
 import type { DocumentFormData } from '@/schemas'
-
-const DOCUMENTS_KEY = ['documents'] as const
+import type { Document } from '@/types'
 
 export function useDocuments() {
-  return useQuery<Document[]>({
-    queryKey: DOCUMENTS_KEY,
-    queryFn: async () => {
-      const res = await api.get<ApiResponse<Document[]>>('/documents')
-      if (!res.data.success) {
-        throw new Error('API returned success=false for GET /documents')
-      }
-      return res.data.data
-    },
-  })
+  const { data, loading, error, refetch } = useQuery(DocumentsQueryDoc)
+  return {
+    data: data?.documents as Document[] | undefined,
+    isLoading: loading,
+    error,
+    refetch,
+  }
 }
 
 export function useDocument(id: string | undefined) {
-  return useQuery<Document>({
-    queryKey: [...DOCUMENTS_KEY, id],
-    queryFn: async () => {
-      if (!id) throw new Error('Document ID is required')
-      const res = await api.get<ApiResponse<Document>>(`/documents/${id}`)
-      if (!res.data.success) {
-        throw new Error(`API returned success=false for GET /documents/${id}`)
-      }
-      return res.data.data
-    },
-    enabled: !!id,
+  const { data, loading, error } = useQuery(DocumentQueryDoc, {
+    variables: { id: id ?? '' },
+    skip: !id,
   })
+  return {
+    data: data?.document as Document | undefined,
+    isLoading: loading,
+    error,
+  }
 }
 
 export function useCreateDocument() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: DocumentFormData) => {
-      const res = await api.post<ApiResponse<Document>>('/documents', data)
-      if (!res.data.success) {
-        throw new Error('API returned success=false for POST /documents')
-      }
-      return res.data.data
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: DOCUMENTS_KEY })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(CreateDocumentMutationDoc, {
+    refetchQueries: [DocumentsQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (data: DocumentFormData) => {
+      const res = await mutate({ variables: { input: data } })
+      return res.data?.createDocument
+    },
+    mutate: (data: DocumentFormData) => {
+      void mutate({ variables: { input: data } })
+    },
+  }
 }
 
 export function useUpdateDocument() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<DocumentFormData> }) => {
-      if (!id) throw new Error('Document ID is required for update')
-      const res = await api.patch<ApiResponse<Document>>(`/documents/${id}`, data)
-      if (!res.data.success) {
-        throw new Error(`API returned success=false for PATCH /documents/${id}`)
-      }
-      return res.data.data
-    },
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: DOCUMENTS_KEY })
-      qc.invalidateQueries({ queryKey: [...DOCUMENTS_KEY, variables.id] })
-    },
+  const [mutate, state] = useMutation(UpdateDocumentMutationDoc, {
+    refetchQueries: [DocumentsQueryDoc],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: Partial<DocumentFormData>
+    }) => {
+      const res = await mutate({ variables: { id, input: data } })
+      return res.data?.updateDocument
+    },
+    mutate: ({ id, data }: { id: string; data: Partial<DocumentFormData> }) => {
+      void mutate({ variables: { id, input: data } })
+    },
+  }
 }
 
 export function useDeleteDocument() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!id) throw new Error('Document ID is required for delete')
-      await api.delete(`/documents/${id}`)
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: DOCUMENTS_KEY })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(DeleteDocumentMutationDoc, {
+    refetchQueries: [DocumentsQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (id: string) => {
+      await mutate({ variables: { id } })
+    },
+    mutate: (id: string) => {
+      void mutate({ variables: { id } })
+    },
+  }
 }

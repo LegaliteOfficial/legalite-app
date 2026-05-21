@@ -1,84 +1,88 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
-import type { Invoice, ApiResponse } from '@/types'
+import { useMutation, useQuery } from '@apollo/client/react'
+import {
+  CreateInvoiceMutationDoc,
+  DeleteInvoiceMutationDoc,
+  InvoiceQueryDoc,
+  InvoicesQueryDoc,
+  UpdateInvoiceMutationDoc,
+} from '@/lib/graphql/operations'
 import type { InvoiceFormData } from '@/schemas'
-
-const INVOICES_KEY = ['invoices'] as const
+import type { Invoice } from '@/types'
 
 export function useInvoices() {
-  return useQuery<Invoice[]>({
-    queryKey: INVOICES_KEY,
-    queryFn: async () => {
-      const res = await api.get<ApiResponse<Invoice[]>>('/invoices')
-      if (!res.data.success) {
-        throw new Error('API returned success=false for GET /invoices')
-      }
-      return res.data.data
-    },
-  })
+  const { data, loading, error, refetch } = useQuery(InvoicesQueryDoc)
+  return {
+    data: data?.invoices as Invoice[] | undefined,
+    isLoading: loading,
+    error,
+    refetch,
+  }
 }
 
 export function useInvoice(id: string | undefined) {
-  return useQuery<Invoice>({
-    queryKey: [...INVOICES_KEY, id],
-    queryFn: async () => {
-      if (!id) throw new Error('Invoice ID is required')
-      const res = await api.get<ApiResponse<Invoice>>(`/invoices/${id}`)
-      if (!res.data.success) {
-        throw new Error(`API returned success=false for GET /invoices/${id}`)
-      }
-      return res.data.data
-    },
-    enabled: !!id,
+  const { data, loading, error } = useQuery(InvoiceQueryDoc, {
+    variables: { id: id ?? '' },
+    skip: !id,
   })
+  return {
+    data: data?.invoice as Invoice | undefined,
+    isLoading: loading,
+    error,
+  }
 }
 
 export function useCreateInvoice() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: InvoiceFormData) => {
-      const res = await api.post<ApiResponse<Invoice>>('/invoices', data)
-      if (!res.data.success) {
-        throw new Error('API returned success=false for POST /invoices')
-      }
-      return res.data.data
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: INVOICES_KEY })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(CreateInvoiceMutationDoc, {
+    refetchQueries: [InvoicesQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (data: InvoiceFormData) => {
+      const res = await mutate({ variables: { input: data } })
+      return res.data?.createInvoice
+    },
+    mutate: (data: InvoiceFormData) => {
+      void mutate({ variables: { input: data } })
+    },
+  }
 }
 
 export function useUpdateInvoice() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InvoiceFormData> }) => {
-      if (!id) throw new Error('Invoice ID is required for update')
-      const res = await api.patch<ApiResponse<Invoice>>(`/invoices/${id}`, data)
-      if (!res.data.success) {
-        throw new Error(`API returned success=false for PATCH /invoices/${id}`)
-      }
-      return res.data.data
-    },
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: INVOICES_KEY })
-      qc.invalidateQueries({ queryKey: [...INVOICES_KEY, variables.id] })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(UpdateInvoiceMutationDoc, {
+    refetchQueries: [InvoicesQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: Partial<InvoiceFormData>
+    }) => {
+      const res = await mutate({ variables: { id, input: data } })
+      return res.data?.updateInvoice
+    },
+    mutate: ({ id, data }: { id: string; data: Partial<InvoiceFormData> }) => {
+      void mutate({ variables: { id, input: data } })
+    },
+  }
 }
 
 export function useDeleteInvoice() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!id) throw new Error('Invoice ID is required for delete')
-      await api.delete(`/invoices/${id}`)
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: INVOICES_KEY })
-      qc.invalidateQueries({ queryKey: ['dashboard'] })
-    },
+  const [mutate, state] = useMutation(DeleteInvoiceMutationDoc, {
+    refetchQueries: [InvoicesQueryDoc, 'DashboardStats'],
   })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async (id: string) => {
+      await mutate({ variables: { id } })
+    },
+    mutate: (id: string) => {
+      void mutate({ variables: { id } })
+    },
+  }
 }

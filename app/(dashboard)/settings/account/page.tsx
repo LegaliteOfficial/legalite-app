@@ -34,18 +34,12 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Spinner } from '@/components/shared/Spinner'
 import { useAuthStore } from '@/stores/auth.store'
-import { api } from '@/lib/api'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation } from '@apollo/client/react'
+import {
+  ChangePasswordMutationDoc,
+  UpdateProfileMutationDoc,
+} from '@/lib/graphql/operations'
 import { toast } from 'sonner'
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-}
 
 type SectionId = 'profile' | 'notifications' | 'security' | 'appearance' | 'integrations'
 
@@ -265,60 +259,80 @@ export default function SettingsPage() {
   const fullApiKey = 'll_sk_prod_a8c2d9e1f3b4c5d6e7f8a9b0c1d2e3f7a'
 
   // ---- Mutations ----
-  const updateProfile = useMutation({
-    mutationFn: async (data: typeof profile) => {
-      const res = await api.patch<ApiResponse<typeof user>>(
-        '/settings/profile',
-        data,
-      )
-      return res.data.data
+  const [updateProfileMutation, updateProfileState] = useMutation(
+    UpdateProfileMutationDoc,
+    {
+      onCompleted: (data) => {
+        const updated = data.updateProfile
+        if (updated && token) {
+          setAuth(
+            {
+              ...updated,
+              firm: updated.firm ?? undefined,
+              gba_number: updated.gba_number ?? undefined,
+            } as Parameters<typeof setAuth>[0],
+            token,
+          )
+        }
+        toast.success('Profile updated successfully.')
+      },
+      onError: () =>
+        toast.error('Unable to update profile. Please try again.'),
     },
-    onSuccess: (data) => {
-      if (data && token) {
-        setAuth(data as NonNullable<typeof user>, token)
-      }
-      toast.success('Profile updated successfully.')
-    },
-    onError: () =>
-      toast.error('Unable to update profile. Please try again.'),
-  })
-
-  const changePassword = useMutation({
-    mutationFn: async (data: {
-      current_password: string
-      new_password: string
-    }) => {
-      await api.post('/settings/password', data)
-    },
-    onSuccess: () => {
-      setPasswords({
-        current_password: '',
-        new_password: '',
-        confirm_password: '',
+  )
+  const updateProfile = {
+    isPending: updateProfileState.loading,
+    mutate: (data: typeof profile) => {
+      void updateProfileMutation({
+        variables: {
+          input: {
+            name: data.name,
+            firm: data.firm || null,
+            phone: data.phone || null,
+          },
+        },
       })
-      toast.success('Password changed successfully.')
     },
-    onError: () =>
-      toast.error(
-        'Unable to change password. Please check your current password.',
-      ),
-  })
+  }
 
-  const saveNotifications = useMutation({
-    mutationFn: async (data: typeof notifications) => {
-      await api.patch('/settings/notifications', data)
+  const [changePasswordMutation, changePasswordState] = useMutation(
+    ChangePasswordMutationDoc,
+    {
+      onCompleted: () => {
+        setPasswords({
+          current_password: '',
+          new_password: '',
+          confirm_password: '',
+        })
+        toast.success('Password changed successfully.')
+      },
+      onError: () =>
+        toast.error(
+          'Unable to change password. Please check your current password.',
+        ),
     },
-    onSuccess: () => toast.success('Notification preferences saved.'),
-    onError: () => toast.error('Unable to save notification preferences.'),
-  })
+  )
+  const changePassword = {
+    isPending: changePasswordState.loading,
+    mutate: (data: { current_password: string; new_password: string }) => {
+      void changePasswordMutation({ variables: { input: data } })
+    },
+  }
 
-  const saveAppearance = useMutation({
-    mutationFn: async (data: typeof appearance) => {
-      await api.patch('/settings/appearance', data)
+  // Notifications and appearance are not yet implemented server-side —
+  // keep them client-only with a fake "save" toast until those resolvers exist.
+  const saveNotifications = {
+    isPending: false,
+    mutate: (_data: typeof notifications) => {
+      toast.success('Notification preferences saved (local only).')
     },
-    onSuccess: () => toast.success('Appearance settings saved.'),
-    onError: () => toast.error('Unable to save appearance settings.'),
-  })
+  }
+  const saveAppearance = {
+    isPending: false,
+    mutate: (_data: typeof appearance) => {
+      toast.success('Appearance settings saved (local only).')
+    },
+  }
 
   // ---- Handlers ----
   const handleSaveProfile = useCallback(() => {

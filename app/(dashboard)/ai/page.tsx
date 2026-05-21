@@ -6,7 +6,13 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { Sparkles, Send, Scale, BookOpen, Search, Loader2, Plus, MessageSquare, Trash2, Clock, Copy, Check, PanelLeftClose, PanelLeft, X, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { api } from '@/lib/api'
+import { useApolloClient, useMutation } from '@apollo/client/react'
+import {
+  AiChatMutationDoc,
+  AiConversationQueryDoc,
+  AiConversationsQueryDoc,
+  DeleteAiConversationMutationDoc,
+} from '@/lib/graphql/operations'
 import { toast } from 'sonner'
 
 interface Attachment {
@@ -49,25 +55,6 @@ interface ConversationWithMessages extends Conversation {
   }>
 }
 
-interface AiChatResponse {
-  success: boolean
-  data: {
-    response: string
-    sources: Source[]
-    conversation_id?: string
-  }
-}
-
-interface ConversationsResponse {
-  success: boolean
-  data: Conversation[]
-}
-
-interface ConversationResponse {
-  success: boolean
-  data: ConversationWithMessages
-}
-
 export default function AiAssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -80,43 +67,54 @@ export default function AiAssistantPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const apollo = useApolloClient()
+  const [chatMutation] = useMutation(AiChatMutationDoc)
+  const [deleteConvMutation] = useMutation(DeleteAiConversationMutationDoc)
 
-  // Load conversations on mount
-  useEffect(() => {
-    loadConversations()
-  }, [])
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
-      const res = await api.get<ConversationsResponse>('/ai/conversations')
-      setConversations(res.data.data)
+      const res = await apollo.query({
+        query: AiConversationsQueryDoc,
+        fetchPolicy: 'network-only',
+      })
+      setConversations(res.data?.aiConversations ?? [])
     } catch {
       // Silent fail on first load
     } finally {
       setLoadingConversations(false)
     }
-  }
+  }, [apollo])
+
+  // Load conversations on mount
+  useEffect(() => {
+    void loadConversations()
+  }, [loadConversations])
 
   const loadConversation = useCallback(async (id: string) => {
     try {
-      const res = await api.get<ConversationResponse>(`/ai/conversations/${id}`)
-      const conv = res.data.data
+      const res = await apollo.query({
+        query: AiConversationQueryDoc,
+        variables: { id },
+        fetchPolicy: 'network-only',
+      })
+      const conv = res.data?.aiConversation
+      if (!conv) throw new Error('Conversation not found')
       setActiveConversationId(id)
       setMessages(
         conv.messages.map((m) => ({
-          role: m.role,
+          role: m.role as 'user' | 'assistant',
           content: m.content,
-          sources: m.sources,
+          sources: (m.sources as Source[] | null) ?? undefined,
         }))
       )
     } catch {
       toast.error('Unable to load conversation.')
     }
-  }, [])
+  }, [apollo])
 
   const deleteConversation = useCallback(async (id: string) => {
     try {
-      await api.delete(`/ai/conversations/${id}`)
+      await deleteConvMutation({ variables: { id } })
       setConversations((prev) => prev.filter((c) => c.id !== id))
       if (activeConversationId === id) {
         setActiveConversationId(null)
@@ -126,7 +124,7 @@ export default function AiAssistantPage() {
     } catch {
       toast.error('Unable to delete conversation.')
     }
-  }, [activeConversationId])
+  }, [activeConversationId, deleteConvMutation])
 
   const startNewConversation = useCallback(() => {
     setActiveConversationId(null)
@@ -177,15 +175,19 @@ export default function AiAssistantPage() {
         }))
       }
 
-      const res = await api.post<AiChatResponse>('/ai/chat', payload)
-      const { response, sources, conversation_id } = res.data.data
+      const res = await chatMutation({ variables: { input: payload } })
+      const out = res.data?.aiChat
+      if (!out) throw new Error('Empty chat response')
+      const response = out.response
+      const sources = (out.sources ?? []) as Source[]
+      const conversation_id = out.conversation_id
       setMessages((prev) => [...prev, { role: 'assistant', content: response, sources }])
 
       // Track conversation ID
       if (conversation_id && !activeConversationId) {
         setActiveConversationId(conversation_id)
         // Reload conversation list
-        loadConversations()
+        void loadConversations()
       }
     } catch {
       setMessages((prev) => [...prev, {
@@ -197,7 +199,7 @@ export default function AiAssistantPage() {
       setIsLoading(false)
       scrollToBottom()
     }
-  }, [input, isLoading, scrollToBottom, activeConversationId, attachments])
+  }, [input, isLoading, scrollToBottom, activeConversationId, attachments, chatMutation, loadConversations])
 
   const handleAttachClick = useCallback(() => {
     fileInputRef.current?.click()

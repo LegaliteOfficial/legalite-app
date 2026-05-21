@@ -3,13 +3,15 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
-import { api } from '@/lib/api'
+import { useMutation } from '@apollo/client/react'
+import { GoogleAuthMutationDoc } from '@/lib/graphql/operations'
 
 function AuthCompleteInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setAuth } = useAuthStore()
   const called = useRef(false)
+  const [googleAuth] = useMutation(GoogleAuthMutationDoc)
 
   useEffect(() => {
     if (called.current) return
@@ -22,17 +24,21 @@ function AuthCompleteInner() {
       return
     }
 
-    api
-      .post('/auth/google', { accessToken: token })
+    googleAuth({ variables: { input: { accessToken: token } } })
       .then((res) => {
-        setAuth(res.data.data.user, res.data.data.token)
+        const payload = res.data?.googleAuth
+        if (!payload) throw new Error('Empty googleAuth response')
+        setAuth(
+          { ...payload.user, firm: payload.user.firm ?? undefined } as Parameters<typeof setAuth>[0],
+          payload.token,
+        )
         router.replace('/dashboard')
       })
       .catch((err) => {
         console.error('API auth error:', err)
         router.replace('/login')
       })
-  }, [router, searchParams, setAuth])
+  }, [router, searchParams, setAuth, googleAuth])
 
   return null
 }

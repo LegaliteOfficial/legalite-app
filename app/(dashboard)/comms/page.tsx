@@ -13,23 +13,13 @@ import { Spinner } from '@/components/shared/Spinner'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { useClients } from '@/hooks/use-clients'
-import { api } from '@/lib/api'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@apollo/client/react'
+import {
+  CreateMessageMutationDoc,
+  DeleteMessageMutationDoc,
+  MessagesQueryDoc,
+} from '@/lib/graphql/operations'
 import { toast } from 'sonner'
-
-interface Message {
-  id: string
-  client_id: string
-  subject: string
-  body: string
-  channel: string
-  direction: string
-  status: string
-  client_name: string | null
-  created_at: string
-}
-
-interface ApiResponse<T> { success: boolean; data: T }
 
 type ChannelFilter = 'all' | 'email' | 'sms' | 'whatsapp' | 'in_app'
 
@@ -60,30 +50,40 @@ export default function CommsPage() {
     status: 'draft',
   })
 
-  const qc = useQueryClient()
   const { data: clients } = useClients()
 
-  const { data: messages, isLoading } = useQuery<Message[]>({
-    queryKey: ['comms', channelFilter],
-    queryFn: async () => {
-      const params = channelFilter !== 'all' ? `?channel=${channelFilter}` : ''
-      const res = await api.get<ApiResponse<Message[]>>(`/comms${params}`)
-      return res.data.data
+  const { data: messagesData, loading: isLoading } = useQuery(MessagesQueryDoc, {
+    variables: {
+      clientId: null,
+      channel: channelFilter === 'all' ? null : channelFilter,
+    },
+  })
+  const messages = messagesData?.messages
+
+  const [createMessage, createState] = useMutation(CreateMessageMutationDoc, {
+    refetchQueries: [MessagesQueryDoc],
+    onCompleted: () => {
+      resetForm()
+      toast.success('Message created successfully.')
     },
   })
 
-  const createMutation = useMutation({
-    mutationFn: async (data: typeof form) => {
-      const res = await api.post<ApiResponse<Message>>('/comms', data)
-      return res.data.data
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['comms'] }); resetForm(); toast.success('Message created successfully.') },
+  const [deleteMessage] = useMutation(DeleteMessageMutationDoc, {
+    refetchQueries: [MessagesQueryDoc],
+    onCompleted: () => toast.success('Message removed.'),
   })
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => { await api.delete(`/comms/${id}`) },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['comms'] }); toast.success('Message removed.') },
-  })
+  const createMutation = {
+    isPending: createState.loading,
+    mutate: (data: typeof form) => {
+      void createMessage({ variables: { input: data } })
+    },
+  }
+  const deleteMutation = {
+    mutate: (id: string) => {
+      void deleteMessage({ variables: { id } })
+    },
+  }
 
   const resetForm = useCallback(() => {
     setForm({ client_id: '', subject: '', body: '', channel: 'email', direction: 'outbound', status: 'draft' })

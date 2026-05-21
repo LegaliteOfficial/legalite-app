@@ -25,9 +25,10 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { isAxiosError } from 'axios'
+import { useApolloClient } from '@apollo/client/react'
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useAuthStore } from '@/stores/auth.store'
-import { api } from '@/lib/api'
+import { MeQueryDoc } from '@/lib/graphql/operations'
 
 /** Subscribe to Zustand persist hydration without setState-in-effect. */
 function useStoreHydration(): boolean {
@@ -52,10 +53,9 @@ function RealAuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { isAuthenticated, token, logout } = useAuthStore()
   const hydrated = useStoreHydration()
+  const apollo = useApolloClient()
   // Track which token we've already validated against the API. When this
-  // matches the current token we know the token is good. Setting state
-  // happens only inside the async .then/.catch (external system callbacks)
-  // so React 19's "no setState in effect body" rule is satisfied.
+  // matches the current token we know the token is good.
   const [validatedToken, setValidatedToken] = useState<string | null>(null)
 
   useEffect(() => {
@@ -63,26 +63,27 @@ function RealAuthGuard({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated || !token) return // missing token → handled by redirect effect below
     if (validatedToken === token) return // already validated this exact token
     let cancelled = false
-    api
-      .get('/auth/me')
+    apollo
+      .query({ query: MeQueryDoc, fetchPolicy: 'network-only' })
       .then(() => {
         if (!cancelled) setValidatedToken(token)
       })
       .catch((err: unknown) => {
         if (cancelled) return
-        const status = isAxiosError(err) ? err.response?.status : undefined
-        if (status === 401) {
+        const isUnauthenticated =
+          err instanceof CombinedGraphQLErrors &&
+          err.errors.some((e) => e.extensions?.code === 'UNAUTHENTICATED')
+        if (isUnauthenticated) {
           // Token is genuinely invalid → clear it.
           logout()
         } else {
-          // Network error, 500, CORS, cold start — assume token still valid
-          // and let the user proceed. They'll see real errors on the next
-          // failed action and can re-login then if it's actually broken.
+          // Network error, cold start, CORS — assume token still valid
+          // and let the user proceed.
           setValidatedToken(token)
         }
       })
     return () => { cancelled = true }
-  }, [hydrated, isAuthenticated, token, validatedToken, logout])
+  }, [hydrated, isAuthenticated, token, validatedToken, logout, apollo])
 
   // Redirect to login when we've finished hydrating and there's no token.
   useEffect(() => {

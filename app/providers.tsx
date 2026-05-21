@@ -1,26 +1,17 @@
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ApolloProvider } from '@apollo/client/react'
 import { Toaster } from 'sonner'
 import { useState } from 'react'
+import { getApolloClient } from '@/lib/apollo'
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000, // 1 minute
-            retry: 1,
-          },
-        },
-      })
-  )
+  const [client] = useState(() => getApolloClient())
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <ApolloProvider client={client}>
       {children}
       <Toaster position="top-right" richColors />
-    </QueryClientProvider>
+    </ApolloProvider>
   )
 }

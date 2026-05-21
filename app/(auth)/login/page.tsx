@@ -4,8 +4,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginFormData } from '@/schemas'
 import { useAuthStore } from '@/stores/auth.store'
-import { api } from '@/lib/api'
-import { isAxiosError } from 'axios'
+import { useMutation, useApolloClient } from '@apollo/client/react'
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { LoginMutationDoc as LoginDocument, MeQueryDoc as MeDocument } from '@/lib/graphql/operations'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
@@ -30,11 +31,13 @@ function LoginForm() {
   const [serverError, setServerError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const apollo = useApolloClient()
+  const [loginMutation] = useMutation(LoginDocument)
 
   // If we have a persisted token, validate it against the API before
-  // redirecting away from /login. Only a real 401 clears the token —
-  // network errors, 500s, or cold-start blips let the user proceed to
-  // the dashboard so a flaky backend doesn't make login look broken.
+  // redirecting away from /login. Only an UNAUTHENTICATED GraphQL error
+  // clears the token — network errors, 500s, or cold-start blips let the
+  // user proceed so a flaky backend doesn't make login look broken.
   useEffect(() => {
     if (!isAuthenticated || !token) return
     let cancelled = false
@@ -43,21 +46,22 @@ function LoginForm() {
       const next = searchParams?.get('next') ?? '/dashboard'
       router.replace(next)
     }
-    api
-      .get('/auth/me')
+    apollo
+      .query({ query: MeDocument, fetchPolicy: 'network-only' })
       .then(goToNext)
       .catch((err: unknown) => {
         if (cancelled) return
-        const status = isAxiosError(err) ? err.response?.status : undefined
-        if (status === 401) {
+        const isUnauthenticated =
+          err instanceof CombinedGraphQLErrors &&
+          err.errors.some((e) => e.extensions?.code === 'UNAUTHENTICATED')
+        if (isUnauthenticated) {
           logout()
         } else {
-          // Backend hiccup — keep the user logged in and proceed.
           goToNext()
         }
       })
     return () => { cancelled = true }
-  }, [isAuthenticated, token, router, searchParams, logout])
+  }, [isAuthenticated, token, router, searchParams, logout, apollo])
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
@@ -77,15 +81,23 @@ function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setServerError('')
     try {
-      const res = await api.post('/auth/login', data)
-      setAuth(res.data.data.user, res.data.data.token)
+      const res = await loginMutation({ variables: { input: data } })
+      const payload = res.data?.login
+      if (!payload) throw new Error('Empty login response')
+      setAuth(
+        { ...payload.user, firm: payload.user.firm ?? undefined } as Parameters<typeof setAuth>[0],
+        payload.token,
+      )
       const next = searchParams?.get('next') ?? '/dashboard'
       router.push(next)
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setServerError(
-        error.response?.data?.message ?? 'Login failed. Check your credentials.'
-      )
+      const message =
+        err instanceof CombinedGraphQLErrors
+          ? err.errors[0]?.message
+          : err instanceof Error
+            ? err.message
+            : null
+      setServerError(message ?? 'Login failed. Check your credentials.')
     }
   }
 

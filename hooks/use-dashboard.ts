@@ -1,8 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
-import { api } from '@/lib/api'
-import type { DashboardStats, ApiResponse } from '@/types'
-
-const DASHBOARD_KEY = ['dashboard', 'stats'] as const
+import { useQuery } from '@apollo/client/react'
+import { DashboardStatsQueryDoc } from '@/lib/graphql/operations'
+import type { DashboardStats } from '@/types'
 
 // DEV ONLY — return firm-leader-shaped mock data while Supabase is unreachable.
 // Remove this branch when NEXT_PUBLIC_DEV_BYPASS_AUTH is removed.
@@ -13,7 +11,6 @@ const MOCK_STATS: DashboardStats = {
   active_cases: 47,
   pending_tasks: 23,
   total_invoices_due: 12,
-  // Personal slice — invariant: each value <= the corresponding firm total above.
   personal_total_clients: 28,
   personal_active_cases: 9,
   personal_pending_tasks: 6,
@@ -34,16 +31,29 @@ const MOCK_STATS: DashboardStats = {
 }
 
 export function useDashboardStats() {
-  return useQuery<DashboardStats>({
-    queryKey: DASHBOARD_KEY,
-    queryFn: async () => {
-      if (DEV_BYPASS) return MOCK_STATS
-      const res = await api.get<ApiResponse<DashboardStats>>('/dashboard/stats')
-      if (!res.data.success) {
-        throw new Error('Failed to fetch dashboard stats')
-      }
-      return res.data.data
-    },
-    refetchInterval: 60_000,
+  const { data, loading, error, refetch } = useQuery(DashboardStatsQueryDoc, {
+    pollInterval: 60_000,
+    skip: DEV_BYPASS,
   })
+  if (DEV_BYPASS) {
+    return { data: MOCK_STATS, isLoading: false, error: undefined, refetch }
+  }
+  // GraphQL DashboardStats currently doesn't include personal_* totals — the
+  // resolver returns firm-wide numbers only. Backfill the personal slice with
+  // firm totals so existing UI keeps rendering until the backend splits them.
+  const stats = data?.dashboardStats
+  const augmented: DashboardStats | undefined = stats
+    ? {
+        ...stats,
+        personal_total_clients: stats.total_clients,
+        personal_active_cases: stats.active_cases,
+        personal_pending_tasks: stats.pending_tasks,
+        personal_invoices_due: stats.total_invoices_due,
+        recent_activity: stats.recent_activity.map((r) => ({
+          ...r,
+          type: r.type as DashboardStats['recent_activity'][number]['type'],
+        })),
+      }
+    : undefined
+  return { data: augmented, isLoading: loading, error, refetch }
 }
