@@ -21,19 +21,19 @@ const NAV_GROUPS = [
   {
     label: 'Workspace',
     items: [
-      { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard',      href: '/dashboard' },
-      { id: 'clients',   Icon: Users,           label: 'Clients',        href: '/clients' },
-      { id: 'cases',     Icon: Scale,           label: 'Cases',          href: '/cases' },
-      { id: 'tasks',     Icon: CheckSquare,     label: 'Tasks',          href: '/tasks' },
-      { id: 'documents', Icon: FileText,        label: 'Documents',      href: '/documents' },
-      { id: 'deadline',  Icon: Timer,           label: 'Deadline Engine',href: '/deadline' },
+      { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard',       href: '/dashboard' },
+      { id: 'clients',   Icon: Users,           label: 'Clients',         href: '/clients' },
+      { id: 'cases',     Icon: Scale,           label: 'Cases',           href: '/cases' },
+      { id: 'tasks',     Icon: CheckSquare,     label: 'Tasks',           href: '/tasks' },
+      { id: 'documents', Icon: FileText,        label: 'Documents',       href: '/documents' },
+      { id: 'deadline',  Icon: Timer,           label: 'Deadline engine', href: '/deadline' },
     ],
   },
   {
     label: 'Intelligence',
     items: [
-      { id: 'ai',      Icon: Sparkles,      label: 'AI Assistant', href: '/ai' },
-      { id: 'comms',   Icon: MessageSquare, label: 'Client Comms', href: '/comms' },
+      { id: 'ai',      Icon: Sparkles,      label: 'AI assistant', href: '/ai' },
+      { id: 'comms',   Icon: MessageSquare, label: 'Client comms', href: '/comms' },
       { id: 'billing', Icon: CreditCard,    label: 'Billing',      href: '/billing' },
     ],
   },
@@ -44,6 +44,12 @@ const NAV_GROUPS = [
     ],
   },
 ]
+
+const TEXT_DIM = 'rgba(255,255,255,0.58)'
+const TEXT_MUTED = 'rgba(255,255,255,0.38)'
+const TEXT_LABEL = 'rgba(255,255,255,0.32)'
+const HOVER_BG = 'rgba(255,255,255,0.06)'
+const ACTIVE_BG = 'rgba(201,151,43,0.14)'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -64,89 +70,107 @@ export function Sidebar() {
 
   return (
     <aside
-      style={{ width: 256, background: 'transparent' }}
-      className="flex flex-col flex-shrink-0 h-full relative overflow-hidden"
+      style={{ width: 248, background: 'transparent' }}
+      className="flex flex-col shrink-0 h-full relative overflow-hidden rounded-l-2xl"
     >
-      {/* Logo */}
-      <div className="px-5 py-6 border-b border-white/[0.06]">
+      {/* Brand */}
+      <div className="px-5 pt-6 pb-5">
         <h1
-          className="font-heading text-2xl font-extrabold"
-          style={{ color: 'var(--gold-light)', letterSpacing: '-0.5px' }}
+          className="font-heading text-[22px] font-semibold tracking-tight"
+          style={{ color: 'var(--gold-light)' }}
         >
           LegaLite
         </h1>
-        <p className="text-[10.5px] mt-0.5 tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          Legal Practice Management
-        </p>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2.5 py-3.5 overflow-y-auto">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.label}>
+      <nav className="flex-1 px-3 overflow-y-auto">
+        {NAV_GROUPS.map((group, idx) => (
+          <div key={group.label} className={idx === 0 ? '' : 'mt-6'}>
             <div
-              className="text-[10px] font-bold tracking-[1.5px] uppercase px-3 py-2 mt-2"
-              style={{ color: 'rgba(255,255,255,0.22)' }}
+              className="px-2 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.12em]"
+              style={{ color: TEXT_LABEL }}
             >
               {group.label}
             </div>
-            {group.items.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              const Icon = item.Icon
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-[15px] font-medium transition-all duration-150 border border-transparent"
-                  style={{
-                    color: isActive ? 'var(--gold-light)' : 'rgba(255,255,255,0.52)',
-                    background: isActive
-                      ? 'linear-gradient(135deg,rgba(201,151,43,0.22),rgba(201,151,43,0.08))'
-                      : 'transparent',
-                    borderColor: isActive ? 'rgba(201,151,43,0.28)' : 'transparent',
-                  }}
-                >
-                  <Icon size={15} strokeWidth={isActive ? 2 : 1.75} />
-                  {item.label}
-                </Link>
-              )
-            })}
+            <ul className="flex flex-col">
+              {group.items.map((item) => {
+                const isActive =
+                  pathname === item.href || pathname.startsWith(item.href + '/')
+                const Icon = item.Icon
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={item.href}
+                      className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] font-medium transition-colors"
+                      style={{
+                        color: isActive ? 'var(--gold-light)' : TEXT_DIM,
+                        background: isActive ? ACTIVE_BG : 'transparent',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) e.currentTarget.style.background = HOVER_BG
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) e.currentTarget.style.background = 'transparent'
+                      }}
+                    >
+                      <Icon
+                        size={15}
+                        strokeWidth={1.75}
+                        style={{
+                          color: isActive ? 'var(--gold-light)' : TEXT_MUTED,
+                        }}
+                      />
+                      {item.label}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
         ))}
       </nav>
 
       {/* User footer */}
-      <div className="p-2.5 border-t border-white/[0.06]">
-        <div
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
-          style={{ background: 'rgba(255,255,255,0.05)' }}
-        >
+      <div className="px-3 pb-4 pt-3">
+        <div className="flex items-center gap-2.5 px-2 py-1.5">
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
             style={{
-              background: 'linear-gradient(135deg,var(--gold),var(--gold-dark))',
+              background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
               color: 'var(--navy)',
             }}
           >
             {initials}
           </div>
-          <div className="text-left flex-1 min-w-0">
-            <div className="text-sm font-semibold truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
-              {user?.name}
+          <div className="flex-1 min-w-0">
+            <div
+              className="text-[13px] font-medium truncate"
+              style={{ color: 'rgba(255,255,255,0.85)' }}
+            >
+              {user?.name ?? 'Signed in'}
             </div>
-            <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.32)' }}>
-              {user?.role?.replace('_', ' ')}
-            </div>
+            {user?.role && (
+              <div className="text-[11px] truncate" style={{ color: TEXT_MUTED }}>
+                {user.role.replace('_', ' ')}
+              </div>
+            )}
           </div>
           <button
             onClick={handleLogout}
-            className="p-1.5 rounded-md transition-colors cursor-pointer flex-shrink-0"
-            style={{ color: 'rgba(255,255,255,0.3)' }}
+            className="p-1.5 rounded-md transition-colors cursor-pointer shrink-0"
             title="Sign out"
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}
+            style={{ color: TEXT_MUTED }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = HOVER_BG
+              e.currentTarget.style.color = 'rgba(255,255,255,0.85)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = TEXT_MUTED
+            }}
           >
-            <LogOut size={15} />
+            <LogOut size={14} strokeWidth={1.75} />
           </button>
         </div>
       </div>

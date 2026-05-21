@@ -291,18 +291,24 @@ export default function AiAssistantPage() {
   }
 
   return (
-    <div className="flex-1 flex overflow-hidden" style={{ background: 'var(--cream)' }}>
+    <div className="flex-1 flex overflow-hidden">
       {/* Conversation Sidebar */}
       {sidebarOpen && (
-      <div className="w-64 flex-shrink-0 border-r flex flex-col" style={{ borderColor: 'var(--border)', background: 'white' }}>
-        <div className="p-3 border-b" style={{ borderColor: 'var(--border)' }}>
+      <div
+        className="w-64 shrink-0 border-r flex flex-col"
+        style={{
+          borderColor: 'var(--border-soft)',
+          background: 'var(--surface-card)',
+        }}
+      >
+        <div className="p-3 border-b" style={{ borderColor: 'var(--border-soft)' }}>
           <Button
             onClick={startNewConversation}
-            className="w-full h-9 text-xs font-semibold text-white gap-1.5"
-            style={{ background: 'var(--gold)' }}
+            size="lg"
+            className="w-full rounded-lg"
           >
-            <Plus size={14} />
-            New Conversation
+            <Plus size={14} strokeWidth={2} />
+            New conversation
           </Button>
         </div>
 
@@ -310,68 +316,89 @@ export default function AiAssistantPage() {
           {loadingConversations ? (
             <div className="space-y-2 p-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 rounded-lg bg-gray-50 animate-pulse" />
+                <div key={i} className="h-12 rounded-lg animate-pulse" style={{ background: 'var(--surface-sunken)' }} />
               ))}
             </div>
           ) : conversations.length === 0 ? (
             <div className="text-center p-4">
-              <MessageSquare size={20} className="mx-auto mb-2 text-gray-300" />
-              <p className="text-[11px]" style={{ color: '#9CA3AF' }}>No conversations yet</p>
+              <MessageSquare size={18} strokeWidth={1.75} className="mx-auto mb-2" style={{ color: 'var(--text-subtle)' }} />
+              <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>No conversations yet</p>
             </div>
           ) : (
-            conversations.map((conv) => (
-              <div
-                key={conv.id}
-                className="group flex items-start gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-all"
-                style={{
-                  background: activeConversationId === conv.id ? 'rgba(201,151,43,0.08)' : 'transparent',
-                  borderLeft: activeConversationId === conv.id ? '2px solid var(--gold)' : '2px solid transparent',
-                }}
-                onClick={() => loadConversation(conv.id)}
-              >
-                <MessageSquare size={13} className="mt-0.5 flex-shrink-0" style={{ color: activeConversationId === conv.id ? 'var(--gold)' : '#9CA3AF' }} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-medium truncate" style={{ color: 'var(--navy)' }}>
-                    {conv.title}
-                  </p>
-                  <p className="text-[10px] flex items-center gap-1" style={{ color: '#9CA3AF' }}>
-                    <Clock size={9} />
-                    {formatDate(conv.updated_at)}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id) }}
-                  className="opacity-0 group-hover:opacity-100 h-5 w-5 rounded flex items-center justify-center hover:bg-red-50 transition-all"
+            conversations.map((conv) => {
+              const isActive = activeConversationId === conv.id
+              return (
+                <div
+                  key={conv.id}
+                  className="group flex items-start gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors"
+                  style={{
+                    background: isActive ? 'var(--surface-sunken)' : 'transparent',
+                  }}
+                  onClick={() => loadConversation(conv.id)}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'var(--surface-overlay)'
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'transparent'
+                  }}
                 >
-                  <Trash2 size={11} className="text-red-400" />
-                </button>
-              </div>
-            ))
+                  <MessageSquare
+                    size={13}
+                    strokeWidth={1.75}
+                    className="mt-0.5 shrink-0"
+                    style={{ color: isActive ? 'var(--gold)' : 'var(--text-muted)' }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                      {conv.title}
+                    </p>
+                    <p className="text-[10.5px] flex items-center gap-1 tabular-nums" style={{ color: 'var(--text-muted)' }}>
+                      <Clock size={9} strokeWidth={1.75} />
+                      {formatDate(conv.updated_at)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id) }}
+                    className="opacity-0 group-hover:opacity-100 h-5 w-5 rounded flex items-center justify-center transition-all"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <Trash2 size={11} strokeWidth={1.75} />
+                  </button>
+                </div>
+              )
+            })
           )}
         </div>
       </div>
       )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'var(--surface-card)' }}>
         {/* Header */}
-        <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border)', background: 'white' }}>
+        <div
+          className="px-6 py-4 border-b"
+          style={{ borderColor: 'var(--border-soft)' }}
+        >
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen((prev) => !prev)}
-              className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
-              style={{ border: '1px solid var(--border)' }}
+              className="h-8 w-8 rounded-lg flex items-center justify-center border transition-colors"
+              style={{
+                borderColor: 'var(--border-default)',
+                color: 'var(--text-secondary)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-overlay)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
             >
-              {sidebarOpen ? <PanelLeftClose size={16} style={{ color: '#6B7280' }} /> : <PanelLeft size={16} style={{ color: '#6B7280' }} />}
+              {sidebarOpen ? <PanelLeftClose size={14} strokeWidth={1.75} /> : <PanelLeft size={14} strokeWidth={1.75} />}
             </button>
-            <div className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/favicon.ico" alt="LegaLite" className="h-9 w-9 object-cover" />
-            </div>
-            <div>
-              <h1 className="font-heading text-lg font-bold" style={{ color: 'var(--navy)' }}>LegaLite AI</h1>
-            </div>
+            <h1
+              className="font-heading text-lg font-semibold tracking-tight"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              LegaLite AI
+            </h1>
           </div>
         </div>
 
@@ -379,13 +406,18 @@ export default function AiAssistantPage() {
         <div className="flex-1 overflow-y-auto p-6">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto text-center">
-              <div className="h-16 w-16 rounded-2xl overflow-hidden flex items-center justify-center mb-4">
+              <div className="h-14 w-14 rounded-2xl overflow-hidden flex items-center justify-center mb-5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/favicon.ico" alt="LegaLite" className="h-16 w-16 object-cover" />
+                <img src="/favicon.ico" alt="LegaLite" className="h-14 w-14 object-cover" />
               </div>
-              <h2 className="font-heading text-xl font-bold mb-2" style={{ color: 'var(--navy)' }}>How can I help you today?</h2>
-              <p className="text-sm mb-8" style={{ color: '#6B7280' }}>
-                Ask me about Ghana law, find case precedents, or get help drafting legal arguments.
+              <h2
+                className="font-heading text-[22px] font-semibold mb-2 tracking-tight"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                How can I help you today?
+              </h2>
+              <p className="text-[13.5px] mb-8 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                Ask about Ghana law, find case precedents, or get help drafting legal arguments.
               </p>
               <div className="w-full space-y-2">
                 {suggestions.map((s, i) => {
@@ -394,10 +426,17 @@ export default function AiAssistantPage() {
                     <button
                       key={i}
                       onClick={() => { setInput(s.text) }}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm transition-all hover:shadow-sm hover:-translate-y-0.5"
-                      style={{ background: 'white', borderColor: 'var(--border)', color: '#374151' }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-[13px] transition-colors"
+                      style={{
+                        background: 'var(--surface-card)',
+                        borderColor: 'var(--border-soft)',
+                        color: 'var(--text-primary)',
+                        boxShadow: 'var(--shadow-xs)',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-card-hover)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface-card)')}
                     >
-                      <Icon size={16} style={{ color: 'var(--gold)' }} />
+                      <Icon size={15} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
                       {s.text}
                     </button>
                   )
@@ -411,12 +450,13 @@ export default function AiAssistantPage() {
                   <div
                     className="max-w-[85%] rounded-2xl px-5 py-3"
                     style={msg.role === 'user' ? {
-                      background: 'var(--navy)',
-                      color: 'white',
+                      background: 'var(--surface-sunken)',
+                      color: 'var(--text-primary)',
                     } : {
-                      background: 'white',
-                      border: '1px solid var(--border)',
-                      color: '#1a1a1a',
+                      background: 'var(--surface-card)',
+                      border: '1px solid var(--border-soft)',
+                      color: 'var(--text-primary)',
+                      boxShadow: 'var(--shadow-xs)',
                     }}
                   >
                     <div className="text-sm leading-relaxed ai-markdown">
@@ -459,9 +499,16 @@ export default function AiAssistantPage() {
 
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl px-5 py-3 flex items-center gap-2" style={{ background: 'white', border: '1px solid var(--border)' }}>
-                    <Loader2 size={14} className="animate-spin" style={{ color: 'var(--gold)' }} />
-                    <span className="text-sm" style={{ color: '#6B7280' }}>Legaliting...</span>
+                  <div
+                    className="rounded-2xl px-5 py-3 flex items-center gap-2"
+                    style={{
+                      background: 'var(--surface-card)',
+                      border: '1px solid var(--border-soft)',
+                      boxShadow: 'var(--shadow-xs)',
+                    }}
+                  >
+                    <Loader2 size={13} className="animate-spin" style={{ color: 'var(--gold)' }} />
+                    <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>Legaliting…</span>
                   </div>
                 </div>
               )}
@@ -472,28 +519,31 @@ export default function AiAssistantPage() {
         </div>
 
         {/* Input Area */}
-        <div className="px-6 py-4 border-t" style={{ borderColor: 'var(--border)', background: 'white' }}>
+        <div className="px-6 py-4 border-t" style={{ borderColor: 'var(--border-soft)' }}>
           {/* Attached file chips */}
           {attachments.length > 0 && (
             <div className="max-w-3xl mx-auto mb-2 flex flex-wrap gap-2">
               {attachments.map((att, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px]"
-                  style={{ background: 'rgba(201,151,43,0.08)', border: '1px solid rgba(201,151,43,0.25)' }}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11.5px]"
+                  style={{
+                    background: 'var(--surface-sunken)',
+                    border: '1px solid var(--border-soft)',
+                  }}
                 >
-                  <FileText size={12} style={{ color: 'var(--gold)' }} />
-                  <span className="font-medium max-w-[180px] truncate" style={{ color: 'var(--navy)' }}>
+                  <FileText size={12} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+                  <span className="font-medium max-w-[180px] truncate" style={{ color: 'var(--text-primary)' }}>
                     {att.name}
                   </span>
-                  <span style={{ color: '#9CA3AF' }}>{formatFileSize(att.size)}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{formatFileSize(att.size)}</span>
                   <button
                     type="button"
                     onClick={() => removeAttachment(i)}
                     className="ml-0.5 p-0.5 rounded hover:bg-black/5 transition-colors"
                     aria-label={`Remove ${att.name}`}
                   >
-                    <X size={11} style={{ color: '#6B7280' }} />
+                    <X size={11} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
                   </button>
                 </div>
               ))}
@@ -514,18 +564,26 @@ export default function AiAssistantPage() {
               type="button"
               onClick={handleAttachClick}
               disabled={isLoading}
-              className="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-lg transition-colors disabled:opacity-50"
-              style={{ background: 'transparent', border: '1px solid var(--border)', color: '#6B7280' }}
+              className="h-11 w-11 shrink-0 flex items-center justify-center rounded-lg transition-colors disabled:opacity-50"
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-secondary)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) e.currentTarget.style.background = 'var(--surface-overlay)'
+              }}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               aria-label="Attach document"
               title="Attach a document to enrich this answer"
             >
-              <Plus size={18} />
+              <Plus size={16} strokeWidth={1.75} />
             </button>
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask LegaLite anything..."
+              placeholder="Ask LegaLite anything…"
               rows={1}
               className="resize-none min-h-[44px] max-h-[120px]"
               disabled={isLoading}
@@ -533,13 +591,13 @@ export default function AiAssistantPage() {
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="h-11 w-11 p-0 flex-shrink-0 text-white"
-              style={{ background: input.trim() ? 'var(--gold)' : '#d1d5db' }}
+              size="icon-lg"
+              className="h-11 w-11 shrink-0"
             >
-              <Send size={16} />
+              <Send size={15} strokeWidth={1.75} />
             </Button>
           </div>
-          <p className="text-center text-[10px] mt-2" style={{ color: '#9CA3AF' }}>
+          <p className="text-center text-[10.5px] mt-2" style={{ color: 'var(--text-muted)' }}>
             Attach documents (PDF, text, image, DOCX) to combine them with LegaLite AI&apos;s legal knowledge.
           </p>
         </div>

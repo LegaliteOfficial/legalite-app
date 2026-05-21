@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -42,24 +41,26 @@ export function DataTable<T extends { id: string }>({
   if (data.length === 0) {
     return (
       <div
-        className="rounded-2xl border p-16 text-center"
+        className="rounded-2xl border px-6 py-16 text-center"
         style={{
-          background: 'var(--cream-white)',
-          borderColor: 'var(--border)',
-          boxShadow: '0 1px 3px rgba(13,27,42,0.04)',
+          background: 'var(--surface-card)',
+          borderColor: 'var(--border-soft)',
+          boxShadow: 'var(--shadow-xs)',
         }}
       >
         <div
-          className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full"
-          style={{ background: 'rgba(201,151,43,0.08)' }}
+          className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full"
+          style={{ background: 'var(--surface-sunken)' }}
         >
-          <Inbox size={22} style={{ color: 'var(--gold)' }} />
+          <Inbox size={18} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
         </div>
-        <p className="text-sm font-medium" style={{ color: 'var(--navy)' }}>
+        <p className="text-[13.5px] font-medium" style={{ color: 'var(--text-primary)' }}>
           {emptyMessage}
         </p>
         {emptyDescription && (
-          <p className="mt-1 text-xs text-gray-400">{emptyDescription}</p>
+          <p className="mt-1 text-[12px]" style={{ color: 'var(--text-muted)' }}>
+            {emptyDescription}
+          </p>
         )}
       </div>
     )
@@ -69,23 +70,23 @@ export function DataTable<T extends { id: string }>({
     <div
       className="rounded-2xl border overflow-hidden"
       style={{
-        background: 'var(--cream-white)',
-        borderColor: 'var(--border)',
-        boxShadow: '0 1px 3px rgba(13,27,42,0.04), 0 8px 32px rgba(13,27,42,0.06)',
+        background: 'var(--surface-card)',
+        borderColor: 'var(--border-soft)',
+        boxShadow: 'var(--shadow-xs)',
       }}
     >
       <Table>
         <TableHeader>
           <TableRow
             className="border-b hover:bg-transparent"
-            style={{ borderColor: 'var(--border)', background: 'rgba(13,27,42,0.02)' }}
+            style={{ borderColor: 'var(--border-soft)' }}
           >
             {columns.map((col) => (
               <TableHead
                 key={col.key}
-                className="h-11 px-5 text-[10.5px] uppercase tracking-[0.08em] font-semibold"
+                className="h-10 px-5 text-[10.5px] uppercase tracking-[0.08em] font-medium"
                 style={{
-                  color: 'rgba(13,27,42,0.45)',
+                  color: 'var(--text-muted)',
                   width: col.width,
                   textAlign: col.align ?? 'left',
                 }}
@@ -99,12 +100,10 @@ export function DataTable<T extends { id: string }>({
           {paged.map((row, i) => (
             <TableRow
               key={row.id ?? i}
-              className="border-b transition-all duration-150 group"
-              style={{
-                borderColor: 'rgba(13,27,42,0.06)',
-              }}
+              className="border-b transition-colors duration-100"
+              style={{ borderColor: 'var(--border-soft)' }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(201,151,43,0.025)'
+                e.currentTarget.style.background = 'var(--surface-overlay)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent'
@@ -113,16 +112,16 @@ export function DataTable<T extends { id: string }>({
               {columns.map((col) => (
                 <TableCell
                   key={col.key}
-                  className="px-5 py-3.5 text-[13px]"
+                  className="px-5 py-3 text-[13px]"
                   style={{
-                    color: 'var(--navy)',
+                    color: 'var(--text-primary)',
                     textAlign: col.align ?? 'left',
                   }}
                 >
                   {col.render
                     ? col.render(row)
                     : String(
-                        (row as Record<string, unknown>)[col.key] ?? '\u2014',
+                        (row as Record<string, unknown>)[col.key] ?? '—',
                       )}
                 </TableCell>
               ))}
@@ -131,60 +130,78 @@ export function DataTable<T extends { id: string }>({
         </TableBody>
       </Table>
 
-      {/* Pagination footer */}
       {data.length > pageSize && (
         <div
           className="flex items-center justify-between px-5 py-2.5 border-t"
-          style={{
-            borderColor: 'var(--border)',
-            background: 'rgba(13,27,42,0.015)',
-          }}
+          style={{ borderColor: 'var(--border-soft)' }}
         >
-          <p className="text-[11px] text-gray-400">
+          <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
             Showing {page * pageSize + 1}&ndash;{Math.min((page + 1) * pageSize, data.length)} of {data.length}
           </p>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
+          <div className="flex items-center gap-0.5">
+            <PageButton
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
+              ariaLabel="Previous page"
             >
-              <ChevronLeft size={14} />
-            </Button>
+              <ChevronLeft size={13} strokeWidth={1.75} />
+            </PageButton>
             {Array.from({ length: totalPages }, (_, i) => (
-              <Button
+              <PageButton
                 key={i}
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-[11px] font-medium"
-                style={
-                  i === page
-                    ? {
-                        background: 'var(--gold)',
-                        color: '#fff',
-                        borderRadius: '6px',
-                      }
-                    : { color: 'var(--navy)' }
-                }
+                active={i === page}
                 onClick={() => setPage(i)}
+                ariaLabel={`Page ${i + 1}`}
               >
                 {i + 1}
-              </Button>
+              </PageButton>
             ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
+            <PageButton
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
+              ariaLabel="Next page"
             >
-              <ChevronRight size={14} />
-            </Button>
+              <ChevronRight size={13} strokeWidth={1.75} />
+            </PageButton>
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+function PageButton({
+  children,
+  active,
+  disabled,
+  onClick,
+  ariaLabel,
+}: {
+  children: React.ReactNode
+  active?: boolean
+  disabled?: boolean
+  onClick?: () => void
+  ariaLabel?: string
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onClick}
+      className="inline-flex items-center justify-center h-7 min-w-7 px-2 rounded-md text-[12px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      style={{
+        background: active ? 'var(--surface-sunken)' : 'transparent',
+        color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled && !active) e.currentTarget.style.background = 'var(--surface-overlay)'
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.background = 'transparent'
+      }}
+    >
+      {children}
+    </button>
   )
 }

@@ -1,12 +1,13 @@
 'use client'
 
-import { Plus, Pencil, Trash2, Search, Users } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTable, type Column } from '@/components/shared/DataTable'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { ClientForm } from '@/components/shared/ClientForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { useClients } from '@/hooks/use-clients'
@@ -23,25 +24,9 @@ export default function ClientsPage() {
   if (isLoading) return <PageSkeleton />
   if (error) {
     return (
-      <div className="flex-1 p-8 flex items-center justify-center" style={{ background: 'var(--cream)' }}>
-        <div
-          className="text-center rounded-2xl border px-12 py-10"
-          style={{ background: 'var(--cream-white)', borderColor: 'var(--border)' }}
-        >
-          <p className="text-sm font-medium mb-1" style={{ color: 'var(--navy)' }}>
-            Unable to load clients
-          </p>
-          <p className="text-xs text-gray-400 mb-4">
-            Please check your connection and try again.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.location.reload()}
-            className="text-xs"
-          >
-            Retry
-          </Button>
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 py-5">
+          <ErrorPanel onRetry={() => window.location.reload()} />
         </div>
       </div>
     )
@@ -74,19 +59,16 @@ export default function ClientsPage() {
       header: 'Client ID',
       width: '120px',
       render: (row) => (
-        <span
-          className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-mono font-medium tracking-wide"
-          style={{ background: 'rgba(13,27,42,0.05)', color: 'var(--navy)' }}
-        >
-          {row.client_code ?? '\u2014'}
+        <span className="font-mono text-[12px] tracking-wide" style={{ color: 'var(--text-muted)' }}>
+          {row.client_code ?? '—'}
         </span>
       ),
     },
     {
       key: 'full_name',
-      header: 'Full Name',
+      header: 'Name',
       render: (row) => (
-        <span className="font-medium text-[13px]" style={{ color: 'var(--navy)' }}>
+        <span className="font-medium text-[13.5px]" style={{ color: 'var(--text-primary)' }}>
           {row.full_name}
         </span>
       ),
@@ -95,8 +77,8 @@ export default function ClientsPage() {
       key: 'phone',
       header: 'Phone',
       render: (row) => (
-        <span className="text-[13px] text-gray-500">
-          {row.phone || '\u2014'}
+        <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+          {row.phone || '—'}
         </span>
       ),
     },
@@ -104,8 +86,8 @@ export default function ClientsPage() {
       key: 'ghana_card',
       header: 'Ghana Card',
       render: (row) => (
-        <span className="text-[12px] font-mono text-gray-500 tracking-wide">
-          {row.ghana_card || '\u2014'}
+        <span className="font-mono text-[12px] tracking-wide" style={{ color: 'var(--text-muted)' }}>
+          {row.ghana_card || '—'}
         </span>
       ),
     },
@@ -118,10 +100,10 @@ export default function ClientsPage() {
         const count = caseCountMap[row.id] ?? 0
         return (
           <span
-            className="inline-flex items-center justify-center h-6 min-w-[24px] px-1.5 rounded-full text-[11px] font-bold"
+            className="inline-flex items-center justify-center h-[18px] min-w-[20px] px-1.5 rounded-full text-[11px] font-medium tabular-nums"
             style={{
-              background: count > 0 ? 'rgba(201,151,43,0.1)' : 'rgba(13,27,42,0.04)',
-              color: count > 0 ? 'var(--gold)' : 'rgba(13,27,42,0.3)',
+              background: 'var(--surface-sunken)',
+              color: count > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
             }}
           >
             {count}
@@ -132,31 +114,31 @@ export default function ClientsPage() {
     {
       key: 'status',
       header: 'Status',
-      width: '100px',
+      width: '110px',
       render: (row) => <StatusBadge status={row.status ?? 'Active'} />,
     },
     {
       key: 'updated_at',
       header: '',
-      width: '80px',
+      width: '88px',
       align: 'right',
       render: (row) => (
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 justify-end">
+        <div className="flex gap-0.5 justify-end">
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 rounded-lg"
+            size="icon-sm"
             onClick={() => openModal({ type: 'editClient', id: row.id })}
+            aria-label="Edit client"
           >
-            <Pencil size={13} style={{ color: 'var(--navy)' }} />
+            <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
           </Button>
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 rounded-lg hover:bg-red-50"
+            size="icon-sm"
             onClick={() => openModal({ type: 'confirmDelete', entity: 'client', id: row.id, name: row.full_name })}
+            aria-label="Delete client"
           >
-            <Trash2 size={13} className="text-red-400" />
+            <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
           </Button>
         </div>
       ),
@@ -164,71 +146,75 @@ export default function ClientsPage() {
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-8" style={{ background: 'var(--cream)' }}>
-      {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl"
-            style={{ background: 'rgba(201,151,43,0.1)' }}
-          >
-            <Users size={18} style={{ color: 'var(--gold)' }} />
-          </div>
-          <div>
-            <h2
-              className="font-heading text-lg font-bold leading-tight"
-              style={{ color: 'var(--navy)' }}
-            >
-              Client Directory
-            </h2>
-            <p className="text-[12px] text-gray-400 mt-0.5">
-              {filtered.length} registered client{filtered.length !== 1 ? 's' : ''}
-            </p>
-          </div>
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-5">
+        <PageHeader
+          title="Clients"
+          description={`${clientList.length} registered client${clientList.length !== 1 ? 's' : ''}`}
+          actions={
+            <>
+              <div className="relative w-56">
+                <Search
+                  size={14}
+                  strokeWidth={1.75}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: 'var(--text-subtle)' }}
+                />
+                <Input
+                  placeholder="Search clients…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-9 text-[13px] rounded-lg"
+                  style={{ borderColor: 'var(--border-default)', background: 'var(--surface-card)' }}
+                />
+              </div>
+              <Button onClick={() => openModal({ type: 'addClient' })} size="lg" className="rounded-lg">
+                <Plus size={14} strokeWidth={2} />
+                Add client
+              </Button>
+            </>
+          }
+        />
+
+        <div className="mt-6">
+          <DataTable
+            columns={columns}
+            data={filtered}
+            emptyMessage={search.trim() ? `No clients matching "${search}"` : 'No clients yet'}
+            emptyDescription={
+              search.trim()
+                ? 'Try adjusting your search terms.'
+                : 'Click "Add client" to register your first one.'
+            }
+          />
         </div>
-        <div className="flex items-center gap-2.5">
-          <div className="relative w-52">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"
-            />
-            <Input
-              placeholder="Search clients..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-[13px] rounded-xl border-gray-200 bg-white/70 placeholder:text-gray-300 focus:ring-1"
-              style={{ borderColor: 'var(--border)' }}
-            />
-          </div>
-          <Button
-            onClick={() => openModal({ type: 'addClient' })}
-            className="h-9 px-4 rounded-xl text-[13px] font-semibold shadow-sm"
-            style={{ background: 'var(--gold)', color: '#fff' }}
-          >
-            <Plus size={15} className="mr-1.5" />
-            Add Client
-          </Button>
-        </div>
+
+        <ClientForm />
+        <DeleteDialog />
       </div>
+    </div>
+  )
+}
 
-      {/* Table */}
-      <DataTable
-        columns={columns}
-        data={filtered}
-        emptyMessage={
-          search.trim()
-            ? `No clients matching "${search}"`
-            : 'No clients yet'
-        }
-        emptyDescription={
-          search.trim()
-            ? 'Try adjusting your search terms.'
-            : 'Click "+ Add Client" to register your first client.'
-        }
-      />
-
-      <ClientForm />
-      <DeleteDialog />
+function ErrorPanel({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div
+      className="rounded-2xl border px-10 py-12 text-center"
+      style={{
+        background: 'var(--surface-card)',
+        borderColor: 'var(--border-soft)',
+        boxShadow: 'var(--shadow-xs)',
+      }}
+    >
+      <p className="text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
+        Unable to load clients
+      </p>
+      <p className="mt-1 text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
+        Please check your connection and try again.
+      </p>
+      <Button variant="outline" size="sm" onClick={onRetry} className="mt-4">
+        Retry
+      </Button>
     </div>
   )
 }

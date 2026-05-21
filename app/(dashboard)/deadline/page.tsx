@@ -8,9 +8,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Spinner } from '@/components/shared/Spinner'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { useDeadlines, useDeadlineStats, useCreateDeadline, useUpdateDeadline, useDeleteDeadline } from '@/hooks/use-deadlines'
 import { useCases } from '@/hooks/use-cases'
 import { toast } from 'sonner'
@@ -90,7 +92,6 @@ export default function DeadlinePage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending
 
-  // Check deadlines for notifications when data changes
   useEffect(() => {
     if (deadlines && notificationsEnabled) {
       checkAndNotifyDeadlines(deadlines)
@@ -153,247 +154,318 @@ export default function DeadlinePage() {
     }
   }, [updateMutation])
 
-  // Moved to module-scope pure functions below
-
   if (isLoading) return <PageSkeleton />
 
-  const filters: { id: StatusFilter; label: string; icon: typeof Clock }[] = [
-    { id: 'all', label: 'All', icon: Clock },
-    { id: 'Pending', label: 'Pending', icon: Timer },
-    { id: 'Done', label: 'Completed', icon: CheckCircle2 },
-    { id: 'Missed', label: 'Missed', icon: AlertTriangle },
+  const filters: { id: StatusFilter; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'Pending', label: 'Pending' },
+    { id: 'Done', label: 'Completed' },
+    { id: 'Missed', label: 'Missed' },
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--cream)' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-heading text-xl font-bold" style={{ color: 'var(--navy)' }}>Deadline Engine</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>
-            {stats?.overdue_count ? `${stats.overdue_count} overdue` : 'All deadlines on track'}
-            {' '}&middot;{' '}
-            {stats?.upcoming_this_week?.length ?? 0} due this week
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {isNotificationSupported() && (
-            <Button
-              variant="outline"
-              onClick={handleToggleNotifications}
-              className="h-10 px-4 text-sm font-medium gap-2"
-              style={{
-                borderColor: notificationsEnabled ? 'var(--gold)' : 'var(--border)',
-                color: notificationsEnabled ? 'var(--gold)' : '#6B7280',
-                background: notificationsEnabled ? 'rgba(201,151,43,0.06)' : 'white',
-              }}
-            >
-              {notificationsEnabled ? <Bell size={15} /> : <BellOff size={15} />}
-              {notificationsEnabled ? 'Notifications On' : 'Notifications Off'}
-            </Button>
-          )}
-          <Button
-            onClick={() => { resetForm(); setShowForm(true) }}
-            className="h-10 px-5 text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, var(--gold), #B8860B)' }}
-          >
-            <Plus size={16} className="mr-1.5" />
-            Add Deadline
-          </Button>
-        </div>
-      </div>
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-5">
+        <PageHeader
+          title="Deadlines"
+          description={
+            stats?.overdue_count
+              ? `${stats.overdue_count} overdue · ${stats?.upcoming_this_week?.length ?? 0} due this week`
+              : `${stats?.upcoming_this_week?.length ?? 0} due this week`
+          }
+          actions={
+            <>
+              {isNotificationSupported() && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleToggleNotifications}
+                  className="rounded-lg"
+                  style={{
+                    borderColor: notificationsEnabled ? 'var(--gold)' : 'var(--border-default)',
+                    color: notificationsEnabled ? 'var(--gold)' : 'var(--text-secondary)',
+                  }}
+                >
+                  {notificationsEnabled ? <Bell size={14} strokeWidth={1.75} /> : <BellOff size={14} strokeWidth={1.75} />}
+                  {notificationsEnabled ? 'Notifications on' : 'Notifications off'}
+                </Button>
+              )}
+              <Button onClick={() => { resetForm(); setShowForm(true) }} size="lg" className="rounded-lg">
+                <Plus size={14} strokeWidth={2} />
+                Add deadline
+              </Button>
+            </>
+          }
+        />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border p-4" style={{ background: 'white', borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(192,57,43,0.08)' }}>
-              <AlertTriangle size={16} style={{ color: '#C0392B' }} />
-            </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6B7280' }}>Overdue</span>
-          </div>
-          <p className="font-heading text-2xl font-bold" style={{ color: stats?.overdue_count ? '#C0392B' : 'var(--navy)' }}>
-            {stats?.overdue_count ?? 0}
-          </p>
+        <div className="mt-6 grid grid-cols-3 gap-4">
+          <DeadlineStat
+            Icon={AlertTriangle}
+            label="Overdue"
+            value={stats?.overdue_count ?? 0}
+            valueColor={stats?.overdue_count ? '#C0392B' : undefined}
+          />
+          <DeadlineStat Icon={Clock} label="This week" value={stats?.upcoming_this_week?.length ?? 0} />
+          <DeadlineStat Icon={CheckCircle2} label="Total" value={deadlines?.length ?? 0} />
         </div>
-        <div className="rounded-xl border p-4" style={{ background: 'white', borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(201,151,43,0.08)' }}>
-              <Clock size={16} style={{ color: '#C9972B' }} />
-            </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6B7280' }}>This Week</span>
-          </div>
-          <p className="font-heading text-2xl font-bold" style={{ color: 'var(--navy)' }}>
-            {stats?.upcoming_this_week?.length ?? 0}
-          </p>
-        </div>
-        <div className="rounded-xl border p-4" style={{ background: 'white', borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(46,125,79,0.08)' }}>
-              <CheckCircle2 size={16} style={{ color: '#2E7D4F' }} />
-            </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6B7280' }}>Total</span>
-          </div>
-          <p className="font-heading text-2xl font-bold" style={{ color: 'var(--navy)' }}>
-            {deadlines?.length ?? 0}
-          </p>
-        </div>
-      </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 mb-5">
-        {filters.map((f) => {
-          const Icon = f.icon
-          const isActive = statusFilter === f.id
-          return (
-            <button
-              key={f.id}
-              onClick={() => setStatusFilter(f.id)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                background: isActive ? 'var(--navy)' : 'white',
-                color: isActive ? 'white' : '#374151',
-                border: `1px solid ${isActive ? 'var(--navy)' : 'var(--border)'}`,
-              }}
-            >
-              <Icon size={14} />
-              {f.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Deadlines List */}
-      {!deadlines?.length ? (
-        <div className="rounded-xl border p-12 text-center" style={{ background: 'white', borderColor: 'var(--border)' }}>
-          <Timer size={40} className="mx-auto mb-3 text-gray-300" />
-          <p className="text-sm font-medium" style={{ color: '#6B7280' }}>No deadlines found.</p>
-          <p className="text-[12px] mt-1" style={{ color: '#9CA3AF' }}>Click &quot;Add Deadline&quot; to create one.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {deadlines.map((d) => {
-            const overdue = d.status === 'Pending' && isOverdue(d.due_date)
+        <div className="mt-6 flex items-center gap-1">
+          {filters.map((f) => {
+            const isActive = statusFilter === f.id
             return (
-              <div
-                key={d.id}
-                className="group rounded-xl border p-4 flex items-center gap-4 transition-all hover:shadow-sm"
+              <button
+                key={f.id}
+                onClick={() => setStatusFilter(f.id)}
+                className="inline-flex items-center px-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
                 style={{
-                  background: 'white',
-                  borderColor: overdue ? 'rgba(192,57,43,0.3)' : 'var(--border)',
-                  borderLeft: overdue ? '4px solid #C0392B' : d.status === 'Done' ? '4px solid #2E7D4F' : '4px solid var(--gold)',
+                  background: isActive ? 'var(--surface-sunken)' : 'transparent',
+                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'var(--surface-overlay)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'transparent'
                 }}
               >
-                {/* Priority indicator */}
-                <div className="flex-shrink-0">
-                  {d.status === 'Done' ? (
-                    <CheckCircle2 size={20} style={{ color: '#2E7D4F' }} />
-                  ) : overdue ? (
-                    <AlertTriangle size={20} style={{ color: '#C0392B' }} />
-                  ) : (
-                    <Calendar size={20} style={{ color: 'var(--gold)' }} />
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="font-heading text-sm font-bold truncate" style={{ color: 'var(--navy)', textDecoration: d.status === 'Done' ? 'line-through' : 'none' }}>
-                      {d.title}
-                    </h3>
-                    <StatusBadge status={d.priority} />
-                  </div>
-                  <div className="flex items-center gap-3 text-[11px]" style={{ color: '#6B7280' }}>
-                    <span>{new Date(d.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                    {d.case_title && <span>&middot; {d.case_title}</span>}
-                    <span
-                      className="font-semibold"
-                      style={{ color: overdue ? '#C0392B' : d.status === 'Done' ? '#2E7D4F' : '#C9972B' }}
-                    >
-                      {d.status === 'Done' ? 'Completed' : daysUntil(d.due_date)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {d.status === 'Pending' && (
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleMarkDone(d.id)}>
-                      <CheckCircle2 size={14} style={{ color: '#2E7D4F' }} />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleEdit(d)}>
-                    <Pencil size={13} />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDelete(d.id)}>
-                    <Trash2 size={13} className="text-red-400" />
-                  </Button>
-                </div>
-              </div>
+                {f.label}
+              </button>
             )
           })}
         </div>
-      )}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={showForm} onOpenChange={(open) => { if (!open) resetForm() }}>
-        <DialogContent className="sm:max-w-lg rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-lg" style={{ color: 'var(--navy)' }}>
-              {editId ? 'Edit Deadline' : 'New Deadline'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: '#6B7280' }}>Title *</Label>
-              <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="e.g. File Statement of Defence" className="h-10" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: '#6B7280' }}>Due Date *</Label>
-                <Input type="date" value={form.due_date} onChange={(e) => setForm((p) => ({ ...p, due_date: e.target.value }))} className="h-10" />
+        <div className="mt-4">
+          {!deadlines?.length ? (
+            <div
+              className="rounded-2xl border px-6 py-16 text-center"
+              style={{
+                background: 'var(--surface-card)',
+                borderColor: 'var(--border-soft)',
+                boxShadow: 'var(--shadow-xs)',
+              }}
+            >
+              <div
+                className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full"
+                style={{ background: 'var(--surface-sunken)' }}
+              >
+                <Timer size={18} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
               </div>
-              <div>
-                <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: '#6B7280' }}>Priority</Label>
-                <Select value={form.priority} onValueChange={(v) => setForm((p) => ({ ...p, priority: (v ?? 'Medium') as DeadlinePriority }))}>
-                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+              <p className="text-[13.5px] font-medium" style={{ color: 'var(--text-primary)' }}>
+                No deadlines found
+              </p>
+              <p className="mt-1 text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                Click &quot;Add deadline&quot; to create one.
+              </p>
+            </div>
+          ) : (
+            <div
+              className="rounded-2xl border overflow-hidden"
+              style={{
+                background: 'var(--surface-card)',
+                borderColor: 'var(--border-soft)',
+                boxShadow: 'var(--shadow-xs)',
+              }}
+            >
+              <ul className="divide-y" style={{ borderColor: 'var(--border-soft)' }}>
+                {deadlines.map((d) => {
+                  const overdue = d.status === 'Pending' && isOverdue(d.due_date)
+                  const dotColor = d.status === 'Done' ? '#2E7D4F' : overdue ? '#C0392B' : 'var(--gold)'
+                  const StatusIcon = d.status === 'Done' ? CheckCircle2 : overdue ? AlertTriangle : Calendar
+                  return (
+                    <li
+                      key={d.id}
+                      className="group flex items-center gap-4 px-5 py-3.5 transition-colors"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--surface-overlay)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                      }}
+                    >
+                      <div
+                        className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: 'var(--surface-sunken)' }}
+                      >
+                        <StatusIcon size={14} strokeWidth={1.75} style={{ color: dotColor }} />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3
+                            className="text-[13.5px] font-medium truncate"
+                            style={{
+                              color: 'var(--text-primary)',
+                              textDecoration: d.status === 'Done' ? 'line-through' : 'none',
+                              opacity: d.status === 'Done' ? 0.6 : 1,
+                            }}
+                          >
+                            {d.title}
+                          </h3>
+                          <StatusBadge status={d.priority} />
+                        </div>
+                        <div className="flex items-center gap-2 text-[11.5px] flex-wrap" style={{ color: 'var(--text-muted)' }}>
+                          <span className="tabular-nums">
+                            {new Date(d.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                          {d.case_title && <><span>·</span><span>{d.case_title}</span></>}
+                          <span>·</span>
+                          <span
+                            className="font-medium"
+                            style={{
+                              color: overdue ? '#C0392B' : d.status === 'Done' ? '#2E7D4F' : 'var(--text-secondary)',
+                            }}
+                          >
+                            {d.status === 'Done' ? 'Completed' : daysUntil(d.due_date)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {d.status === 'Pending' && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleMarkDone(d.id)}
+                            aria-label="Mark done"
+                          >
+                            <CheckCircle2 size={13} style={{ color: '#2E7D4F' }} />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => handleEdit(d)}
+                          aria-label="Edit"
+                        >
+                          <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => handleDelete(d.id)}
+                          aria-label="Delete"
+                        >
+                          <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
+                        </Button>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <Dialog open={showForm} onOpenChange={(open) => { if (!open) resetForm() }}>
+          <DialogContent className="sm:max-w-lg rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="font-heading text-lg" style={{ color: 'var(--text-primary)' }}>
+                {editId ? 'Edit deadline' : 'New deadline'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <Field label="Title">
+                <Input
+                  value={form.title}
+                  onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                  placeholder="e.g. File Statement of Defence"
+                  className="h-10"
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Due date">
+                  <Input
+                    type="date"
+                    value={form.due_date}
+                    onChange={(e) => setForm((p) => ({ ...p, due_date: e.target.value }))}
+                    className="h-10"
+                  />
+                </Field>
+                <Field label="Priority">
+                  <Select
+                    value={form.priority}
+                    onValueChange={(v) => setForm((p) => ({ ...p, priority: (v ?? 'Medium') as DeadlinePriority }))}
+                  >
+                    <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="High">High</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="Low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+              <Field label="Linked case">
+                <Select value={form.case_id} onValueChange={(v) => setForm((p) => ({ ...p, case_id: v ?? '' }))}>
+                  <SelectTrigger className="h-10"><SelectValue placeholder="Select case" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="Low">Low</SelectItem>
+                    {(cases ?? []).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
+              <Field label="Description">
+                <Textarea
+                  value={form.description}
+                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="Optional notes…"
+                  rows={3}
+                />
+              </Field>
             </div>
-            <div>
-              <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: '#6B7280' }}>Linked Case</Label>
-              <Select value={form.case_id} onValueChange={(v) => setForm((p) => ({ ...p, case_id: v ?? '' }))}>
-                <SelectTrigger className="h-10"><SelectValue placeholder="-- Select case --" /></SelectTrigger>
-                <SelectContent>
-                  {(cases ?? []).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: '#6B7280' }}>Description</Label>
-              <Textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Optional notes..." rows={3} />
-            </div>
-          </div>
-          <DialogFooter className="rounded-b-2xl pt-3" style={{ background: 'rgba(13,27,42,0.02)' }}>
-            <Button variant="outline" onClick={resetForm}>Cancel</Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isPending}
-              className="text-white"
-              style={{ background: 'var(--gold)' }}
-            >
-              {isPending ? <><Spinner size={14} /> Saving...</> : editId ? 'Update' : 'Create'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter className="pt-3">
+              <Button variant="outline" onClick={resetForm}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={isPending}>
+                {isPending ? <><Spinner size={14} /> Saving…</> : editId ? 'Update' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  )
+}
+
+function DeadlineStat({
+  Icon, label, value, valueColor,
+}: {
+  Icon: typeof AlertTriangle
+  label: string
+  value: number
+  valueColor?: string
+}) {
+  return (
+    <Card padding="lg">
+      <div
+        className="w-9 h-9 rounded-lg flex items-center justify-center mb-4"
+        style={{ background: 'var(--surface-sunken)' }}
+      >
+        <Icon size={16} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+      </div>
+      <div
+        className="font-heading text-[28px] font-semibold leading-none tracking-tight"
+        style={{ color: valueColor ?? 'var(--text-primary)' }}
+      >
+        {value}
+      </div>
+      <div className="mt-2 text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>
+        {label}
+      </div>
+    </Card>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <Label
+        className="text-[11px] font-medium uppercase tracking-wider mb-1.5 block"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        {label}
+      </Label>
+      {children}
     </div>
   )
 }

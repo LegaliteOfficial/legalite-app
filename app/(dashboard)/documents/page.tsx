@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DataTable, type Column } from '@/components/shared/DataTable'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Spinner } from '@/components/shared/Spinner'
@@ -300,43 +301,68 @@ export default function DocumentsPage() {
 
   if (isLoading) return <PageSkeleton />
   if (error) return (
-    <div className="flex-1 p-6 flex items-center justify-center" style={{ background: 'var(--cream)' }}>
-      <div className="text-center">
-        <p className="text-sm text-red-500 mb-2">Failed to load documents</p>
-        <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-5">
+        <div
+          className="rounded-2xl border px-10 py-12 text-center"
+          style={{
+            background: 'var(--surface-card)',
+            borderColor: 'var(--border-soft)',
+            boxShadow: 'var(--shadow-xs)',
+          }}
+        >
+          <p className="text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
+            Failed to load documents
+          </p>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="mt-4">Retry</Button>
+        </div>
       </div>
     </div>
   )
 
   return (
-    <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--cream)' }}>
-      {/* Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b" style={{ borderColor: 'var(--border)' }}>
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          const isActive = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative"
-              style={{
-                color: isActive ? 'var(--gold)' : '#6B7280',
-                borderBottom: isActive ? '2px solid var(--gold)' : '2px solid transparent',
-                marginBottom: '-1px',
-              }}
-            >
-              <Icon size={16} />
-              {tab.label}
-              {tab.id === 'library' && documents?.length ? (
-                <span className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(201,151,43,0.12)', color: 'var(--gold)' }}>
-                  {documents.length}
-                </span>
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-5">
+        <PageHeader
+          title="Documents"
+          description="Templates, drafts, and your legal library."
+        />
+
+        <div
+          className="mt-6 flex items-center gap-6 border-b"
+          style={{ borderColor: 'var(--border-soft)' }}
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="relative inline-flex items-center gap-1.5 px-0.5 pb-3 text-[13.5px] font-medium transition-colors"
+                style={{
+                  color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                }}
+              >
+                {tab.label}
+                {tab.id === 'library' && documents?.length ? (
+                  <span
+                    className="text-[10.5px] font-medium px-1.5 py-0.5 rounded tabular-nums"
+                    style={{ background: 'var(--surface-sunken)', color: 'var(--text-muted)' }}
+                  >
+                    {documents.length}
+                  </span>
+                ) : null}
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full"
+                    style={{ background: 'var(--gold)' }}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
 
       {/* Templates Tab - Gallery View */}
       {activeTab === 'templates' && !showQuickSetup && (
@@ -353,28 +379,34 @@ export default function DocumentsPage() {
           </div>
 
           {/* Category Filter */}
-          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+          <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-1">
             {CATEGORIES.map((cat) => {
-              const Icon = cat.icon
               const isActive = selectedCategory === cat.id
               const count = cat.id === 'all' ? DOCUMENT_TEMPLATES.length : DOCUMENT_TEMPLATES.filter((t) => t.category === cat.id).length
               return (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium whitespace-nowrap transition-colors"
                   style={{
-                    background: isActive ? 'var(--navy)' : 'white',
-                    color: isActive ? 'white' : '#374151',
-                    border: `1px solid ${isActive ? 'var(--navy)' : 'var(--border)'}`,
+                    background: isActive ? 'var(--surface-sunken)' : 'transparent',
+                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'var(--surface-overlay)'
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'transparent'
                   }}
                 >
-                  <Icon size={14} />
                   {cat.label}
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{
-                    background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(13,27,42,0.06)',
-                    color: isActive ? 'white' : '#6B7280',
-                  }}>
+                  <span
+                    className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1.5 rounded-full text-[10.5px] font-medium tabular-nums"
+                    style={{
+                      background: isActive ? 'var(--surface-card)' : 'var(--surface-sunken)',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
                     {count}
                   </span>
                 </button>
@@ -651,26 +683,29 @@ export default function DocumentsPage() {
           </div>
 
           {/* Category Pills */}
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-1 mb-6">
             {([
-              { id: 'book' as const, label: 'Books', icon: BookOpen, accent: '#2563EB' },
-              { id: 'article' as const, label: 'Articles', icon: FileText, accent: '#8B5CF6' },
-              { id: 'document' as const, label: 'Documents', icon: FileText, accent: '#C9972B' },
+              { id: 'book' as const, label: 'Books' },
+              { id: 'article' as const, label: 'Articles' },
+              { id: 'document' as const, label: 'Documents' },
             ]).map((cat) => {
-              const CatIcon = cat.icon
               const isActive = libraryCategory === cat.id
               return (
                 <button
                   key={cat.id}
                   onClick={() => setLibraryCategory(cat.id)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
                   style={{
-                    background: isActive ? cat.accent : 'white',
-                    color: isActive ? 'white' : '#374151',
-                    border: '1px solid ' + (isActive ? cat.accent : 'var(--border)'),
+                    background: isActive ? 'var(--surface-sunken)' : 'transparent',
+                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'var(--surface-overlay)'
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'transparent'
                   }}
                 >
-                  <CatIcon size={15} />
                   {cat.label}
                 </button>
               )
@@ -777,7 +812,8 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      <DeleteDialog />
+        <DeleteDialog />
+      </div>
     </div>
   )
 }

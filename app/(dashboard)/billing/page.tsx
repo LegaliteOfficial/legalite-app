@@ -8,7 +8,6 @@ import {
   Users,
   Sparkles,
   ChevronDown,
-  ChevronUp,
   Zap,
   Shield,
   FileText,
@@ -22,6 +21,8 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { PageHeader } from '@/components/shared/PageHeader'
 
 const plans = [
   {
@@ -30,37 +31,37 @@ const plans = [
     description: 'For individual lawyers getting started',
     price: 0,
     period: '/month',
-    icon: Zap,
+    Icon: Zap,
     isCurrent: true,
     isPopular: false,
     features: [
-      { text: '5 clients', icon: Users },
-      { text: '3 cases', icon: FileText },
-      { text: '5 AI queries/day', icon: Sparkles },
-      { text: '2 document templates', icon: FileText },
-      { text: 'Community support', icon: MessageSquare },
-      { text: 'Basic dashboard', icon: BarChart3 },
+      { text: '5 clients', Icon: Users },
+      { text: '3 cases', Icon: FileText },
+      { text: '5 AI queries/day', Icon: Sparkles },
+      { text: '2 document templates', Icon: FileText },
+      { text: 'Community support', Icon: MessageSquare },
+      { text: 'Basic dashboard', Icon: BarChart3 },
     ],
   },
   {
     id: 'premium',
     name: 'Premium',
-    description: 'For one person - everything you need to grow',
+    description: 'Everything you need to grow your practice',
     price: 149,
     period: '/month',
-    icon: Crown,
+    Icon: Crown,
     isCurrent: false,
     isPopular: true,
     features: [
-      { text: 'Unlimited clients', icon: Users },
-      { text: 'Unlimited cases', icon: FileText },
-      { text: '50 AI queries/day', icon: Sparkles },
-      { text: 'All 12 document templates', icon: FileText },
-      { text: 'Priority email support', icon: MessageSquare },
-      { text: 'Full dashboard analytics', icon: BarChart3 },
-      { text: 'Deadline engine', icon: Clock },
-      { text: 'Document library', icon: FileText },
-      { text: 'Client communications', icon: Phone },
+      { text: 'Unlimited clients', Icon: Users },
+      { text: 'Unlimited cases', Icon: FileText },
+      { text: '50 AI queries/day', Icon: Sparkles },
+      { text: 'All 12 document templates', Icon: FileText },
+      { text: 'Priority email support', Icon: MessageSquare },
+      { text: 'Full dashboard analytics', Icon: BarChart3 },
+      { text: 'Deadline engine', Icon: Clock },
+      { text: 'Document library', Icon: FileText },
+      { text: 'Client communications', Icon: Phone },
     ],
   },
   {
@@ -69,20 +70,20 @@ const plans = [
     description: 'For a firm of up to 15 users',
     price: 999,
     period: '/month',
-    icon: Building2,
+    Icon: Building2,
     isCurrent: false,
     isPopular: false,
     features: [
-      { text: 'Everything in Premium', icon: Check },
-      { text: 'Up to 15 team members', icon: UserPlus },
-      { text: 'Unlimited AI queries', icon: Sparkles },
-      { text: 'Custom document templates', icon: FileText },
-      { text: 'Dedicated account manager', icon: Headphones },
-      { text: 'White-label branding', icon: Palette },
-      { text: 'API access', icon: Code },
-      { text: 'Advanced analytics & reporting', icon: BarChart3 },
-      { text: 'Priority phone & chat support', icon: Phone },
-      { text: 'Team collaboration tools', icon: Users },
+      { text: 'Everything in Premium', Icon: Check },
+      { text: 'Up to 15 team members', Icon: UserPlus },
+      { text: 'Unlimited AI queries', Icon: Sparkles },
+      { text: 'Custom document templates', Icon: FileText },
+      { text: 'Dedicated account manager', Icon: Headphones },
+      { text: 'White-label branding', Icon: Palette },
+      { text: 'API access', Icon: Code },
+      { text: 'Advanced analytics & reporting', Icon: BarChart3 },
+      { text: 'Priority phone & chat support', Icon: Phone },
+      { text: 'Team collaboration tools', Icon: Users },
     ],
   },
 ] as const
@@ -124,29 +125,27 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div
-      className="border-b"
-      style={{ borderColor: 'rgba(201, 151, 43, 0.15)' }}
-    >
+    <div className="border-b last:border-b-0" style={{ borderColor: 'var(--border-soft)' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-5 text-left transition-colors hover:opacity-80"
+        className="w-full flex items-center justify-between py-4 text-left"
       >
-        <span
-          className="font-medium text-[15px]"
-          style={{ color: 'var(--navy)' }}
-        >
+        <span className="text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
           {question}
         </span>
-        {isOpen ? (
-          <ChevronUp size={18} style={{ color: 'var(--gold)' }} />
-        ) : (
-          <ChevronDown size={18} style={{ color: '#9CA3AF' }} />
-        )}
+        <ChevronDown
+          size={16}
+          strokeWidth={1.75}
+          style={{
+            color: 'var(--text-muted)',
+            transform: isOpen ? 'rotate(180deg)' : 'none',
+            transition: 'transform 180ms ease',
+          }}
+        />
       </button>
       {isOpen && (
-        <div className="pb-5 pr-8">
-          <p className="text-sm leading-relaxed" style={{ color: '#6B7280' }}>
+        <div className="pb-4 pr-8">
+          <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             {answer}
           </p>
         </div>
@@ -157,174 +156,126 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 
 export default function BillingPage() {
   return (
-    <div
-      className="flex-1 overflow-y-auto"
-      style={{ background: 'var(--cream)' }}
-    >
-      {/* Header */}
-      <div className="px-6 pt-8 pb-2">
-        <h1
-          className="font-heading text-2xl font-bold mb-1"
-          style={{ color: 'var(--navy)' }}
-        >
-          Plans & Billing
-        </h1>
-        <p className="text-sm" style={{ color: '#6B7280' }}>
-          Choose the plan that fits your practice. Upgrade or downgrade at any
-          time.
-        </p>
-      </div>
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-5">
+        <PageHeader
+          title="Plans & billing"
+          description="Choose the plan that fits your practice. Upgrade or downgrade anytime."
+        />
 
-      {/* Plan Cards */}
-      <div className="px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl">
+        <div className="mt-7 grid grid-cols-1 lg:grid-cols-3 gap-4">
           {plans.map((plan) => {
-            const Icon = plan.icon
+            const Icon = plan.Icon
             return (
-              <div
+              <Card
                 key={plan.id}
-                className="relative rounded-xl border-2 p-6 flex flex-col transition-shadow hover:shadow-lg"
-                style={{
-                  background: plan.isPopular
-                    ? 'linear-gradient(180deg, rgba(201,151,43,0.03) 0%, white 100%)'
-                    : 'white',
-                  borderColor: plan.isPopular
-                    ? 'var(--gold)'
-                    : 'rgba(201, 151, 43, 0.12)',
-                }}
+                variant={plan.isPopular ? 'elevated' : 'default'}
+                padding="lg"
+                className="relative flex flex-col"
+                style={
+                  plan.isPopular
+                    ? { borderColor: 'rgba(201,151,43,0.40)' }
+                    : undefined
+                }
               >
-                {/* Popular Badge */}
                 {plan.isPopular && (
                   <div
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-semibold tracking-wide text-white"
-                    style={{ background: 'var(--gold)' }}
+                    className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10.5px] font-medium uppercase tracking-wider"
+                    style={{ background: 'var(--gold)', color: 'var(--navy)' }}
                   >
-                    RECOMMENDED
+                    Recommended
                   </div>
                 )}
 
-                {/* Plan Header */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center"
-                      style={{
-                        background: plan.isPopular
-                          ? 'var(--gold)'
-                          : 'rgba(201, 151, 43, 0.08)',
-                      }}
-                    >
-                      <Icon
-                        size={18}
-                        style={{
-                          color: plan.isPopular ? 'white' : 'var(--gold)',
-                        }}
-                      />
-                    </div>
-                    <h2
-                      className="font-heading text-lg font-bold"
-                      style={{ color: 'var(--navy)' }}
-                    >
-                      {plan.name}
-                    </h2>
-                  </div>
-                  <p
-                    className="text-[13px] leading-relaxed"
-                    style={{ color: '#6B7280' }}
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center"
+                    style={{ background: 'var(--surface-sunken)' }}
                   >
-                    {plan.description}
-                  </p>
+                    <Icon size={16} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+                  </div>
+                  <h2 className="font-heading text-lg font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                    {plan.name}
+                  </h2>
                 </div>
+                <p className="text-[13px] leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
+                  {plan.description}
+                </p>
 
-                {/* Price */}
                 <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
+                  <div className="flex items-baseline gap-1.5">
                     <span
-                      className="font-heading text-4xl font-bold"
-                      style={{ color: 'var(--navy)' }}
+                      className="font-heading text-[32px] font-semibold leading-none tracking-tight"
+                      style={{ color: 'var(--text-primary)' }}
                     >
                       GHS {plan.price}
                     </span>
-                    <span
-                      className="text-sm"
-                      style={{ color: '#9CA3AF' }}
-                    >
+                    <span className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
                       {plan.period}
                     </span>
                   </div>
                   {plan.id === 'premium' && (
-                    <p
-                      className="text-xs mt-1"
-                      style={{ color: '#9CA3AF' }}
-                    >
+                    <p className="text-[11.5px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
                       per person
                     </p>
                   )}
                   {plan.id === 'bingy' && (
-                    <p
-                      className="text-xs mt-1"
-                      style={{ color: '#9CA3AF' }}
-                    >
+                    <p className="text-[11.5px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
                       per firm, up to 15 users
                     </p>
                   )}
                 </div>
 
-                {/* CTA Button */}
                 <div className="mb-6">
                   {plan.isCurrent ? (
                     <div
-                      className="w-full h-9 rounded-lg flex items-center justify-center text-sm font-medium border"
+                      className="w-full h-9 rounded-lg flex items-center justify-center gap-1.5 text-[13px] font-medium border"
                       style={{
-                        borderColor: 'var(--gold)',
-                        color: 'var(--gold)',
-                        background: 'rgba(201, 151, 43, 0.04)',
+                        borderColor: 'var(--border-default)',
+                        background: 'var(--surface-sunken)',
+                        color: 'var(--text-secondary)',
                       }}
                     >
-                      <Shield size={14} className="mr-1.5" />
-                      Current Plan
+                      <Shield size={13} strokeWidth={1.75} />
+                      Current plan
                     </div>
                   ) : (
                     <Button
-                      className="w-full h-9 text-sm font-semibold text-white cursor-pointer"
-                      style={{
-                        background: plan.isPopular
-                          ? 'var(--gold)'
-                          : 'var(--navy)',
-                      }}
+                      className="w-full"
+                      size="lg"
+                      variant={plan.isPopular ? 'default' : 'secondary'}
                     >
                       Upgrade to {plan.name}
                     </Button>
                   )}
                 </div>
 
-                {/* Divider */}
                 <div
                   className="border-t mb-5"
-                  style={{ borderColor: 'rgba(201, 151, 43, 0.1)' }}
+                  style={{ borderColor: 'var(--border-soft)' }}
                 />
 
-                {/* Features */}
                 <div className="flex-1">
                   <p
-                    className="text-[11px] font-semibold uppercase tracking-wider mb-3"
-                    style={{ color: '#9CA3AF' }}
+                    className="text-[10.5px] font-medium uppercase tracking-wider mb-3"
+                    style={{ color: 'var(--text-muted)' }}
                   >
-                    {plan.id === 'bingy' ? 'Everything in Premium, plus' : 'What\u2019s included'}
+                    {plan.id === 'bingy' ? 'Everything in Premium, plus' : 'What’s included'}
                   </p>
                   <ul className="space-y-2.5">
                     {plan.features.map((feature) => {
-                      const FeatureIcon = feature.icon
+                      const FeatureIcon = feature.Icon
                       return (
                         <li
                           key={feature.text}
-                          className="flex items-start gap-2.5 text-sm"
-                          style={{ color: '#374151' }}
+                          className="flex items-start gap-2.5 text-[13px]"
+                          style={{ color: 'var(--text-secondary)' }}
                         >
                           <FeatureIcon
-                            size={15}
+                            size={14}
+                            strokeWidth={1.75}
                             className="mt-0.5 shrink-0"
-                            style={{ color: 'var(--gold)' }}
+                            style={{ color: 'var(--text-muted)' }}
                           />
                           <span>{feature.text}</span>
                         </li>
@@ -332,44 +283,27 @@ export default function BillingPage() {
                     })}
                   </ul>
                 </div>
-              </div>
+              </Card>
             )
           })}
         </div>
-      </div>
 
-      {/* FAQ Section */}
-      <div className="px-6 pb-12">
-        <div className="max-w-3xl">
-          <div className="mb-6">
-            <h2
-              className="font-heading text-xl font-bold mb-1"
-              style={{ color: 'var(--navy)' }}
-            >
-              Frequently Asked Questions
-            </h2>
-            <p className="text-sm" style={{ color: '#6B7280' }}>
-              Everything you need to know about LegaLite plans and billing.
-            </p>
-          </div>
-
-          <div
-            className="rounded-xl border p-1"
-            style={{
-              background: 'white',
-              borderColor: 'rgba(201, 151, 43, 0.12)',
-            }}
+        <div className="mt-10 max-w-3xl">
+          <h2
+            className="font-heading text-xl font-semibold tracking-tight mb-1"
+            style={{ color: 'var(--text-primary)' }}
           >
-            <div className="px-5">
-              {faqs.map((faq) => (
-                <FAQItem
-                  key={faq.question}
-                  question={faq.question}
-                  answer={faq.answer}
-                />
-              ))}
-            </div>
-          </div>
+            Frequently asked questions
+          </h2>
+          <p className="text-[13.5px] mb-5" style={{ color: 'var(--text-secondary)' }}>
+            Everything you need to know about LegaLite plans and billing.
+          </p>
+
+          <Card padding="none" className="px-5">
+            {faqs.map((faq) => (
+              <FAQItem key={faq.question} question={faq.question} answer={faq.answer} />
+            ))}
+          </Card>
         </div>
       </div>
     </div>

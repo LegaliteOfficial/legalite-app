@@ -1,12 +1,13 @@
 'use client'
 
-import { Plus, Pencil, Trash2, Search, Scale } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTable, type Column } from '@/components/shared/DataTable'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { CaseForm } from '@/components/shared/CaseForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { useCases } from '@/hooks/use-cases'
@@ -25,20 +26,9 @@ export default function CasesPage() {
   if (isLoading) return <PageSkeleton />
   if (error) {
     return (
-      <div className="flex-1 p-8 flex items-center justify-center" style={{ background: 'var(--cream)' }}>
-        <div
-          className="text-center rounded-2xl border px-12 py-10"
-          style={{ background: 'var(--cream-white)', borderColor: 'var(--border)' }}
-        >
-          <p className="text-sm font-medium mb-1" style={{ color: 'var(--navy)' }}>
-            Unable to load cases
-          </p>
-          <p className="text-xs text-gray-400 mb-4">
-            Please check your connection and try again.
-          </p>
-          <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="text-xs">
-            Retry
-          </Button>
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 py-5">
+          <ErrorPanel onRetry={() => window.location.reload()} />
         </div>
       </div>
     )
@@ -77,10 +67,10 @@ export default function CasesPage() {
       width: '110px',
       render: (row) => (
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-mono font-medium tracking-wide"
-          style={{ background: 'rgba(13,27,42,0.05)', color: 'var(--navy)' }}
+          className="font-mono text-[12px] tracking-wide"
+          style={{ color: 'var(--text-muted)' }}
         >
-          {row.case_code ?? '\u2014'}
+          {row.case_code ?? '—'}
         </span>
       ),
     },
@@ -88,7 +78,7 @@ export default function CasesPage() {
       key: 'title',
       header: 'Title',
       render: (row) => (
-        <span className="font-medium text-[13px]" style={{ color: 'var(--navy)' }}>
+        <span className="font-medium text-[13.5px]" style={{ color: 'var(--text-primary)' }}>
           {row.title}
         </span>
       ),
@@ -97,8 +87,8 @@ export default function CasesPage() {
       key: 'client_name',
       header: 'Client',
       render: (row) => (
-        <span className="text-[13px] text-gray-500">
-          {row.client_name || '\u2014'}
+        <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+          {row.client_name || '—'}
         </span>
       ),
     },
@@ -106,32 +96,35 @@ export default function CasesPage() {
       key: 'court',
       header: 'Court',
       render: (row) => (
-        <span className="text-[13px] text-gray-500">
-          {row.court || '\u2014'}
+        <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+          {row.court || '—'}
         </span>
       ),
     },
     {
       key: 'suit_number',
-      header: 'Suit No.',
+      header: 'Suit no.',
       render: (row) => (
-        <span className="text-[12px] font-mono text-gray-500 tracking-wide">
-          {row.suit_number || '\u2014'}
+        <span className="font-mono text-[12px] tracking-wide" style={{ color: 'var(--text-muted)' }}>
+          {row.suit_number || '—'}
         </span>
       ),
     },
     {
       key: 'next_court_date',
-      header: 'Next Date',
+      header: 'Next date',
       render: (row) => {
-        if (!row.next_court_date) return <span className="text-gray-400">{'\u2014'}</span>
+        if (!row.next_court_date) {
+          return <span style={{ color: 'var(--text-subtle)' }}>—</span>
+        }
         const d = new Date(row.next_court_date)
-        const isUpcoming = d.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 && d.getTime() > Date.now()
+        const isUpcoming =
+          d.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 && d.getTime() > Date.now()
         return (
-          <span
-            className="text-[12px] font-medium"
-            style={{ color: isUpcoming ? '#C0392B' : 'var(--navy)' }}
-          >
+          <span className="inline-flex items-center gap-1.5 text-[12.5px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+            {isUpcoming && (
+              <span aria-hidden className="w-1.5 h-1.5 rounded-full" style={{ background: '#C0392B' }} />
+            )}
             {d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
           </span>
         )
@@ -140,31 +133,31 @@ export default function CasesPage() {
     {
       key: 'status',
       header: 'Status',
-      width: '100px',
+      width: '110px',
       render: (row) => <StatusBadge status={row.status ?? 'Active'} />,
     },
     {
       key: 'actions',
       header: '',
-      width: '80px',
+      width: '88px',
       align: 'right',
       render: (row) => (
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 justify-end">
+        <div className="flex gap-0.5 justify-end">
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 rounded-lg"
+            size="icon-sm"
             onClick={() => openModal({ type: 'editCase', id: row.id })}
+            aria-label="Edit case"
           >
-            <Pencil size={13} style={{ color: 'var(--navy)' }} />
+            <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
           </Button>
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 rounded-lg hover:bg-red-50"
+            size="icon-sm"
             onClick={() => openModal({ type: 'confirmDelete', entity: 'case', id: row.id, name: row.title })}
+            aria-label="Delete case"
           >
-            <Trash2 size={13} className="text-red-400" />
+            <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
           </Button>
         </div>
       ),
@@ -172,107 +165,118 @@ export default function CasesPage() {
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-8" style={{ background: 'var(--cream)' }}>
-      {/* Page header */}
-      <div className="flex items-start justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl"
-            style={{ background: 'rgba(201,151,43,0.1)' }}
-          >
-            <Scale size={18} style={{ color: 'var(--gold)' }} />
-          </div>
-          <div>
-            <h2
-              className="font-heading text-lg font-bold leading-tight"
-              style={{ color: 'var(--navy)' }}
-            >
-              Case Management
-            </h2>
-            <p className="text-[12px] text-gray-400 mt-0.5">
-              {caseList.length} total case{caseList.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <div className="relative w-52">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"
-            />
-            <Input
-              placeholder="Search cases..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-[13px] rounded-xl border-gray-200 bg-white/70 placeholder:text-gray-300 focus:ring-1"
-              style={{ borderColor: 'var(--border)' }}
-            />
-          </div>
-          <Button
-            onClick={() => openModal({ type: 'addCase' })}
-            className="h-9 px-4 rounded-xl text-[13px] font-semibold shadow-sm"
-            style={{ background: 'var(--gold)', color: '#fff' }}
-          >
-            <Plus size={15} className="mr-1.5" />
-            Open New Case
-          </Button>
-        </div>
-      </div>
-
-      {/* Status filter tabs */}
-      <div className="flex items-center gap-1.5 mb-5">
-        {STATUS_FILTERS.map((s) => {
-          const isActive = statusFilter === s
-          const count = statusCounts[s] ?? 0
-          return (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-150"
-              style={
-                isActive
-                  ? { background: 'var(--gold)', color: '#fff' }
-                  : {
-                      background: 'var(--cream-white)',
-                      color: 'var(--navy)',
-                      border: '1px solid var(--border)',
-                    }
-              }
-            >
-              {s}
-              <span
-                className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full text-[10px] font-bold"
-                style={
-                  isActive
-                    ? { background: 'rgba(255,255,255,0.25)', color: '#fff' }
-                    : { background: 'rgba(13,27,42,0.06)', color: 'rgba(13,27,42,0.4)' }
-                }
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-5">
+        <PageHeader
+          title="Cases"
+          description={`${caseList.length} total case${caseList.length !== 1 ? 's' : ''}`}
+          actions={
+            <>
+              <div className="relative w-56">
+                <Search
+                  size={14}
+                  strokeWidth={1.75}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: 'var(--text-subtle)' }}
+                />
+                <Input
+                  placeholder="Search cases…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-9 text-[13px] rounded-lg"
+                  style={{ borderColor: 'var(--border-default)', background: 'var(--surface-card)' }}
+                />
+              </div>
+              <Button
+                onClick={() => openModal({ type: 'addCase' })}
+                size="lg"
+                className="rounded-lg"
               >
-                {count}
-              </span>
-            </button>
-          )
-        })}
+                <Plus size={14} strokeWidth={2} />
+                New case
+              </Button>
+            </>
+          }
+        />
+
+        <div className="mt-6 flex items-center gap-1">
+          {STATUS_FILTERS.map((s) => {
+            const isActive = statusFilter === s
+            const count = statusCounts[s] ?? 0
+            return (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
+                style={{
+                  background: isActive ? 'var(--surface-sunken)' : 'transparent',
+                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'var(--surface-overlay)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                {s}
+                <span
+                  className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1.5 rounded-full text-[10.5px] font-medium tabular-nums"
+                  style={{
+                    background: isActive ? 'var(--surface-card)' : 'var(--surface-sunken)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mt-4">
+          <DataTable
+            columns={columns}
+            data={filtered}
+            emptyMessage={
+              search.trim() || statusFilter !== 'All'
+                ? 'No cases found'
+                : 'No cases yet'
+            }
+            emptyDescription={
+              search.trim() || statusFilter !== 'All'
+                ? 'Try adjusting your filters or search terms.'
+                : 'Click "New case" to file your first one.'
+            }
+          />
+        </div>
+
+        <CaseForm />
+        <DeleteDialog />
       </div>
+    </div>
+  )
+}
 
-      {/* Table */}
-      <DataTable
-        columns={columns}
-        data={filtered}
-        emptyMessage={
-          search.trim() || statusFilter !== 'All'
-            ? 'No cases found'
-            : 'No cases yet'
-        }
-        emptyDescription={
-          search.trim() || statusFilter !== 'All'
-            ? 'Try adjusting your filters or search terms.'
-            : 'Click "+ Open New Case" to file your first case.'
-        }
-      />
-
-      <CaseForm />
-      <DeleteDialog />
+function ErrorPanel({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div
+      className="rounded-2xl border px-10 py-12 text-center"
+      style={{
+        background: 'var(--surface-card)',
+        borderColor: 'var(--border-soft)',
+        boxShadow: 'var(--shadow-xs)',
+      }}
+    >
+      <p className="text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
+        Unable to load cases
+      </p>
+      <p className="mt-1 text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
+        Please check your connection and try again.
+      </p>
+      <Button variant="outline" size="sm" onClick={onRetry} className="mt-4">
+        Retry
+      </Button>
     </div>
   )
 }
