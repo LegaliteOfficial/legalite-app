@@ -22,9 +22,23 @@ let cached: SupabaseClient | null = null
 
 export function createSupabaseClient(): SupabaseClient {
   if (cached) return cached
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL is not set. Add it to .env and restart the dev server.',
+    )
+  }
+  if (!anonKey) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. Add it to .env and restart the dev server.',
+    )
+  }
+
   cached = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       auth: {
         flowType: 'pkce',

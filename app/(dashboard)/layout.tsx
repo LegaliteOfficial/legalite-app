@@ -9,12 +9,26 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard>
-      <div className="flex h-screen overflow-hidden">
-        <NavigationProgress />
-        <Sidebar />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {children}
-        </main>
+      <div
+        className="h-screen overflow-hidden p-3"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(13,27,42,0.10), rgba(13,27,42,0.10)), url('/assets/images/law%20firm.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="flex h-full overflow-hidden gap-3">
+          <NavigationProgress />
+          <Sidebar />
+          <main
+            className="flex-1 flex flex-col overflow-hidden rounded-2xl"
+            style={{ background: 'var(--cream)' }}
+          >
+            {children}
+          </main>
+        </div>
       </div>
     </AuthGuard>
   )

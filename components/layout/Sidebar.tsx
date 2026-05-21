@@ -64,7 +64,7 @@ export function Sidebar() {
 
   return (
     <aside
-      style={{ width: 256, background: 'var(--navy)' }}
+      style={{ width: 256, background: 'transparent' }}
       className="flex flex-col flex-shrink-0 h-full relative overflow-hidden"
     >
       {/* Logo */}
