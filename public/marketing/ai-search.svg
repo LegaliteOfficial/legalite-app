@@ -1,0 +1,45 @@
+<svg width="669" height="99" viewBox="0 0 669 99" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ai-border" x1="9.57" y1="49.05" x2="659.19" y2="49.05" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#375DFB"/>
+      <stop offset="0.28" stop-color="#DF1C41"/>
+      <stop offset="0.61" stop-color="#F2AE40"/>
+      <stop offset="1" stop-color="#C2D6FF"/>
+    </linearGradient>
+    <linearGradient id="ai-button" x1="621.46" y1="28.89" x2="621.46" y2="66.90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#375DFB"/>
+      <stop offset="1" stop-color="#213795"/>
+    </linearGradient>
+    <filter id="ai-glow" x="-10%" y="-200%" width="120%" height="500%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="ai-button-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#ai-glow)" opacity="0.85">
+    <rect x="11.96" y="11.96" width="644.83" height="74.17" rx="37.09"
+          fill="none" stroke="url(#ai-border)" stroke-width="4.79"/>
+  </g>
+
+  <rect x="9.25" y="10.16" width="649.93" height="75.73" rx="37.87"
+        fill="#1C1C1C" fill-opacity="0.1"/>
+
+  <rect x="11.96" y="11.96" width="644.83" height="74.17" rx="37.09"
+        fill="none" stroke="url(#ai-border)" stroke-width="1.5" opacity="0.9"/>
+
+  <text x="40" y="55"
+        fill="white"
+        font-family="'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+        font-size="18"
+        font-weight="400"
+        letter-spacing="-0.2">Ask LegaLite AI anything&#8230;</text>
+
+  <g filter="url(#ai-button-shadow)" opacity="0.4">
+    <rect x="602.45" y="30" width="38.01" height="38.01" rx="19" fill="#375DFB"/>
+  </g>
+  <rect x="602.45" y="28.89" width="38.01" height="38.01" rx="19" fill="url(#ai-button)"/>
+  <path d="M622.35 44.18V55.02H620.57V44.18L615.79 48.96L614.53 47.70L621.46 40.77L628.39 47.70L627.13 48.96L622.35 44.18Z"
+        fill="white"/>
+</svg>

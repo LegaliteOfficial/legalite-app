@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 360" width="300" height="360">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#243B55"/>
+      <stop offset="1" stop-color="#0A1622"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#9D7C32" stop-opacity="0.45"/>
+      <stop offset="0.6" stop-color="#9D7C32" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#9D7C32" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="300" height="360" fill="url(#bg)"/>
+  <rect width="300" height="360" fill="url(#glow)"/>
+
+  <g opacity="0.06" transform="translate(248 24)">
+    <polygon points="20,2 2,38 38,38" fill="#9D7C32"/>
+  </g>
+  <g opacity="0.05" transform="translate(22 305)">
+    <polygon points="14,2 2,26 26,26" fill="#9D7C32"/>
+  </g>
+
+  <g fill="#F8F4EE" opacity="0.96">
+    <circle cx="150" cy="178" r="56"/>
+    <path d="M50 360 Q50 270 150 252 Q250 270 250 360 Z"/>
+  </g>
+</svg>
