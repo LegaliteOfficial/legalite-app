@@ -24,7 +24,7 @@ export default function DashboardLayout({
           <Sidebar />
           <main
             className="flex-1 flex flex-col overflow-hidden rounded-2xl"
-            style={{ background: 'var(--surface-page)' }}
+            style={{ background: 'rgba(244, 244, 245, 0.86)', backdropFilter: 'blur(6px)' }}
           >
             {children}
           </main>
