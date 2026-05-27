@@ -9,8 +9,16 @@ import {
 import type { DocumentFormData } from '@/schemas'
 import type { Document } from '@/types'
 
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+
 export function useDocuments() {
-  const { data, loading, error, refetch } = useQuery(DocumentsQueryDoc)
+  const { data, loading, error, refetch } = useQuery(DocumentsQueryDoc, {
+    skip: DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
+  })
+  if (DEV_BYPASS) {
+    return { data: [] as Document[], isLoading: false, error: undefined, refetch }
+  }
   return {
     data: data?.documents as Document[] | undefined,
     isLoading: loading,

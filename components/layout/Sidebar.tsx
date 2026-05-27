@@ -8,6 +8,7 @@ import {
   Users,
   Scale,
   CheckSquare,
+  Contact,
   FileText,
   Timer,
   Sparkles,
@@ -25,6 +26,7 @@ const NAV_GROUPS = [
       { id: 'clients',   Icon: Users,           label: 'Clients',         href: '/clients' },
       { id: 'cases',     Icon: Scale,           label: 'Cases',           href: '/cases' },
       { id: 'tasks',     Icon: CheckSquare,     label: 'Tasks',           href: '/tasks' },
+      { id: 'contacts',  Icon: Contact,         label: 'Contacts',        href: '/contacts' },
       { id: 'documents', Icon: FileText,        label: 'Documents',       href: '/documents' },
       { id: 'deadline',  Icon: Timer,           label: 'Deadline engine', href: '/deadline' },
     ],
@@ -70,7 +72,11 @@ export function Sidebar() {
 
   return (
     <aside
-      style={{ width: 248, background: 'transparent' }}
+      // 5% size bump applied via `zoom` so the text-[10.5px] / text-[13.5px]
+      // pixel values + icon sizes + paddings all scale together. Pairs with
+      // the font-medium → font-semibold bump below for a slightly bolder,
+      // slightly larger sidebar without rewriting every literal.
+      style={{ width: 248, background: 'transparent', zoom: 1.05 }}
       className="flex flex-col shrink-0 h-full relative overflow-hidden rounded-2xl"
     >
       {/* Brand */}
@@ -88,7 +94,7 @@ export function Sidebar() {
         {NAV_GROUPS.map((group, idx) => (
           <div key={group.label} className={idx === 0 ? '' : 'mt-6'}>
             <div
-              className="px-2 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.12em]"
+              className="px-2 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em]"
               style={{ color: TEXT_LABEL }}
             >
               {group.label}
@@ -102,7 +108,7 @@ export function Sidebar() {
                   <li key={item.id}>
                     <Link
                       href={item.href}
-                      className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] font-medium transition-colors"
+                      className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] font-semibold transition-colors"
                       style={{
                         color: isActive ? 'var(--gold-light)' : TEXT_DIM,
                         background: isActive ? ACTIVE_BG : 'transparent',
@@ -145,7 +151,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <div
-              className="text-[13px] font-medium truncate"
+              className="text-[13px] font-semibold truncate"
               style={{ color: 'rgba(255,255,255,0.85)' }}
             >
               {user?.name ?? 'Signed in'}

@@ -154,6 +154,16 @@
   }
   html {
     @apply font-sans;
+    /* The app is light-themed today (cream surfaces, navy text). Without
+       this declaration, native form controls — <select> options popups,
+       <input type="date"> calendar pickers, scrollbars — inherit the OS
+       color scheme and render dark/black on macOS dark mode. Pinning to
+       `light` keeps everything visually consistent. When we ship a real
+       dark mode pass, override this on the `.dark` class. */
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
   }
 }
 /* AI Chat Markdown Styling */

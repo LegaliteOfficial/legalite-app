@@ -107,8 +107,8 @@ export default function MarketingHome() {
               <div className="relative px-6 py-10 md:px-16 md:py-20">
                 <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl mx-auto max-w-[1200px]">
                   <Image
-                    src="/marketing/legalite-app-ui.jpg"
-                    alt=""
+                    src="/marketing/legalite-app-ui.png"
+                    alt="LegaLite dashboard preview"
                     width={1728}
                     height={972}
                     sizes="(max-width: 1200px) 90vw, 1200px"

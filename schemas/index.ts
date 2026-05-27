@@ -39,10 +39,17 @@ export const caseSchema = z.object({
   court: z.string().optional().or(z.literal('')),
   suit_number: z.string().optional().or(z.literal('')),
   opposing_party: z.string().optional().or(z.literal('')),
-  matter_type: z.string().optional().or(z.literal('')),
+  // Renamed from matter_type — also relabelled as "Practice area" in the UI.
+  case_type: z.string().optional().or(z.literal('')),
+  // Workflow stage within the case (Discovery / Trial prep / etc.).
+  // Free-text for now; we'll constrain to a configurable list once
+  // "Stages" admin screen lands.
+  case_stage: z.string().optional().or(z.literal('')),
   assigned_lawyer: z.string().optional().or(z.literal('')),
-  status: z.enum(['Active', 'Pending', 'Closed']).default('Active'),
+  originating_lawyer: z.string().optional().or(z.literal('')),
+  status: z.enum(['Open', 'Pending', 'Closed']).default('Open'),
   next_court_date: z.string().optional().or(z.literal('')),
+  date_opened: z.string().optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
 })
 

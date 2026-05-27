@@ -24,7 +24,17 @@ export default function DashboardLayout({
           <Sidebar />
           <main
             className="flex-1 flex flex-col overflow-hidden rounded-2xl"
-            style={{ background: 'rgba(244, 244, 245, 0.86)', backdropFilter: 'blur(6px)' }}
+            style={{
+              background: 'rgba(244, 244, 245, 0.86)',
+              backdropFilter: 'blur(6px)',
+              // Bump the dashboard's pixel-baked design tokens (text-[11px],
+              // text-[13px], icons, padding) by 10% in one place. Sidebar
+              // isn't affected because it's a sibling, not a child.
+              // `zoom` scales text + icons + spacing together so the
+              // result stays balanced — `font-size: 110%` would only
+              // affect rem-based text, which this codebase doesn't use.
+              zoom: 1.1,
+            }}
           >
             {children}
           </main>

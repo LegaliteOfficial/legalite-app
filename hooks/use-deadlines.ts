@@ -24,10 +24,17 @@ export interface Deadline {
 
 type DeadlineInput = Partial<Omit<Deadline, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+
 export function useDeadlines(status?: string) {
   const { data, loading, error, refetch } = useQuery(DeadlinesQueryDoc, {
     variables: { status: status ?? null, upcoming: null },
+    skip: DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
+  if (DEV_BYPASS) {
+    return { data: [] as Deadline[], isLoading: false, error: undefined, refetch }
+  }
   return {
     data: data?.deadlines as Deadline[] | undefined,
     isLoading: loading,
@@ -39,7 +46,17 @@ export function useDeadlines(status?: string) {
 export function useDeadlineStats() {
   const { data, loading, error, refetch } = useQuery(DeadlineStatsQueryDoc, {
     pollInterval: 60_000,
+    skip: DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
+  if (DEV_BYPASS) {
+    return {
+      data: { overdue_count: 0, upcoming_this_week: [] as Deadline[] },
+      isLoading: false,
+      error: undefined,
+      refetch,
+    }
+  }
   return {
     data: data?.deadlineStats as
       | { overdue_count: number; upcoming_this_week: Deadline[] }

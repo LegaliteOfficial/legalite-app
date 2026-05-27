@@ -12,6 +12,7 @@ import { useUIStore } from '@/stores/ui.store'
 import { useCase, useCreateCase, useUpdateCase } from '@/hooks/use-cases'
 import { useClients } from '@/hooks/use-clients'
 import { caseSchema, type CaseFormData } from '@/schemas'
+import { CASE_STAGES, PRACTICE_AREAS } from '@/lib/case-options'
 import { Spinner } from '@/components/shared/Spinner'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
@@ -32,7 +33,8 @@ export function CaseForm() {
     resolver: zodResolver(caseSchema) as any,
     defaultValues: {
       title: '', client_id: '', court: '', suit_number: '', opposing_party: '',
-      matter_type: '', assigned_lawyer: '', status: 'Active', next_court_date: '', notes: '',
+      case_type: '', case_stage: '', assigned_lawyer: '', originating_lawyer: '',
+      status: 'Open', next_court_date: '', date_opened: '', notes: '',
     },
   })
 
@@ -44,17 +46,21 @@ export function CaseForm() {
         court: existing.court ?? '',
         suit_number: existing.suit_number ?? '',
         opposing_party: existing.opposing_party ?? '',
-        matter_type: existing.matter_type ?? '',
+        case_type: existing.case_type ?? '',
+        case_stage: existing.case_stage ?? '',
         assigned_lawyer: existing.assigned_lawyer ?? '',
-        status: existing.status ?? 'Active',
+        originating_lawyer: existing.originating_lawyer ?? '',
+        status: existing.status ?? 'Open',
         next_court_date: existing.next_court_date ?? '',
+        date_opened: existing.date_opened ?? '',
         notes: existing.notes ?? '',
       })
     }
     if (isAdd) {
       form.reset({
         title: '', client_id: '', court: '', suit_number: '', opposing_party: '',
-        matter_type: '', assigned_lawyer: '', status: 'Active', next_court_date: '', notes: '',
+        case_type: '', case_stage: '', assigned_lawyer: '', originating_lawyer: '',
+        status: 'Open', next_court_date: '', date_opened: '', notes: '',
       })
     }
   }, [isEdit, isAdd, existing, form])
@@ -118,7 +124,7 @@ export function CaseForm() {
                 <Select value={form.watch('status')} onValueChange={(v) => v && form.setValue('status', v as CaseFormData['status'])}>
                   <SelectTrigger className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }}><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Open">Open</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Closed">Closed</SelectItem>
                   </SelectContent>
@@ -148,13 +154,63 @@ export function CaseForm() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="matter_type" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Matter Type</Label>
-              <Input id="matter_type" placeholder="e.g. Civil, Criminal" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('matter_type')} />
+              <Label htmlFor="case_type" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Practice area</Label>
+              <Select
+                value={form.watch('case_type') ?? ''}
+                onValueChange={(v) => v && form.setValue('case_type', v)}
+              >
+                <SelectTrigger
+                  id="case_type"
+                  className="h-10 rounded-lg text-[13px]"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  <SelectValue placeholder="Find a practice area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRACTICE_AREAS.map((pa) => (
+                    <SelectItem key={pa} value={pa}>
+                      {pa}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label htmlFor="assigned_lawyer" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Assigned Lawyer</Label>
+              <Label htmlFor="case_stage" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Case stage</Label>
+              <Select
+                value={form.watch('case_stage') ?? ''}
+                onValueChange={(v) => v && form.setValue('case_stage', v)}
+              >
+                <SelectTrigger
+                  id="case_stage"
+                  className="h-10 rounded-lg text-[13px]"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  <SelectValue placeholder="Find a case stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CASE_STAGES.map((stage) => (
+                    <SelectItem key={stage} value={stage}>
+                      {stage}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="assigned_lawyer" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Responsible lawyer</Label>
               <Input id="assigned_lawyer" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('assigned_lawyer')} />
             </div>
+            <div>
+              <Label htmlFor="originating_lawyer" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Originating lawyer</Label>
+              <Input id="originating_lawyer" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('originating_lawyer')} />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="date_opened" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Open date</Label>
+            <Input id="date_opened" type="date" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('date_opened')} />
           </div>
           <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
             <Label htmlFor="notes" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Notes</Label>
