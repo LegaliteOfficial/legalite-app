@@ -9,8 +9,16 @@ import {
 import type { InvoiceFormData } from '@/schemas'
 import type { Invoice } from '@/types'
 
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+
 export function useInvoices() {
-  const { data, loading, error, refetch } = useQuery(InvoicesQueryDoc)
+  const { data, loading, error, refetch } = useQuery(InvoicesQueryDoc, {
+    skip: DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
+  })
+  if (DEV_BYPASS) {
+    return { data: [] as Invoice[], isLoading: false, error: undefined, refetch }
+  }
   return {
     data: data?.invoices as Invoice[] | undefined,
     isLoading: loading,

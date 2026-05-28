@@ -30,10 +30,17 @@ export interface LibraryItem {
 
 type LibraryItemInput = Partial<Omit<LibraryItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+
 export function useLibrary(category?: string) {
   const { data, loading, error, refetch } = useQuery(LibraryItemsQueryDoc, {
     variables: { category: category ?? null },
+    skip: DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
+  if (DEV_BYPASS) {
+    return { data: [] as LibraryItem[], isLoading: false, error: undefined, refetch }
+  }
   return {
     data: data?.libraryItems as LibraryItem[] | undefined,
     isLoading: loading,

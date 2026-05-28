@@ -9,8 +9,18 @@ import {
 import type { TaskFormData } from '@/schemas'
 import type { Task } from '@/types'
 
+// Skip Apollo round-trip in dev bypass — otherwise every navigation to
+// /tasks hangs for the network timeout before the empty state renders.
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+
 export function useTasks() {
-  const { data, loading, error, refetch } = useQuery(TasksQueryDoc)
+  const { data, loading, error, refetch } = useQuery(TasksQueryDoc, {
+    skip: DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
+  })
+  if (DEV_BYPASS) {
+    return { data: [] as Task[], isLoading: false, error: undefined, refetch }
+  }
   return {
     data: data?.tasks as Task[] | undefined,
     isLoading: loading,

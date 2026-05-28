@@ -38,7 +38,7 @@ export interface CaseContext {
     court?: string | null
     suit_number?: string | null
     opposing_party?: string | null
-    matter_type?: string | null
+    case_type?: string | null
     next_court_date?: string | null
     notes?: string | null
   }
