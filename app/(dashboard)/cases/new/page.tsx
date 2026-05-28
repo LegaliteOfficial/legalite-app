@@ -483,20 +483,25 @@ export default function NewCasePage() {
               label="Case permissions"
               registerRef={(el) => { sectionRefs.current['permissions'] = el }}
             >
-              <PermissionsSection form={form} setField={setField} />
+              <PermissionsSection
+                form={form}
+                setField={setField}
+                firmUserOptions={firmUserOptions}
+              />
             </Section>
 
             <Section
               id="notifications"
               label="Case notifications"
               registerRef={(el) => { sectionRefs.current['notifications'] = el }}
-              description="Firm users on this list get notified about activity on the case."
+              description="Firm users that you select will receive notifications when the status of this case changes or the case is deleted. They will also be notified when documents are uploaded by clients and related contacts."
             >
-              <UserPickerStub
+              <FieldLabel>Firm user</FieldLabel>
+              <FirmUserMultiPicker
                 value={form.notification_subscribers}
                 onChange={(v) => setField('notification_subscribers', v)}
+                firmUsers={firmUserOptions}
                 placeholder="Find a firm user"
-                emptyHint="No subscribers yet — they'll appear here once user management ships."
               />
             </Section>
 
@@ -504,13 +509,14 @@ export default function NewCasePage() {
               id="block-users"
               label="Block users"
               registerRef={(el) => { sectionRefs.current['block-users'] = el }}
-              description="Listed users won't see this case anywhere in LegaLite."
+              description="Listed users won't see this case anywhere in LegaLite, even if they otherwise have firm-wide access."
             >
-              <UserPickerStub
+              <FieldLabel>Choose users to block</FieldLabel>
+              <FirmUserMultiPicker
                 value={form.blocked_users}
                 onChange={(v) => setField('blocked_users', v)}
+                firmUsers={firmUserOptions}
                 placeholder="Find a firm user"
-                emptyHint="No blocked users."
               />
             </Section>
 
@@ -766,27 +772,55 @@ function FieldLabel({
   )
 }
 
+interface SelectOptionGroup {
+  label: string
+  options: Array<{ value: string; label: string }> | readonly string[]
+}
+
 function NativeSelect({
   value,
   onChange,
   placeholder,
   options,
+  groups,
   disabled = false,
+  onFocus,
+  onBlur,
 }: {
   value: string
   onChange: (v: string) => void
   placeholder?: string
-  options: Array<{ value: string; label: string }> | readonly string[]
+  options?: Array<{ value: string; label: string }> | readonly string[]
+  // Optional grouped form — renders <optgroup> sections (e.g. Users /
+  // Groups in firm-user pickers). If both `options` and `groups` are
+  // provided, `groups` wins.
+  groups?: SelectOptionGroup[]
   disabled?: boolean
+  // Optional focus callbacks — used by callers that want to surface
+  // additional context (e.g. an empty-state hint) only when the user
+  // actively engages the dropdown.
+  onFocus?: () => void
+  onBlur?: () => void
 }) {
-  const normalized = Array.isArray(options) && typeof options[0] === 'string'
-    ? (options as readonly string[]).map((o) => ({ value: o, label: o }))
-    : (options as Array<{ value: string; label: string }>)
+  const normalize = (
+    opts: Array<{ value: string; label: string }> | readonly string[] | undefined,
+  ) =>
+    !opts
+      ? []
+      : opts.length === 0 || typeof opts[0] === 'string'
+        ? (opts as unknown as readonly string[]).map((o) => ({
+            value: o,
+            label: o,
+          }))
+        : (opts as Array<{ value: string; label: string }>)
+  const flat = normalize(options)
   return (
     <div className="relative">
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         disabled={disabled}
         className="w-full h-10 rounded-lg border px-3 pr-9 text-[13px] appearance-none cursor-pointer disabled:cursor-not-allowed"
         style={{
@@ -801,11 +835,21 @@ function NativeSelect({
         }}
       >
         {placeholder !== undefined && <option value="">{placeholder}</option>}
-        {normalized.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
+        {groups
+          ? groups.map((g) => (
+              <optgroup key={g.label} label={g.label}>
+                {normalize(g.options).map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : flat.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
       </select>
       <ChevronDown
         size={13}
@@ -1635,10 +1679,32 @@ function TagsField({
 function PermissionsSection({
   form,
   setField,
+  firmUserOptions,
 }: {
   form: NewCaseForm
   setField: <K extends keyof NewCaseForm>(key: K, val: NewCaseForm[K]) => void
+  firmUserOptions: string[]
 }) {
+  // Tracks whether the user has the picker focused. The empty-state hint
+  // panel only shows while the picker is focused AND the list is empty —
+  // it no longer takes up space when the user has scrolled past or hasn't
+  // engaged the field. Blur uses a small timeout so a mousedown on the
+  // dropdown options doesn't immediately re-hide the hint.
+  const [pickerFocused, setPickerFocused] = useState(false)
+  const blurTimer = useRef<number | null>(null)
+  const handleFocus = () => {
+    if (blurTimer.current) {
+      window.clearTimeout(blurTimer.current)
+      blurTimer.current = null
+    }
+    setPickerFocused(true)
+  }
+  const handleBlur = () => {
+    blurTimer.current = window.setTimeout(() => setPickerFocused(false), 120)
+  }
+
+  const showEmptyHint =
+    pickerFocused && form.permitted_users.length === 0
   return (
     <div className="space-y-4">
       <div>
@@ -1661,79 +1727,38 @@ function PermissionsSection({
       {form.permissions_mode === 'specific' && (
         <div className="space-y-2 pl-7">
           <FieldLabel required>Add users or groups</FieldLabel>
-          <UserPickerStub
+          <FirmUserMultiPicker
             value={form.permitted_users}
             onChange={(v) => setField('permitted_users', v)}
+            firmUsers={firmUserOptions}
+            groups={['Everyone']}
             placeholder="Find users or groups"
+            onFocus={handleFocus}
+            onBlur={handleBlur}
           />
-          {/* Always-visible roster panel so the user can see at a glance
-              who currently has access (matches Clio's panel). When empty,
-              shows a centred "no access" message; when populated, lists
-              each user/group as a row with a remove button. */}
-          <div
-            className="rounded-xl border"
-            style={{
-              background: 'var(--surface-sunken)',
-              borderColor: 'var(--border-soft)',
-            }}
-          >
-            {form.permitted_users.length === 0 ? (
-              <div className="px-5 py-10 text-center">
-                <p
-                  className="text-[13px] font-semibold"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  No users or groups have access to this case.
-                </p>
-                <p
-                  className="mt-1 text-[12px]"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  Add at least one user above so the case isn&rsquo;t locked
-                  out for everyone.
-                </p>
-              </div>
-            ) : (
-              <ul className="divide-y" style={{ borderColor: 'var(--border-soft)' }}>
-                {form.permitted_users.map((u) => (
-                  <li
-                    key={u}
-                    className="flex items-center justify-between px-4 py-2.5"
-                    style={{ borderColor: 'var(--border-soft)' }}
-                  >
-                    <span
-                      className="text-[13px]"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      {u}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setField(
-                          'permitted_users',
-                          form.permitted_users.filter((x) => x !== u),
-                        )
-                      }
-                      className="p-1.5 rounded-md transition-colors cursor-pointer"
-                      style={{ color: 'var(--text-muted)' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--surface-card)'
-                        e.currentTarget.style.color = '#C0392B'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = 'var(--text-muted)'
-                      }}
-                      aria-label={`Remove ${u}`}
-                    >
-                      <X size={13} strokeWidth={1.75} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {showEmptyHint && (
+            <div
+              className="rounded-xl border px-5 py-6 text-center"
+              style={{
+                background: 'var(--surface-sunken)',
+                borderColor: 'var(--border-soft)',
+              }}
+            >
+              <p
+                className="text-[13px] font-semibold"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                No users or groups have access to this case.
+              </p>
+              <p
+                className="mt-1 text-[12px]"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Add at least one user above so the case isn&rsquo;t locked
+                out for everyone.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1815,6 +1840,103 @@ function UserPickerStub({
         >
           {emptyHint}
         </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Multi-pick dropdown for firm users / groups. Replaces UserPickerStub
+ * everywhere we want a real Clio-style picker:
+ *
+ *   - Renders as a native <select> grouped into "Groups" / "Users"
+ *     sections via <optgroup>. Picking an entry adds it to `value` and
+ *     resets the trigger back to the placeholder so the user can keep
+ *     adding.
+ *   - Already-selected items are hidden from the dropdown so the user
+ *     can't double-add the same person.
+ *   - By default the picked items render as removable chips beneath the
+ *     trigger. Pass `hideSelectedPills` if the parent already has its
+ *     own roster panel (Permissions section uses that pattern).
+ */
+function FirmUserMultiPicker({
+  value,
+  onChange,
+  firmUsers,
+  groups = [],
+  placeholder = 'Find a firm user',
+  hideSelectedPills = false,
+  onFocus,
+  onBlur,
+}: {
+  value: string[]
+  onChange: (next: string[]) => void
+  firmUsers: string[]
+  groups?: string[]
+  placeholder?: string
+  hideSelectedPills?: boolean
+  // Forwarded to the underlying <select>. Lets the parent react to the
+  // user focusing the picker — e.g. to show an empty-state hint that
+  // only appears once they've actually engaged the field.
+  onFocus?: () => void
+  onBlur?: () => void
+}) {
+  const availableUsers = firmUsers.filter((u) => !value.includes(u))
+  const availableGroups = groups.filter((g) => !value.includes(g))
+  const optgroups: SelectOptionGroup[] = [
+    ...(availableGroups.length > 0
+      ? [{ label: 'Groups', options: availableGroups }]
+      : []),
+    ...(availableUsers.length > 0
+      ? [{ label: 'Users', options: availableUsers }]
+      : []),
+  ]
+  const everythingPicked = optgroups.length === 0
+
+  return (
+    <div className="space-y-2">
+      <NativeSelect
+        // value stays empty so the trigger always shows the placeholder
+        // — this is a stateless "picker" that emits adds to the parent.
+        value=""
+        onChange={(picked) => {
+          if (picked && !value.includes(picked)) {
+            onChange([...value, picked])
+          }
+        }}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        placeholder={
+          everythingPicked
+            ? 'All available users / groups added'
+            : placeholder
+        }
+        groups={optgroups}
+        disabled={everythingPicked}
+      />
+      {!hideSelectedPills && value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((u) => (
+            <span
+              key={u}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11.5px] font-medium"
+              style={{
+                background: 'var(--surface-sunken)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {u}
+              <button
+                type="button"
+                onClick={() => onChange(value.filter((x) => x !== u))}
+                className="cursor-pointer"
+                aria-label={`Remove ${u}`}
+              >
+                <X size={11} strokeWidth={1.75} />
+              </button>
+            </span>
+          ))}
+        </div>
       )}
     </div>
   )

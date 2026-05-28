@@ -22,6 +22,10 @@ export interface Client {
   phone?: string | null
   ghana_card?: string | null
   address?: string | null
+  // ISO yyyy-mm-dd. Optional today — backend column lands with the
+  // contact-detail screen migration. Surfaced in the contacts list
+  // Date of Birth column.
+  date_of_birth?: string | null
   status: 'Active' | 'Inactive'
   notes?: string | null
   created_at: string

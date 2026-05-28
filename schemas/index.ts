@@ -24,10 +24,16 @@ export const registerSchema = z
 // ── Business schemas (match actual DB column names) ──────────────────────
 
 export const clientSchema = z.object({
+  // Firm-defined ID. Some firms auto-generate (LL-0001 style), others
+  // type their own. Optional so quick-create stays one field.
+  client_code: z.string().optional().or(z.literal('')),
   full_name: z.string().min(1, 'Client name is required'),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   ghana_card: z.string().optional().or(z.literal('')),
+  // ISO yyyy-mm-dd (HTML <input type="date"> output format). Backend
+  // column lands with the contact-detail screen migration.
+  date_of_birth: z.string().optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
   status: z.enum(['Active', 'Inactive']).default('Active'),
   notes: z.string().optional().or(z.literal('')),

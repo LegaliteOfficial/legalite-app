@@ -24,6 +24,7 @@ const DEV_SAMPLE_CLIENTS: Client[] = [
     email: 'office@mensahholdings.gh',
     phone: '+233 20 555 0101',
     ghana_card: null,
+    date_of_birth: null,
     address: 'Accra',
     status: 'Active',
     notes: null,
@@ -37,6 +38,7 @@ const DEV_SAMPLE_CLIENTS: Client[] = [
     email: 'trust@owusu.gh',
     phone: '+233 24 555 0202',
     ghana_card: null,
+    date_of_birth: null,
     address: 'Kumasi',
     status: 'Active',
     notes: null,
@@ -50,6 +52,7 @@ const DEV_SAMPLE_CLIENTS: Client[] = [
     email: 'legal@accratech.gh',
     phone: '+233 30 555 0303',
     ghana_card: null,
+    date_of_birth: null,
     address: 'Accra',
     status: 'Active',
     notes: null,
@@ -59,10 +62,12 @@ const DEV_SAMPLE_CLIENTS: Client[] = [
   {
     id: 'dev-client-4',
     user_id: 'dev',
+    client_code: 'LL-0004',
     full_name: 'Nana Kofi Asante',
     email: 'nana.k.asante@example.gh',
     phone: '+233 26 555 0404',
     ghana_card: null,
+    date_of_birth: '1996-06-20',
     address: 'Cape Coast',
     status: 'Active',
     notes: null,
@@ -98,8 +103,13 @@ export function useClients() {
 export function useClient(id: string | undefined) {
   const { data, loading, error } = useQuery(ClientQueryDoc, {
     variables: { id: id ?? '' },
-    skip: !id,
+    skip: !id || DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
+  if (DEV_BYPASS) {
+    const match = id ? DEV_SAMPLE_CLIENTS.find((c) => c.id === id) : undefined
+    return { data: match, isLoading: false, error: undefined }
+  }
   return {
     data: data?.client as Client | undefined,
     isLoading: loading,
