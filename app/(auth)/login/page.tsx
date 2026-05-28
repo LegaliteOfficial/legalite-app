@@ -85,8 +85,10 @@ function LoginForm() {
       const payload = res.data?.login
       if (!payload) throw new Error('Empty login response')
       setAuth(
-        { ...payload.user, firm: payload.user.firm ?? undefined } as Parameters<typeof setAuth>[0],
+        payload.user,
         payload.token,
+        payload.active_membership ?? null,
+        payload.memberships ?? [],
       )
       const next = searchParams?.get('next') ?? '/dashboard'
       router.push(next)

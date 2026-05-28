@@ -4,6 +4,12 @@ type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+export type AcceptInviteInput = {
+  name: string;
+  password: string;
+  token: string;
+};
+
 export type AiChatInput = {
   attachments?: Array<ChatAttachmentInput> | null | undefined;
   context?: string | null | undefined;
@@ -11,9 +17,19 @@ export type AiChatInput = {
   message: string;
 };
 
+export type ChangeMemberRoleInput = {
+  firm_role: string;
+  member_id: string | number;
+};
+
 export type ChangePasswordInput = {
   current_password: string;
   new_password: string;
+};
+
+export type ChangeProfessionalTitleInput = {
+  member_id: string | number;
+  professional_title: string;
 };
 
 export type ChatAttachmentInput = {
@@ -112,17 +128,47 @@ export type GoogleAuthInput = {
   accessToken: string;
 };
 
+export type InvitationIdInput = {
+  id: string | number;
+};
+
+export type InviteMemberInput = {
+  email: string;
+  firm_role: string;
+  professional_title: string;
+};
+
 export type LoginInput = {
   email: string;
   password: string;
 };
 
-export type RegisterInput = {
+export type LookupInvitationInput = {
+  token: string;
+};
+
+export type RegisterOwnerInput = {
   email: string;
-  firm?: string | null | undefined;
+  firm_name: string;
+  firm_type?: string | null | undefined;
   name: string;
   password: string;
-  role?: string | null | undefined;
+  professional_title?: string | null | undefined;
+};
+
+export type SetProfilePracticeAreasInput = {
+  practice_area_ids: Array<string | number>;
+  primary_practice_area_id?: string | number | null | undefined;
+};
+
+export type SwitchFirmInput = {
+  firmId: string;
+};
+
+export type TransferOwnershipInput = {
+  new_owner_profile_id: string | number;
+  new_role_for_outgoing_owner: string;
+  reason: string;
 };
 
 export type UpdateCaseInput = {
@@ -170,6 +216,23 @@ export type UpdateDocumentInput = {
   title?: string | null | undefined;
 };
 
+export type UpdateFirmInput = {
+  city?: string | null | undefined;
+  description?: string | null | undefined;
+  digital_address?: string | null | undefined;
+  email?: string | null | undefined;
+  firm_type?: string | null | undefined;
+  logo_url?: string | null | undefined;
+  name?: string | null | undefined;
+  office_address?: string | null | undefined;
+  phone?: string | null | undefined;
+  region?: string | null | undefined;
+  registration_number?: string | null | undefined;
+  tin?: string | null | undefined;
+  website?: string | null | undefined;
+  year_established?: number | null | undefined;
+};
+
 export type UpdateInvoiceInput = {
   amount_ghs?: number | null | undefined;
   client_id?: string | number | null | undefined;
@@ -188,10 +251,28 @@ export type UpdateLibraryItemInput = {
 
 export type UpdateProfileInput = {
   avatar_url?: string | null | undefined;
-  firm?: string | null | undefined;
+  bio?: string | null | undefined;
+  city?: string | null | undefined;
+  date_of_birth?: string | null | undefined;
+  digital_address?: string | null | undefined;
+  first_name?: string | null | undefined;
   gba_number?: string | null | undefined;
+  gender?: string | null | undefined;
+  ghana_card_no?: string | null | undefined;
+  last_name?: string | null | undefined;
+  middle_name?: string | null | undefined;
   name?: string | null | undefined;
+  office_address?: string | null | undefined;
+  passport_no?: string | null | undefined;
   phone?: string | null | undefined;
+  practice_type?: string | null | undefined;
+  practising_license_no?: string | null | undefined;
+  practising_license_year?: number | null | undefined;
+  region?: string | null | undefined;
+  supreme_court_enrollment_no?: string | null | undefined;
+  work_email?: string | null | undefined;
+  work_phone?: string | null | undefined;
+  year_called_to_bar?: number | null | undefined;
 };
 
 export type UpdateTaskInput = {
@@ -205,31 +286,172 @@ export type UpdateTaskInput = {
   title?: string | null | undefined;
 };
 
+export type UploadVerificationDocumentInput = {
+  document_type: string;
+  file_name: string;
+  file_size?: number | null | undefined;
+  file_type?: string | null | undefined;
+  file_url: string;
+};
+
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
 
-export type LoginMutation = { login: { token: string, user: { id: string, email: string, name: string, role: string, firm: string | null, created_at: string } } };
+export type LoginMutation = { login: { token: string, user: { id: string, email: string, name: string, role: string, first_name: string | null, last_name: string | null, gba_number: string | null, supreme_court_enrollment_no: string | null, practising_license_no: string | null, digital_address: string | null, verification_status: string | null, created_at: string }, active_membership: { firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string } | null, memberships: Array<{ firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string }> } };
 
-export type RegisterMutationVariables = Exact<{
-  input: RegisterInput;
+export type RegisterOwnerMutationVariables = Exact<{
+  input: RegisterOwnerInput;
 }>;
 
 
-export type RegisterMutation = { register: { token: string, user: { id: string, email: string, name: string, role: string, firm: string | null, created_at: string } } };
+export type RegisterOwnerMutation = { registerOwner: { token: string, user: { id: string, email: string, name: string, role: string, first_name: string | null, last_name: string | null, gba_number: string | null, supreme_court_enrollment_no: string | null, practising_license_no: string | null, digital_address: string | null, verification_status: string | null, created_at: string }, active_membership: { firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string } | null, memberships: Array<{ firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string }> } };
+
+export type AcceptInviteMutationVariables = Exact<{
+  input: AcceptInviteInput;
+}>;
+
+
+export type AcceptInviteMutation = { acceptInvite: { token: string, user: { id: string, email: string, name: string, role: string, first_name: string | null, last_name: string | null, gba_number: string | null, supreme_court_enrollment_no: string | null, practising_license_no: string | null, digital_address: string | null, verification_status: string | null, created_at: string }, active_membership: { firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string } | null, memberships: Array<{ firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string }> } };
 
 export type GoogleAuthMutationVariables = Exact<{
   input: GoogleAuthInput;
 }>;
 
 
-export type GoogleAuthMutation = { googleAuth: { token: string, user: { id: string, email: string, name: string, role: string, firm: string | null, created_at: string } } };
+export type GoogleAuthMutation = { googleAuth: { token: string, user: { id: string, email: string, name: string, role: string, first_name: string | null, last_name: string | null, gba_number: string | null, supreme_court_enrollment_no: string | null, practising_license_no: string | null, digital_address: string | null, verification_status: string | null, created_at: string }, active_membership: { firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string } | null, memberships: Array<{ firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string }> } };
+
+export type SwitchFirmMutationVariables = Exact<{
+  input: SwitchFirmInput;
+}>;
+
+
+export type SwitchFirmMutation = { switchFirm: { token: string, user: { id: string, email: string, name: string, role: string, verification_status: string | null, created_at: string }, active_membership: { firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string } | null, memberships: Array<{ firm_id: string, firm_name: string, firm_slug: string, firm_role: string, professional_title: string, status: string }> } };
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = { me: { id: string, email: string, name: string, role: string, firm: string | null, created_at: string } };
+export type MeQuery = { me: { id: string, email: string, name: string, role: string, first_name: string | null, last_name: string | null, gba_number: string | null, supreme_court_enrollment_no: string | null, practising_license_no: string | null, digital_address: string | null, verification_status: string | null, created_at: string } };
+
+export type CurrentFirmQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CurrentFirmQuery = { currentFirm: { id: string, name: string, slug: string, firm_type: string, registration_number: string | null, tin: string | null, year_established: number | null, email: string | null, phone: string | null, website: string | null, office_address: string | null, digital_address: string | null, city: string | null, region: string | null, logo_url: string | null, description: string | null, plan: string, status: string, owner_profile_id: string, created_at: string, updated_at: string } | null };
+
+export type UpdateFirmMutationVariables = Exact<{
+  input: UpdateFirmInput;
+}>;
+
+
+export type UpdateFirmMutation = { updateFirm: { id: string, name: string, slug: string, firm_type: string, registration_number: string | null, tin: string | null, year_established: number | null, email: string | null, phone: string | null, website: string | null, office_address: string | null, digital_address: string | null, city: string | null, region: string | null, logo_url: string | null, description: string | null, plan: string, status: string, owner_profile_id: string, created_at: string, updated_at: string } };
+
+export type FirmMembersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type FirmMembersQuery = { firmMembers: Array<{ id: string, firm_id: string, profile_id: string, firm_role: string, professional_title: string, employment_type: string, status: string, name: string, email: string, gba_number: string | null, verification_status: string | null, joined_at: string, left_at: string | null }> };
+
+export type ChangeMemberRoleMutationVariables = Exact<{
+  input: ChangeMemberRoleInput;
+}>;
+
+
+export type ChangeMemberRoleMutation = { changeMemberRole: { id: string, firm_role: string, professional_title: string, status: string, name: string, email: string } };
+
+export type ChangeProfessionalTitleMutationVariables = Exact<{
+  input: ChangeProfessionalTitleInput;
+}>;
+
+
+export type ChangeProfessionalTitleMutation = { changeProfessionalTitle: { id: string, firm_role: string, professional_title: string } };
+
+export type DeactivateMemberMutationVariables = Exact<{
+  member_id: string | number;
+}>;
+
+
+export type DeactivateMemberMutation = { deactivateMember: { id: string, status: string } };
+
+export type ReactivateMemberMutationVariables = Exact<{
+  member_id: string | number;
+}>;
+
+
+export type ReactivateMemberMutation = { reactivateMember: { id: string, status: string } };
+
+export type LeaveFirmMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type LeaveFirmMutation = { leaveFirm: boolean };
+
+export type TransferOwnershipMutationVariables = Exact<{
+  input: TransferOwnershipInput;
+}>;
+
+
+export type TransferOwnershipMutation = { transferOwnership: { id: string, firm_role: string, name: string } };
+
+export type PendingInvitationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PendingInvitationsQuery = { pendingInvitations: Array<{ id: string, firm_id: string, email: string, firm_role: string, professional_title: string, invited_by: string, expires_at: string, created_at: string }> };
+
+export type InviteMemberMutationVariables = Exact<{
+  input: InviteMemberInput;
+}>;
+
+
+export type InviteMemberMutation = { inviteMember: { token: string, accept_url: string, invitation: { id: string, firm_id: string, email: string, firm_role: string, professional_title: string, expires_at: string, created_at: string } } };
+
+export type ResendInvitationMutationVariables = Exact<{
+  input: InvitationIdInput;
+}>;
+
+
+export type ResendInvitationMutation = { resendInvitation: { token: string, accept_url: string, invitation: { id: string, expires_at: string } } };
+
+export type RevokeInvitationMutationVariables = Exact<{
+  input: InvitationIdInput;
+}>;
+
+
+export type RevokeInvitationMutation = { revokeInvitation: { id: string, revoked_at: string | null } };
+
+export type InvitationLookupQueryVariables = Exact<{
+  input: LookupInvitationInput;
+}>;
+
+
+export type InvitationLookupQuery = { invitationLookup: { email: string, firm_name: string, firm_role: string, professional_title: string, expires_at: string } };
+
+export type PracticeAreasQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PracticeAreasQuery = { practiceAreas: Array<{ id: string, slug: string, name: string, description: string | null }> };
+
+export type MyPracticeAreasQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyPracticeAreasQuery = { myPracticeAreas: Array<{ practice_area_id: string, slug: string, name: string, is_primary: boolean }> };
+
+export type SetMyPracticeAreasMutationVariables = Exact<{
+  input: SetProfilePracticeAreasInput;
+}>;
+
+
+export type SetMyPracticeAreasMutation = { setMyPracticeAreas: Array<{ practice_area_id: string, slug: string, name: string, is_primary: boolean }> };
+
+export type MyVerificationDocumentsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyVerificationDocumentsQuery = { myVerificationDocuments: Array<{ id: string, document_type: string, file_url: string, file_name: string, file_type: string | null, file_size: number | null, status: string, rejection_reason: string | null, created_at: string }> };
+
+export type UploadVerificationDocumentMutationVariables = Exact<{
+  input: UploadVerificationDocumentInput;
+}>;
+
+
+export type UploadVerificationDocumentMutation = { uploadVerificationDocument: { id: string, document_type: string, file_url: string, file_name: string, status: string, created_at: string } };
 
 export type ClientsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -509,14 +731,14 @@ export type DeleteMessageMutation = { deleteMessage: boolean };
 export type ProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ProfileQuery = { profile: { id: string, email: string, name: string, role: string, firm: string | null, gba_number: string | null, phone: string | null, avatar_url: string | null, created_at: string, updated_at: string } };
+export type ProfileQuery = { profile: { id: string, email: string, name: string, role: string, first_name: string | null, middle_name: string | null, last_name: string | null, date_of_birth: string | null, gender: string | null, gba_number: string | null, supreme_court_enrollment_no: string | null, year_called_to_bar: number | null, practising_license_no: string | null, practising_license_year: number | null, ghana_card_no: string | null, passport_no: string | null, bio: string | null, practice_type: string | null, office_address: string | null, digital_address: string | null, city: string | null, region: string | null, work_email: string | null, work_phone: string | null, phone: string | null, avatar_url: string | null, verification_status: string, verified_at: string | null, created_at: string, updated_at: string } };
 
 export type UpdateProfileMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateProfileMutation = { updateProfile: { id: string, email: string, name: string, role: string, firm: string | null, gba_number: string | null, phone: string | null, avatar_url: string | null, created_at: string, updated_at: string } };
+export type UpdateProfileMutation = { updateProfile: { id: string, email: string, name: string, role: string, first_name: string | null, middle_name: string | null, last_name: string | null, gba_number: string | null, supreme_court_enrollment_no: string | null, year_called_to_bar: number | null, practising_license_no: string | null, digital_address: string | null, city: string | null, region: string | null, phone: string | null, avatar_url: string | null, verification_status: string, updated_at: string } };
 
 export type ChangePasswordMutationVariables = Exact<{
   input: ChangePasswordInput;
@@ -552,10 +774,31 @@ export type DeleteAiConversationMutationVariables = Exact<{
 export type DeleteAiConversationMutation = { deleteAiConversation: boolean };
 
 
-export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"firm"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
-export const RegisterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Register"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RegisterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"register"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"firm"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]}}]} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
-export const GoogleAuthDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"GoogleAuth"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GoogleAuthInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"googleAuth"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"firm"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]}}]} as unknown as DocumentNode<GoogleAuthMutation, GoogleAuthMutationVariables>;
-export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"firm"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
+export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"first_name"}},{"kind":"Field","name":{"kind":"Name","value":"last_name"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"supreme_court_enrollment_no"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_no"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}},{"kind":"Field","name":{"kind":"Name","value":"active_membership"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}},{"kind":"Field","name":{"kind":"Name","value":"memberships"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
+export const RegisterOwnerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RegisterOwner"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RegisterOwnerInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"registerOwner"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"first_name"}},{"kind":"Field","name":{"kind":"Name","value":"last_name"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"supreme_court_enrollment_no"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_no"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}},{"kind":"Field","name":{"kind":"Name","value":"active_membership"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}},{"kind":"Field","name":{"kind":"Name","value":"memberships"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]} as unknown as DocumentNode<RegisterOwnerMutation, RegisterOwnerMutationVariables>;
+export const AcceptInviteDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AcceptInvite"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AcceptInviteInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"acceptInvite"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"first_name"}},{"kind":"Field","name":{"kind":"Name","value":"last_name"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"supreme_court_enrollment_no"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_no"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}},{"kind":"Field","name":{"kind":"Name","value":"active_membership"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}},{"kind":"Field","name":{"kind":"Name","value":"memberships"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]} as unknown as DocumentNode<AcceptInviteMutation, AcceptInviteMutationVariables>;
+export const GoogleAuthDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"GoogleAuth"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GoogleAuthInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"googleAuth"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"first_name"}},{"kind":"Field","name":{"kind":"Name","value":"last_name"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"supreme_court_enrollment_no"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_no"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}},{"kind":"Field","name":{"kind":"Name","value":"active_membership"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}},{"kind":"Field","name":{"kind":"Name","value":"memberships"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]} as unknown as DocumentNode<GoogleAuthMutation, GoogleAuthMutationVariables>;
+export const SwitchFirmDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SwitchFirm"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SwitchFirmInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"switchFirm"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}},{"kind":"Field","name":{"kind":"Name","value":"active_membership"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}},{"kind":"Field","name":{"kind":"Name","value":"memberships"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]}}]} as unknown as DocumentNode<SwitchFirmMutation, SwitchFirmMutationVariables>;
+export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"first_name"}},{"kind":"Field","name":{"kind":"Name","value":"last_name"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"supreme_court_enrollment_no"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_no"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
+export const CurrentFirmDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CurrentFirm"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"currentFirm"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_type"}},{"kind":"Field","name":{"kind":"Name","value":"registration_number"}},{"kind":"Field","name":{"kind":"Name","value":"tin"}},{"kind":"Field","name":{"kind":"Name","value":"year_established"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"website"}},{"kind":"Field","name":{"kind":"Name","value":"office_address"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"region"}},{"kind":"Field","name":{"kind":"Name","value":"logo_url"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"owner_profile_id"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<CurrentFirmQuery, CurrentFirmQueryVariables>;
+export const UpdateFirmDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateFirm"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateFirmInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateFirm"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"firm_type"}},{"kind":"Field","name":{"kind":"Name","value":"registration_number"}},{"kind":"Field","name":{"kind":"Name","value":"tin"}},{"kind":"Field","name":{"kind":"Name","value":"year_established"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"website"}},{"kind":"Field","name":{"kind":"Name","value":"office_address"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"region"}},{"kind":"Field","name":{"kind":"Name","value":"logo_url"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"plan"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"owner_profile_id"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<UpdateFirmMutation, UpdateFirmMutationVariables>;
+export const FirmMembersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"FirmMembers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"firmMembers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"profile_id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"employment_type"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"joined_at"}},{"kind":"Field","name":{"kind":"Name","value":"left_at"}}]}}]}}]} as unknown as DocumentNode<FirmMembersQuery, FirmMembersQueryVariables>;
+export const ChangeMemberRoleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ChangeMemberRole"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ChangeMemberRoleInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changeMemberRole"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]}}]} as unknown as DocumentNode<ChangeMemberRoleMutation, ChangeMemberRoleMutationVariables>;
+export const ChangeProfessionalTitleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ChangeProfessionalTitle"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ChangeProfessionalTitleInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changeProfessionalTitle"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}}]}}]}}]} as unknown as DocumentNode<ChangeProfessionalTitleMutation, ChangeProfessionalTitleMutationVariables>;
+export const DeactivateMemberDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeactivateMember"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"member_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deactivateMember"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"member_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"member_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<DeactivateMemberMutation, DeactivateMemberMutationVariables>;
+export const ReactivateMemberDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ReactivateMember"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"member_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reactivateMember"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"member_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"member_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<ReactivateMemberMutation, ReactivateMemberMutationVariables>;
+export const LeaveFirmDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"LeaveFirm"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"leaveFirm"}}]}}]} as unknown as DocumentNode<LeaveFirmMutation, LeaveFirmMutationVariables>;
+export const TransferOwnershipDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"TransferOwnership"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"TransferOwnershipInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transferOwnership"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<TransferOwnershipMutation, TransferOwnershipMutationVariables>;
+export const PendingInvitationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PendingInvitations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pendingInvitations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"invited_by"}},{"kind":"Field","name":{"kind":"Name","value":"expires_at"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]} as unknown as DocumentNode<PendingInvitationsQuery, PendingInvitationsQueryVariables>;
+export const InviteMemberDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"InviteMember"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"InviteMemberInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"inviteMember"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"invitation"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firm_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"expires_at"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}},{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"accept_url"}}]}}]}}]} as unknown as DocumentNode<InviteMemberMutation, InviteMemberMutationVariables>;
+export const ResendInvitationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ResendInvitation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"InvitationIdInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"resendInvitation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"invitation"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"expires_at"}}]}},{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"accept_url"}}]}}]}}]} as unknown as DocumentNode<ResendInvitationMutation, ResendInvitationMutationVariables>;
+export const RevokeInvitationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RevokeInvitation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"InvitationIdInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"revokeInvitation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"revoked_at"}}]}}]}}]} as unknown as DocumentNode<RevokeInvitationMutation, RevokeInvitationMutationVariables>;
+export const InvitationLookupDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"InvitationLookup"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LookupInvitationInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"invitationLookup"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"firm_name"}},{"kind":"Field","name":{"kind":"Name","value":"firm_role"}},{"kind":"Field","name":{"kind":"Name","value":"professional_title"}},{"kind":"Field","name":{"kind":"Name","value":"expires_at"}}]}}]}}]} as unknown as DocumentNode<InvitationLookupQuery, InvitationLookupQueryVariables>;
+export const PracticeAreasDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PracticeAreas"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"practiceAreas"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}}]}}]} as unknown as DocumentNode<PracticeAreasQuery, PracticeAreasQueryVariables>;
+export const MyPracticeAreasDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyPracticeAreas"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myPracticeAreas"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"practice_area_id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"is_primary"}}]}}]}}]} as unknown as DocumentNode<MyPracticeAreasQuery, MyPracticeAreasQueryVariables>;
+export const SetMyPracticeAreasDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetMyPracticeAreas"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SetProfilePracticeAreasInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setMyPracticeAreas"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"practice_area_id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"is_primary"}}]}}]}}]} as unknown as DocumentNode<SetMyPracticeAreasMutation, SetMyPracticeAreasMutationVariables>;
+export const MyVerificationDocumentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MyVerificationDocuments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myVerificationDocuments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"document_type"}},{"kind":"Field","name":{"kind":"Name","value":"file_url"}},{"kind":"Field","name":{"kind":"Name","value":"file_name"}},{"kind":"Field","name":{"kind":"Name","value":"file_type"}},{"kind":"Field","name":{"kind":"Name","value":"file_size"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"rejection_reason"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]} as unknown as DocumentNode<MyVerificationDocumentsQuery, MyVerificationDocumentsQueryVariables>;
+export const UploadVerificationDocumentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UploadVerificationDocument"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UploadVerificationDocumentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uploadVerificationDocument"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"document_type"}},{"kind":"Field","name":{"kind":"Name","value":"file_url"}},{"kind":"Field","name":{"kind":"Name","value":"file_name"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]} as unknown as DocumentNode<UploadVerificationDocumentMutation, UploadVerificationDocumentMutationVariables>;
 export const ClientsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Clients"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"clients"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"user_id"}},{"kind":"Field","name":{"kind":"Name","value":"full_name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"ghana_card"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<ClientsQuery, ClientsQueryVariables>;
 export const ClientDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Client"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"client"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"user_id"}},{"kind":"Field","name":{"kind":"Name","value":"full_name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"ghana_card"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<ClientQuery, ClientQueryVariables>;
 export const CreateClientDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateClient"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateClientInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createClient"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"user_id"}},{"kind":"Field","name":{"kind":"Name","value":"full_name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"ghana_card"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<CreateClientMutation, CreateClientMutationVariables>;
@@ -596,8 +839,8 @@ export const DeleteDeadlineDocument = {"kind":"Document","definitions":[{"kind":
 export const MessagesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Messages"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"clientId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"channel"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"messages"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"clientId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"clientId"}}},{"kind":"Argument","name":{"kind":"Name","value":"channel"},"value":{"kind":"Variable","name":{"kind":"Name","value":"channel"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"user_id"}},{"kind":"Field","name":{"kind":"Name","value":"client_id"}},{"kind":"Field","name":{"kind":"Name","value":"subject"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"channel"}},{"kind":"Field","name":{"kind":"Name","value":"direction"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"client_name"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<MessagesQuery, MessagesQueryVariables>;
 export const CreateMessageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateMessage"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateMessageInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createMessage"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"user_id"}},{"kind":"Field","name":{"kind":"Name","value":"client_id"}},{"kind":"Field","name":{"kind":"Name","value":"subject"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"channel"}},{"kind":"Field","name":{"kind":"Name","value":"direction"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"client_name"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<CreateMessageMutation, CreateMessageMutationVariables>;
 export const DeleteMessageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteMessage"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteMessage"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}]}}]} as unknown as DocumentNode<DeleteMessageMutation, DeleteMessageMutationVariables>;
-export const ProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"firm"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"avatar_url"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<ProfileQuery, ProfileQueryVariables>;
-export const UpdateProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateProfile"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateProfileInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateProfile"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"firm"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"avatar_url"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<UpdateProfileMutation, UpdateProfileMutationVariables>;
+export const ProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"first_name"}},{"kind":"Field","name":{"kind":"Name","value":"middle_name"}},{"kind":"Field","name":{"kind":"Name","value":"last_name"}},{"kind":"Field","name":{"kind":"Name","value":"date_of_birth"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"supreme_court_enrollment_no"}},{"kind":"Field","name":{"kind":"Name","value":"year_called_to_bar"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_no"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_year"}},{"kind":"Field","name":{"kind":"Name","value":"ghana_card_no"}},{"kind":"Field","name":{"kind":"Name","value":"passport_no"}},{"kind":"Field","name":{"kind":"Name","value":"bio"}},{"kind":"Field","name":{"kind":"Name","value":"practice_type"}},{"kind":"Field","name":{"kind":"Name","value":"office_address"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"region"}},{"kind":"Field","name":{"kind":"Name","value":"work_email"}},{"kind":"Field","name":{"kind":"Name","value":"work_phone"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"avatar_url"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"verified_at"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<ProfileQuery, ProfileQueryVariables>;
+export const UpdateProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateProfile"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateProfileInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateProfile"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"first_name"}},{"kind":"Field","name":{"kind":"Name","value":"middle_name"}},{"kind":"Field","name":{"kind":"Name","value":"last_name"}},{"kind":"Field","name":{"kind":"Name","value":"gba_number"}},{"kind":"Field","name":{"kind":"Name","value":"supreme_court_enrollment_no"}},{"kind":"Field","name":{"kind":"Name","value":"year_called_to_bar"}},{"kind":"Field","name":{"kind":"Name","value":"practising_license_no"}},{"kind":"Field","name":{"kind":"Name","value":"digital_address"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"region"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"avatar_url"}},{"kind":"Field","name":{"kind":"Name","value":"verification_status"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<UpdateProfileMutation, UpdateProfileMutationVariables>;
 export const ChangePasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ChangePassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ChangePasswordInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changePassword"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<ChangePasswordMutation, ChangePasswordMutationVariables>;
 export const AiConversationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AiConversations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"aiConversations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}}]}}]}}]} as unknown as DocumentNode<AiConversationsQuery, AiConversationsQueryVariables>;
 export const AiConversationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AiConversation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"aiConversation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}},{"kind":"Field","name":{"kind":"Name","value":"updated_at"}},{"kind":"Field","name":{"kind":"Name","value":"messages"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"content"}},{"kind":"Field","name":{"kind":"Name","value":"sources"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]}}]} as unknown as DocumentNode<AiConversationQuery, AiConversationQueryVariables>;

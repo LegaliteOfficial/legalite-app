@@ -265,14 +265,9 @@ export default function SettingsPage() {
       onCompleted: (data) => {
         const updated = data.updateProfile
         if (updated && token) {
-          setAuth(
-            {
-              ...updated,
-              firm: updated.firm ?? undefined,
-              gba_number: updated.gba_number ?? undefined,
-            } as Parameters<typeof setAuth>[0],
-            token,
-          )
+          // Preserve the existing membership context; profile mutation
+          // doesn't touch firm assignment.
+          setAuth(updated, token)
         }
         toast.success('Profile updated successfully.')
       },
@@ -287,8 +282,8 @@ export default function SettingsPage() {
         variables: {
           input: {
             name: data.name,
-            firm: data.firm || null,
             phone: data.phone || null,
+            bio: data.bio || null,
           },
         },
       })

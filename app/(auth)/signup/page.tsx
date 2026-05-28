@@ -2,11 +2,14 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { registerSchema, type RegisterFormData } from '@/schemas'
+import {
+  registerOwnerSchema,
+  type RegisterOwnerFormData,
+} from '@/schemas'
 import { useAuthStore } from '@/stores/auth.store'
 import { useMutation } from '@apollo/client/react'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
-import { RegisterMutationDoc } from '@/lib/graphql/operations'
+import { RegisterOwnerMutationDoc } from '@/lib/graphql/operations'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -14,11 +17,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeOff } from 'lucide-react'
 
-const ROLES = [
-  { value: 'lawyer', label: 'Lawyer' },
-  { value: 'senior_partner', label: 'Senior Partner' },
-  { value: 'associate', label: 'Associate' },
-  { value: 'paralegal', label: 'Paralegal' },
+// Mapped to backend's firm_type enum.
+const FIRM_TYPES = [
+  { value: 'sole_practice', label: 'Solo Practice' },
+  { value: 'partnership', label: 'Partnership' },
+  { value: 'chamber', label: 'Chamber' },
+  { value: 'corporate_firm', label: 'Corporate Firm' },
 ] as const
 
 export default function SignupPage() {
@@ -28,7 +32,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [registerMutation] = useMutation(RegisterMutationDoc)
+  const [registerMutation] = useMutation(RegisterOwnerMutationDoc)
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
@@ -43,22 +47,24 @@ export default function SignupPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'lawyer' },
+  } = useForm<RegisterOwnerFormData>({
+    resolver: zodResolver(registerOwnerSchema),
+    defaultValues: { firm_type: 'sole_practice' },
   })
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: RegisterOwnerFormData) => {
     setServerError('')
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword: _, ...payload } = data
       const res = await registerMutation({ variables: { input: payload } })
-      const out = res.data?.register
+      const out = res.data?.registerOwner
       if (!out) throw new Error('Empty register response')
       setAuth(
-        { ...out.user, firm: out.user.firm ?? undefined } as Parameters<typeof setAuth>[0],
+        out.user,
         out.token,
+        out.active_membership ?? null,
+        out.memberships ?? [],
       )
       router.push('/dashboard')
     } catch (err: unknown) {
@@ -172,24 +178,24 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Role + Firm */}
+          {/* Firm Type + Firm Name */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label
                 className="block text-[11px] font-bold uppercase tracking-widest mb-2"
                 style={{ color: 'rgba(255,255,255,0.45)' }}
               >
-                Role
+                Practice Type
               </label>
               <select
-                {...register('role')}
+                {...register('firm_type')}
                 className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none transition-all appearance-none"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
                   border: '1.5px solid rgba(255,255,255,0.1)',
                 }}
               >
-                {ROLES.map((r) => (
+                {FIRM_TYPES.map((r) => (
                   <option key={r.value} value={r.value} style={{ background: '#0D1B2A' }}>
                     {r.label}
                   </option>
@@ -201,11 +207,11 @@ export default function SignupPage() {
                 className="block text-[11px] font-bold uppercase tracking-widest mb-2"
                 style={{ color: 'rgba(255,255,255,0.45)' }}
               >
-                Firm Name
+                Firm or Practice Name *
               </label>
               <input
-                {...register('firm')}
-                placeholder="Optional"
+                {...register('firm_name')}
+                placeholder="e.g. Akufo & Co"
                 className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
