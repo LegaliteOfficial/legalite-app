@@ -100,7 +100,7 @@ function buildCaseContext(client: Client, kase: Case): CaseContext {
       court: kase.court,
       suit_number: kase.suit_number,
       opposing_party: kase.opposing_party,
-      matter_type: kase.matter_type,
+      case_type: kase.case_type,
       next_court_date: kase.next_court_date,
       notes: kase.notes,
     },

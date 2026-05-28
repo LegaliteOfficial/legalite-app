@@ -141,6 +141,37 @@ export const clientSchema = z.object({
 export type ClientFormData = z.infer<typeof clientSchema>
 ```
 
+### Progressive disclosure (collapsible sections)
+
+**Optional / advanced sections on a form must default to CLOSED.** A user
+landing on a new-record screen should see only the fields they're
+required to fill in plus the obviously-needed channels (name, email,
+phone, address). Anything that's optional, advanced, role-specific, or
+rarely used (Employees, Billing preferences, Custom fields, Permissions
+overrides, Custom rates, etc.) sits inside a `<CollapsibleSection>`
+that initialises with `open={false}`. The user expands it when they
+need it. Never set `useState(true)` on an optional section just to
+make it discoverable — discoverability comes from the section header
+being visible, not the body.
+
+Only the always-required section (e.g. Contact information on
+/contacts/new, Case details on /cases/new) is rendered uncollapsed,
+because the user can't progress without filling it in.
+
+This rule applies to every form going forward — don't wait to be
+asked to collapse a section.
+
+### Action-row duplication
+
+The sticky top header on a full-screen create/edit route carries the
+authoritative action buttons (Save / Save and create X / Cancel).
+**Do not** duplicate that row at the bottom of the form. A scrolled
+form should end with the last section plus a small bottom spacer —
+users scroll back to the sticky header (or use keyboard submit) to
+save. Duplicate action rows double the maintenance surface (loading
+state, disabled state, copy) and create ambiguity about which button
+is the "real" one.
+
 ---
 
 ## Tables

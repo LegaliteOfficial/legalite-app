@@ -72,6 +72,18 @@
   --border-default: rgba(13, 27, 42, 0.10);
   --border-strong: rgba(13, 27, 42, 0.16);
 
+  /* ── Semantic accents ──
+     Reserved tokens used by the calendar (and any future
+     time-aware surface). `--accent-today` paints the "today" lane
+     in the calendar grid + the month-picker selection; `--now-line`
+     is the live time-indicator rule. Kept as standalone tokens so
+     we can swap the calendar's accent without touching the gold
+     brand palette that lives elsewhere in the app. */
+  --accent-today: var(--gold);
+  --accent-today-tint: rgba(201, 151, 43, 0.08);
+  --accent-today-tint-strong: rgba(201, 151, 43, 0.18);
+  --now-line: #DC2626;
+
   /* ── Elevation — minimal, restrained, image-bleed safe ── */
   --shadow-xs: 0 1px 1.5px rgba(13, 27, 42, 0.04);
   --shadow-sm: 0 1px 2px rgba(13, 27, 42, 0.05), 0 1px 1px rgba(13, 27, 42, 0.03);
@@ -154,6 +166,16 @@
   }
   html {
     @apply font-sans;
+    /* The app is light-themed today (cream surfaces, navy text). Without
+       this declaration, native form controls — <select> options popups,
+       <input type="date"> calendar pickers, scrollbars — inherit the OS
+       color scheme and render dark/black on macOS dark mode. Pinning to
+       `light` keeps everything visually consistent. When we ship a real
+       dark mode pass, override this on the `.dark` class. */
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
   }
 }
 /* AI Chat Markdown Styling */
@@ -188,6 +210,9 @@
 .tiptap-editor s { text-decoration: line-through; }
 .tiptap-editor u { text-decoration: underline; }
 .tiptap-editor hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+.tiptap-editor mark { background: rgba(252, 211, 77, 0.45); color: inherit; padding: 0 2px; border-radius: 2px; }
+.tiptap-editor a { color: var(--gold-dark); text-decoration: underline; }
+.tiptap-editor a:hover { color: var(--navy); }
 /* TipTap placeholder uses an empty p/h with a data attribute */
 .tiptap-editor p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
