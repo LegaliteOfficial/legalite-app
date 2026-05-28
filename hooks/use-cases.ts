@@ -193,10 +193,19 @@ export function useCases() {
 }
 
 export function useCase(id: string | undefined) {
+  // Mirror the DEV_BYPASS short-circuit in `useCases` — without it,
+  // every detail-page open in dev mode tries to hit Apollo, hangs
+  // for the network timeout, then surfaces "Unable to load case".
+  // With this branch the dev sample case is returned synchronously.
   const { data, loading, error } = useQuery(CaseQueryDoc, {
     variables: { id: id ?? '' },
-    skip: !id,
+    skip: !id || DEV_BYPASS,
+    errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
+  if (DEV_BYPASS) {
+    const match = id ? DEV_SAMPLE_CASES.find((c) => c.id === id) : undefined
+    return { data: match, isLoading: false, error: undefined }
+  }
   const row = data?.case as WireCase | undefined
   return {
     data: row ? toCase(row) : undefined,

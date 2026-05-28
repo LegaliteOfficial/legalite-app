@@ -896,7 +896,13 @@ export default function CasesPage() {
                       {pageRows.map((row) => (
                         <tr
                           key={row.id}
-                          className="border-t group"
+                          // Clicking anywhere on the row navigates to
+                          // the case detail page. Inline action cells
+                          // (Actions menu, status pill, etc.) must
+                          // stop propagation so they don't drill in
+                          // accidentally.
+                          onClick={() => router.push(`/cases/${row.id}`)}
+                          className="border-t group cursor-pointer"
                           style={{ borderColor: 'var(--border-soft)' }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = 'var(--surface-overlay)'
@@ -934,7 +940,14 @@ export default function CasesPage() {
                               background: 'inherit',
                             }}
                           >
-                            <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div
+                              className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
+                              // Stop propagation here so clicking
+                              // Edit / Delete doesn't ALSO drill into
+                              // the detail page via the row's click
+                              // handler.
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
