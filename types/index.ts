@@ -22,11 +22,20 @@ export interface Client {
   phone?: string | null
   ghana_card?: string | null
   address?: string | null
+  // ISO yyyy-mm-dd. Optional today — backend column lands with the
+  // contact-detail screen migration. Surfaced in the contacts list
+  // Date of Birth column.
+  date_of_birth?: string | null
   status: 'Active' | 'Inactive'
   notes?: string | null
   created_at: string
   updated_at: string
 }
+
+// Case status mirrors the reference terminology: a case is Open until it pauses
+// (Pending) or wraps up (Closed). Renamed from 'Active' on 2026-05-23 — see
+// migration 20260523_case_workflow_fields.sql.
+export type CaseStatus = 'Open' | 'Pending' | 'Closed'
 
 export interface Case {
   id: string
@@ -38,10 +47,24 @@ export interface Case {
   suit_number?: string | null
   opposing_party?: string | null
   next_court_date?: string | null
-  status: 'Active' | 'Pending' | 'Closed'
-  matter_type?: string | null
+  status: CaseStatus
+  // Renamed from matter_type on 2026-05-23. The DB column is also case_type
+  // — see migration 0003. "Practice area" in the UI.
+  case_type?: string | null
+  // Workflow stage within the case lifecycle (e.g. "Discovery", "Trial prep").
+  // Separate from `status`: a case can be Open + in "Trial prep" stage.
+  case_stage?: string | null
   assigned_lawyer?: string | null
+  // Lawyer who brought the case in. Used for origination credit / reporting.
+  originating_lawyer?: string | null
   date_opened?: string | null
+  // Timestamp when status transitioned to Closed / Pending. Null while Open.
+  closed_at?: string | null
+  pending_at?: string | null
+  // Count of unread notifications/updates on the case. Driven by triggers
+  // on related tables (deadlines, tasks, messages) — surfaced as a bell
+  // count in the cases list.
+  notification_count?: number
   notes?: string | null
   description?: string | null
   created_at: string

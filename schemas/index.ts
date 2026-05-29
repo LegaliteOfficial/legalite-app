@@ -24,10 +24,16 @@ export const registerSchema = z
 // ── Business schemas (match actual DB column names) ──────────────────────
 
 export const clientSchema = z.object({
+  // Firm-defined ID. Some firms auto-generate (LL-0001 style), others
+  // type their own. Optional so quick-create stays one field.
+  client_code: z.string().optional().or(z.literal('')),
   full_name: z.string().min(1, 'Client name is required'),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   ghana_card: z.string().optional().or(z.literal('')),
+  // ISO yyyy-mm-dd (HTML <input type="date"> output format). Backend
+  // column lands with the contact-detail screen migration.
+  date_of_birth: z.string().optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
   status: z.enum(['Active', 'Inactive']).default('Active'),
   notes: z.string().optional().or(z.literal('')),
@@ -39,10 +45,17 @@ export const caseSchema = z.object({
   court: z.string().optional().or(z.literal('')),
   suit_number: z.string().optional().or(z.literal('')),
   opposing_party: z.string().optional().or(z.literal('')),
-  matter_type: z.string().optional().or(z.literal('')),
+  // Renamed from matter_type — also relabelled as "Practice area" in the UI.
+  case_type: z.string().optional().or(z.literal('')),
+  // Workflow stage within the case (Discovery / Trial prep / etc.).
+  // Free-text for now; we'll constrain to a configurable list once
+  // "Stages" admin screen lands.
+  case_stage: z.string().optional().or(z.literal('')),
   assigned_lawyer: z.string().optional().or(z.literal('')),
-  status: z.enum(['Active', 'Pending', 'Closed']).default('Active'),
+  originating_lawyer: z.string().optional().or(z.literal('')),
+  status: z.enum(['Open', 'Pending', 'Closed']).default('Open'),
   next_court_date: z.string().optional().or(z.literal('')),
+  date_opened: z.string().optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
 })
 
