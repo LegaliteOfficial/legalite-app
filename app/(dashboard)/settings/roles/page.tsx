@@ -100,7 +100,7 @@ export default function RolesPage() {
   const canNext = end < total
 
   return (
-    <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--cream)' }}>
+    <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--surface-card)' }}>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm mb-5" style={{ color: 'var(--navy)' }}>
         <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Settings</Link>

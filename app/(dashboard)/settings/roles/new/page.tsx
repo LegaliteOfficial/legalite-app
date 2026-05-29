@@ -312,7 +312,7 @@ export default function CreateRolePage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto" style={{ background: 'var(--cream)' }}>
+    <div className="flex-1 overflow-y-auto" style={{ background: 'var(--surface-card)' }}>
       {/* Sticky top bar */}
       <div
         className="sticky top-0 z-20 backdrop-blur"

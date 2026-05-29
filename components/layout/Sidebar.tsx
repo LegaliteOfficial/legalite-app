@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
+import { useFirmStore } from '@/stores/firm.store'
 import {
   LayoutDashboard,
   Users,
@@ -59,6 +60,23 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
+  // Firm branding overrides — when set in Settings -> Account Info
+  // the wordmark/logo at the top of the sidebar switches to the
+  // firm's own identity. Falls back to "LegaLite" when both are null.
+  const firmName = useFirmStore((s) => s.firmName)
+  const firmLogoDataUrl = useFirmStore((s) => s.firmLogoDataUrl)
+  const firmBrandColor = useFirmStore((s) => s.firmBrandColor)
+  const brandLabel = firmName ?? 'LegaLite'
+  // Initials drive the colour-chip render. Use the firm's first 1-2
+  // word initials when a firm name is set; fall back to "L" for the
+  // LegaLite default so the chip still reads as a brand mark.
+  const brandInitials = (firmName ?? 'LegaLite')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 
   const initials = (user?.name ?? user?.email ?? 'U')
     .split(' ')
@@ -82,14 +100,59 @@ export function Sidebar() {
       className="flex flex-col shrink-0 h-full relative overflow-hidden rounded-2xl"
     >
       {/* Brand */}
-      <div className="px-5 pt-6 pb-5">
-        <h1
-          className="font-heading text-[22px] font-semibold tracking-tight"
-          style={{ color: 'var(--gold-light)' }}
-        >
-          LegaLite
-        </h1>
-      </div>
+      {/* Default state shows the LegaLite wordmark. Once the firm
+          fills in Settings -> Account Info, the wordmark switches
+          to the firm name; an uploaded logo (if any) shows as a
+          square chip to the left of the text. Truncation handles
+          long firm names so the layout stays stable. */}
+      <Link
+        href="/settings/account-info"
+        className="block px-5 pt-6 pb-5 group"
+        title={firmName ? `${firmName} — edit firm details` : 'Set up your firm'}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* Brand chip precedence:
+                1. Logo if uploaded   -> image chip (most specific)
+                2. Else brand colour  -> coloured square with initials
+                3. Else               -> no chip, just the wordmark
+              Logo wins because it carries more identity than a colour
+              swatch; a firm with both set is treating the colour as a
+              fallback the moment they ever pull the logo. */}
+          {firmLogoDataUrl ? (
+            // Uploaded logos can be any aspect ratio — `object-contain`
+            // keeps the whole logo visible inside the chip rather than
+            // cropping it. The chip itself is square so very wide
+            // logos render letterboxed, very tall ones pillarboxed.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={firmLogoDataUrl}
+              alt={`${brandLabel} logo`}
+              className="h-7 w-7 rounded-md object-contain shrink-0"
+              style={{ background: 'rgba(255,255,255,0.08)' }}
+            />
+          ) : firmBrandColor ? (
+            <span
+              aria-hidden
+              className="inline-flex items-center justify-center h-7 w-7 rounded-md text-[11.5px] font-semibold shrink-0"
+              style={{
+                background: firmBrandColor,
+                // Derive a readable text colour from the chip fill so
+                // the initials stay legible on both dark and light
+                // brand colours (e.g. navy vs cream).
+                color: readableTextOn(firmBrandColor),
+              }}
+            >
+              {brandInitials}
+            </span>
+          ) : null}
+          <h1
+            className="font-heading text-[22px] font-semibold tracking-tight truncate"
+            style={{ color: 'var(--gold-light)' }}
+          >
+            {brandLabel}
+          </h1>
+        </div>
+      </Link>
 
       {/* Nav */}
       <nav className="flex-1 px-3 overflow-y-auto">
@@ -184,4 +247,38 @@ export function Sidebar() {
       </div>
     </aside>
   )
+}
+
+/**
+ * Picks white or near-black for text drawn on top of `bg`. Uses the
+ * relative-luminance formula from WCAG to flip at the perceptual
+ * midpoint rather than a naive HSL midpoint, so initials stay
+ * legible on navy / cream / gold without manual tuning.
+ *
+ * Falls back to white for any colour string we can't parse — at
+ * worst a chip looks dim, but no crash.
+ */
+function readableTextOn(bg: string): string {
+  // Accepts `#rgb`, `#rrggbb`, or any string parseable into the
+  // standard 6-char hex. Non-hex inputs (e.g. `rgb(...)` or named
+  // colours) skip the calc and return white.
+  let hex = bg.trim()
+  if (hex.startsWith('#')) hex = hex.slice(1)
+  if (hex.length === 3) {
+    hex = hex
+      .split('')
+      .map((c) => c + c)
+      .join('')
+  }
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return '#FFFFFF'
+  const r = parseInt(hex.slice(0, 2), 16) / 255
+  const g = parseInt(hex.slice(2, 4), 16) / 255
+  const b = parseInt(hex.slice(4, 6), 16) / 255
+  const srgb = (c: number) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  const lum = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b)
+  // 0.42 instead of 0.5 — empirically reads better for short text
+  // on the kind of brand colours legal firms tend to pick (navy,
+  // forest, burgundy all flip to white correctly).
+  return lum > 0.42 ? '#0D1B2A' : '#FFFFFF'
 }
