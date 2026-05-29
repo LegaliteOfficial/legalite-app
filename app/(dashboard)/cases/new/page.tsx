@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   Briefcase,
@@ -267,6 +267,11 @@ const CURRENCIES = [
 
 export default function NewCasePage() {
   const router = useRouter()
+  // `?client=<id>` lets the Clients page link straight into the
+  // new-case form with a client pre-selected. Optional — falls
+  // through cleanly when absent.
+  const searchParams = useSearchParams()
+  const prefilledClientId = searchParams.get('client') ?? ''
   const createMutation = useCreateCase()
   const { data: clients } = useClients()
   const { data: existingCases } = useCases()
@@ -287,7 +292,15 @@ export default function NewCasePage() {
     return Array.from(set).sort()
   }, [user, existingCases])
 
-  const [form, setForm] = useState<NewCaseForm>(INITIAL_FORM)
+  // Seed the form with the prefilled client if the URL carried one,
+  // otherwise fall through to the base initial state. The constant
+  // is reused so any keys added to INITIAL_FORM later flow through
+  // without touching this branch.
+  const [form, setForm] = useState<NewCaseForm>(() =>
+    prefilledClientId
+      ? { ...INITIAL_FORM, client_ids: [prefilledClientId] }
+      : INITIAL_FORM,
+  )
   const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id)
   const [submitting, setSubmitting] = useState(false)
 

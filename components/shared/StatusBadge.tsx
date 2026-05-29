@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 
 const DOT_COLORS: Record<string, string> = {
   Active:        '#2E7D4F',
+  Open:          '#2E7D4F',
   Done:          '#2E7D4F',
   Paid:          '#2E7D4F',
   Low:           '#2E7D4F',
