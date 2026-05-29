@@ -1,0 +1,218 @@
+/**
+ * Minimal RFC 5545 (iCalendar) generator for LegaLite deadlines.
+ * --------------------------------------------------------------
+ * Outputs a valid `.ics` document that any standards-compliant
+ * calendar app (Outlook, Apple Calendar, Google Calendar via
+ * import, Thunderbird, Fantastical, etc.) can read.
+ *
+ * Scope intentionally narrow: we only emit the fields LegaLite's
+ * Deadline carries today — UID, DTSTAMP, DTSTART, DTEND, SUMMARY,
+ * DESCRIPTION, optional URL, plus a sensible PRIORITY mapping.
+ * Recurrence, attendees, alarms, time zones (VTIMEZONE) etc. are
+ * out of scope for the first pass; iOS/Outlook still render the
+ * events fine using UTC stamps.
+ *
+ * The whole thing is dependency-free so it can be called from the
+ * client in a "Download feed" button handler without dragging in
+ * a 90-KB ical.js bundle.
+ */
+
+import type { Deadline } from '@/hooks/use-deadlines'
+
+/**
+ * Width at which iCalendar lines must be folded per RFC 5545 §3.1.
+ * Lines longer than this are split at byte 75 with a CRLF + single
+ * space continuation. Most readers tolerate longer lines but the
+ * strict spec is 75 octets.
+ */
+const FOLD_WIDTH = 75
+
+/**
+ * Fixed product identifier surfaced in the PRODID property. Helps
+ * troubleshooters see at a glance who generated the feed and what
+ * version, without exposing internal infra hostnames.
+ */
+const PROD_ID = '-//LegaLite//Practice Management Calendar 1.0//EN'
+
+/**
+ * Default event duration when a Deadline has no explicit end time.
+ * Currently the schema only carries a single `due_date` timestamp,
+ * so we render each event as a one-hour block — matching the
+ * weekly grid's default. Adjust here if the schema gains `end_at`.
+ */
+const DEFAULT_EVENT_MINUTES = 60
+
+/**
+ * RFC 5545 §3.3.5 — DATE-TIME values in UTC use the basic format
+ * YYYYMMDDTHHMMSSZ. Pads each component to 2/4 digits and strips
+ * the conventional ISO separators.
+ */
+function formatICalUtc(d: Date): string {
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0')
+  return (
+    `${d.getUTCFullYear()}` +
+    `${pad(d.getUTCMonth() + 1)}` +
+    `${pad(d.getUTCDate())}` +
+    `T` +
+    `${pad(d.getUTCHours())}` +
+    `${pad(d.getUTCMinutes())}` +
+    `${pad(d.getUTCSeconds())}` +
+    `Z`
+  )
+}
+
+/**
+ * RFC 5545 §3.3.11 — text values escape \ , ; and newlines. The
+ * order matters: backslash first, otherwise the escapes we add
+ * later would themselves be re-escaped.
+ */
+function escapeICalText(s: string): string {
+  return s
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r\n|\r|\n/g, '\\n')
+}
+
+/**
+ * RFC 5545 §3.1 — content lines are wrapped at 75 octets with
+ * CRLF + single-space continuation. Byte-counting matters for
+ * multi-byte UTF-8; using `TextEncoder` keeps us correct for
+ * names with accented characters (e.g. Ghanaian names).
+ */
+function foldLine(line: string): string {
+  const encoder = new TextEncoder()
+  const bytes = encoder.encode(line)
+  if (bytes.length <= FOLD_WIDTH) return line
+
+  // Walk the string char-by-char accumulating byte length, splitting
+  // whenever we'd exceed the fold width. Continuation lines are
+  // prefixed with a single space (NOT a tab — Outlook chokes on tabs).
+  const out: string[] = []
+  let chunkStart = 0
+  let chunkBytes = 0
+  for (let i = 0; i < line.length; i++) {
+    const charBytes = encoder.encode(line[i]).length
+    if (chunkBytes + charBytes > FOLD_WIDTH) {
+      out.push(line.slice(chunkStart, i))
+      chunkStart = i
+      chunkBytes = 0
+    }
+    chunkBytes += charBytes
+  }
+  out.push(line.slice(chunkStart))
+  return out.join('\r\n ')
+}
+
+/**
+ * Map a LegaLite priority (High/Medium/Low) to RFC 5545's 1–9
+ * PRIORITY scale (1 = highest, 9 = lowest, 0 = undefined). We
+ * pick the canonical "high / normal / low" values from §3.8.1.9.
+ */
+function priorityToICal(p: Deadline['priority']): number {
+  if (p === 'High') return 1
+  if (p === 'Medium') return 5
+  return 7
+}
+
+interface BuildOptions {
+  /**
+   * Human-readable name surfaced in clients that show calendar
+   * names (Apple Calendar shows it as the calendar title, Outlook
+   * as the feed name). Falls back to "LegaLite" if omitted.
+   */
+  calendarName?: string
+  /**
+   * Free-text caption shown under the calendar name in some
+   * clients. Useful for distinguishing the "Firm" feed from the
+   * "Your calendar" feed when a user subscribes to both.
+   */
+  description?: string
+}
+
+/**
+ * Build a complete iCalendar document from a list of deadlines.
+ * Returns a CRLF-joined string ready to drop into a Blob or
+ * write to disk. Empty input still produces a valid (empty)
+ * calendar so subscribers don't error out on first load.
+ */
+export function buildICalendar(
+  deadlines: Deadline[],
+  options: BuildOptions = {},
+): string {
+  const now = new Date()
+  const calendarName = options.calendarName ?? 'LegaLite Calendar'
+  const description = options.description ?? 'Generated by LegaLite'
+
+  // RFC 5545 §3.6.1 — every VEVENT needs DTSTAMP (when this
+  // version of the event was written) and a UID stable across
+  // regenerations. We use the deadline's id for UID so updates
+  // overwrite rather than duplicate, and the current time for
+  // DTSTAMP. SEQUENCE could bump on update; omitted for now.
+  const events = deadlines.map((d) => {
+    const due = new Date(d.due_date)
+    const end = new Date(due.getTime() + DEFAULT_EVENT_MINUTES * 60_000)
+    const summary = escapeICalText(d.title)
+    const lines: string[] = ['BEGIN:VEVENT']
+    lines.push(`UID:${d.id}@legalite.app`)
+    lines.push(`DTSTAMP:${formatICalUtc(now)}`)
+    lines.push(`DTSTART:${formatICalUtc(due)}`)
+    lines.push(`DTEND:${formatICalUtc(end)}`)
+    lines.push(`SUMMARY:${summary}`)
+    if (d.description) {
+      lines.push(`DESCRIPTION:${escapeICalText(d.description)}`)
+    }
+    if (d.case_title) {
+      // Surface the linked case as a LOCATION-style hint so the
+      // client lists it next to the event title. (LOCATION is
+      // typically address, but every major client renders it as
+      // a secondary line which is exactly what we want here.)
+      lines.push(`LOCATION:${escapeICalText(d.case_title)}`)
+    }
+    lines.push(`PRIORITY:${priorityToICal(d.priority)}`)
+    // STATUS in iCalendar: CONFIRMED / TENTATIVE / CANCELLED.
+    // Map LegaLite's Pending/Done/Missed → CONFIRMED/CONFIRMED/
+    // CANCELLED so subscribers correctly grey out missed events.
+    const status = d.status === 'Missed' ? 'CANCELLED' : 'CONFIRMED'
+    lines.push(`STATUS:${status}`)
+    lines.push('END:VEVENT')
+    return lines
+  })
+
+  // Header. X-WR-CALNAME / X-WR-CALDESC are de-facto standard
+  // (Apple/Google/Outlook all read them) for setting the visible
+  // calendar name when subscribed.
+  const out: string[] = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    `PRODID:${PROD_ID}`,
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${escapeICalText(calendarName)}`,
+    `X-WR-CALDESC:${escapeICalText(description)}`,
+  ]
+  for (const event of events) out.push(...event)
+  out.push('END:VCALENDAR')
+
+  // RFC 5545 §3.1 mandates CRLF line endings.
+  return out.map(foldLine).join('\r\n')
+}
+
+/**
+ * Browser-only helper. Triggers a download of the supplied iCal
+ * text under `filename` via the standard anchor-with-Blob trick.
+ * Used by the Feeds page's "Download .ics" buttons.
+ */
+export function downloadIcs(filename: string, ics: string): void {
+  if (typeof window === 'undefined') return
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  // Revoke after a tick so Safari has time to start the download.
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
