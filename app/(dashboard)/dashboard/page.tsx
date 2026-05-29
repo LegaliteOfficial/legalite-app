@@ -128,7 +128,11 @@ function OnboardingBanner({ onDismiss }: { onDismiss: () => void }) {
           Welcome to LegaLite.
         </span>{' '}
         <Link
-          href="/firm/settings"
+          // Routes to Settings -> Account Info, the live surface
+          // where firm-level setup (firm name, address, country,
+          // billing contact) actually lives. `/firm/settings` used
+          // to point at a placeholder route that never shipped.
+          href="/settings/account-info"
           className="font-medium hover:underline underline-offset-2"
           style={{ color: 'var(--gold)' }}
         >
