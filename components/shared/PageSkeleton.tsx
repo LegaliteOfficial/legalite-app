@@ -1,38 +1,21 @@
 'use client'
 
-import { Skeleton } from '@/components/ui/skeleton'
+/**
+ * PageSkeleton — universal page-level loading state.
+ *
+ * Historically this rendered a row-of-bars Skeleton placeholder.
+ * It now wraps `PageLoader` so the law-themed scales-of-justice
+ * animation appears uniformly wherever any page or list-level
+ * loading is in flight (matches the route-level `loading.tsx`
+ * files, the auth bounce, dashboard tab switches, etc).
+ *
+ * Keeping the `PageSkeleton` export means we don't have to touch
+ * every call site that already imports this — the visual swap
+ * propagates with a single change here.
+ */
+
+import { PageLoader } from '@/components/shared/PageLoader'
 
 export function PageSkeleton() {
-  return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="px-6 py-5">
-        <div className="flex items-end justify-between gap-6 mb-7">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-44" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <Skeleton className="h-9 w-32" />
-        </div>
-        <div
-          className="rounded-2xl border overflow-hidden"
-          style={{
-            background: 'var(--surface-card)',
-            borderColor: 'var(--border-soft)',
-            boxShadow: 'var(--shadow-xs)',
-          }}
-        >
-          <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border-soft)' }}>
-            <Skeleton className="h-4 w-full max-w-[300px]" />
-          </div>
-          <div className="px-5 py-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="py-3 border-b last:border-b-0" style={{ borderColor: 'var(--border-soft)' }}>
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  return <PageLoader />
 }

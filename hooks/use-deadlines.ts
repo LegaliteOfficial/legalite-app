@@ -6,6 +6,10 @@ import {
   DeleteDeadlineMutationDoc,
   UpdateDeadlineMutationDoc,
 } from '@/lib/graphql/operations'
+// DEV_SAMPLE_DEADLINES lives in a server-safe module so the
+// /api/calendar/feeds/[scope] route can reuse the exact same
+// records when generating subscribed iCal feeds in dev mode.
+import { DEV_SAMPLE_DEADLINES } from '@/lib/calendar/dev-data'
 
 export interface Deadline {
   id: string
@@ -25,71 +29,6 @@ export interface Deadline {
 type DeadlineInput = Partial<Omit<Deadline, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
-
-/**
- * DEV ONLY — sample deadlines used so the case-detail Calendar
- * section has something to render in dev mode. Mirrors the dev
- * sample case ids in `use-cases.ts` so each card lights up on the
- * right case-detail page.
- */
-const DEV_SAMPLE_DEADLINES: Deadline[] = [
-  {
-    id: 'dev-deadline-1',
-    user_id: 'dev',
-    case_id: 'dev-1',
-    title: 'Mensah holdings — case management conference',
-    description: null,
-    due_date: '2026-06-04T09:00:00Z',
-    priority: 'High',
-    status: 'Pending',
-    reminder_days: 2,
-    case_title: 'Mensah v. Ghana Revenue Authority',
-    created_at: '2026-05-20T09:00:00Z',
-    updated_at: '2026-05-20T09:00:00Z',
-  },
-  {
-    id: 'dev-deadline-2',
-    user_id: 'dev',
-    case_id: 'dev-1',
-    title: 'File discovery responses to GRA',
-    description: null,
-    due_date: '2026-06-12T16:00:00Z',
-    priority: 'Medium',
-    status: 'Pending',
-    reminder_days: 5,
-    case_title: 'Mensah v. Ghana Revenue Authority',
-    created_at: '2026-05-20T09:00:00Z',
-    updated_at: '2026-05-20T09:00:00Z',
-  },
-  {
-    id: 'dev-deadline-3',
-    user_id: 'dev',
-    case_id: 'dev-2',
-    title: 'Estate of Owusu — probate hearing',
-    description: null,
-    due_date: '2026-05-29T10:30:00Z',
-    priority: 'High',
-    status: 'Pending',
-    reminder_days: 1,
-    case_title: 'Estate of Owusu — Probate',
-    created_at: '2026-05-15T09:00:00Z',
-    updated_at: '2026-05-15T09:00:00Z',
-  },
-  {
-    id: 'dev-deadline-4',
-    user_id: 'dev',
-    case_id: 'dev-3',
-    title: 'AccraTech v. Volta — settlement negotiation',
-    description: null,
-    due_date: '2026-07-15T14:00:00Z',
-    priority: 'Medium',
-    status: 'Pending',
-    reminder_days: 3,
-    case_title: 'AccraTech Ltd v. Volta Cables',
-    created_at: '2026-05-18T09:00:00Z',
-    updated_at: '2026-05-18T09:00:00Z',
-  },
-]
 
 export function useDeadlines(status?: string) {
   const { data, loading, error, refetch } = useQuery(DeadlinesQueryDoc, {
@@ -143,12 +82,27 @@ export function useCreateDeadline() {
     isPending: state.loading,
     error: state.error,
     mutateAsync: async (data: DeadlineInput) => {
+      // DEV_BYPASS — no backend to call. Resolve with a mock
+      // record so callers can verify the UI flow end-to-end. The
+      // record won't appear in subsequent useDeadlines() reads
+      // because those still serve the static DEV_SAMPLE_DEADLINES
+      // list; that's acceptable for a dev mock.
+      if (DEV_BYPASS) {
+        return {
+          ...data,
+          id: `dev-new-${Date.now()}`,
+          user_id: 'dev',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as Deadline
+      }
       const res = await mutate({
         variables: { input: data as Parameters<typeof mutate>[0]['variables']['input'] },
       })
       return res.data?.createDeadline
     },
     mutate: (data: DeadlineInput) => {
+      if (DEV_BYPASS) return
       void mutate({
         variables: { input: data as Parameters<typeof mutate>[0]['variables']['input'] },
       })
@@ -164,12 +118,25 @@ export function useUpdateDeadline() {
     isPending: state.loading,
     error: state.error,
     mutateAsync: async ({ id, data }: { id: string; data: DeadlineInput }) => {
+      // DEV_BYPASS — resolve with a mock so the UI sees a success
+      // path. Same caveat as useCreateDeadline (mutations don't
+      // persist; subsequent reads still see the seed data).
+      if (DEV_BYPASS) {
+        return {
+          ...data,
+          id,
+          user_id: 'dev',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as Deadline
+      }
       const res = await mutate({
         variables: { id, input: data as Parameters<typeof mutate>[0]['variables']['input'] },
       })
       return res.data?.updateDeadline
     },
     mutate: ({ id, data }: { id: string; data: DeadlineInput }) => {
+      if (DEV_BYPASS) return
       void mutate({
         variables: { id, input: data as Parameters<typeof mutate>[0]['variables']['input'] },
       })
@@ -185,9 +152,12 @@ export function useDeleteDeadline() {
     isPending: state.loading,
     error: state.error,
     mutateAsync: async (id: string) => {
+      // DEV_BYPASS — resolve cleanly so the UI's success path runs.
+      if (DEV_BYPASS) return
       await mutate({ variables: { id } })
     },
     mutate: (id: string) => {
+      if (DEV_BYPASS) return
       void mutate({ variables: { id } })
     },
   }

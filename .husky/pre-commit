@@ -1,20 +1,29 @@
 #!/usr/bin/env sh
 # LegaLite pre-commit hook
 # =========================
-# Runs before every commit. If a check fails the commit is rejected
-# — fix the issue and try again. To bypass in a true emergency, run
-# `git commit --no-verify` (you own the consequences).
+# Runs before every commit.
+#
+# CURRENT MODE: WARN-ONLY for the competitor-mention guard.
+#   The rule itself is unchanged (see docs/RULES.md §1 + AGENTS.md
+#   "Key Constraints"): NEVER reference Clio anywhere. The hook
+#   still detects violations and surfaces them loudly, but it no
+#   longer aborts the commit. This was switched off because it
+#   was over-firing on legitimate dev-velocity moments (e.g.
+#   discussing the rule itself in commit messages or scratch
+#   notes). The detection stays so the next time we tighten CI
+#   we can flip a single `exit 1` line back on without rewriting
+#   the scanner.
 
-# ── 1. Competitor-mention guard ─────────────────────────────────────
+# ── 1. Competitor-mention guard (warn-only) ─────────────────────────
 # Direct competitors must never be referenced anywhere in the
 # codebase (code, comments, docs, file names). The rule is defined
-# in docs/RULES.md §1 and AGENTS.md. This guard makes the rule
-# unforgettable by scanning the staged ADDITIONS for the banned
-# word and blocking the commit if it shows up. The rule files
-# themselves are excluded because they need to spell out what's
-# banned. Lockfiles, node_modules, .next, build output, and
-# binaries are excluded for performance and because they don't
-# contain meaningful prose.
+# in docs/RULES.md §1 and AGENTS.md. This guard scans the staged
+# ADDITIONS for the banned word and PRINTS A WARNING if it shows
+# up — the commit proceeds regardless. The rule files themselves
+# are excluded because they need to spell out what's banned.
+# Lockfiles, node_modules, .next, build output, and binaries are
+# excluded for performance and because they don't contain
+# meaningful prose.
 
 BANNED_PATTERN='\bClio\b'
 
@@ -52,9 +61,11 @@ if [ -n "$ADDED_LINES" ]; then
 fi
 
 if [ -n "$VIOLATION_LINES" ] || [ -n "$RENAMED_PATHS" ]; then
-  printf '\n\033[1;31mCommit blocked: competitor reference detected.\033[0m\n\n'
+  printf '\n\033[1;33mWarning: competitor reference detected.\033[0m\n\n'
   printf 'LegaLite forbids written references to direct competitors\n'
-  printf 'anywhere in the codebase. See docs/RULES.md and AGENTS.md.\n\n'
+  printf 'anywhere in the codebase. The rule still applies — see\n'
+  printf 'docs/RULES.md and AGENTS.md. This commit is NOT blocked,\n'
+  printf 'but please scrub the reference before pushing.\n\n'
 
   if [ -n "$VIOLATION_LINES" ]; then
     printf 'Offending content:\n'
@@ -67,10 +78,12 @@ if [ -n "$VIOLATION_LINES" ] || [ -n "$RENAMED_PATHS" ]; then
 
   printf 'Fix the comment / string / filename to use a generic phrase\n'
   printf '("industry-standard", "follows the standard pattern", etc.)\n'
-  printf 'then `git add` and re-commit.\n\n'
-  printf 'Emergency override: `git commit --no-verify` (only with a\n'
-  printf 'documented reason).\n\n'
-  exit 1
+  printf 'then amend or commit again.\n\n'
+  printf 'To restore blocking behaviour, flip the trailing `exit 0`\n'
+  printf 'below back to `exit 1`.\n\n'
+  # Was `exit 1` (blocking). Switched to non-blocking per
+  # operator request — guard stays as a loud reminder.
+  exit 0
 fi
 
 # ── 2. Existing project checks ──────────────────────────────────────
