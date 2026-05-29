@@ -1,1 +1,81 @@
-npm test
+#!/usr/bin/env sh
+# LegaLite pre-commit hook
+# =========================
+# Runs before every commit. If a check fails the commit is rejected
+# — fix the issue and try again. To bypass in a true emergency, run
+# `git commit --no-verify` (you own the consequences).
+
+# ── 1. Competitor-mention guard ─────────────────────────────────────
+# Direct competitors must never be referenced anywhere in the
+# codebase (code, comments, docs, file names). The rule is defined
+# in docs/RULES.md §1 and AGENTS.md. This guard makes the rule
+# unforgettable by scanning the staged ADDITIONS for the banned
+# word and blocking the commit if it shows up. The rule files
+# themselves are excluded because they need to spell out what's
+# banned. Lockfiles, node_modules, .next, build output, and
+# binaries are excluded for performance and because they don't
+# contain meaningful prose.
+
+BANNED_PATTERN='\bClio\b'
+
+# Diff of staged additions only. `-U0` keeps the patch tight (no
+# context lines) so we don't false-positive on unchanged code that
+# happens to live next to a modified line. The `:(exclude)`
+# pathspecs scope the search to actual source / docs.
+ADDED_LINES="$(
+  git diff --cached -U0 --diff-filter=ACMR \
+    -- \
+    ':(exclude)AGENTS.md' \
+    ':(exclude)docs/RULES.md' \
+    ':(exclude).husky/pre-commit' \
+    ':(exclude)pnpm-lock.yaml' \
+    ':(exclude)package-lock.json' \
+    ':(exclude)yarn.lock' \
+    ':(exclude)*/node_modules/*' \
+    ':(exclude)*/.next/*' \
+    ':(exclude)*/dist/*' \
+    ':(exclude)*/build/*' \
+  | grep -E '^\+[^+]' \
+  || true
+)"
+
+# Also block staged file/path names that contain the banned word.
+RENAMED_PATHS="$(
+  git diff --cached --name-only --diff-filter=ACMR \
+    | grep -iE "$BANNED_PATTERN" \
+    || true
+)"
+
+VIOLATION_LINES=""
+if [ -n "$ADDED_LINES" ]; then
+  VIOLATION_LINES="$(printf '%s\n' "$ADDED_LINES" | grep -E "$BANNED_PATTERN" || true)"
+fi
+
+if [ -n "$VIOLATION_LINES" ] || [ -n "$RENAMED_PATHS" ]; then
+  printf '\n\033[1;31mCommit blocked: competitor reference detected.\033[0m\n\n'
+  printf 'LegaLite forbids written references to direct competitors\n'
+  printf 'anywhere in the codebase. See docs/RULES.md and AGENTS.md.\n\n'
+
+  if [ -n "$VIOLATION_LINES" ]; then
+    printf 'Offending content:\n'
+    printf '%s\n\n' "$VIOLATION_LINES"
+  fi
+  if [ -n "$RENAMED_PATHS" ]; then
+    printf 'Offending path(s):\n'
+    printf '%s\n\n' "$RENAMED_PATHS"
+  fi
+
+  printf 'Fix the comment / string / filename to use a generic phrase\n'
+  printf '("industry-standard", "follows the standard pattern", etc.)\n'
+  printf 'then `git add` and re-commit.\n\n'
+  printf 'Emergency override: `git commit --no-verify` (only with a\n'
+  printf 'documented reason).\n\n'
+  exit 1
+fi
+
+# ── 2. Existing project checks ──────────────────────────────────────
+# Whatever was here before the guard was introduced. Add tests,
+# linters, type-checks, etc. on the lines below.
+# (Kept lightweight by default; uncomment when CI catches up.)
+
+# npm test --silent

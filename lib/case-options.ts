@@ -38,7 +38,7 @@ export type PracticeArea = (typeof PRACTICE_AREAS)[number]
  * Case stage = workflow position within a case (where the case is in its
  * lifecycle), distinct from Case status (Open / Pending / Closed).
  *
- * Default list covers both litigation and transactional work. In Clio
+ * Default list covers both litigation and transactional work. In the standard pattern
  * these are configurable per practice area; until that admin screen
  * ships, we expose one shared list. When firms want per-practice-area
  * stages, swap this for a hook that scopes by `practice_area`.

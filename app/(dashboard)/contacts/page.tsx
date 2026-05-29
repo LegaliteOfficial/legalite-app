@@ -3,7 +3,7 @@
 /**
  * Contacts list view
  * ------------------
- * Clio-aligned contacts page: top tabs (Contacts / Conflict checks),
+ * industry-standard contacts page: top tabs (Contacts / Conflict checks),
  * type-filter pills (All / People / Companies), header actions (Manage
  * tags / New contact / New company), search, column picker, sortable
  * table with checkbox + Actions menu, and a pinned pagination + export
@@ -95,7 +95,7 @@ interface ColumnDef {
 /**
  * Derived contact shape that augments the wire `Client` with display-
  * only fields (role pill text, contact category) computed from existing
- * columns. Lets the table render Clio-style without schema changes.
+ * columns. Lets the table render industry-standard without schema changes.
  */
 interface Contact extends Client {
   // Always "Person" today; gets real values once a `contact_type` column
@@ -111,7 +111,7 @@ type SortDir = 'asc' | 'desc'
 
 /**
  * Colour palette for the contact-type pills. Sky-blue badges identify
- * people; violet identifies companies — matches Clio's chip styling so
+ * people; violet identifies companies — matches the reference chip styling so
  * the contact category is scannable at a glance. Keep these in sync with
  * the row-avatar tints further down (Name column render).
  */
@@ -431,7 +431,7 @@ export default function ContactsPage() {
   // ── Filters popover state ──────────────────────────────────────────
   // `contactRoleFilter`: tri-state — `null` means no filter (show all),
   // 'none' means contacts with no assigned role, 'client' means the
-  // Client role. Mirrors Clio's "Contact type" radio (None / Client).
+  // Client role. Mirrors the reference "Contact type" radio (None / Client).
   // `contactTagsFilter`: list of tag names to require on each contact.
   // Inert until the Client schema gets a `tags` column — kept here so
   // the picker UI works end-to-end and ships with a real selection
@@ -672,7 +672,7 @@ export default function ContactsPage() {
 
             {/* Toolbar: switches between the type-filter pills and a
                 bulk-actions strip when one or more rows are selected.
-                Matches Clio — destructive actions live up here, not
+                Matches the standard pattern — destructive actions live up here, not
                 inline per row, so deletion is a deliberate two-step
                 (select → delete). */}
             <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
@@ -875,7 +875,7 @@ export default function ContactsPage() {
                           // Clicking anywhere on the row (outside the
                           // checkbox + Actions cells, which stop
                           // propagation) drills into the detail page.
-                          // Matches Clio's pattern where the row is
+                          // Matches the reference pattern where the row is
                           // the navigation target, not just the name.
                           onClick={() => router.push(`/contacts/${row.id}`)}
                           className="border-t group transition-colors cursor-pointer"
@@ -1056,7 +1056,7 @@ function TabButton({
 }
 
 /**
- * Clio-style Columns popover. Two panels (Visible columns + Custom
+ * industry-standard Columns popover. Two panels (Visible columns + Custom
  * Fields) with staged changes — toggling a checkbox edits a local draft
  * Set, and only "Update columns" commits the change. "Cancel" or
  * clicking outside discards the draft. Replaces the previous single-
@@ -1250,7 +1250,7 @@ function ColumnsPicker({
 }
 
 /**
- * Filters popover — mirrors Clio's contact filter dropdown. Three
+ * Filters popover — mirrors the reference contact filter dropdown. Three
  * sections (Contact type radio, Contact tags multi-picker, Custom
  * Fields stub) plus Apply / Clear actions in the footer.
  *
@@ -1339,7 +1339,7 @@ function FiltersPopover({
   }
 
   // Radio behaviour: clicking the currently-selected option clears it
-  // (so the user can go back to "no filter") — matches Clio.
+  // (so the user can go back to "no filter") — matches the standard pattern.
   const selectRole = (val: 'none' | 'client') => {
     setDraftRole((prev) => (prev === val ? null : val))
   }
@@ -1718,7 +1718,7 @@ function SortableHeader({
 /**
  * Bulk-actions strip — replaces the type-filter pills row whenever one
  * or more contacts are selected. Carries the destructive Delete action
- * + selection count + clear affordance, matching Clio's UX where
+ * + selection count + clear affordance, matching the reference UX where
  * deletion is intentionally a two-step (select then delete).
  */
 function BulkActionsBar({

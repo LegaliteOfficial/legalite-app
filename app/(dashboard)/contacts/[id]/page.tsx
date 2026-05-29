@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Contact detail page (Clio-aligned)
+ * Contact detail page (industry-standard)
  * ----------------------------------
  * Full-screen detail view for a single contact. Top bar carries the
  * contact avatar, full name, and three header actions (Quick bill,
@@ -92,8 +92,8 @@ import type { Case, Document, Invoice } from '@/types'
 // ── Constants ──────────────────────────────────────────────────────────
 
 /**
- * Tabs shown above the dashboard panels. Mirrors Clio's set minus
- * Clio Connect — that's a vendor-specific portal we won't ship.
+ * Tabs shown above the dashboard panels. Mirrors the reference set minus
+ * an external portal — that's a vendor-specific portal we won't ship.
  */
 const TABS = [
   'Dashboard',
@@ -410,7 +410,7 @@ function TabButton({
 
 /**
  * Reusable collapsible card used by every dashboard panel. Mirrors
- * Clio's chevron-on-the-left, label-bold, optional right-slot layout.
+ * the reference chevron-on-the-left, label-bold, optional right-slot layout.
  */
 function CollapsibleCard({
   label,
@@ -735,10 +735,10 @@ function CasesCard({
 }
 
 /**
- * "Associated cases" panel — Clio's variant of the cases card where
+ * "Associated cases" panel — the reference variant of the cases card where
  * the contact appears in a related-contacts list rather than as the
  * primary client. We surface a toggle (All / Open) + Link case CTA,
- * mirroring Clio. Today the panel just shows an empty state because
+ * following the standard pattern. Today the panel just shows an empty state because
  * we don't have a many-to-many `case_contacts` join table yet.
  */
 function AssociatedCasesCard({ contactId }: { contactId: string }) {
@@ -823,7 +823,7 @@ function ScopeBtn({
  * Document column registry — the set of columns the picker can toggle.
  * Some fields (Size / Author / Uploaded by / Comments) aren't in our
  * Document schema yet, so they render em-dashes today. Keeping them in
- * the registry means the picker UI matches Clio one-to-one and lights
+ * the registry means the picker UI matches the standard pattern one-to-one and lights
  * up automatically the day the columns ship.
  */
 type DocColumnId =
@@ -873,7 +873,7 @@ const DOC_COLUMNS: DocColumn[] = [
 const DOC_PAGE_SIZES = [25, 50, 100] as const
 
 /**
- * Documents tab body. Mirrors Clio's contact-scoped documents view:
+ * Documents tab body. Mirrors the reference contact-scoped documents view:
  * toolbar (Filter by keyword · Priority · Columns · Filters · New) plus
  * either an empty-state illustration or a table of files.
  *
@@ -946,7 +946,7 @@ function DocumentsTab({ contactId }: { contactId: string }) {
     setPage(0)
   }, [search, caseFilter, categoryFilter, pageSize])
 
-  // `showBin` is reserved for the future trash view (Clio's "Show
+  // `showBin` is reserved for the future trash view (the reference "Show
   // Items in Bin" toggle). The state is read by the Apply handler in
   // the filter popover; suppress the unused-var lint until the bin
   // surface lands.
@@ -961,7 +961,7 @@ function DocumentsTab({ contactId }: { contactId: string }) {
         boxShadow: 'var(--shadow-xs)',
       }}
     >
-      {/* Card-internal tab label — matches Clio's "Documents" sub-
+      {/* Card-internal tab label — matches the reference "Documents" sub-
           heading inside the panel. */}
       <div
         className="px-6 pt-5 pb-4 border-b"
@@ -1222,12 +1222,12 @@ function DocumentsTab({ contactId }: { contactId: string }) {
 // ── Bills tab ──────────────────────────────────────────────────────────
 
 /**
- * Status sub-tabs surfaced above the bills table. Order mirrors Clio.
+ * Status sub-tabs surfaced above the bills table. Order follows the standard pattern.
  * Each one maps to a predicate over `Invoice.status`; the rest of the
  * pipeline filters by the chosen status, then layers search /
  * advanced filters on top.
  *
- * Notes on the Clio→LegaLite status mapping:
+ * Notes on the the standard pattern→LegaLite status mapping:
  *   - **Draft** matches `'Draft'` directly.
  *   - **Pending approval** has no analogue in our schema yet — the
  *     workflow ships with the firm-approval module, so this sub-tab
@@ -1272,7 +1272,7 @@ interface BillColumn {
 }
 
 /**
- * Bill column registry — matches Clio's checklist exactly, default
+ * Bill column registry — matches the reference checklist exactly, default
  * visibility per the screenshot. Columns whose data isn't on Invoice
  * yet (last_sent, pending_payment, paid_on, type, total/net_total/tax
  * — those come with the line-item ledger) render em-dashes today.
@@ -1297,7 +1297,7 @@ const BILL_COLUMNS: BillColumn[] = [
 
 const BILL_PAGE_SIZES = [25, 50, 100] as const
 
-/** Categories surfaced by the Type filter — matches Clio's three. */
+/** Categories surfaced by the Type filter — matches the reference three. */
 const BILL_TYPES = ['None', 'Revenue', 'Client Account'] as const
 
 interface BillFilters {
@@ -1327,7 +1327,7 @@ const EMPTY_BILL_FILTERS: BillFilters = {
 }
 
 /**
- * Bills tab body. Mirrors Clio's contact-scoped bills view: status
+ * Bills tab body. Mirrors the reference contact-scoped bills view: status
  * sub-tabs · Search by ID · Columns popover · Filters popover · table
  * (or empty state) · paging + Export footer.
  *
@@ -1636,7 +1636,7 @@ function BillsTab({ contactId }: { contactId: string }) {
 
 /**
  * Status sub-tab. Pill-style button; the active state gets a filled
- * navy background so it reads as a "you are here" indicator (Clio
+ * navy background so it reads as a "you are here" indicator (the standard pattern
  * uses an outlined border treatment, but our pill matches the rest
  * of the LegaLite tabs).
  */
@@ -1847,7 +1847,7 @@ function BillsColumnsPopover({
  *
  * Today the Solicitor and Currency pickers are stubs (we don't have
  * a firm-users picker or a multi-currency catalog yet); they show
- * the Clio copy so users can preview the surface area.
+ * the the standard pattern copy so users can preview the surface area.
  */
 function BillsFiltersPopover({
   filters,
@@ -2022,7 +2022,7 @@ function BillsFiltersPopover({
               onChange={(v) => setDraft({ ...draft, currency: v })}
             />
 
-            {/* Custom Fields stub — mirrors Clio. */}
+            {/* Custom Fields stub — follows the standard pattern. */}
             <div>
               <div
                 className="text-[12.5px] font-semibold mb-1.5"
@@ -2559,7 +2559,7 @@ interface TxnColumn {
 
 /**
  * Transactions column registry. Every column defaults to visible —
- * matches Clio's all-checked state on first open.
+ * matches the reference all-checked state on first open.
  */
 const TXN_COLUMNS: TxnColumn[] = [
   { id: 'date', label: 'Date', defaultVisible: true },
@@ -2574,7 +2574,7 @@ const TXN_COLUMNS: TxnColumn[] = [
 
 /**
  * Transactions tab body. We don't yet have a bank-accounts table or a
- * ledger, so this whole tab is structurally Clio-aligned but
+ * ledger, so this whole tab is structurally industry-standard but
  * permanently lands on the "No bank accounts found" empty state. The
  * toolbar (date range + Columns popover) and the table-shaped scaffold
  * are still rendered so the surface area looks complete and is ready
@@ -2878,7 +2878,7 @@ function NoBankAccountsEmptyState() {
 
 /**
  * Inline SVG of a stylised bank building sitting on a white card,
- * with a small "+" badge in the bottom-right corner. Mirrors Clio's
+ * with a small "+" badge in the bottom-right corner. Mirrors the reference
  * Transactions-empty illustration.
  *
  * Composition (in z-order):
@@ -3090,7 +3090,7 @@ const COMM_COLUMNS: CommColumn[] = [
 ]
 
 /**
- * Communications tab body. Mirrors Clio's contact-scoped Communications
+ * Communications tab body. Mirrors the reference contact-scoped Communications
  * view:
  *   - Sub-tabs (Logs / Secure messages / Client portals) — Logs is
  *     wired; the other two stub a toast until those flows ship.
@@ -3662,7 +3662,7 @@ function NoLogsEmptyState() {
 
 /**
  * Inline SVG of two overlapping speech bubbles with a "+" badge in
- * the bottom-right. Mirrors Clio's Communications-empty illustration.
+ * the bottom-right. Mirrors the reference Communications-empty illustration.
  *
  * Composition (in z-order):
  *   1. Ground shadow
@@ -3801,7 +3801,7 @@ const NOTE_COLUMNS: NoteColumn[] = [
 ]
 
 /**
- * Notes tab body. Mirrors Clio's contact-scoped Notes view:
+ * Notes tab body. Mirrors the reference contact-scoped Notes view:
  *
  *   - Card label "Notes" + "New note" gold primary button.
  *   - Toolbar: All / With time / Without time pill toggle (filters
@@ -4381,7 +4381,7 @@ function NoteColumnsPopover({
 }
 
 /**
- * "New note" dialog. Mirrors Clio:
+ * "New note" dialog. Follows the standard pattern:
  *   - Subject (required-ish text)
  *   - Note: a rich-text style block. The toolbar is a row of icon
  *     buttons (Bold / Italic / Underline / Highlight / Ordered list /
@@ -4680,7 +4680,7 @@ function NewNoteDialog({
 }
 
 /**
- * Real rich-text editor backed by Tiptap. Renders Clio's icon
+ * Real rich-text editor backed by Tiptap. Renders the reference icon
  * toolbar above a `contenteditable` surface; every button is wired
  * to a Tiptap command and lights up with a gold-tinted background
  * when the cursor is sitting inside that mark/format.
@@ -5236,7 +5236,7 @@ function formatClock(secs: number): string {
 
 /**
  * Format a second count as a compact human-readable string —
- * e.g. `1h 12m`, `42s`, `2h 5m 30s`. Matches Clio's "1h 12m, 1:12…"
+ * e.g. `1h 12m`, `42s`, `2h 5m 30s`. Matches the reference "1h 12m, 1:12…"
  * placeholder so users see a familiar shape when the timer commits.
  */
 function humanizeDuration(secs: number): string {
@@ -5724,7 +5724,7 @@ function FiltersPopover({
 }
 
 /**
- * "New" dropdown — surfaces Clio's four creation entry points. Each
+ * "New" dropdown — surfaces the reference four creation entry points. Each
  * menu item opens its own dialog; the parent owns the open state so
  * the dialogs survive dropdown close.
  */
@@ -5796,7 +5796,7 @@ function NewDropdown({
 }
 
 /**
- * Empty state shown when the contact has no documents. Mirrors Clio:
+ * Empty state shown when the contact has no documents. Follows the standard pattern:
  * an open-book illustration with a bright-blue magnifying glass
  * overlapping the bottom-right corner, plus the "No files found"
  * headline and the drag-and-drop subhead.
@@ -5825,7 +5825,7 @@ function DocumentsEmptyState() {
 
 /**
  * Inline SVG of an open book with a magnifying glass overlapping the
- * bottom-right corner. Mirrors Clio's contact-scoped Documents empty
+ * bottom-right corner. Mirrors the reference contact-scoped Documents empty
  * state. Drawn at a 220×180 viewBox; scales to whatever wrapper width
  * the caller sets.
  *
@@ -5847,7 +5847,7 @@ function NoFilesIllustration() {
   const SHADOW = 'rgba(13, 27, 42, 0.08)'
   const LENS_FILL = '#7DD3FC' // light sky-blue glass
   const LENS_HIGHLIGHT = '#FFFFFF'
-  const LENS_RIM = '#1E88E5' // saturated blue matching Clio's accent
+  const LENS_RIM = '#1E88E5' // saturated blue matching the reference accent
   const HANDLE = '#1E88E5'
 
   return (
@@ -6169,7 +6169,7 @@ function DocumentRow({
 
 /**
  * Default category list for the upload dialog. Pulled from the
- * standard Clio set so users see familiar legal-document buckets.
+ * standard the standard pattern set so users see familiar legal-document buckets.
  * Persisted as the document's `template_type` string column for now;
  * the firm-settings screen will let firms manage this list later.
  */
@@ -6229,7 +6229,7 @@ function emptyStagedFile(): StagedFile {
 }
 
 /**
- * Upload dialog — opens from New ▸ Upload files. Mirrors Clio's
+ * Upload dialog — opens from New ▸ Upload files. Mirrors the reference
  * modal: file row + metadata fields (File name · Matter · Received
  * date · Category · Author), with "+ Add another file" to attach
  * more in a single submission, then Upload / Cancel.
@@ -6277,7 +6277,7 @@ function UploadDialog({
 
   // Submission is valid when every row has both a file and a non-
   // empty file name. Matter / category / author stay optional —
-  // matches Clio (only the file + filename are required).
+  // matches the standard pattern (only the file + filename are required).
   const canSubmit =
     staged.length > 0 &&
     staged.every((r) => r.file !== null && r.fileName.trim().length > 0) &&
@@ -6622,7 +6622,7 @@ function UploadRow({
       </div>
 
       {/* Received date + Category — side by side at md+, stacked
-          below to mirror Clio's two-up row. */}
+          below to mirror the reference two-up row. */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label
@@ -6682,7 +6682,7 @@ function UploadRow({
         </div>
       </div>
 
-      {/* Author — free text. Kept here for parity with Clio; persisted
+      {/* Author — free text. Kept here for parity with the standard pattern; persisted
           once the contact-detail migration adds an author column. */}
       <div>
         <Label
@@ -7158,7 +7158,7 @@ function CreateFolderDialog({
  * today (no templates seeded), so the dropdown renders the "No
  * results found" state inline. Document name + "Create a PDF
  * document" toggle round out the form; footer carries the same
- * sub-processor disclosure Clio shows.
+ * sub-processor disclosure the standard pattern shows.
  *
  * On Create we mint a real Document record with `template_type` set
  * to the chosen template name (or empty if none) and `content` left
@@ -7263,7 +7263,7 @@ function CreateFromTemplateDialog({
                 color: 'var(--text-primary)',
               }}
             />
-            {/* Inline "no results" panel. Mirrors Clio's design where
+            {/* Inline "no results" panel. Follows the standard pattern where
                 the picker shows search results / empty state directly
                 below the input rather than in a separate dropdown. */}
             <div
@@ -7347,7 +7347,7 @@ function CreateFromTemplateDialog({
             </div>
           </div>
 
-          {/* Create as PDF checkbox — Clio's default is on. */}
+          {/* Create as PDF checkbox — the reference default is on. */}
           <label className="flex items-center gap-2 cursor-pointer select-none text-[13px]">
             <span
               className="inline-flex h-4 w-4 items-center justify-center rounded-sm border transition-colors"
@@ -7382,7 +7382,7 @@ function CreateFromTemplateDialog({
             />
           </label>
 
-          {/* Sub-processor disclosure — Clio surfaces this because
+          {/* Sub-processor disclosure — the standard pattern surfaces this because
               they hand template rendering off to Nintex. LegaLite
               runs renders in-house today, so the copy is adapted
               to a generic disclaimer pointing at our Terms / Privacy

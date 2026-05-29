@@ -32,9 +32,9 @@ export interface Client {
   updated_at: string
 }
 
-// Case status mirrors Clio's terminology: a case is Open until it pauses
+// Case status mirrors the reference terminology: a case is Open until it pauses
 // (Pending) or wraps up (Closed). Renamed from 'Active' on 2026-05-23 — see
-// migration 0003_case_clio_fields.sql.
+// migration 20260523_case_workflow_fields.sql.
 export type CaseStatus = 'Open' | 'Pending' | 'Closed'
 
 export interface Case {

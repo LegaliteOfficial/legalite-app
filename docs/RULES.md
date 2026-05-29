@@ -7,11 +7,152 @@
 
 ## 1. General Rules
 
+- **NEVER REFERENCE CLIO.** Clio is a direct competitor.
+  Mentioning their product anywhere in this codebase — source,
+  comments, docs, commit messages, PR descriptions, file names,
+  identifiers, branch names, migrations, internal Slack snippets
+  pasted into the repo, anywhere — creates real legal exposure
+  (copying allegations, trade-dress claims). When a reference
+  screenshot is supplied, describe the visual goal in your own
+  words: "standard practice-management layout", "industry
+  pattern", "follows the standard convention". Never attribute
+  the design to a third party. **This rule supersedes everything
+  else in this file and is non-negotiable.** A pre-commit hook
+  at `.husky/pre-commit` enforces it mechanically — see §1.1 for
+  the operator procedures (bypass, disable, modify, remove).
 - Always reference `README.md`, `docs/TENANCY.md`, `docs/FRONTEND.md`, `docs/BACKEND.md`, and `docs/AI.md` before making changes.
 - No emojis in code, comments, or commit messages.
 - Use professional naming conventions, strict TypeScript types, and consistent formatting.
 - All visual elements must use components from **shadcn/ui** — no custom raw CSS unless absolutely unavoidable.
 - If existing documentation is outdated or conflicts with the current state, flag it before proceeding.
+
+---
+
+## 1.1 Competitor-mention guard — operator procedures
+
+The pre-commit hook at `.husky/pre-commit` enforces the §1 rule by
+scanning staged additions and renamed paths for the banned word
+and rejecting any commit that contains it. The hook excludes
+`AGENTS.md`, `docs/RULES.md`, the hook file itself, lockfiles,
+`node_modules`, `.next`, `dist`, and `build`. Anyone running
+`pnpm install` after a pull picks up the hook automatically via
+the `prepare: husky` script in `package.json`.
+
+The procedures below cover the four ways the guard might need to
+change over time. Each procedure preserves an audit trail.
+
+### A. One-off bypass for a single commit
+
+Use this only when the commit is provably exempt — e.g. you're
+landing a security patch in an unrelated file and CI is wedged.
+Never use it as a routine workaround.
+
+```bash
+# Document the reason in the commit message itself, then:
+git commit --no-verify -m "fix: security patch X (hook bypassed: reason)"
+```
+
+The bypass is recorded in plain text in the commit message so a
+future reviewer can audit it. Two-or-more `--no-verify` commits in
+one week should trigger a discussion in the team channel about
+why the rule keeps getting in the way.
+
+### B. Temporary local disable (developer can't run the hook)
+
+If a teammate's machine can't execute the shell script (rare —
+typically only Windows users without WSL or Git Bash), unblock
+them locally without touching the repo:
+
+```bash
+# Local-only — not shared.
+git config --local core.hooksPath /dev/null
+```
+
+To re-enable:
+
+```bash
+git config --local --unset core.hooksPath
+```
+
+The developer is then on the honour system to grep manually
+before each commit. Push them to install WSL / Git for Windows so
+the hook can run; the manual workaround is a stop-gap.
+
+### C. Modifying the banned-word list
+
+If we ever need to add a second competitor or remove one:
+
+1. Edit the `BANNED_PATTERN` regex at the top of
+   `.husky/pre-commit`. It's a single line — extend the pattern
+   with alternation, e.g. `BANNED_PATTERN='\b(Clio|MyCase)\b'`.
+2. If you're **removing** a word: also do a full-codebase scrub
+   pass so the word goes away from current source before the
+   guard stops catching it. The cleanest sequence is:
+   - Update the regex
+   - Run `grep -rIn -E "<old pattern>" --include="*.ts" --include="*.tsx" --include="*.md" .`
+   - Rewrite any hits in your own words
+   - Commit both changes together
+3. If you're **adding** a word: also do an audit pass to find any
+   existing hits the older guard let through (e.g. legacy code
+   that pre-dated the rule). Same grep, same scrub procedure.
+4. Update §1 of this file and the matching key constraint in
+   `AGENTS.md` so the policy and the regex stay in sync.
+5. Test before pushing — see §1.1.E.
+
+### D. Permanently removing the guard
+
+Removing the guard is a leadership-only decision because the rule
+exists for legal exposure reasons, not engineering preference. The
+operator who removes it owns that decision in writing.
+
+1. Open an issue / Slack thread and get explicit sign-off from
+   the firm owner (or the person handling IP / legal). Quote
+   their approval in the commit message body for the audit trail.
+2. Remove the guard block from `.husky/pre-commit` — keep the
+   file (and any other checks it runs) intact. Don't delete
+   `.husky/pre-commit` outright; future guards will live there.
+3. Delete §1 (the banned-word rule) and §1.1 (this section) from
+   this file. Delete the matching key constraint from `AGENTS.md`.
+4. Run `grep -rIn` one final time to confirm the codebase doesn't
+   silently pick up new references because the guard is gone.
+5. Commit with a `chore(rules): remove competitor-mention guard
+   (signed off by …)` message and push.
+
+### E. Testing changes to the hook
+
+Before pushing any hook change, prove both halves work:
+
+```bash
+# Should be REJECTED (the banned word appears in an addition)
+echo "// matches Clio's design" > /tmp/__test.ts && \
+  cp /tmp/__test.ts ./__test.ts && \
+  git add ./__test.ts && \
+  .husky/pre-commit
+# Expect: exit 1, red "Commit blocked" message
+rm ./__test.ts /tmp/__test.ts && git reset HEAD ./__test.ts 2>/dev/null
+
+# Should PASS (clean content)
+echo "// industry-standard layout" > ./__test.ts && \
+  git add ./__test.ts && \
+  .husky/pre-commit
+# Expect: exit 0, silent
+rm ./__test.ts && git reset HEAD ./__test.ts 2>/dev/null
+```
+
+If both behaviours match, the hook is ready to commit.
+
+### F. Recommended belt-and-braces
+
+The hook is a *local* guardrail — it runs only when a developer
+commits on their machine. A determined or careless person can
+bypass it with `--no-verify`. For full defence-in-depth:
+
+- Mirror the same `\bClio\b` grep in CI (GitHub Actions / Vercel
+  preview build) and fail the pipeline on a match. That catches
+  any commit that arrived via `--no-verify` or via a developer
+  who disabled the local hook.
+- Enable GitHub branch protection on `main` requiring CI to pass
+  before merge so the CI guard can't be skipped.
 
 ---
 
