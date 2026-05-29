@@ -154,6 +154,16 @@
   }
   html {
     @apply font-sans;
+    /* The app is light-themed today (cream surfaces, navy text). Without
+       this declaration, native form controls — <select> options popups,
+       <input type="date"> calendar pickers, scrollbars — inherit the OS
+       color scheme and render dark/black on macOS dark mode. Pinning to
+       `light` keeps everything visually consistent. When we ship a real
+       dark mode pass, override this on the `.dark` class. */
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
   }
 }
 /* AI Chat Markdown Styling */
@@ -188,6 +198,9 @@
 .tiptap-editor s { text-decoration: line-through; }
 .tiptap-editor u { text-decoration: underline; }
 .tiptap-editor hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+.tiptap-editor mark { background: rgba(252, 211, 77, 0.45); color: inherit; padding: 0 2px; border-radius: 2px; }
+.tiptap-editor a { color: var(--gold-dark); text-decoration: underline; }
+.tiptap-editor a:hover { color: var(--navy); }
 /* TipTap placeholder uses an empty p/h with a data attribute */
 .tiptap-editor p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

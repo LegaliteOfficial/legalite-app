@@ -29,10 +29,12 @@ export function ClientForm() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(clientSchema) as any,
     defaultValues: {
+      client_code: '',
       full_name: '',
       email: '',
       phone: '',
       ghana_card: '',
+      date_of_birth: '',
       address: '',
       status: 'Active',
       notes: '',
@@ -42,17 +44,29 @@ export function ClientForm() {
   useEffect(() => {
     if (isEdit && existing) {
       form.reset({
+        client_code: existing.client_code ?? '',
         full_name: existing.full_name ?? '',
         email: existing.email ?? '',
         phone: existing.phone ?? '',
         ghana_card: existing.ghana_card ?? '',
+        date_of_birth: existing.date_of_birth ?? '',
         address: existing.address ?? '',
         status: existing.status ?? 'Active',
         notes: existing.notes ?? '',
       })
     }
     if (isAdd) {
-      form.reset({ full_name: '', email: '', phone: '', ghana_card: '', address: '', status: 'Active', notes: '' })
+      form.reset({
+        client_code: '',
+        full_name: '',
+        email: '',
+        phone: '',
+        ghana_card: '',
+        date_of_birth: '',
+        address: '',
+        status: 'Active',
+        notes: '',
+      })
     }
   }, [isEdit, isAdd, existing, form])
 
@@ -85,6 +99,7 @@ export function ClientForm() {
           <p className="text-[12px] text-gray-400 mt-0.5">{isEdit ? 'Update the details below.' : 'Fill in the details below to create a new client.'}</p>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
+          {/* Identity: name is the only required field. */}
           <div>
             <Label htmlFor="full_name" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Full Name *</Label>
             <Input id="full_name" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('full_name')} />
@@ -92,22 +107,12 @@ export function ClientForm() {
               <p className="text-xs text-red-500 mt-1">{form.formState.errors.full_name.message}</p>
             )}
           </div>
-          <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="email" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Email</Label>
-                <Input id="email" type="email" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('email')} />
-              </div>
-              <div>
-                <Label htmlFor="phone" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Phone</Label>
-                <Input id="phone" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('phone')} />
-              </div>
-            </div>
-          </div>
+
+          {/* Metadata: firm-defined ID + Active/Inactive status. */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="ghana_card" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Ghana Card</Label>
-              <Input id="ghana_card" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('ghana_card')} />
+              <Label htmlFor="client_code" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Client ID</Label>
+              <Input id="client_code" placeholder="e.g. LL-0001" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('client_code')} />
             </div>
             <div>
               <Label htmlFor="status" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Status</Label>
@@ -125,10 +130,40 @@ export function ClientForm() {
               </Select>
             </div>
           </div>
+
+          {/* Contact: how to reach them. */}
+          <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Email</Label>
+                <Input id="email" type="email" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('email')} />
+              </div>
+              <div>
+                <Label htmlFor="phone" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Phone</Label>
+                <Input id="phone" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('phone')} />
+              </div>
+            </div>
+          </div>
+
+          {/* Personal: Ghana Card + Date of Birth. */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="ghana_card" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Ghana Card</Label>
+              <Input id="ghana_card" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('ghana_card')} />
+            </div>
+            <div>
+              <Label htmlFor="date_of_birth" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Date of Birth</Label>
+              <Input id="date_of_birth" type="date" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('date_of_birth')} />
+            </div>
+          </div>
+
+          {/* Address — full-width, addresses run long. */}
           <div>
             <Label htmlFor="address" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Address</Label>
             <Input id="address" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('address')} />
           </div>
+
+          {/* Notes — free-form. */}
           <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
             <Label htmlFor="notes" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Notes</Label>
             <Textarea id="notes" rows={3} className="rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('notes')} />
