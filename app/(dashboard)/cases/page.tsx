@@ -3,14 +3,14 @@
 /**
  * Cases list view
  * ---------------
- * Clio-style table with status pills, column picker, search, pagination,
+ * industry-standard table with status pills, column picker, search, pagination,
  * CSV export, and an expand-rows toggle. The "Stages" tab, "Manage tags",
  * "Case templates", and "Filters" controls are stubbed — they show toasts
  * pointing at the upcoming subsequent screens we'll spec from screenshots.
  *
  * Data shape: see types/index.ts `Case` and hooks/use-cases.ts. The hook
  * translates the legacy `matter_type` column to `case_type` until the
- * backend migration (0003_case_clio_fields) and its codegen catch up.
+ * backend migration (20260523_case_workflow_fields) and its codegen catch up.
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -61,7 +61,7 @@ import type { Case, CaseStatus } from '@/types'
 
 // ── Column registry ─────────────────────────────────────────────────────
 // Lives outside the component so its identity is stable across renders.
-// `defaultVisible` mirrors what's on the Clio screenshot — the user can
+// `defaultVisible` mirrors what's on the the standard pattern screenshot — the user can
 // toggle anything via the Columns ▾ dropdown.
 type ColumnId =
   | 'client'
@@ -85,7 +85,7 @@ interface ColumnDef {
   label: string
   defaultVisible: boolean
   // Minimum width so the header stays on one line and the whole table can
-  // overflow horizontally instead of stacking heading text. Matches Clio's
+  // overflow horizontally instead of stacking heading text. Matches the reference
   // behaviour where columns truncate with ellipsis and you scroll left/right.
   minWidth: number
   align?: 'left' | 'right'
@@ -111,7 +111,7 @@ type StatusFilter = (typeof STATUS_FILTERS)[number]
 const PAGE_SIZES = [25, 50, 100] as const
 
 /**
- * Filter state for the side drawer. Mirrors Clio's panel field-for-field.
+ * Filter state for the side drawer. Mirrors the reference panel field-for-field.
  * Empty string / undefined means "no constraint". Fields whose backing data
  * we don't have yet (responsible_staff, tags, admin_view, billable_status,
  * permissions, blocked_users, status_date) render in the UI for fidelity
@@ -140,7 +140,7 @@ const EMPTY_FILTERS: CaseFilters = {}
 
 // ── Filter dropdown option lists ────────────────────────────────────────
 // Static lists for fields whose options come from configuration rather
-// than from the rows themselves. Each list mirrors Clio's defaults with
+// than from the rows themselves. Each list mirrors the reference defaults with
 // "matter" → "case" terminology applied per the LegaLite rename.
 
 const ADMIN_VIEW_OPTIONS = [
@@ -677,7 +677,7 @@ export default function CasesPage() {
     // Outer page chrome is a flex column that fills the dashboard <main>.
     // The table card grows to fill remaining height (flex-1 min-h-0) so
     // empty space below the rows is part of the card, not the gradient
-    // background. Matches Clio.
+    // background. Matches the standard pattern.
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-6 py-5 flex flex-col flex-1 min-h-0">
         {/* Top row: tabs (Cases / Stages) + action buttons */}
@@ -916,7 +916,7 @@ export default function CasesPage() {
                               key={col.id}
                               // Cells stay on one line and truncate with
                               // ellipsis when the value overflows the
-                              // column min-width — matches Clio. Long
+                              // column min-width — matches the standard pattern. Long
                               // titles surface in full on row hover via
                               // the title attribute below.
                               className={`px-3 ${expandRows ? 'py-3.5' : 'py-2'} overflow-hidden text-ellipsis whitespace-nowrap`}
@@ -1448,7 +1448,7 @@ function ErrorPanel({ onRetry }: { onRetry: () => void }) {
 // ── Filters drawer ──────────────────────────────────────────────────────
 
 /**
- * Side panel that mirrors Clio's Filters drawer. Edits happen against a
+ * Side panel that mirrors the reference Filters drawer. Edits happen against a
  * local `draft` copy — only "Apply filters" commits the values upstream
  * (via `onApply`). "Clear filters" wipes both the draft AND the applied
  * state so the user sees the table refresh immediately without a second
@@ -1456,7 +1456,7 @@ function ErrorPanel({ onRetry }: { onRetry: () => void }) {
  *
  * Fields whose data we don't have yet (Responsible staff, Tags, Admin
  * view, Billable status, Permissions, Blocked users, Status date) render
- * with empty placeholder selects so the UI matches Clio's visual spec
+ * with empty placeholder selects so the UI matches the reference visual spec
  * end-to-end. They're inert today and start filtering when the backend
  * adds the matching columns.
  */

@@ -3,7 +3,7 @@
 /**
  * Tag settings dialog
  * -------------------
- * Mirrors the Clio "Tag settings" modal: a description, a colour + name
+ * Mirrors the the standard pattern "Tag settings" modal: a description, a colour + name
  * input for creating new tags, and a list of existing tags with edit /
  * delete affordances. Persists via the local tags store (Zustand) until
  * the backend ships a tags table.

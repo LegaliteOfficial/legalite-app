@@ -1,9 +1,9 @@
--- Clio-aligned case schema (2026-05-23)
--- =====================================
+-- Case workflow schema (2026-05-23)
+-- ================================
 -- Background: the cases table originated with a "matter_type" column and a
 -- status enum of (Active, Pending, Closed). We're aligning terminology with
--- Clio (the closest competitor product), where every "matter" is a "case"
--- and an unfinished case is "Open", not "Active". This migration:
+-- industry-standard practice-management vocabulary — every "matter" is a
+-- "case" and an unfinished case is "Open", not "Active". This migration:
 --   1. Renames matter_type -> case_type
 --   2. Migrates status 'Active' -> 'Open' and updates the enum check
 --   3. Adds workflow / origination / lifecycle columns the new cases list

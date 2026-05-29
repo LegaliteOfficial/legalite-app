@@ -11,8 +11,8 @@ import type { Case, CaseStatus } from '@/types'
 
 /**
  * Wire shape returned by the legalite-backend Cases query as of 2026-05-23.
- * The backend hasn't been migrated to the Clio-style field names yet (see
- * migration 0003_case_clio_fields.sql and the matching backend codegen).
+ * The backend hasn't been migrated to the industry-standard field names yet (see
+ * migration 20260523_case_workflow_fields.sql and the matching backend codegen).
  * Until it has, we read `matter_type` from the wire and translate to
  * `case_type` for app code. Same with the renamed status enum.
  */
@@ -215,7 +215,7 @@ export function useCase(id: string | undefined) {
 }
 
 /**
- * Translate form data (post-Clio rename) into the wire input shape the
+ * Translate form data (post-rename) into the wire input shape the
  * legalite-backend still expects. Drops fields the backend doesn't know
  * about yet — they'll start being sent once migration 0003 + the backend
  * codegen land.

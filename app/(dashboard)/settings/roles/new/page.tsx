@@ -195,7 +195,7 @@ const TEMPLATE_PERMISSIONS: Record<string, string[]> = {
   ],
 }
 
-// Permissions that ship enabled by default even without a template (mirroring Clio).
+// Permissions that ship enabled by default even without a template (following the standard pattern).
 const DEFAULT_ENABLED = new Set(['view-own-activities', 'view-assigned-tasks'])
 // Non-configurable section's permissions are always on — locked.
 const ALWAYS_ON = new Set(PERMISSION_SECTIONS.find((s) => s.id === 'non-config')!.groups.flatMap((g) => g.permissions.map((p) => p.id)))

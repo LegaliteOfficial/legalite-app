@@ -63,7 +63,7 @@ import type { CaseStatus } from '@/types'
 
 /**
  * Status options surfaced in the header pill. The label colour /
- * background follows Clio's convention (green for Open, amber for
+ * background follows the reference convention (green for Open, amber for
  * Pending, grey for Closed) so the pill reads as a workflow chip
  * rather than just text.
  */
@@ -929,7 +929,7 @@ function AssignedToEditor({
   onSaveAssigned: (v: string) => void | Promise<void>
 }) {
   // The screenshot shows two chips (assigned + originating) on this
-  // row. Composing them visually here so the row reads like Clio's
+  // row. Composing them visually here so the row reads like the reference
   // "team" treatment even though the schema splits the roles.
   const others = originating && originating !== assigned ? [originating] : []
   return (

@@ -7,6 +7,18 @@
 
 ## 1. General Rules
 
+- **NEVER REFERENCE CLIO.** Clio is a direct competitor.
+  Mentioning their product anywhere in this codebase — source,
+  comments, docs, commit messages, PR descriptions, file names,
+  identifiers, branch names, migrations, internal Slack snippets
+  pasted into the repo, anywhere — creates real legal exposure
+  (copying allegations, trade-dress claims). When a reference
+  screenshot is supplied, describe the visual goal in your own
+  words: "standard practice-management layout", "industry
+  pattern", "follows the standard convention". Never attribute
+  the design to a third party. **This rule supersedes everything
+  else in this file and is non-negotiable.** A pre-commit hook
+  should grep for the word and reject commits that contain it.
 - Always reference `README.md`, `docs/TENANCY.md`, `docs/FRONTEND.md`, `docs/BACKEND.md`, and `docs/AI.md` before making changes.
 - No emojis in code, comments, or commit messages.
 - Use professional naming conventions, strict TypeScript types, and consistent formatting.

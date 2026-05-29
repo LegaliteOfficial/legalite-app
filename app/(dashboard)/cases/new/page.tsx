@@ -6,7 +6,7 @@
  * Replaces the legacy `CaseForm` dialog for the CREATE flow. (Edit still
  * uses the dialog for now — that lives in components/shared/CaseForm.tsx.)
  *
- * Layout mirrors the Clio "New matter" reference: sticky top bar with
+ * Layout mirrors the the standard pattern "New matter" reference: sticky top bar with
  * Save / Save & conflict check / Cancel, a sticky left nav with anchors
  * to every section, and a scrolling form on the right organised into
  * section cards.
@@ -14,7 +14,7 @@
  * Schema reality check:
  *   The Case interface currently covers ~half of what this form collects
  *   (description, lawyers, practice area, stage, dates, status). Newer
- *   Clio-parity fields — responsible_staff, client_reference, location,
+ *   reference fields — responsible_staff, client_reference, location,
  *   statute_of_limitations_*, tags, permissions_*, notification
  *   subscribers, blocked_users, related_contacts, custom_fields, and the
  *   whole Billing preference section — render in the UI today but DON'T
@@ -217,7 +217,7 @@ const INITIAL_FORM: NewCaseForm = {
   conflict_checks: [],
 }
 
-// Document folder categories — Clio's defaults. Editable per firm in
+// Document folder categories — the reference defaults. Editable per firm in
 // settings later; hard-coded here until that admin screen ships.
 const DOC_CATEGORIES = [
   'Agreements',
@@ -1341,7 +1341,7 @@ function CaseDetailsSection({
           <FieldLabel>Closed date</FieldLabel>
           {/* Always editable. The backend will only persist this when the
               case actually transitions to Closed (trigger in migration
-              0003_case_clio_fields auto-stamps this), but the user may
+              20260523_case_workflow_fields auto-stamps this), but the user may
               want to record a planned closure date ahead of time. */}
           <Input
             type="date"
@@ -1847,7 +1847,7 @@ function UserPickerStub({
 
 /**
  * Multi-pick dropdown for firm users / groups. Replaces UserPickerStub
- * everywhere we want a real Clio-style picker:
+ * everywhere we want a real industry-standard picker:
  *
  *   - Renders as a native <select> grouped into "Groups" / "Users"
  *     sections via <optgroup>. Picking an entry adds it to `value` and

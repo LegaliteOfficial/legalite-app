@@ -4,7 +4,7 @@
  * New contact creation page
  * -------------------------
  * Replaces the legacy `ClientForm` dialog for the CREATE flow. Mirrors
- * Clio's New Contact screen: a sticky top bar (Save / Save & open new
+ * the reference New Contact screen: a sticky top bar (Save / Save & open new
  * case / Cancel), then a single-column form broken into sections —
  * Contact information, Email, Phone, Website, Address, Tags, Custom
  * fields, Billing preferences.
@@ -42,7 +42,7 @@ import { useClients, useCreateClient } from '@/hooks/use-clients'
 // ── Constants ──────────────────────────────────────────────────────────
 
 /**
- * Channel-type vocabularies, one per channel. Clio uses different sets
+ * Channel-type vocabularies, one per channel. industry-standard sets use different sets
  * for each (e.g. Phone has Mobile / Fax / Pager / Skype that Email
  * doesn't), so each section reads from its own list rather than sharing
  * a single union. All four start with "Work" so it's the default for
@@ -573,7 +573,7 @@ export default function NewContactPage() {
           <PhoneSection form={form} setField={setField} />
           <WebsiteSection form={form} setField={setField} />
           <AddressSection form={form} setField={setField} />
-          {/* Employees: a company-only section. Matches Clio — a company
+          {/* Employees: a company-only section. Matches the standard pattern — a company
               contact has a roster of people who work there, linked to
               existing person contacts (or stubbed by name until the
               person record exists). Hidden entirely when the user has
@@ -1166,7 +1166,7 @@ interface ChannelRowProps {
   primaryRadioName: string
   rowId: string
   // Each section (Email/Phone/Website) supplies its own type vocabulary
-  // — Clio uses different sets per channel (Phone has Mobile/Fax/Skype,
+  // — industry-standard sets use different sets per channel (Phone has Mobile/Fax/Skype,
   // Website has Facebook/LinkedIn/etc.).
   typeOptions: readonly string[]
 }
@@ -1797,7 +1797,7 @@ function BillingPreferencesContent({
 
 /**
  * Employees content rendered inside the "Employees" collapsible
- * section. Mirrors Clio's pattern: each row is a person picker (a
+ * section. Mirrors the reference pattern: each row is a person picker (a
  * native select populated with existing person contacts) plus a
  * "Remove" link. "+ Add employee" tacks on a fresh blank row.
  *
@@ -1835,7 +1835,7 @@ function EmployeesContent({
   }
   const removeRow = (id: string) => {
     // Always keep at least one row so the section never looks empty —
-    // matches the Clio behaviour where removing the last row clears
+    // matches the the standard pattern behaviour where removing the last row clears
     // the fields rather than deleting the row.
     if (form.employees.length === 1) {
       setField('employees', [
