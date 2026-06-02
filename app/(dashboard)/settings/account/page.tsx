@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { Suspense, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
@@ -206,7 +206,18 @@ function Card({
 
 const VALID_SECTIONS: readonly SectionId[] = ['profile', 'notifications', 'security', 'appearance', 'integrations']
 
+// Next 16 requires anything that reads useSearchParams() to live inside a
+// Suspense boundary, otherwise prerender fails. We split the body into an
+// inner component so the outer default export can wrap it.
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
+  )
+}
+
+function SettingsPageInner() {
   const { user, setAuth, token } = useAuthStore()
   const searchParams = useSearchParams()
   const sectionParam = searchParams?.get('section') as SectionId | null
