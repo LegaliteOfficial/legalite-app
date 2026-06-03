@@ -1,16 +1,18 @@
 /**
  * Client assignees
  * ----------------
- * Returns the list of firm members (lawyers, partners, associates,
- * paralegals) assigned to each client. Mirrors the pattern of
- * `useClients()` / `useCases()` — short-circuits to a sample list
- * in `NEXT_PUBLIC_DEV_BYPASS_AUTH=true` mode so the UI has real
- * shape to render before the backend lands.
- *
- * Today this is local-only; when the integrations release ships,
- * swap the dev short-circuit for a real query that joins
- * client_assignments → users.
+ * The firm members assigned to each client, keyed by client id so the list
+ * view can look up a row's team without an N+1 fetch. Wired to the real
+ * `clientAssignments` GraphQL query (one round-trip, grouped client-side);
+ * short-circuits to a sample list in `NEXT_PUBLIC_DEV_BYPASS_AUTH=true` mode.
  */
+
+import { useMemo } from 'react'
+import { useQuery, useMutation } from '@apollo/client/react'
+import {
+  ClientAssignmentsQueryDoc,
+  SetClientAssignmentsMutationDoc,
+} from '@/lib/graphql/operations'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
@@ -85,22 +87,67 @@ const DEV_SAMPLE_ASSIGNEES: Record<string, Assignee[]> = {
   'dev-client-4': [TEAM.ab],
 }
 
+// professional_title (backend) → the narrower AssigneeRole the UI colours by.
+function toAssigneeRole(title?: string | null): AssigneeRole {
+  switch (title) {
+    case 'managing_partner':
+    case 'senior_partner':
+    case 'partner':
+      return 'senior_partner'
+    case 'associate':
+      return 'associate'
+    case 'paralegal':
+      return 'paralegal'
+    case 'secretary':
+    case 'support_staff':
+    case 'admin':
+      return 'admin'
+    default:
+      return 'lawyer'
+  }
+}
+
 /**
- * Returns a map keyed by client id → assignee list. Designed so
- * the caller can synchronously look up each row's assignees while
- * iterating its clients list, without an N+1 fetch per row.
- *
- * In dev mode the map is the static sample above; in real mode
- * this becomes a single GraphQL query that joins
- * `client_assignments` → `users` and bucket by client id.
+ * Map keyed by client id → assignee list, for synchronous per-row lookup while
+ * iterating the clients list. One GraphQL query, grouped client-side.
  */
 export function useClientAssignees(): Map<string, Assignee[]> {
-  // Object identity matters here so React doesn't re-render on
-  // every poll — wrap in a Map keyed off the constant.
-  if (DEV_BYPASS) {
-    return new Map(Object.entries(DEV_SAMPLE_ASSIGNEES))
+  const { data } = useQuery(ClientAssignmentsQueryDoc, {
+    skip: DEV_BYPASS,
+    errorPolicy: 'all',
+  })
+
+  return useMemo(() => {
+    if (DEV_BYPASS) return new Map(Object.entries(DEV_SAMPLE_ASSIGNEES))
+    const map = new Map<string, Assignee[]>()
+    for (const a of data?.clientAssignments ?? []) {
+      const assignee: Assignee = {
+        id: a.member_id,
+        name: a.name,
+        role: toAssigneeRole(a.professional_title),
+        avatar_url: a.avatar_url ?? null,
+      }
+      const list = map.get(a.client_id)
+      if (list) list.push(assignee)
+      else map.set(a.client_id, [assignee])
+    }
+    return map
+  }, [data])
+}
+
+/** Replace the full set of members assigned to a client. */
+export function useSetClientAssignments() {
+  const [mutate, state] = useMutation(SetClientAssignmentsMutationDoc, {
+    refetchQueries: [ClientAssignmentsQueryDoc],
+  })
+  return {
+    isPending: state.loading,
+    mutateAsync: async (
+      client_id: string,
+      assignments: { member_id: string; assignment_role?: string }[],
+    ) => {
+      const res = await mutate({ variables: { input: { client_id, assignments } } })
+      return res.data?.setClientAssignments
+    },
   }
-  // TODO(integrations-release): wire the real fetch. Empty map is
-  // safe — the UI just renders "Unassigned" until then.
-  return new Map()
 }

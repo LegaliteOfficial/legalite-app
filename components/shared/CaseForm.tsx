@@ -63,7 +63,10 @@ export function CaseForm() {
         status: 'Open', next_court_date: '', date_opened: '', notes: '',
       })
     }
-  }, [isEdit, isAdd, existing, form])
+    // form.reset is stable; depending on existing.id avoids re-running on
+    // every TanStack Query data re-emission (which would loop with form.reset).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, isAdd, existing?.id])
 
   if (!isAdd && !isEdit) return null
 

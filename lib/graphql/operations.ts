@@ -513,11 +513,14 @@ export const ClientsQueryDoc = graphql(/* GraphQL */ `
   query Clients {
     clients {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -531,11 +534,14 @@ export const ClientQueryDoc = graphql(/* GraphQL */ `
   query Client($id: ID!) {
     client(id: $id) {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -549,11 +555,14 @@ export const CreateClientMutationDoc = graphql(/* GraphQL */ `
   mutation CreateClient($input: CreateClientInput!) {
     createClient(input: $input) {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -567,11 +576,14 @@ export const UpdateClientMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateClient($id: ID!, $input: UpdateClientInput!) {
     updateClient(id: $id, input: $input) {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -593,16 +605,25 @@ export const CasesQueryDoc = graphql(/* GraphQL */ `
   query Cases {
     cases {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -615,16 +636,25 @@ export const CaseQueryDoc = graphql(/* GraphQL */ `
   query Case($id: ID!) {
     case(id: $id) {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -637,16 +667,25 @@ export const CreateCaseMutationDoc = graphql(/* GraphQL */ `
   mutation CreateCase($input: CreateCaseInput!) {
     createCase(input: $input) {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -659,16 +698,25 @@ export const UpdateCaseMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateCase($id: ID!, $input: UpdateCaseInput!) {
     updateCase(id: $id, input: $input) {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -680,6 +728,114 @@ export const UpdateCaseMutationDoc = graphql(/* GraphQL */ `
 export const DeleteCaseMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteCase($id: ID!) {
     deleteCase(id: $id)
+  }
+`)
+
+// ──────────────── Clients / Cases assignments (team) ─────────────
+
+export const ClientAssignmentsQueryDoc = graphql(/* GraphQL */ `
+  query ClientAssignments {
+    clientAssignments {
+      id
+      client_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+export const SetClientAssignmentsMutationDoc = graphql(/* GraphQL */ `
+  mutation SetClientAssignments($input: SetClientAssignmentsInput!) {
+    setClientAssignments(input: $input) {
+      id
+      client_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+export const CaseAssignmentsQueryDoc = graphql(/* GraphQL */ `
+  query CaseAssignments($case_id: ID!) {
+    caseAssignments(case_id: $case_id) {
+      id
+      case_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+export const SetCaseAssignmentsMutationDoc = graphql(/* GraphQL */ `
+  mutation SetCaseAssignments($input: SetCaseAssignmentsInput!) {
+    setCaseAssignments(input: $input) {
+      id
+      case_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+// ──────────────────────── Attachments ────────────────────────
+
+export const AttachmentsQueryDoc = graphql(/* GraphQL */ `
+  query Attachments($entity_type: String!, $entity_id: ID!) {
+    attachments(entity_type: $entity_type, entity_id: $entity_id) {
+      id
+      firm_id
+      entity_type
+      entity_id
+      file_name
+      file_type
+      file_size
+      uploaded_by
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const AttachmentDownloadUrlQueryDoc = graphql(/* GraphQL */ `
+  query AttachmentDownloadUrl($id: ID!) {
+    attachmentDownloadUrl(id: $id) {
+      url
+    }
+  }
+`)
+
+export const CreateAttachmentMutationDoc = graphql(/* GraphQL */ `
+  mutation CreateAttachment($input: CreateAttachmentInput!) {
+    createAttachment(input: $input) {
+      id
+      firm_id
+      entity_type
+      entity_id
+      file_name
+      file_type
+      file_size
+      uploaded_by
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const DeleteAttachmentMutationDoc = graphql(/* GraphQL */ `
+  mutation DeleteAttachment($id: ID!) {
+    deleteAttachment(id: $id)
   }
 `)
 
