@@ -101,7 +101,9 @@ export const lawyerProfileSchema = z.object({
   avatar_url: z.string().url().optional().or(z.literal('')),
 })
 
-// Invite a teammate (admin console).
+// Invite a teammate (admin console). role_ids are the custom firm roles to
+// grant on acceptance (the granular permission layer); firm_role is the coarse
+// compatibility value.
 export const inviteMemberSchema = z.object({
   email: z.string().email(),
   firm_role: z.enum(['admin', 'member']).default('member'),
@@ -117,7 +119,18 @@ export const inviteMemberSchema = z.object({
       'secretary',
     ])
     .default('lawyer'),
+  role_ids: z.array(z.string().uuid()).default([]),
 })
+
+// Create / edit a custom firm role. Permissions are catalog slugs; the backend
+// validates them against its permission catalog.
+export const createRoleSchema = z.object({
+  name: z.string().min(1, 'Role name is required').max(80),
+  description: z.string().max(500).optional(),
+  permissions: z.array(z.string()).default([]),
+})
+
+export type CreateRoleFormData = z.infer<typeof createRoleSchema>
 
 // Owner-only: hand the firm over to another active member.
 export const transferOwnershipSchema = z.object({

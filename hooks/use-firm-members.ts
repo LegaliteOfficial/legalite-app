@@ -75,7 +75,7 @@ export function useInviteMember() {
 }
 
 export function useResendInvitation() {
-  const [mutate, state] = useMutation<ResendInvitationMutation, ResendInvitationMutation>(ResendInvitationMutationDoc, {
+  const [mutate, state] = useMutation(ResendInvitationMutationDoc, {
     refetchQueries: [PendingInvitationsQueryDoc],
   })
   return {

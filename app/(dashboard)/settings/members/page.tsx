@@ -24,12 +24,12 @@ import {
   useDeactivateMember,
   useReactivateMember,
   PROFESSIONAL_TITLES,
-  INVITE_FIRM_ROLES,
   titleLabel,
   roleLabel,
   type FirmMember,
   type PendingInvitation,
 } from '@/hooks/use-firm-members'
+import { useFirmRoles } from '@/hooks/use-firm-roles'
 
 type TabId = 'members' | 'invitations'
 
@@ -402,16 +402,19 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [email, setEmail] = useState('')
   const [title, setTitle] = useState('lawyer')
-  const [role, setRole] = useState('member')
+  const [roleIds, setRoleIds] = useState<string[]>([])
   const [touched, setTouched] = useState(false)
   const invite = useInviteMember()
+  const { data: roles, isLoading: rolesLoading } = useFirmRoles()
 
+  const assignableRoles = roles ?? []
   const emailValid = EMAIL_RE.test(email.trim())
+  const rolesValid = roleIds.length > 0
 
   const reset = () => {
     setEmail('')
     setTitle('lawyer')
-    setRole('member')
+    setRoleIds([])
     setTouched(false)
   }
 
@@ -421,15 +424,28 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
     onClose()
   }
 
+  const toggleRole = (id: string) => {
+    setRoleIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setTouched(true)
-    if (!emailValid) return
+    if (!emailValid || !rolesValid) return
+    // Derive the coarse firm_role (compat) from the chosen roles: granting a
+    // system Owner/Administrator role implies admin power.
+    const selected = assignableRoles.filter((r) => roleIds.includes(r.id))
+    const isAdmin = selected.some(
+      (r) => r.is_system && (r.slug === 'administrator' || r.slug === 'owner'),
+    )
     try {
       await invite.mutateAsync({
         email: email.trim().toLowerCase(),
         professional_title: title,
-        firm_role: role,
+        firm_role: isAdmin ? 'admin' : 'member',
+        role_ids: roleIds,
       })
       toast.success(`Invitation sent to ${email.trim().toLowerCase()}.`)
       reset()
@@ -469,38 +485,86 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
-                Professional title
-              </Label>
-              <Select value={title} onValueChange={(v) => setTitle(v ?? 'lawyer')}>
-                <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PROFESSIONAL_TITLES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
-                Access level
-              </Label>
-              <Select value={role} onValueChange={(v) => setRole(v ?? 'member')}>
-                <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {INVITE_FIRM_ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
+              Professional title
+            </Label>
+            <Select value={title} onValueChange={(v) => setTitle(v ?? 'lawyer')}>
+              <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PROFESSIONAL_TITLES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <p className="text-[12px] leading-relaxed" style={{ color: '#6B7280' }}>
-            {INVITE_FIRM_ROLES.find((r) => r.value === role)?.description}
-          </p>
+          {/* Role assignment — the access this person will have. */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-[12px] font-semibold block" style={{ color: 'var(--navy)' }}>
+                Roles
+              </Label>
+              <Link
+                href="/settings/roles/new"
+                className="text-[11px] font-semibold hover:underline"
+                style={{ color: 'var(--gold-dark)' }}
+              >
+                + Create role
+              </Link>
+            </div>
+            <div
+              className="rounded-lg border divide-y max-h-52 overflow-y-auto"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              {rolesLoading ? (
+                <div className="flex items-center gap-2 px-3 py-4 text-[13px]" style={{ color: '#6B7280' }}>
+                  <Spinner size={14} /> Loading roles…
+                </div>
+              ) : assignableRoles.length === 0 ? (
+                <div className="px-3 py-4 text-[13px]" style={{ color: '#6B7280' }}>
+                  No roles yet. <Link href="/settings/roles/new" className="font-semibold hover:underline" style={{ color: 'var(--gold-dark)' }}>Create one</Link> to assign access.
+                </div>
+              ) : (
+                assignableRoles.map((r) => {
+                  const checked = roleIds.includes(r.id)
+                  return (
+                    <label
+                      key={r.id}
+                      className="flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-black/[0.02]"
+                      style={{ borderColor: 'var(--border)' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleRole(r.id)}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-yellow-600"
+                      />
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-[13px] font-semibold" style={{ color: 'var(--navy)' }}>{r.name}</span>
+                          {r.is_system && (
+                            <span
+                              className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                              style={{ background: 'rgba(13,27,42,0.06)', color: '#6B7280' }}
+                            >
+                              System
+                            </span>
+                          )}
+                        </span>
+                        {r.description && r.description !== '—' && (
+                          <span className="block text-[12px] leading-snug mt-0.5" style={{ color: '#6B7280' }}>{r.description}</span>
+                        )}
+                      </span>
+                    </label>
+                  )
+                })
+              )}
+            </div>
+            {touched && !rolesValid && (
+              <p className="text-xs text-red-500 mt-1">Assign at least one role.</p>
+            )}
+          </div>
 
           <div className="flex gap-2 justify-end pt-2">
             <button

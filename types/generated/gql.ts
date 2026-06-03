@@ -34,6 +34,13 @@ type Documents = {
     "\n  mutation ResendInvitation($input: InvitationIdInput!) {\n    resendInvitation(input: $input) {\n      invitation {\n        id\n        expires_at\n      }\n      token\n      accept_url\n    }\n  }\n": typeof types.ResendInvitationDocument,
     "\n  mutation RevokeInvitation($input: InvitationIdInput!) {\n    revokeInvitation(input: $input) {\n      id\n      revoked_at\n    }\n  }\n": typeof types.RevokeInvitationDocument,
     "\n  query InvitationLookup($input: LookupInvitationInput!) {\n    invitationLookup(input: $input) {\n      email\n      firm_name\n      firm_role\n      professional_title\n      expires_at\n    }\n  }\n": typeof types.InvitationLookupDocument,
+    "\n  query PermissionCatalog {\n    permissionCatalog {\n      key\n      label\n      description\n      groups {\n        key\n        label\n        permissions {\n          slug\n          label\n        }\n      }\n    }\n  }\n": typeof types.PermissionCatalogDocument,
+    "\n  query FirmRoles {\n    firmRoles {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n": typeof types.FirmRolesDocument,
+    "\n  query FirmRole($id: ID!) {\n    firmRole(id: $id) {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n": typeof types.FirmRoleDocument,
+    "\n  mutation CreateFirmRole($input: CreateFirmRoleInput!) {\n    createFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n": typeof types.CreateFirmRoleDocument,
+    "\n  mutation UpdateFirmRole($input: UpdateFirmRoleInput!) {\n    updateFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      updated_at\n    }\n  }\n": typeof types.UpdateFirmRoleDocument,
+    "\n  mutation ArchiveFirmRole($input: RoleIdInput!) {\n    archiveFirmRole(input: $input) {\n      id\n      status\n    }\n  }\n": typeof types.ArchiveFirmRoleDocument,
+    "\n  mutation SetMemberRoles($input: SetMemberRolesInput!) {\n    setMemberRoles(input: $input) {\n      id\n      name\n      slug\n      is_system\n    }\n  }\n": typeof types.SetMemberRolesDocument,
     "\n  query PracticeAreas {\n    practiceAreas {\n      id\n      slug\n      name\n      description\n    }\n  }\n": typeof types.PracticeAreasDocument,
     "\n  query MyPracticeAreas {\n    myPracticeAreas {\n      practice_area_id\n      slug\n      name\n      is_primary\n    }\n  }\n": typeof types.MyPracticeAreasDocument,
     "\n  mutation SetMyPracticeAreas($input: SetProfilePracticeAreasInput!) {\n    setMyPracticeAreas(input: $input) {\n      practice_area_id\n      slug\n      name\n      is_primary\n    }\n  }\n": typeof types.SetMyPracticeAreasDocument,
@@ -108,6 +115,13 @@ const documents: Documents = {
     "\n  mutation ResendInvitation($input: InvitationIdInput!) {\n    resendInvitation(input: $input) {\n      invitation {\n        id\n        expires_at\n      }\n      token\n      accept_url\n    }\n  }\n": types.ResendInvitationDocument,
     "\n  mutation RevokeInvitation($input: InvitationIdInput!) {\n    revokeInvitation(input: $input) {\n      id\n      revoked_at\n    }\n  }\n": types.RevokeInvitationDocument,
     "\n  query InvitationLookup($input: LookupInvitationInput!) {\n    invitationLookup(input: $input) {\n      email\n      firm_name\n      firm_role\n      professional_title\n      expires_at\n    }\n  }\n": types.InvitationLookupDocument,
+    "\n  query PermissionCatalog {\n    permissionCatalog {\n      key\n      label\n      description\n      groups {\n        key\n        label\n        permissions {\n          slug\n          label\n        }\n      }\n    }\n  }\n": types.PermissionCatalogDocument,
+    "\n  query FirmRoles {\n    firmRoles {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n": types.FirmRolesDocument,
+    "\n  query FirmRole($id: ID!) {\n    firmRole(id: $id) {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n": types.FirmRoleDocument,
+    "\n  mutation CreateFirmRole($input: CreateFirmRoleInput!) {\n    createFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n": types.CreateFirmRoleDocument,
+    "\n  mutation UpdateFirmRole($input: UpdateFirmRoleInput!) {\n    updateFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      updated_at\n    }\n  }\n": types.UpdateFirmRoleDocument,
+    "\n  mutation ArchiveFirmRole($input: RoleIdInput!) {\n    archiveFirmRole(input: $input) {\n      id\n      status\n    }\n  }\n": types.ArchiveFirmRoleDocument,
+    "\n  mutation SetMemberRoles($input: SetMemberRolesInput!) {\n    setMemberRoles(input: $input) {\n      id\n      name\n      slug\n      is_system\n    }\n  }\n": types.SetMemberRolesDocument,
     "\n  query PracticeAreas {\n    practiceAreas {\n      id\n      slug\n      name\n      description\n    }\n  }\n": types.PracticeAreasDocument,
     "\n  query MyPracticeAreas {\n    myPracticeAreas {\n      practice_area_id\n      slug\n      name\n      is_primary\n    }\n  }\n": types.MyPracticeAreasDocument,
     "\n  mutation SetMyPracticeAreas($input: SetProfilePracticeAreasInput!) {\n    setMyPracticeAreas(input: $input) {\n      practice_area_id\n      slug\n      name\n      is_primary\n    }\n  }\n": types.SetMyPracticeAreasDocument,
@@ -256,6 +270,34 @@ export function graphql(source: "\n  mutation RevokeInvitation($input: Invitatio
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query InvitationLookup($input: LookupInvitationInput!) {\n    invitationLookup(input: $input) {\n      email\n      firm_name\n      firm_role\n      professional_title\n      expires_at\n    }\n  }\n"): (typeof documents)["\n  query InvitationLookup($input: LookupInvitationInput!) {\n    invitationLookup(input: $input) {\n      email\n      firm_name\n      firm_role\n      professional_title\n      expires_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PermissionCatalog {\n    permissionCatalog {\n      key\n      label\n      description\n      groups {\n        key\n        label\n        permissions {\n          slug\n          label\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PermissionCatalog {\n    permissionCatalog {\n      key\n      label\n      description\n      groups {\n        key\n        label\n        permissions {\n          slug\n          label\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query FirmRoles {\n    firmRoles {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  query FirmRoles {\n    firmRoles {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query FirmRole($id: ID!) {\n    firmRole(id: $id) {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  query FirmRole($id: ID!) {\n    firmRole(id: $id) {\n      id\n      firm_id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateFirmRole($input: CreateFirmRoleInput!) {\n    createFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  mutation CreateFirmRole($input: CreateFirmRoleInput!) {\n    createFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      created_at\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateFirmRole($input: UpdateFirmRoleInput!) {\n    updateFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateFirmRole($input: UpdateFirmRoleInput!) {\n    updateFirmRole(input: $input) {\n      id\n      name\n      slug\n      description\n      permissions\n      is_system\n      status\n      member_count\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ArchiveFirmRole($input: RoleIdInput!) {\n    archiveFirmRole(input: $input) {\n      id\n      status\n    }\n  }\n"): (typeof documents)["\n  mutation ArchiveFirmRole($input: RoleIdInput!) {\n    archiveFirmRole(input: $input) {\n      id\n      status\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetMemberRoles($input: SetMemberRolesInput!) {\n    setMemberRoles(input: $input) {\n      id\n      name\n      slug\n      is_system\n    }\n  }\n"): (typeof documents)["\n  mutation SetMemberRoles($input: SetMemberRolesInput!) {\n    setMemberRoles(input: $input) {\n      id\n      name\n      slug\n      is_system\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
