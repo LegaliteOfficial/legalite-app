@@ -6,7 +6,7 @@ const config: CodegenConfig = {
   schema: '../legalite-backend/src/schema.gql',
   documents: ['lib/graphql/**/*.ts', '!lib/graphql/generated/**'],
   generates: {
-    'types/generated/graphql.ts': {
+    'types/generated/': {
       preset: 'client',
       presetConfig: {
         // We don't use GraphQL fragments anywhere yet — masking adds an

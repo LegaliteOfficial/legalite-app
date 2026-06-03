@@ -1,6 +1,6 @@
-import { gql } from "@apollo/client";
+import { graphql } from "@/types/generated";
 
-export const LoginMutationDoc = gql(/* gql */ `
+export const LoginMutationDoc = graphql(/* GraphQL */ `
   mutation Login($input: LoginInput!) {
     login(input: $input) {
       token
@@ -38,7 +38,7 @@ export const LoginMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const RegisterOwnerMutationDoc = gql(/* gql */ `
+export const RegisterOwnerMutationDoc = graphql(/* GraphQL */ `
   mutation RegisterOwner($input: RegisterOwnerInput!) {
     registerOwner(input: $input) {
       token

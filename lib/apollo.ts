@@ -8,8 +8,11 @@ import {
 } from '@apollo/client'
 import { SetContextLink } from '@apollo/client/link/context'
 
+// Backend defaults to port 3001 (see legalite-backend/src/main.ts). The
+// GraphQL endpoint is at /graphql because the GraphQLModule opts out of
+// useGlobalPrefix; if you re-enable that flag, change this to /api/graphql.
 const GRAPHQL_URL =
-  process.env.NEXT_PUBLIC_GRAPHQL_URL ?? 'http://localhost:3001/graphql'
+  process.env.NEXT_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4000/graphql'
 
 // Lifts the JWT off the persisted zustand store (key `ll:auth`, same shape
 // the old axios interceptor read) and attaches it as a bearer token. Reading

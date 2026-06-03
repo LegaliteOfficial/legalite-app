@@ -1,6 +1,6 @@
-import { gql } from "@apollo/client"
+import { graphql } from "@/types/generated"
 
-export const AcceptInviteMutationDoc = gql(/* gql */ `
+export const AcceptInviteMutationDoc = graphql(/* GraphQL */ `
   mutation AcceptInvite($input: AcceptInviteInput!) {
     acceptInvite(input: $input) {
       token
@@ -38,7 +38,7 @@ export const AcceptInviteMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const GoogleAuthMutationDoc = gql(/* gql */ `
+export const GoogleAuthMutationDoc = graphql(/* GraphQL */ `
   mutation GoogleAuth($input: GoogleAuthInput!) {
     googleAuth(input: $input) {
       token
@@ -76,7 +76,7 @@ export const GoogleAuthMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const SwitchFirmMutationDoc = gql(/* gql */ `
+export const SwitchFirmMutationDoc = graphql(/* GraphQL */ `
   mutation SwitchFirm($input: SwitchFirmInput!) {
     switchFirm(input: $input) {
       token
@@ -108,7 +108,7 @@ export const SwitchFirmMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const MeQueryDoc = gql(/* gql */ `
+export const MeQueryDoc = graphql(/* GraphQL */ `
   query Me {
     me {
       id
@@ -129,7 +129,7 @@ export const MeQueryDoc = gql(/* gql */ `
 
 // ─────────────────────── Firms / Members / Invites ──────────────────────
 
-export const CurrentFirmQueryDoc = gql(/* gql */ `
+export const CurrentFirmQueryDoc = graphql(/* GraphQL */ `
   query CurrentFirm {
     currentFirm {
       id
@@ -157,7 +157,7 @@ export const CurrentFirmQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateFirmMutationDoc = gql(/* gql */ `
+export const UpdateFirmMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateFirm($input: UpdateFirmInput!) {
     updateFirm(input: $input) {
       id
@@ -185,7 +185,7 @@ export const UpdateFirmMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const FirmMembersQueryDoc = gql(/* gql */ `
+export const FirmMembersQueryDoc = graphql(/* GraphQL */ `
   query FirmMembers {
     firmMembers {
       id
@@ -205,7 +205,7 @@ export const FirmMembersQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const ChangeMemberRoleMutationDoc = gql(/* gql */ `
+export const ChangeMemberRoleMutationDoc = graphql(/* GraphQL */ `
   mutation ChangeMemberRole($input: ChangeMemberRoleInput!) {
     changeMemberRole(input: $input) {
       id
@@ -218,7 +218,7 @@ export const ChangeMemberRoleMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const ChangeProfessionalTitleMutationDoc = gql(/* gql */ `
+export const ChangeProfessionalTitleMutationDoc = graphql(/* GraphQL */ `
   mutation ChangeProfessionalTitle($input: ChangeProfessionalTitleInput!) {
     changeProfessionalTitle(input: $input) {
       id
@@ -228,7 +228,7 @@ export const ChangeProfessionalTitleMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeactivateMemberMutationDoc = gql(/* gql */ `
+export const DeactivateMemberMutationDoc = graphql(/* GraphQL */ `
   mutation DeactivateMember($member_id: ID!) {
     deactivateMember(member_id: $member_id) {
       id
@@ -237,7 +237,7 @@ export const DeactivateMemberMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const ReactivateMemberMutationDoc = gql(/* gql */ `
+export const ReactivateMemberMutationDoc = graphql(/* GraphQL */ `
   mutation ReactivateMember($member_id: ID!) {
     reactivateMember(member_id: $member_id) {
       id
@@ -246,13 +246,13 @@ export const ReactivateMemberMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const LeaveFirmMutationDoc = gql(/* gql */ `
+export const LeaveFirmMutationDoc = graphql(/* GraphQL */ `
   mutation LeaveFirm {
     leaveFirm
   }
 `)
 
-export const TransferOwnershipMutationDoc = gql(/* gql */ `
+export const TransferOwnershipMutationDoc = graphql(/* GraphQL */ `
   mutation TransferOwnership($input: TransferOwnershipInput!) {
     transferOwnership(input: $input) {
       id
@@ -262,7 +262,7 @@ export const TransferOwnershipMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const PendingInvitationsQueryDoc = gql(/* gql */ `
+export const PendingInvitationsQueryDoc = graphql(/* GraphQL */ `
   query PendingInvitations {
     pendingInvitations {
       id
@@ -277,7 +277,7 @@ export const PendingInvitationsQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const InviteMemberMutationDoc = gql(/* gql */ `
+export const InviteMemberMutationDoc = graphql(/* GraphQL */ `
   mutation InviteMember($input: InviteMemberInput!) {
     inviteMember(input: $input) {
       invitation {
@@ -295,7 +295,7 @@ export const InviteMemberMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const ResendInvitationMutationDoc = gql(/* gql */ `
+export const ResendInvitationMutationDoc = graphql(/* GraphQL */ `
   mutation ResendInvitation($input: InvitationIdInput!) {
     resendInvitation(input: $input) {
       invitation {
@@ -308,7 +308,7 @@ export const ResendInvitationMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const RevokeInvitationMutationDoc = gql(/* gql */ `
+export const RevokeInvitationMutationDoc = graphql(/* GraphQL */ `
   mutation RevokeInvitation($input: InvitationIdInput!) {
     revokeInvitation(input: $input) {
       id
@@ -317,7 +317,7 @@ export const RevokeInvitationMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const InvitationLookupQueryDoc = gql(/* gql */ `
+export const InvitationLookupQueryDoc = graphql(/* GraphQL */ `
   query InvitationLookup($input: LookupInvitationInput!) {
     invitationLookup(input: $input) {
       email
@@ -331,7 +331,7 @@ export const InvitationLookupQueryDoc = gql(/* gql */ `
 
 // ─────────────────────── Practice Areas ──────────────────────────────────
 
-export const PracticeAreasQueryDoc = gql(/* gql */ `
+export const PracticeAreasQueryDoc = graphql(/* GraphQL */ `
   query PracticeAreas {
     practiceAreas {
       id
@@ -342,7 +342,7 @@ export const PracticeAreasQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const MyPracticeAreasQueryDoc = gql(/* gql */ `
+export const MyPracticeAreasQueryDoc = graphql(/* GraphQL */ `
   query MyPracticeAreas {
     myPracticeAreas {
       practice_area_id
@@ -353,7 +353,7 @@ export const MyPracticeAreasQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const SetMyPracticeAreasMutationDoc = gql(/* gql */ `
+export const SetMyPracticeAreasMutationDoc = graphql(/* GraphQL */ `
   mutation SetMyPracticeAreas($input: SetProfilePracticeAreasInput!) {
     setMyPracticeAreas(input: $input) {
       practice_area_id
@@ -366,7 +366,7 @@ export const SetMyPracticeAreasMutationDoc = gql(/* gql */ `
 
 // ─────────────────────── Verifications ───────────────────────────────────
 
-export const MyVerificationDocumentsQueryDoc = gql(/* gql */ `
+export const MyVerificationDocumentsQueryDoc = graphql(/* GraphQL */ `
   query MyVerificationDocuments {
     myVerificationDocuments {
       id
@@ -382,7 +382,7 @@ export const MyVerificationDocumentsQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const UploadVerificationDocumentMutationDoc = gql(/* gql */ `
+export const UploadVerificationDocumentMutationDoc = graphql(/* GraphQL */ `
   mutation UploadVerificationDocument(
     $input: UploadVerificationDocumentInput!
   ) {
@@ -400,7 +400,7 @@ export const UploadVerificationDocumentMutationDoc = gql(/* gql */ `
 
 // ──────────────────────── Clients ────────────────────────
 
-export const ClientsQueryDoc = gql(/* gql */ `
+export const ClientsQueryDoc = graphql(/* GraphQL */ `
   query Clients {
     clients {
       id
@@ -418,7 +418,7 @@ export const ClientsQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const ClientQueryDoc = gql(/* gql */ `
+export const ClientQueryDoc = graphql(/* GraphQL */ `
   query Client($id: ID!) {
     client(id: $id) {
       id
@@ -436,7 +436,7 @@ export const ClientQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateClientMutationDoc = gql(/* gql */ `
+export const CreateClientMutationDoc = graphql(/* GraphQL */ `
   mutation CreateClient($input: CreateClientInput!) {
     createClient(input: $input) {
       id
@@ -454,7 +454,7 @@ export const CreateClientMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateClientMutationDoc = gql(/* gql */ `
+export const UpdateClientMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateClient($id: ID!, $input: UpdateClientInput!) {
     updateClient(id: $id, input: $input) {
       id
@@ -472,7 +472,7 @@ export const UpdateClientMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteClientMutationDoc = gql(/* gql */ `
+export const DeleteClientMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteClient($id: ID!) {
     deleteClient(id: $id)
   }
@@ -480,7 +480,7 @@ export const DeleteClientMutationDoc = gql(/* gql */ `
 
 // ───────────────────────── Cases ─────────────────────────
 
-export const CasesQueryDoc = gql(/* gql */ `
+export const CasesQueryDoc = graphql(/* GraphQL */ `
   query Cases {
     cases {
       id
@@ -502,7 +502,7 @@ export const CasesQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CaseQueryDoc = gql(/* gql */ `
+export const CaseQueryDoc = graphql(/* GraphQL */ `
   query Case($id: ID!) {
     case(id: $id) {
       id
@@ -524,7 +524,7 @@ export const CaseQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateCaseMutationDoc = gql(/* gql */ `
+export const CreateCaseMutationDoc = graphql(/* GraphQL */ `
   mutation CreateCase($input: CreateCaseInput!) {
     createCase(input: $input) {
       id
@@ -546,7 +546,7 @@ export const CreateCaseMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateCaseMutationDoc = gql(/* gql */ `
+export const UpdateCaseMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateCase($id: ID!, $input: UpdateCaseInput!) {
     updateCase(id: $id, input: $input) {
       id
@@ -568,7 +568,7 @@ export const UpdateCaseMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteCaseMutationDoc = gql(/* gql */ `
+export const DeleteCaseMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteCase($id: ID!) {
     deleteCase(id: $id)
   }
@@ -576,7 +576,7 @@ export const DeleteCaseMutationDoc = gql(/* gql */ `
 
 // ───────────────────────── Tasks ─────────────────────────
 
-export const TasksQueryDoc = gql(/* gql */ `
+export const TasksQueryDoc = graphql(/* GraphQL */ `
   query Tasks {
     tasks {
       id
@@ -597,7 +597,7 @@ export const TasksQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const TaskQueryDoc = gql(/* gql */ `
+export const TaskQueryDoc = graphql(/* GraphQL */ `
   query Task($id: ID!) {
     task(id: $id) {
       id
@@ -618,7 +618,7 @@ export const TaskQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateTaskMutationDoc = gql(/* gql */ `
+export const CreateTaskMutationDoc = graphql(/* GraphQL */ `
   mutation CreateTask($input: CreateTaskInput!) {
     createTask(input: $input) {
       id
@@ -639,7 +639,7 @@ export const CreateTaskMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateTaskMutationDoc = gql(/* gql */ `
+export const UpdateTaskMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateTask($id: ID!, $input: UpdateTaskInput!) {
     updateTask(id: $id, input: $input) {
       id
@@ -660,7 +660,7 @@ export const UpdateTaskMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteTaskMutationDoc = gql(/* gql */ `
+export const DeleteTaskMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteTask($id: ID!) {
     deleteTask(id: $id)
   }
@@ -668,7 +668,7 @@ export const DeleteTaskMutationDoc = gql(/* gql */ `
 
 // ──────────────────────── Documents ──────────────────────
 
-export const DocumentsQueryDoc = gql(/* gql */ `
+export const DocumentsQueryDoc = graphql(/* GraphQL */ `
   query Documents {
     documents {
       id
@@ -688,7 +688,7 @@ export const DocumentsQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const DocumentQueryDoc = gql(/* gql */ `
+export const DocumentQueryDoc = graphql(/* GraphQL */ `
   query Document($id: ID!) {
     document(id: $id) {
       id
@@ -708,7 +708,7 @@ export const DocumentQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateDocumentMutationDoc = gql(/* gql */ `
+export const CreateDocumentMutationDoc = graphql(/* GraphQL */ `
   mutation CreateDocument($input: CreateDocumentInput!) {
     createDocument(input: $input) {
       id
@@ -728,7 +728,7 @@ export const CreateDocumentMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateDocumentMutationDoc = gql(/* gql */ `
+export const UpdateDocumentMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateDocument($id: ID!, $input: UpdateDocumentInput!) {
     updateDocument(id: $id, input: $input) {
       id
@@ -748,7 +748,7 @@ export const UpdateDocumentMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteDocumentMutationDoc = gql(/* gql */ `
+export const DeleteDocumentMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteDocument($id: ID!) {
     deleteDocument(id: $id)
   }
@@ -756,7 +756,7 @@ export const DeleteDocumentMutationDoc = gql(/* gql */ `
 
 // ──────────────────────── Invoices ───────────────────────
 
-export const InvoicesQueryDoc = gql(/* gql */ `
+export const InvoicesQueryDoc = graphql(/* GraphQL */ `
   query Invoices {
     invoices {
       id
@@ -773,7 +773,7 @@ export const InvoicesQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const InvoiceQueryDoc = gql(/* gql */ `
+export const InvoiceQueryDoc = graphql(/* GraphQL */ `
   query Invoice($id: ID!) {
     invoice(id: $id) {
       id
@@ -790,7 +790,7 @@ export const InvoiceQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateInvoiceMutationDoc = gql(/* gql */ `
+export const CreateInvoiceMutationDoc = graphql(/* GraphQL */ `
   mutation CreateInvoice($input: CreateInvoiceInput!) {
     createInvoice(input: $input) {
       id
@@ -807,7 +807,7 @@ export const CreateInvoiceMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateInvoiceMutationDoc = gql(/* gql */ `
+export const UpdateInvoiceMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateInvoice($id: ID!, $input: UpdateInvoiceInput!) {
     updateInvoice(id: $id, input: $input) {
       id
@@ -824,7 +824,7 @@ export const UpdateInvoiceMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteInvoiceMutationDoc = gql(/* gql */ `
+export const DeleteInvoiceMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteInvoice($id: ID!) {
     deleteInvoice(id: $id)
   }
@@ -832,7 +832,7 @@ export const DeleteInvoiceMutationDoc = gql(/* gql */ `
 
 // ─────────────────────── Dashboard ───────────────────────
 
-export const DashboardStatsQueryDoc = gql(/* gql */ `
+export const DashboardStatsQueryDoc = graphql(/* GraphQL */ `
   query DashboardStats {
     dashboardStats {
       total_clients
@@ -857,7 +857,7 @@ export const DashboardStatsQueryDoc = gql(/* gql */ `
 
 // ──────────────────────── Library ────────────────────────
 
-export const LibraryItemsQueryDoc = gql(/* gql */ `
+export const LibraryItemsQueryDoc = graphql(/* GraphQL */ `
   query LibraryItems($category: String) {
     libraryItems(category: $category) {
       id
@@ -879,7 +879,7 @@ export const LibraryItemsQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const LibraryDownloadUrlQueryDoc = gql(/* gql */ `
+export const LibraryDownloadUrlQueryDoc = graphql(/* GraphQL */ `
   query LibraryDownloadUrl($id: ID!) {
     libraryDownloadUrl(id: $id) {
       url
@@ -887,7 +887,7 @@ export const LibraryDownloadUrlQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateLibraryItemMutationDoc = gql(/* gql */ `
+export const CreateLibraryItemMutationDoc = graphql(/* GraphQL */ `
   mutation CreateLibraryItem($input: CreateLibraryItemInput!) {
     createLibraryItem(input: $input) {
       id
@@ -909,7 +909,7 @@ export const CreateLibraryItemMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateLibraryItemMutationDoc = gql(/* gql */ `
+export const UpdateLibraryItemMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateLibraryItem($id: ID!, $input: UpdateLibraryItemInput!) {
     updateLibraryItem(id: $id, input: $input) {
       id
@@ -931,7 +931,7 @@ export const UpdateLibraryItemMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const ToggleLibraryItemFavoriteMutationDoc = gql(/* gql */ `
+export const ToggleLibraryItemFavoriteMutationDoc = graphql(/* GraphQL */ `
   mutation ToggleLibraryItemFavorite($id: ID!) {
     toggleLibraryItemFavorite(id: $id) {
       id
@@ -940,7 +940,7 @@ export const ToggleLibraryItemFavoriteMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteLibraryItemMutationDoc = gql(/* gql */ `
+export const DeleteLibraryItemMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteLibraryItem($id: ID!) {
     deleteLibraryItem(id: $id)
   }
@@ -948,7 +948,7 @@ export const DeleteLibraryItemMutationDoc = gql(/* gql */ `
 
 // ─────────────────────── Deadlines ───────────────────────
 
-export const DeadlinesQueryDoc = gql(/* gql */ `
+export const DeadlinesQueryDoc = graphql(/* GraphQL */ `
   query Deadlines($status: String, $upcoming: Boolean) {
     deadlines(status: $status, upcoming: $upcoming) {
       id
@@ -967,7 +967,7 @@ export const DeadlinesQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const DeadlineStatsQueryDoc = gql(/* gql */ `
+export const DeadlineStatsQueryDoc = graphql(/* GraphQL */ `
   query DeadlineStats {
     deadlineStats {
       overdue_count
@@ -989,7 +989,7 @@ export const DeadlineStatsQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateDeadlineMutationDoc = gql(/* gql */ `
+export const CreateDeadlineMutationDoc = graphql(/* GraphQL */ `
   mutation CreateDeadline($input: CreateDeadlineInput!) {
     createDeadline(input: $input) {
       id
@@ -1008,7 +1008,7 @@ export const CreateDeadlineMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateDeadlineMutationDoc = gql(/* gql */ `
+export const UpdateDeadlineMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateDeadline($id: ID!, $input: UpdateDeadlineInput!) {
     updateDeadline(id: $id, input: $input) {
       id
@@ -1027,7 +1027,7 @@ export const UpdateDeadlineMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteDeadlineMutationDoc = gql(/* gql */ `
+export const DeleteDeadlineMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteDeadline($id: ID!) {
     deleteDeadline(id: $id)
   }
@@ -1035,7 +1035,7 @@ export const DeleteDeadlineMutationDoc = gql(/* gql */ `
 
 // ───────────────────────── Comms ─────────────────────────
 
-export const MessagesQueryDoc = gql(/* gql */ `
+export const MessagesQueryDoc = graphql(/* GraphQL */ `
   query Messages($clientId: ID, $channel: String) {
     messages(clientId: $clientId, channel: $channel) {
       id
@@ -1053,7 +1053,7 @@ export const MessagesQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const CreateMessageMutationDoc = gql(/* gql */ `
+export const CreateMessageMutationDoc = graphql(/* GraphQL */ `
   mutation CreateMessage($input: CreateMessageInput!) {
     createMessage(input: $input) {
       id
@@ -1071,7 +1071,7 @@ export const CreateMessageMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteMessageMutationDoc = gql(/* gql */ `
+export const DeleteMessageMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteMessage($id: ID!) {
     deleteMessage(id: $id)
   }
@@ -1079,7 +1079,7 @@ export const DeleteMessageMutationDoc = gql(/* gql */ `
 
 // ──────────────────────── Settings ───────────────────────
 
-export const ProfileQueryDoc = gql(/* gql */ `
+export const ProfileQueryDoc = graphql(/* GraphQL */ `
   query Profile {
     profile {
       id
@@ -1116,7 +1116,7 @@ export const ProfileQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const UpdateProfileMutationDoc = gql(/* gql */ `
+export const UpdateProfileMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateProfile($input: UpdateProfileInput!) {
     updateProfile(input: $input) {
       id
@@ -1141,7 +1141,7 @@ export const UpdateProfileMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const ChangePasswordMutationDoc = gql(/* gql */ `
+export const ChangePasswordMutationDoc = graphql(/* GraphQL */ `
   mutation ChangePassword($input: ChangePasswordInput!) {
     changePassword(input: $input)
   }
@@ -1149,7 +1149,7 @@ export const ChangePasswordMutationDoc = gql(/* gql */ `
 
 // ──────────────────────── AI ─────────────────────────────
 
-export const AiConversationsQueryDoc = gql(/* gql */ `
+export const AiConversationsQueryDoc = graphql(/* GraphQL */ `
   query AiConversations {
     aiConversations {
       id
@@ -1160,7 +1160,7 @@ export const AiConversationsQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const AiConversationQueryDoc = gql(/* gql */ `
+export const AiConversationQueryDoc = graphql(/* GraphQL */ `
   query AiConversation($id: ID!) {
     aiConversation(id: $id) {
       id
@@ -1178,7 +1178,7 @@ export const AiConversationQueryDoc = gql(/* gql */ `
   }
 `)
 
-export const AiChatMutationDoc = gql(/* gql */ `
+export const AiChatMutationDoc = graphql(/* GraphQL */ `
   mutation AiChat($input: AiChatInput!) {
     aiChat(input: $input) {
       response
@@ -1193,7 +1193,7 @@ export const AiChatMutationDoc = gql(/* gql */ `
   }
 `)
 
-export const DeleteAiConversationMutationDoc = gql(/* gql */ `
+export const DeleteAiConversationMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteAiConversation($id: ID!) {
     deleteAiConversation(id: $id)
   }
