@@ -80,7 +80,7 @@ export default function DashboardPage() {
 // ── Header ─────────────────────────────────────────────────────────────────
 
 function DashboardHeader() {
-  const today = new Date().toLocaleDateString(undefined, {
+  const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',

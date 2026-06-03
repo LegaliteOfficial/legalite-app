@@ -1,6 +1,24 @@
 import type { Metadata } from 'next'
+import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from './providers'
+
+const euclid = localFont({
+  src: [
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Light.ttf',          weight: '300', style: 'normal' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Light Italic.ttf',   weight: '300', style: 'italic' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Regular.ttf',        weight: '400', style: 'normal' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Italic.ttf',         weight: '400', style: 'italic' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Medium.ttf',         weight: '500', style: 'normal' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Medium Italic.ttf',  weight: '500', style: 'italic' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A SemiBold.ttf',       weight: '600', style: 'normal' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A SemiBold Italic.ttf',weight: '600', style: 'italic' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Bold.ttf',           weight: '700', style: 'normal' },
+    { path: '../public/fonts/euclid-circular-a/Euclid Circular A Bold Italic.ttf',    weight: '700', style: 'italic' },
+  ],
+  variable: '--font-euclid',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'LegaLite — Ghana Legal Practice Management',
@@ -14,13 +32,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={euclid.variable}>
       <body>
         <Providers>{children}</Providers>
       </body>

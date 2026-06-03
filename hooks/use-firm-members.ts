@@ -10,10 +10,22 @@ import {
   DeactivateMemberMutationDoc,
   ReactivateMemberMutationDoc,
 } from '@/lib/graphql/operations'
-import type {
-  FirmMembersQuery,
-  PendingInvitationsQuery,
-  InviteMemberInput,
+import {
+  type FirmMembersQuery,
+  type PendingInvitationsQuery,
+  type InviteMemberInput,
+  type PendingInvitationsQueryVariables,
+  InviteMemberMutation,
+  InviteMemberMutationVariables,
+  ResendInvitationMutation,
+  RevokeInvitationMutation,
+  RevokeInvitationMutationVariables,
+  DeactivateMemberMutation,
+  DeactivateMemberMutationVariables,
+  ChangeMemberRoleMutation,
+  ChangeMemberRoleMutationVariables,
+  ChangeProfessionalTitleMutation,
+  ChangeProfessionalTitleMutationVariables,
 } from '@/types/generated/graphql'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
@@ -21,65 +33,12 @@ const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 export type FirmMember = FirmMembersQuery['firmMembers'][number]
 export type PendingInvitation = PendingInvitationsQuery['pendingInvitations'][number]
 
-/**
- * DEV ONLY — sample roster shown when the GraphQL backend is unreachable
- * AND `NEXT_PUBLIC_DEV_BYPASS_AUTH=true`, mirroring the pattern in
- * hooks/use-clients.ts so /settings/members renders without a live API.
- */
-const DEV_SAMPLE_MEMBERS: FirmMember[] = [
-  {
-    id: 'dev-mem-1',
-    firm_id: 'dev-firm',
-    profile_id: 'dev-owner',
-    firm_role: 'owner',
-    professional_title: 'managing_partner',
-    employment_type: 'full_time',
-    status: 'active',
-    name: 'Ama Owusu',
-    email: 'ama.owusu@example.gh',
-    gba_number: 'GBA-10231',
-    verification_status: 'verified',
-    joined_at: '2026-01-04T09:00:00Z',
-    left_at: null,
-  },
-  {
-    id: 'dev-mem-2',
-    firm_id: 'dev-firm',
-    profile_id: 'dev-assoc',
-    firm_role: 'member',
-    professional_title: 'associate',
-    employment_type: 'full_time',
-    status: 'active',
-    name: 'Kojo Mensah',
-    email: 'kojo.mensah@example.gh',
-    gba_number: 'GBA-20984',
-    verification_status: 'verified',
-    joined_at: '2026-02-18T09:00:00Z',
-    left_at: null,
-  },
-]
-
-const DEV_SAMPLE_INVITES: PendingInvitation[] = [
-  {
-    id: 'dev-inv-1',
-    firm_id: 'dev-firm',
-    email: 'nana.adjei@example.gh',
-    firm_role: 'member',
-    professional_title: 'paralegal',
-    invited_by: 'dev-owner',
-    expires_at: '2026-06-17T09:00:00Z',
-    created_at: '2026-06-03T09:00:00Z',
-  },
-]
 
 export function useFirmMembers() {
   const { data, loading, error, refetch } = useQuery(FirmMembersQueryDoc, {
     skip: DEV_BYPASS,
     errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
-  if (DEV_BYPASS) {
-    return { data: DEV_SAMPLE_MEMBERS, isLoading: false, error: undefined, refetch }
-  }
   return {
     data: data?.firmMembers as FirmMember[] | undefined,
     isLoading: loading,
@@ -89,13 +48,10 @@ export function useFirmMembers() {
 }
 
 export function usePendingInvitations() {
-  const { data, loading, error, refetch } = useQuery(PendingInvitationsQueryDoc, {
-    skip: DEV_BYPASS,
-    errorPolicy: DEV_BYPASS ? 'all' : 'none',
+  const { data, loading, error, refetch } = useQuery<PendingInvitationsQuery, PendingInvitationsQueryVariables>(PendingInvitationsQueryDoc, {
+    // skip: DEV_BYPASS,
+    // errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
-  if (DEV_BYPASS) {
-    return { data: DEV_SAMPLE_INVITES, isLoading: false, error: undefined, refetch }
-  }
   return {
     data: data?.pendingInvitations as PendingInvitation[] | undefined,
     isLoading: loading,
@@ -105,7 +61,7 @@ export function usePendingInvitations() {
 }
 
 export function useInviteMember() {
-  const [mutate, state] = useMutation(InviteMemberMutationDoc, {
+  const [mutate, state] = useMutation<InviteMemberMutation, InviteMemberMutationVariables>(InviteMemberMutationDoc, {
     refetchQueries: [PendingInvitationsQueryDoc],
   })
   return {
@@ -119,7 +75,7 @@ export function useInviteMember() {
 }
 
 export function useResendInvitation() {
-  const [mutate, state] = useMutation(ResendInvitationMutationDoc, {
+  const [mutate, state] = useMutation<ResendInvitationMutation, ResendInvitationMutation>(ResendInvitationMutationDoc, {
     refetchQueries: [PendingInvitationsQueryDoc],
   })
   return {
@@ -132,7 +88,7 @@ export function useResendInvitation() {
 }
 
 export function useRevokeInvitation() {
-  const [mutate, state] = useMutation(RevokeInvitationMutationDoc, {
+  const [mutate, state] = useMutation<RevokeInvitationMutation, RevokeInvitationMutationVariables>(RevokeInvitationMutationDoc, {
     refetchQueries: [PendingInvitationsQueryDoc],
   })
   return {
@@ -144,7 +100,7 @@ export function useRevokeInvitation() {
 }
 
 export function useChangeMemberRole() {
-  const [mutate, state] = useMutation(ChangeMemberRoleMutationDoc, {
+  const [mutate, state] = useMutation<ChangeMemberRoleMutation, ChangeMemberRoleMutationVariables>(ChangeMemberRoleMutationDoc, {
     refetchQueries: [FirmMembersQueryDoc],
   })
   return {
@@ -156,7 +112,7 @@ export function useChangeMemberRole() {
 }
 
 export function useChangeProfessionalTitle() {
-  const [mutate, state] = useMutation(ChangeProfessionalTitleMutationDoc, {
+  const [mutate, state] = useMutation<ChangeProfessionalTitleMutation, ChangeProfessionalTitleMutationVariables>(ChangeProfessionalTitleMutationDoc, {
     refetchQueries: [FirmMembersQueryDoc],
   })
   return {
@@ -174,7 +130,7 @@ export function useChangeProfessionalTitle() {
 }
 
 export function useDeactivateMember() {
-  const [mutate, state] = useMutation(DeactivateMemberMutationDoc, {
+  const [mutate, state] = useMutation<DeactivateMemberMutation, DeactivateMemberMutationVariables>(DeactivateMemberMutationDoc, {
     refetchQueries: [FirmMembersQueryDoc],
   })
   return {

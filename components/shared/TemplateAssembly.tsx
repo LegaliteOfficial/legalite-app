@@ -609,7 +609,7 @@ export function TemplateAssembly({ template, onBack, onSaved }: TemplateAssembly
             dangerouslySetInnerHTML={{
               __html: selectedCase
                 ? editorHTML
-                : '<div style="color:#9CA3AF;font-family:DM Sans,sans-serif;font-size:13px;line-height:1.5;">Pick a client and case on the left to start assembling your document. The preview will update as you type.</div>',
+                : '<div style="color:#9CA3AF;font-family:inherit;font-size:13px;line-height:1.5;">Pick a client and case on the left to start assembling your document. The preview will update as you type.</div>',
             }}
           />
         </div>
