@@ -807,7 +807,7 @@ export default function DocumentsPage() {
             onInput={(e) => setEditorHTML((e.target as HTMLDivElement).innerHTML)}
             className="p-8 min-h-[600px] focus:outline-none leading-relaxed"
             style={{ fontFamily: "'Times New Roman', serif", color: '#1a1a1a', fontSize: '13pt', lineHeight: '1.8' }}
-            dangerouslySetInnerHTML={{ __html: editorHTML || '<div style="color:#9CA3AF;font-family:DM Sans,sans-serif;font-size:13px;">Start typing your legal document here, or switch to the Templates tab to use a template...</div>' }}
+            dangerouslySetInnerHTML={{ __html: editorHTML || '<div style="color:#9CA3AF;font-family:inherit;font-size:13px;">Start typing your legal document here, or switch to the Templates tab to use a template...</div>' }}
           />
         </div>
       )}

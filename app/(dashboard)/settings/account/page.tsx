@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { Suspense, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
@@ -206,7 +206,18 @@ function Card({
 
 const VALID_SECTIONS: readonly SectionId[] = ['profile', 'notifications', 'security', 'appearance', 'integrations']
 
+// Next 16 requires anything that reads useSearchParams() to live inside a
+// Suspense boundary, otherwise prerender fails. We split the body into an
+// inner component so the outer default export can wrap it.
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
+  )
+}
+
+function SettingsPageInner() {
   const { user, setAuth, token } = useAuthStore()
   const searchParams = useSearchParams()
   const sectionParam = searchParams?.get('section') as SectionId | null
@@ -265,14 +276,9 @@ export default function SettingsPage() {
       onCompleted: (data) => {
         const updated = data.updateProfile
         if (updated && token) {
-          setAuth(
-            {
-              ...updated,
-              firm: updated.firm ?? undefined,
-              gba_number: updated.gba_number ?? undefined,
-            } as Parameters<typeof setAuth>[0],
-            token,
-          )
+          // Preserve the existing membership context; profile mutation
+          // doesn't touch firm assignment.
+          setAuth(updated, token)
         }
         toast.success('Profile updated successfully.')
       },
@@ -287,8 +293,8 @@ export default function SettingsPage() {
         variables: {
           input: {
             name: data.name,
-            firm: data.firm || null,
             phone: data.phone || null,
+            bio: data.bio || null,
           },
         },
       })

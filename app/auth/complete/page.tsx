@@ -29,8 +29,10 @@ function AuthCompleteInner() {
         const payload = res.data?.googleAuth
         if (!payload) throw new Error('Empty googleAuth response')
         setAuth(
-          { ...payload.user, firm: payload.user.firm ?? undefined } as Parameters<typeof setAuth>[0],
+          payload.user,
           payload.token,
+          payload.active_membership ?? null,
+          payload.memberships ?? [],
         )
         router.replace('/dashboard')
       })

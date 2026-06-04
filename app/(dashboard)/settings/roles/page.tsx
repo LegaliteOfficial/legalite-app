@@ -6,6 +6,8 @@ import {
   ChevronRight, ChevronLeft, Search, SlidersHorizontal, MoreVertical, Plus, FolderLock,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useFirmRoles, useArchiveFirmRole, type FirmRole } from '@/hooks/use-firm-roles'
+import { Spinner } from '@/components/shared/Spinner'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -18,57 +20,31 @@ type Role = {
   description: string
   kind: RoleKind
   status: RoleStatus
+  isSystem: boolean
+  memberCount: number
 }
 
-type TabId = 'all' | 'custom' | 'standard' | 'archived'
+type TabId = 'all' | 'custom' | 'standard'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'all',      label: 'All active roles' },
+  { id: 'all',      label: 'All roles' },
   { id: 'custom',   label: 'Custom roles' },
-  { id: 'standard', label: 'Standard roles' },
-  { id: 'archived', label: 'Archived roles' },
+  { id: 'standard', label: 'System roles' },
 ]
 
-// ── Mock roles ─────────────────────────────────────────────────────────────
-// In production these come from /firms/:firmId/roles.
-
-const ROLES: Role[] = [
-  {
-    id: 'accounts',
-    name: 'Accounts',
-    description: 'Add trust and operating account information, and record incoming and outgoing transactions.',
-    kind: 'standard',
-    status: 'active',
-  },
-  {
-    id: 'administrator',
-    name: 'Administrator',
-    description: 'Full access to LegaLite — manages clients, matters, activities, user permissions, and account exports.',
-    kind: 'standard',
-    status: 'active',
-  },
-  {
-    id: 'billing',
-    name: 'Billing',
-    description: 'Manage bills and receive bill payments. Payment notifications for cards and mobile money are also sent to this user.',
-    kind: 'standard',
-    status: 'active',
-  },
-  {
-    id: 'general-access',
-    name: 'General Access',
-    description: 'Access to matters and contacts, but cannot delete or export across those items.',
-    kind: 'standard',
-    status: 'active',
-  },
-  {
-    id: 'reports',
-    name: 'Reports',
-    description: 'See the Reports tab and generate firm-wide reports.',
-    kind: 'standard',
-    status: 'active',
-  },
-]
+// Map a backend FirmRole into the row shape this page renders. System roles
+// (Owner/Administrator/Member) are the "standard" kind and can't be edited.
+function toRole(r: FirmRole): Role {
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description || '—',
+    kind: r.is_system ? 'standard' : 'custom',
+    status: r.status === 'archived' ? 'archived' : 'active',
+    isSystem: r.is_system,
+    memberCount: r.member_count,
+  }
+}
 
 // ── Page ───────────────────────────────────────────────────────────────────
 
@@ -78,18 +54,20 @@ export default function RolesPage() {
   const [page, setPage] = useState(0)
   const pageSize = 10
 
+  const { data: roleData, isLoading } = useFirmRoles()
+  const roles = useMemo(() => (roleData ?? []).map(toRole), [roleData])
+
   const filteredRoles = useMemo(() => {
     let scope: Role[]
     switch (activeTab) {
-      case 'all':      scope = ROLES.filter((r) => r.status === 'active'); break
-      case 'custom':   scope = ROLES.filter((r) => r.kind === 'custom' && r.status === 'active'); break
-      case 'standard': scope = ROLES.filter((r) => r.kind === 'standard' && r.status === 'active'); break
-      case 'archived': scope = ROLES.filter((r) => r.status === 'archived'); break
+      case 'all':      scope = roles; break
+      case 'custom':   scope = roles.filter((r) => r.kind === 'custom'); break
+      case 'standard': scope = roles.filter((r) => r.kind === 'standard'); break
     }
     const q = query.trim().toLowerCase()
     if (!q) return scope
     return scope.filter((r) => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q))
-  }, [activeTab, query])
+  }, [activeTab, query, roles])
 
   const total = filteredRoles.length
   const start = total === 0 ? 0 : page * pageSize + 1
@@ -181,32 +159,50 @@ export default function RolesPage() {
           </div>
         </div>
 
-        {/* Table or empty state */}
-        {total === 0 ? (
+        {/* Table, loading, or empty state */}
+        {isLoading ? (
+          <div className="flex items-center justify-center gap-2 py-16" style={{ color: '#6B7280' }}>
+            <Spinner size={16} /> <span className="text-sm">Loading roles…</span>
+          </div>
+        ) : total === 0 ? (
           <EmptyState />
         ) : (
           <>
-            <div className="grid grid-cols-[1fr_64px] gap-4 px-5 py-3 border-b text-[11px] font-bold uppercase tracking-wider" style={{ borderColor: 'var(--border)', color: '#6B7280' }}>
+            <div className="grid grid-cols-[1fr_120px_64px] gap-4 px-5 py-3 border-b text-[11px] font-bold uppercase tracking-wider" style={{ borderColor: 'var(--border)', color: '#6B7280' }}>
               <span>Role Name</span>
+              <span>Members</span>
               <span className="text-right">Action</span>
             </div>
             <ul>
               {pageRoles.map((role, i) => (
                 <li
                   key={role.id}
-                  className="grid grid-cols-[1fr_64px] gap-4 px-5 py-4 items-center"
+                  className="grid grid-cols-[1fr_120px_64px] gap-4 px-5 py-4 items-center"
                   style={{ borderBottom: i === pageRoles.length - 1 ? 'none' : '1px solid var(--border)' }}
                 >
                   <div>
-                    <Link
-                      href={`/settings/roles/${role.id}`}
-                      className="text-sm font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
-                      style={{ color: 'var(--gold)' }}
-                    >
-                      {role.name}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/settings/roles/${role.id}`}
+                        className="text-sm font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
+                        style={{ color: 'var(--gold)' }}
+                      >
+                        {role.name}
+                      </Link>
+                      {role.isSystem && (
+                        <span
+                          className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider"
+                          style={{ background: 'rgba(13,27,42,0.06)', color: '#6B7280' }}
+                        >
+                          System
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[13px] mt-1 leading-snug" style={{ color: '#6B7280' }}>{role.description}</p>
                   </div>
+                  <span className="text-sm tabular-nums" style={{ color: '#6B7280' }}>
+                    {role.memberCount} {role.memberCount === 1 ? 'member' : 'members'}
+                  </span>
                   <div className="flex justify-end">
                     <RowMenu role={role} />
                   </div>
@@ -251,6 +247,16 @@ export default function RolesPage() {
 
 function RowMenu({ role }: { role: Role }) {
   const [open, setOpen] = useState(false)
+  const archiveRole = useArchiveFirmRole()
+
+  const handleArchive = async () => {
+    try {
+      await archiveRole.mutateAsync(role.id)
+      toast.success(`Role "${role.name}" archived.`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Unable to archive role.')
+    }
+  }
 
   return (
     <div className="relative">
@@ -270,10 +276,9 @@ function RowMenu({ role }: { role: Role }) {
           style={{ background: 'white', borderColor: 'var(--border)' }}
         >
           <MenuItem onClick={() => toast.message(`Edit "${role.name}" — coming next.`)}>Edit</MenuItem>
-          <MenuItem onClick={() => toast.message(`Duplicate "${role.name}" — coming next.`)}>Duplicate</MenuItem>
           <MenuItem
-            onClick={() => toast.message(`Archive "${role.name}" — coming next.`)}
-            tone={role.kind === 'standard' ? 'disabled' : 'default'}
+            onClick={handleArchive}
+            tone={role.isSystem ? 'disabled' : 'danger'}
           >
             Archive
           </MenuItem>
@@ -288,7 +293,7 @@ function MenuItem({
 }: {
   children: React.ReactNode
   onClick: () => void
-  tone?: 'default' | 'disabled'
+  tone?: 'default' | 'danger' | 'disabled'
 }) {
   return (
     <button
@@ -296,7 +301,7 @@ function MenuItem({
       onMouseDown={(e) => { e.preventDefault(); if (tone !== 'disabled') onClick() }}
       disabled={tone === 'disabled'}
       className="w-full text-left text-sm px-3 py-2 transition-colors hover:bg-black/[0.04] disabled:opacity-40 disabled:cursor-not-allowed"
-      style={{ color: 'var(--navy)' }}
+      style={{ color: tone === 'danger' ? '#B91C1C' : 'var(--navy)' }}
     >
       {children}
     </button>

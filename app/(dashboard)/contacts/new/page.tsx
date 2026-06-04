@@ -19,7 +19,7 @@
  * migration.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Building2,
@@ -445,7 +445,16 @@ const INITIAL_FORM: NewContactForm = {
 
 // ── Page component ─────────────────────────────────────────────────────
 
+// Next 16: useSearchParams() requires a Suspense boundary for prerender.
 export default function NewContactPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewContactPageInner />
+    </Suspense>
+  )
+}
+
+function NewContactPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const createMutation = useCreateClient()

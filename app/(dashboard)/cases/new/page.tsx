@@ -23,7 +23,7 @@
  *   matching schema additions land (next backend migration).
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
@@ -265,7 +265,18 @@ const CURRENCIES = [
 
 // ── Page component ──────────────────────────────────────────────────────
 
+// Next 16: useSearchParams() must live under a Suspense boundary or the
+// production build refuses to prerender. Split the body into an inner
+// component so the default export can wrap it.
 export default function NewCasePage() {
+  return (
+    <Suspense fallback={null}>
+      <NewCasePageInner />
+    </Suspense>
+  )
+}
+
+function NewCasePageInner() {
   const router = useRouter()
   // `?client=<id>` lets the Clients page link straight into the
   // new-case form with a client pre-selected. Optional — falls

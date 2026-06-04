@@ -57,6 +57,7 @@ import { useCase, useDeleteCase, useUpdateCase } from '@/hooks/use-cases'
 import { useClients } from '@/hooks/use-clients'
 import { useDocuments } from '@/hooks/use-documents'
 import { useDeadlines } from '@/hooks/use-deadlines'
+import { AttachmentsPanel } from '@/components/shared/AttachmentsPanel'
 import { useUIStore } from '@/stores/ui.store'
 import type { CaseStatus } from '@/types'
 
@@ -423,6 +424,9 @@ export default function CaseDetailPage({
               </ul>
             )}
           </Section>
+
+          {/* ─── Attachments ───────────────────────────────────────── */}
+          <AttachmentsPanel entityType="case" entityId={id} />
 
           {/* ─── Calendar ──────────────────────────────────────────── */}
           <Section

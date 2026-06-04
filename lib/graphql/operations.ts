@@ -1,39 +1,38 @@
-// All GraphQL operations live here. Codegen reads this file via the glob in
-// codegen.ts and emits typed DocumentNodes + variable/return types into
-// lib/graphql/generated/. The `graphql()` template tag in each call is the
-// codegen-generated, type-aware version once codegen has run at least once.
+import { graphql } from "@/types/generated"
 
-import { graphql } from './generated'
-
-// ───────────────────────── Auth ─────────────────────────
-
-export const LoginMutationDoc = graphql(/* GraphQL */ `
-  mutation Login($input: LoginInput!) {
-    login(input: $input) {
+export const AcceptInviteMutationDoc = graphql(/* GraphQL */ `
+  mutation AcceptInvite($input: AcceptInviteInput!) {
+    acceptInvite(input: $input) {
       token
       user {
         id
         email
         name
         role
-        firm
+        first_name
+        last_name
+        gba_number
+        supreme_court_enrollment_no
+        practising_license_no
+        digital_address
+        verification_status
         created_at
       }
-    }
-  }
-`)
-
-export const RegisterMutationDoc = graphql(/* GraphQL */ `
-  mutation Register($input: RegisterInput!) {
-    register(input: $input) {
-      token
-      user {
-        id
-        email
-        name
-        role
-        firm
-        created_at
+      active_membership {
+        firm_id
+        firm_name
+        firm_slug
+        firm_role
+        professional_title
+        status
+      }
+      memberships {
+        firm_id
+        firm_name
+        firm_slug
+        firm_role
+        professional_title
+        status
       }
     }
   }
@@ -48,8 +47,62 @@ export const GoogleAuthMutationDoc = graphql(/* GraphQL */ `
         email
         name
         role
-        firm
+        first_name
+        last_name
+        gba_number
+        supreme_court_enrollment_no
+        practising_license_no
+        digital_address
+        verification_status
         created_at
+      }
+      active_membership {
+        firm_id
+        firm_name
+        firm_slug
+        firm_role
+        professional_title
+        status
+      }
+      memberships {
+        firm_id
+        firm_name
+        firm_slug
+        firm_role
+        professional_title
+        status
+      }
+    }
+  }
+`)
+
+export const SwitchFirmMutationDoc = graphql(/* GraphQL */ `
+  mutation SwitchFirm($input: SwitchFirmInput!) {
+    switchFirm(input: $input) {
+      token
+      user {
+        id
+        email
+        name
+        role
+        verification_status
+        created_at
+      }
+      active_membership {
+        firm_id
+        firm_name
+        firm_slug
+        firm_role
+        professional_title
+        status
+      }
+      memberships {
+        firm_id
+        firm_name
+        firm_slug
+        firm_role
+        professional_title
+        status
       }
     }
   }
@@ -62,11 +115,397 @@ export const MeQueryDoc = graphql(/* GraphQL */ `
       email
       name
       role
-      firm
+      first_name
+      last_name
+      gba_number
+      supreme_court_enrollment_no
+      practising_license_no
+      digital_address
+      verification_status
       created_at
     }
   }
 `)
+
+// ─────────────────────── Firms / Members / Invites ──────────────────────
+
+export const CurrentFirmQueryDoc = graphql(/* GraphQL */ `
+  query CurrentFirm {
+    currentFirm {
+      id
+      name
+      slug
+      firm_type
+      registration_number
+      tin
+      year_established
+      email
+      phone
+      website
+      office_address
+      digital_address
+      city
+      region
+      logo_url
+      description
+      plan
+      status
+      owner_profile_id
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const UpdateFirmMutationDoc = graphql(/* GraphQL */ `
+  mutation UpdateFirm($input: UpdateFirmInput!) {
+    updateFirm(input: $input) {
+      id
+      name
+      slug
+      firm_type
+      registration_number
+      tin
+      year_established
+      email
+      phone
+      website
+      office_address
+      digital_address
+      city
+      region
+      logo_url
+      description
+      plan
+      status
+      owner_profile_id
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const FirmMembersQueryDoc = graphql(/* GraphQL */ `
+  query FirmMembers {
+    firmMembers {
+      id
+      firm_id
+      profile_id
+      firm_role
+      professional_title
+      employment_type
+      status
+      name
+      email
+      gba_number
+      verification_status
+      joined_at
+      left_at
+    }
+  }
+`)
+
+export const ChangeMemberRoleMutationDoc = graphql(/* GraphQL */ `
+  mutation ChangeMemberRole($input: ChangeMemberRoleInput!) {
+    changeMemberRole(input: $input) {
+      id
+      firm_role
+      professional_title
+      status
+      name
+      email
+    }
+  }
+`)
+
+export const ChangeProfessionalTitleMutationDoc = graphql(/* GraphQL */ `
+  mutation ChangeProfessionalTitle($input: ChangeProfessionalTitleInput!) {
+    changeProfessionalTitle(input: $input) {
+      id
+      firm_role
+      professional_title
+    }
+  }
+`)
+
+export const DeactivateMemberMutationDoc = graphql(/* GraphQL */ `
+  mutation DeactivateMember($member_id: ID!) {
+    deactivateMember(member_id: $member_id) {
+      id
+      status
+    }
+  }
+`)
+
+export const ReactivateMemberMutationDoc = graphql(/* GraphQL */ `
+  mutation ReactivateMember($member_id: ID!) {
+    reactivateMember(member_id: $member_id) {
+      id
+      status
+    }
+  }
+`)
+
+export const LeaveFirmMutationDoc = graphql(/* GraphQL */ `
+  mutation LeaveFirm {
+    leaveFirm
+  }
+`)
+
+export const TransferOwnershipMutationDoc = graphql(/* GraphQL */ `
+  mutation TransferOwnership($input: TransferOwnershipInput!) {
+    transferOwnership(input: $input) {
+      id
+      firm_role
+      name
+    }
+  }
+`)
+
+export const PendingInvitationsQueryDoc = graphql(/* GraphQL */ `
+  query PendingInvitations {
+    pendingInvitations {
+      id
+      firm_id
+      email
+      firm_role
+      professional_title
+      invited_by
+      expires_at
+      created_at
+    }
+  }
+`)
+
+export const InviteMemberMutationDoc = graphql(/* GraphQL */ `
+  mutation InviteMember($input: InviteMemberInput!) {
+    inviteMember(input: $input) {
+      invitation {
+        id
+        firm_id
+        email
+        firm_role
+        professional_title
+        expires_at
+        created_at
+      }
+      token
+      accept_url
+    }
+  }
+`)
+
+export const ResendInvitationMutationDoc = graphql(/* GraphQL */ `
+  mutation ResendInvitation($input: InvitationIdInput!) {
+    resendInvitation(input: $input) {
+      invitation {
+        id
+        expires_at
+      }
+      token
+      accept_url
+    }
+  }
+`)
+
+export const RevokeInvitationMutationDoc = graphql(/* GraphQL */ `
+  mutation RevokeInvitation($input: InvitationIdInput!) {
+    revokeInvitation(input: $input) {
+      id
+      revoked_at
+    }
+  }
+`)
+
+export const InvitationLookupQueryDoc = graphql(/* GraphQL */ `
+  query InvitationLookup($input: LookupInvitationInput!) {
+    invitationLookup(input: $input) {
+      email
+      firm_name
+      firm_role
+      professional_title
+      expires_at
+    }
+  }
+`)
+
+// ─────────────────────── Firm Roles / Permissions (RBAC) ─────────────────
+
+export const PermissionCatalogQueryDoc = graphql(/* GraphQL */ `
+  query PermissionCatalog {
+    permissionCatalog {
+      key
+      label
+      description
+      groups {
+        key
+        label
+        permissions {
+          slug
+          label
+        }
+      }
+    }
+  }
+`)
+
+export const FirmRolesQueryDoc = graphql(/* GraphQL */ `
+  query FirmRoles {
+    firmRoles {
+      id
+      firm_id
+      name
+      slug
+      description
+      permissions
+      is_system
+      status
+      member_count
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const FirmRoleQueryDoc = graphql(/* GraphQL */ `
+  query FirmRole($id: ID!) {
+    firmRole(id: $id) {
+      id
+      firm_id
+      name
+      slug
+      description
+      permissions
+      is_system
+      status
+      member_count
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const CreateFirmRoleMutationDoc = graphql(/* GraphQL */ `
+  mutation CreateFirmRole($input: CreateFirmRoleInput!) {
+    createFirmRole(input: $input) {
+      id
+      name
+      slug
+      description
+      permissions
+      is_system
+      status
+      member_count
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const UpdateFirmRoleMutationDoc = graphql(/* GraphQL */ `
+  mutation UpdateFirmRole($input: UpdateFirmRoleInput!) {
+    updateFirmRole(input: $input) {
+      id
+      name
+      slug
+      description
+      permissions
+      is_system
+      status
+      member_count
+      updated_at
+    }
+  }
+`)
+
+export const ArchiveFirmRoleMutationDoc = graphql(/* GraphQL */ `
+  mutation ArchiveFirmRole($input: RoleIdInput!) {
+    archiveFirmRole(input: $input) {
+      id
+      status
+    }
+  }
+`)
+
+export const SetMemberRolesMutationDoc = graphql(/* GraphQL */ `
+  mutation SetMemberRoles($input: SetMemberRolesInput!) {
+    setMemberRoles(input: $input) {
+      id
+      name
+      slug
+      is_system
+    }
+  }
+`)
+
+// ─────────────────────── Practice Areas ──────────────────────────────────
+
+export const PracticeAreasQueryDoc = graphql(/* GraphQL */ `
+  query PracticeAreas {
+    practiceAreas {
+      id
+      slug
+      name
+      description
+    }
+  }
+`)
+
+export const MyPracticeAreasQueryDoc = graphql(/* GraphQL */ `
+  query MyPracticeAreas {
+    myPracticeAreas {
+      practice_area_id
+      slug
+      name
+      is_primary
+    }
+  }
+`)
+
+export const SetMyPracticeAreasMutationDoc = graphql(/* GraphQL */ `
+  mutation SetMyPracticeAreas($input: SetProfilePracticeAreasInput!) {
+    setMyPracticeAreas(input: $input) {
+      practice_area_id
+      slug
+      name
+      is_primary
+    }
+  }
+`)
+
+// ─────────────────────── Verifications ───────────────────────────────────
+
+export const MyVerificationDocumentsQueryDoc = graphql(/* GraphQL */ `
+  query MyVerificationDocuments {
+    myVerificationDocuments {
+      id
+      document_type
+      file_url
+      file_name
+      file_type
+      file_size
+      status
+      rejection_reason
+      created_at
+    }
+  }
+`)
+
+export const UploadVerificationDocumentMutationDoc = graphql(/* GraphQL */ `
+  mutation UploadVerificationDocument(
+    $input: UploadVerificationDocumentInput!
+  ) {
+    uploadVerificationDocument(input: $input) {
+      id
+      document_type
+      file_url
+      file_name
+      status
+      created_at
+    }
+  }
+`)
+
 
 // ──────────────────────── Clients ────────────────────────
 
@@ -74,11 +513,14 @@ export const ClientsQueryDoc = graphql(/* GraphQL */ `
   query Clients {
     clients {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -92,11 +534,14 @@ export const ClientQueryDoc = graphql(/* GraphQL */ `
   query Client($id: ID!) {
     client(id: $id) {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -110,11 +555,14 @@ export const CreateClientMutationDoc = graphql(/* GraphQL */ `
   mutation CreateClient($input: CreateClientInput!) {
     createClient(input: $input) {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -128,11 +576,14 @@ export const UpdateClientMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateClient($id: ID!, $input: UpdateClientInput!) {
     updateClient(id: $id, input: $input) {
       id
+      firm_id
       user_id
+      client_code
       full_name
       email
       phone
       ghana_card
+      date_of_birth
       address
       status
       notes
@@ -154,16 +605,25 @@ export const CasesQueryDoc = graphql(/* GraphQL */ `
   query Cases {
     cases {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -176,16 +636,25 @@ export const CaseQueryDoc = graphql(/* GraphQL */ `
   query Case($id: ID!) {
     case(id: $id) {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -198,16 +667,25 @@ export const CreateCaseMutationDoc = graphql(/* GraphQL */ `
   mutation CreateCase($input: CreateCaseInput!) {
     createCase(input: $input) {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -220,16 +698,25 @@ export const UpdateCaseMutationDoc = graphql(/* GraphQL */ `
   mutation UpdateCase($id: ID!, $input: UpdateCaseInput!) {
     updateCase(id: $id, input: $input) {
       id
+      firm_id
       user_id
       client_id
+      case_code
       title
       court
       suit_number
       opposing_party
-      matter_type
+      case_type
+      case_stage
       assigned_lawyer
+      originating_lawyer
       status
+      date_opened
       next_court_date
+      closed_at
+      pending_at
+      notification_count
+      description
       notes
       client_name
       created_at
@@ -241,6 +728,114 @@ export const UpdateCaseMutationDoc = graphql(/* GraphQL */ `
 export const DeleteCaseMutationDoc = graphql(/* GraphQL */ `
   mutation DeleteCase($id: ID!) {
     deleteCase(id: $id)
+  }
+`)
+
+// ──────────────── Clients / Cases assignments (team) ─────────────
+
+export const ClientAssignmentsQueryDoc = graphql(/* GraphQL */ `
+  query ClientAssignments {
+    clientAssignments {
+      id
+      client_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+export const SetClientAssignmentsMutationDoc = graphql(/* GraphQL */ `
+  mutation SetClientAssignments($input: SetClientAssignmentsInput!) {
+    setClientAssignments(input: $input) {
+      id
+      client_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+export const CaseAssignmentsQueryDoc = graphql(/* GraphQL */ `
+  query CaseAssignments($case_id: ID!) {
+    caseAssignments(case_id: $case_id) {
+      id
+      case_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+export const SetCaseAssignmentsMutationDoc = graphql(/* GraphQL */ `
+  mutation SetCaseAssignments($input: SetCaseAssignmentsInput!) {
+    setCaseAssignments(input: $input) {
+      id
+      case_id
+      member_id
+      assignment_role
+      name
+      professional_title
+      avatar_url
+    }
+  }
+`)
+
+// ──────────────────────── Attachments ────────────────────────
+
+export const AttachmentsQueryDoc = graphql(/* GraphQL */ `
+  query Attachments($entity_type: String!, $entity_id: ID!) {
+    attachments(entity_type: $entity_type, entity_id: $entity_id) {
+      id
+      firm_id
+      entity_type
+      entity_id
+      file_name
+      file_type
+      file_size
+      uploaded_by
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const AttachmentDownloadUrlQueryDoc = graphql(/* GraphQL */ `
+  query AttachmentDownloadUrl($id: ID!) {
+    attachmentDownloadUrl(id: $id) {
+      url
+    }
+  }
+`)
+
+export const CreateAttachmentMutationDoc = graphql(/* GraphQL */ `
+  mutation CreateAttachment($input: CreateAttachmentInput!) {
+    createAttachment(input: $input) {
+      id
+      firm_id
+      entity_type
+      entity_id
+      file_name
+      file_type
+      file_size
+      uploaded_by
+      created_at
+      updated_at
+    }
+  }
+`)
+
+export const DeleteAttachmentMutationDoc = graphql(/* GraphQL */ `
+  mutation DeleteAttachment($id: ID!) {
+    deleteAttachment(id: $id)
   }
 `)
 
@@ -756,10 +1351,30 @@ export const ProfileQueryDoc = graphql(/* GraphQL */ `
       email
       name
       role
-      firm
+      first_name
+      middle_name
+      last_name
+      date_of_birth
+      gender
       gba_number
+      supreme_court_enrollment_no
+      year_called_to_bar
+      practising_license_no
+      practising_license_year
+      ghana_card_no
+      passport_no
+      bio
+      practice_type
+      office_address
+      digital_address
+      city
+      region
+      work_email
+      work_phone
       phone
       avatar_url
+      verification_status
+      verified_at
       created_at
       updated_at
     }
@@ -773,11 +1388,19 @@ export const UpdateProfileMutationDoc = graphql(/* GraphQL */ `
       email
       name
       role
-      firm
+      first_name
+      middle_name
+      last_name
       gba_number
+      supreme_court_enrollment_no
+      year_called_to_bar
+      practising_license_no
+      digital_address
+      city
+      region
       phone
       avatar_url
-      created_at
+      verification_status
       updated_at
     }
   }

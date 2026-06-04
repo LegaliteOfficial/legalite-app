@@ -7,19 +7,153 @@ export const loginSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
-export const registerSchema = z
+// Owner registration — the public signup form. Every signup creates a firm;
+// solo practitioners simply name their own practice. There is no
+// "individual lawyer" signup path; lawyers without a firm join through an
+// invitation (see acceptInviteSchema). See docs/TENANCY.md §1, §5.
+export const registerOwnerSchema = z
   .object({
     name: z.string().min(1, 'Full name is required'),
     email: z.string().email('Enter a valid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     confirmPassword: z.string(),
-    firm: z.string().optional(),
-    role: z.enum(['lawyer', 'senior_partner', 'associate', 'paralegal']),
+    firm_name: z
+      .string()
+      .min(1, 'Firm or practice name is required')
+      .max(120),
+    firm_type: z
+      .enum(['sole_practice', 'partnership', 'chamber', 'corporate_firm'])
+      .optional(),
+    professional_title: z
+      .enum([
+        'senior_partner',
+        'partner',
+        'managing_partner',
+        'lawyer',
+        'associate',
+        'paralegal',
+      ])
+      .optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   })
+
+// Kept as an alias so old import paths keep working during the transition.
+export const registerSchema = registerOwnerSchema
+
+// Invitation acceptance — invitee sets name + password. Email + firm +
+// role come from the invitation row, not the form.
+export const acceptInviteSchema = z
+  .object({
+    token: z.string().min(1),
+    name: z.string().min(1, 'Full name is required'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
+// Ghana lawyer profile (post-signup completion / settings).
+export const lawyerProfileSchema = z.object({
+  first_name: z.string().min(1).optional(),
+  middle_name: z.string().optional(),
+  last_name: z.string().min(1).optional(),
+  date_of_birth: z.string().optional(),
+  gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
+
+  gba_number: z.string().max(64).optional(),
+  supreme_court_enrollment_no: z.string().max(64).optional(),
+  year_called_to_bar: z.coerce
+    .number()
+    .int()
+    .min(1900)
+    .max(new Date().getFullYear())
+    .optional(),
+  practising_license_no: z.string().max(64).optional(),
+  practising_license_year: z.coerce
+    .number()
+    .int()
+    .min(1900)
+    .max(new Date().getFullYear() + 1)
+    .optional(),
+  ghana_card_no: z.string().max(32).optional(),
+  passport_no: z.string().max(32).optional(),
+
+  bio: z.string().max(2000).optional(),
+  practice_type: z.enum(['solo', 'firm_associated']).optional(),
+
+  office_address: z.string().optional(),
+  // GhanaPost GPS: e.g. GA-123-4567 — letters-digits-digits.
+  digital_address: z
+    .string()
+    .regex(/^[A-Z]{2}-\d{3,4}-\d{3,4}$/, 'Use GhanaPost format, e.g. GA-123-4567')
+    .optional()
+    .or(z.literal('')),
+  city: z.string().optional(),
+  region: z.string().optional(),
+  work_email: z.string().email().optional().or(z.literal('')),
+  work_phone: z.string().optional(),
+  phone: z.string().optional(),
+  avatar_url: z.string().url().optional().or(z.literal('')),
+})
+
+// Invite a teammate (admin console). role_ids are the custom firm roles to
+// grant on acceptance (the granular permission layer); firm_role is the coarse
+// compatibility value.
+export const inviteMemberSchema = z.object({
+  email: z.string().email(),
+  firm_role: z.enum(['admin', 'member']).default('member'),
+  professional_title: z
+    .enum([
+      'senior_partner',
+      'partner',
+      'managing_partner',
+      'lawyer',
+      'associate',
+      'paralegal',
+      'support_staff',
+      'secretary',
+    ])
+    .default('lawyer'),
+  role_ids: z.array(z.string().uuid()).default([]),
+})
+
+// Create / edit a custom firm role. Permissions are catalog slugs; the backend
+// validates them against its permission catalog.
+export const createRoleSchema = z.object({
+  name: z.string().min(1, 'Role name is required').max(80),
+  description: z.string().max(500).optional(),
+  permissions: z.array(z.string()).default([]),
+})
+
+export type CreateRoleFormData = z.infer<typeof createRoleSchema>
+
+// Owner-only: hand the firm over to another active member.
+export const transferOwnershipSchema = z.object({
+  new_owner_profile_id: z.string().uuid(),
+  new_role_for_outgoing_owner: z.enum(['admin', 'member']).default('admin'),
+  reason: z.string().max(500).optional(),
+})
+
+// Practice areas selection.
+export const setPracticeAreasSchema = z
+  .object({
+    practice_area_ids: z.array(z.string().uuid()).max(20),
+    primary_practice_area_id: z.string().uuid().optional(),
+  })
+  .refine(
+    (d) =>
+      !d.primary_practice_area_id ||
+      d.practice_area_ids.includes(d.primary_practice_area_id),
+    {
+      message: 'Primary area must be one of the selected areas',
+      path: ['primary_practice_area_id'],
+    },
+  )
 
 // ── Business schemas (match actual DB column names) ──────────────────────
 
@@ -94,6 +228,12 @@ export const invoiceSchema = z.object({
 
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegisterFormData = z.infer<typeof registerSchema>
+export type RegisterOwnerFormData = z.infer<typeof registerOwnerSchema>
+export type AcceptInviteFormData = z.infer<typeof acceptInviteSchema>
+export type LawyerProfileFormData = z.infer<typeof lawyerProfileSchema>
+export type InviteMemberFormData = z.infer<typeof inviteMemberSchema>
+export type TransferOwnershipFormData = z.infer<typeof transferOwnershipSchema>
+export type SetPracticeAreasFormData = z.infer<typeof setPracticeAreasSchema>
 export type ClientFormData = z.infer<typeof clientSchema>
 export type CaseFormData = z.infer<typeof caseSchema>
 export type TaskFormData = z.infer<typeof taskSchema>

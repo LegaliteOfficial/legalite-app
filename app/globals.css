@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-dm-sans), 'DM Sans', sans-serif;
-  --font-heading: 'Playfair Display', serif;
+  --font-sans: var(--font-euclid), 'Euclid Circular A', system-ui, sans-serif;
+  --font-heading: var(--font-euclid), 'Euclid Circular A', system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -179,9 +179,9 @@
   }
 }
 /* AI Chat Markdown Styling */
-.ai-markdown h1 { font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 1rem 0 0.5rem; font-family: 'Playfair Display', serif; }
-.ai-markdown h2 { font-size: 1.1rem; font-weight: 700; color: var(--navy); margin: 0.875rem 0 0.375rem; font-family: 'Playfair Display', serif; }
-.ai-markdown h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin: 0.75rem 0 0.25rem; font-family: 'Playfair Display', serif; }
+.ai-markdown h1 { font-size: 1.25rem; font-weight: 700; color: var(--navy); margin: 1rem 0 0.5rem; font-family: var(--font-euclid), system-ui, sans-serif; }
+.ai-markdown h2 { font-size: 1.1rem; font-weight: 700; color: var(--navy); margin: 0.875rem 0 0.375rem; font-family: var(--font-euclid), system-ui, sans-serif; }
+.ai-markdown h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin: 0.75rem 0 0.25rem; font-family: var(--font-euclid), system-ui, sans-serif; }
 .ai-markdown p { margin: 0.375rem 0; line-height: 1.7; }
 .ai-markdown strong { color: var(--navy); font-weight: 600; }
 .ai-markdown em { font-style: italic; color: #4B5563; }

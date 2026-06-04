@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon, ShieldAlert, ListChecks, Trash2, Lock,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useCreateFirmRole } from '@/hooks/use-firm-roles'
 
 // ──────────────────────────────────────────────────────────────────────────
 // Data model
@@ -233,6 +234,7 @@ const initialPermissions = (): Record<string, boolean> => {
 
 export default function CreateRolePage() {
   const router = useRouter()
+  const createRole = useCreateFirmRole()
 
   const [roleName, setRoleName] = useState('')
   const [roleDescription, setRoleDescription] = useState('')
@@ -298,7 +300,7 @@ export default function CreateRolePage() {
     return counts
   }, [permissions])
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!roleName.trim()) {
       toast.error('Role name is required.')
       return
@@ -307,8 +309,24 @@ export default function CreateRolePage() {
       toast.error('Role description is required.')
       return
     }
-    toast.success(`Role "${roleName}" created (dev preview — not persisted).`)
-    router.push('/settings/roles')
+    // Send only the granted, configurable permissions. The always-on
+    // "non-configurable" slugs are implicit and not part of the backend
+    // catalog, so they're excluded to avoid an "unknown permission" rejection.
+    const selectedPermissions = Object.entries(permissions)
+      .filter(([id, on]) => on && !ALWAYS_ON.has(id))
+      .map(([id]) => id)
+
+    try {
+      await createRole.mutateAsync({
+        name: roleName.trim(),
+        description: roleDescription.trim(),
+        permissions: selectedPermissions,
+      })
+      toast.success(`Role "${roleName.trim()}" created.`)
+      router.push('/settings/roles')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Unable to create role.')
+    }
   }
 
   return (
@@ -342,10 +360,11 @@ export default function CreateRolePage() {
             <button
               type="button"
               onClick={handleCreate}
-              className="inline-flex items-center justify-center rounded-md px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              disabled={createRole.isPending}
+              className="inline-flex items-center justify-center rounded-md px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, #C9972B 0%, #B8860B 100%)' }}
             >
-              Create custom role
+              {createRole.isPending ? 'Creating…' : 'Create custom role'}
             </button>
           </div>
         </div>

@@ -19,7 +19,7 @@ type Column = {
 
 const SYSTEM_ITEMS: Item[] = [
   { label: 'Account and payment info', description: 'Manage your firm account, plan, and payment details.',                                                    href: '/settings/account-info' },
-  { label: 'Firm members',             description: 'Invite, remove, and manage everyone in your firm.',                                                       href: '/team' },
+  { label: 'Firm members',             description: 'Invite, remove, and manage everyone in your firm.',                                                       href: '/settings/members' },
   { label: 'Roles and permissions',    description: 'Configure firm roles and professional titles for your team.', badge: 'New',                                href: '/settings/roles' },
   { label: 'Custom fields',            description: 'Create custom fields for clients, cases, and matters.',                                                   href: '/settings/custom-fields' },
   { label: 'Recovery bin',             description: 'Recover recently deleted matters, clients, tasks, and documents.',                                        href: '/settings/recovery-bin' },
