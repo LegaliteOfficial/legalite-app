@@ -57,8 +57,7 @@ import { useClients } from '@/hooks/use-clients'
 import { useDocuments } from '@/hooks/use-documents'
 import { useDeadlines } from '@/hooks/use-deadlines'
 import { AttachmentsPanel } from '@/components/shared/AttachmentsPanel'
-import { useUIStore } from '@/stores/ui.store'
-import type { CaseStatus } from '@/types'
+import type { CaseStatus, Client } from '@/types'
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -109,7 +108,6 @@ export default function CaseDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const { openModal } = useUIStore()
 
   const { data: kase, isLoading, error } = useCase(id)
   const { data: clients } = useClients()
@@ -275,7 +273,7 @@ export default function CaseDetailPage({
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem
                     className="text-[13px] cursor-pointer"
-                    onClick={() => openModal({ type: 'editCase', id })}
+                    onClick={() => router.push(`/cases/${id}/edit`)}
                   >
                     <Pencil size={12} strokeWidth={1.75} /> Edit case
                   </DropdownMenuItem>
@@ -345,6 +343,83 @@ export default function CaseDetailPage({
               />
             </MetaRow>
           </div>
+
+          {/* ─── Case details (all fields captured at creation) ─────── */}
+          <CollapsibleSection label="Case details" defaultOpen>
+            <MetaRow label="Practice area">
+              <InlineEditableText
+                value={kase.case_type ?? ''}
+                placeholder="Add a practice area"
+                onSave={(v) => patch({ case_type: v })}
+                className="text-[13px]"
+                showPencil
+              />
+            </MetaRow>
+            <MetaRow label="Case stage">
+              <InlineEditableText
+                value={kase.case_stage ?? ''}
+                placeholder="Add a case stage"
+                onSave={(v) => patch({ case_stage: v })}
+                className="text-[13px]"
+                showPencil
+              />
+            </MetaRow>
+            <MetaRow label="Case ID">
+              <InlineEditableText
+                value={kase.case_code ?? ''}
+                placeholder="Add a case ID"
+                onSave={(v) => patch({ case_code: v })}
+                className="text-[13px]"
+                showPencil
+              />
+            </MetaRow>
+            <MetaRow label="Court">
+              <InlineEditableText
+                value={kase.court ?? ''}
+                placeholder="Add a court"
+                onSave={(v) => patch({ court: v })}
+                className="text-[13px]"
+                showPencil
+              />
+            </MetaRow>
+            <MetaRow label="Suit number">
+              <InlineEditableText
+                value={kase.suit_number ?? ''}
+                placeholder="Add a suit number"
+                onSave={(v) => patch({ suit_number: v })}
+                className="text-[13px]"
+                showPencil
+              />
+            </MetaRow>
+            <MetaRow label="Opposing party">
+              <InlineEditableText
+                value={kase.opposing_party ?? ''}
+                placeholder="Add the opposing party"
+                onSave={(v) => patch({ opposing_party: v })}
+                className="text-[13px]"
+                showPencil
+              />
+            </MetaRow>
+            <MetaRow label="Next court date">
+              <InlineDate
+                value={kase.next_court_date ?? ''}
+                onSave={(v) => patch({ next_court_date: v })}
+              />
+            </MetaRow>
+          </CollapsibleSection>
+
+          {/* ─── Lifecycle dates (auto-stamped on status change) ────── */}
+          <CollapsibleSection label="Lifecycle">
+            <MetaRow label="Pending since">
+              <ReadOnlyDate value={kase.pending_at} />
+            </MetaRow>
+            <MetaRow label="Closed on">
+              <ReadOnlyDate value={kase.closed_at} />
+            </MetaRow>
+          </CollapsibleSection>
+
+          {/* ─── Everything else captured during case creation ──────── */}
+          <CaseExtendedDetails details={kase.details} clients={clients ?? []} />
 
           {/* ─── Preferred case outcome ────────────────────────────── */}
           <Section label="Preferred case outcome">
@@ -1143,6 +1218,314 @@ function ClientChip({
 }
 
 // ── Section primitive ──────────────────────────────────────────────────
+
+/**
+ * Progressive-disclosure section. The header toggles a body of MetaRows open
+ * and closed so the detail surface isn't a wall of fields — used for the full
+ * set of attributes captured during case creation.
+ */
+function CollapsibleSection({
+  label,
+  children,
+  defaultOpen = false,
+}: {
+  label: string
+  children: React.ReactNode
+  defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className="border-b" style={{ borderColor: 'var(--border-soft)' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full px-7 py-4 flex items-center justify-between gap-3 cursor-pointer transition-colors"
+        aria-expanded={open}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-sunken)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      >
+        <span
+          className="text-[13px] font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {label}
+        </span>
+        <ChevronDown
+          size={16}
+          strokeWidth={1.75}
+          style={{
+            color: 'var(--text-muted)',
+            transition: 'transform 0.15s ease',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        />
+      </button>
+      {open && <div>{children}</div>}
+    </div>
+  )
+}
+
+/** Read-only date display for auto-stamped lifecycle timestamps. */
+function ReadOnlyDate({ value }: { value?: string | null }) {
+  const text = value
+    ? new Date(value).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+    : '—'
+  return (
+    <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+      {text}
+    </span>
+  )
+}
+
+// ── Extended case details (the full new-case form, read-only) ──────────────
+
+/** Plain read-only value cell used across the extended detail sections. */
+function RO({ children }: { children: React.ReactNode }) {
+  const empty =
+    children === undefined ||
+    children === null ||
+    children === '' ||
+    (Array.isArray(children) && children.length === 0)
+  return (
+    <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+      {empty ? '—' : children}
+    </span>
+  )
+}
+
+/** Wrap a string list as small chips. */
+function Chips({ items }: { items: string[] }) {
+  if (items.length === 0) return <RO>{''}</RO>
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((t, i) => (
+        <span
+          key={`${t}-${i}`}
+          className="inline-flex items-center rounded-md px-2 py-0.5 text-[12px]"
+          style={{ background: 'var(--surface-sunken)', color: 'var(--text-primary)' }}
+        >
+          {t}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+const titleCase = (s: string) =>
+  s ? s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : ''
+
+const fmtDay = (v?: string | null) =>
+  v
+    ? new Date(v).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : ''
+
+interface ReminderRow { recipient?: string; amount?: string; unit?: string }
+interface ContactRow { contact_id?: string; relationship?: string; bill_recipient?: boolean }
+interface RateRow { user_or_group?: string; amount?: string }
+interface FolderRow { name?: string; category?: string }
+
+/**
+ * Renders every extended field captured during case creation (stored in the
+ * `details` JSON blob) as progressive-disclosure sections. Each section only
+ * appears when it actually has content, so a sparsely-filled case stays clean
+ * while a richly-configured one shows everything.
+ */
+function CaseExtendedDetails({
+  details,
+  clients,
+}: {
+  details?: string | null
+  clients: Client[]
+}) {
+  const d = useMemo<Record<string, unknown> | null>(() => {
+    if (!details) return null
+    try {
+      return JSON.parse(details) as Record<string, unknown>
+    } catch {
+      return null
+    }
+  }, [details])
+
+  if (!d) return null
+
+  const s = (k: string) => (typeof d[k] === 'string' ? (d[k] as string) : '')
+  const b = (k: string) => d[k] === true
+  const a = <T,>(k: string): T[] => (Array.isArray(d[k]) ? (d[k] as T[]) : [])
+  const clientName = (id?: string) =>
+    (id && clients.find((c) => c.id === id)?.full_name) || id || '—'
+
+  const reminders = a<ReminderRow>('statute_reminders')
+  const tags = a<string>('tags')
+  const permitted = a<string>('permitted_users')
+  const subscribers = a<string>('notification_subscribers')
+  const blocked = a<string>('blocked_users')
+  const contacts = a<ContactRow>('related_contacts')
+  const rates = a<RateRow>('custom_billing_rates')
+  const taskLists = a<string>('task_lists')
+  const folders = a<FolderRow>('document_folders')
+  const conflicts = a<string>('conflict_checks')
+
+  const hasAdditional = !!(s('responsible_staff') || s('client_reference') || s('location'))
+  const hasPlanned = !!(s('closed_date') || s('pending_date'))
+  const hasStatute = !!(s('statute_of_limitations_date') || b('statute_of_limitations_satisfied') || reminders.length)
+  const hasPermissions = s('permissions_mode') === 'specific' || permitted.length > 0
+  const hasBilling =
+    d['is_billable'] === false ||
+    (s('billing_method') && s('billing_method') !== 'hourly') ||
+    (s('currency') && s('currency') !== 'GHS') ||
+    b('budget_enabled') ||
+    b('split_invoice') ||
+    b('notify_low_client_funds') ||
+    rates.length > 0
+  const hasAllocations =
+    d['use_firm_settings_originating'] === false ||
+    d['use_firm_settings_responsible'] === false ||
+    (s('originating_allocation') && s('originating_allocation') !== '0') ||
+    (s('responsible_allocation') && s('responsible_allocation') !== '0')
+
+  return (
+    <>
+      {hasAdditional && (
+        <CollapsibleSection label="Additional information">
+          {s('responsible_staff') && (
+            <MetaRow label="Responsible staff"><RO>{s('responsible_staff')}</RO></MetaRow>
+          )}
+          {s('client_reference') && (
+            <MetaRow label="Client reference"><RO>{s('client_reference')}</RO></MetaRow>
+          )}
+          {s('location') && <MetaRow label="Location"><RO>{s('location')}</RO></MetaRow>}
+        </CollapsibleSection>
+      )}
+
+      {hasPlanned && (
+        <CollapsibleSection label="Planned dates">
+          {s('pending_date') && (
+            <MetaRow label="Planned pending date"><RO>{fmtDay(s('pending_date'))}</RO></MetaRow>
+          )}
+          {s('closed_date') && (
+            <MetaRow label="Planned closed date"><RO>{fmtDay(s('closed_date'))}</RO></MetaRow>
+          )}
+        </CollapsibleSection>
+      )}
+
+      {hasStatute && (
+        <CollapsibleSection label="Statute of limitations">
+          <MetaRow label="Date"><RO>{fmtDay(s('statute_of_limitations_date'))}</RO></MetaRow>
+          <MetaRow label="Satisfied"><RO>{b('statute_of_limitations_satisfied') ? 'Yes' : 'No'}</RO></MetaRow>
+          {reminders.length > 0 && (
+            <MetaRow label="Reminders">
+              <div className="flex flex-col gap-1">
+                {reminders.map((r, i) => (
+                  <span key={i} className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                    {(r.recipient || 'Someone')} — {(r.amount || '0')} {(r.unit || 'Days')} before
+                  </span>
+                ))}
+              </div>
+            </MetaRow>
+          )}
+        </CollapsibleSection>
+      )}
+
+      {tags.length > 0 && (
+        <CollapsibleSection label="Tags">
+          <MetaRow label="Tags"><Chips items={tags} /></MetaRow>
+        </CollapsibleSection>
+      )}
+
+      {hasPermissions && (
+        <CollapsibleSection label="Permissions">
+          <MetaRow label="Access"><RO>{s('permissions_mode') === 'specific' ? 'Specific users' : 'Everyone in the firm'}</RO></MetaRow>
+          {permitted.length > 0 && <MetaRow label="Permitted users"><Chips items={permitted} /></MetaRow>}
+        </CollapsibleSection>
+      )}
+
+      {subscribers.length > 0 && (
+        <CollapsibleSection label="Notifications">
+          <MetaRow label="Subscribers"><Chips items={subscribers} /></MetaRow>
+        </CollapsibleSection>
+      )}
+
+      {blocked.length > 0 && (
+        <CollapsibleSection label="Blocked users">
+          <MetaRow label="Blocked"><Chips items={blocked} /></MetaRow>
+        </CollapsibleSection>
+      )}
+
+      {contacts.length > 0 && (
+        <CollapsibleSection label="Related contacts">
+          {contacts.map((c, i) => (
+            <MetaRow key={i} label={titleCase(c.relationship || 'Contact')}>
+              <RO>
+                {clientName(c.contact_id)}
+                {c.bill_recipient ? ' · bill recipient' : ''}
+              </RO>
+            </MetaRow>
+          ))}
+        </CollapsibleSection>
+      )}
+
+      {hasBilling && (
+        <CollapsibleSection label="Billing preference">
+          <MetaRow label="Billable"><RO>{d['is_billable'] === false ? 'No' : 'Yes'}</RO></MetaRow>
+          {s('billing_method') && <MetaRow label="Billing method"><RO>{titleCase(s('billing_method'))}</RO></MetaRow>}
+          {s('currency') && <MetaRow label="Currency"><RO>{s('currency')}</RO></MetaRow>}
+          {b('budget_enabled') && <MetaRow label="Budget"><RO>{s('budget_amount') || 'Enabled'}</RO></MetaRow>}
+          {b('split_invoice') && <MetaRow label="Split invoice"><RO>Yes</RO></MetaRow>}
+          {b('notify_low_client_funds') && <MetaRow label="Notify on low funds"><RO>Yes</RO></MetaRow>}
+          {rates.length > 0 && (
+            <MetaRow label="Custom rates">
+              <div className="flex flex-col gap-1">
+                {rates.map((r, i) => (
+                  <span key={i} className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                    {(r.user_or_group || '—')}: {r.amount || '—'}
+                  </span>
+                ))}
+              </div>
+            </MetaRow>
+          )}
+        </CollapsibleSection>
+      )}
+
+      {taskLists.length > 0 && (
+        <CollapsibleSection label="Task lists">
+          <MetaRow label="Lists"><Chips items={taskLists} /></MetaRow>
+          {b('task_lists_notify_assignees') && <MetaRow label="Notify assignees"><RO>Yes</RO></MetaRow>}
+        </CollapsibleSection>
+      )}
+
+      {folders.length > 0 && (
+        <CollapsibleSection label="Document folders">
+          {folders.map((f, i) => (
+            <MetaRow key={i} label={f.name || 'Folder'}>
+              <RO>{f.category || '—'}</RO>
+            </MetaRow>
+          ))}
+        </CollapsibleSection>
+      )}
+
+      {hasAllocations && (
+        <CollapsibleSection label="Reporting allocations">
+          <MetaRow label="Originating">
+            <RO>{d['use_firm_settings_originating'] === false ? `${s('originating_allocation') || '0'}%` : 'Firm settings'}</RO>
+          </MetaRow>
+          <MetaRow label="Responsible">
+            <RO>{d['use_firm_settings_responsible'] === false ? `${s('responsible_allocation') || '0'}%` : 'Firm settings'}</RO>
+          </MetaRow>
+        </CollapsibleSection>
+      )}
+
+      {conflicts.length > 0 && (
+        <CollapsibleSection label="Conflict checks">
+          <MetaRow label="Checks"><Chips items={conflicts} /></MetaRow>
+        </CollapsibleSection>
+      )}
+    </>
+  )
+}
 
 function Section({
   label,

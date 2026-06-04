@@ -42,6 +42,7 @@ interface WireCase {
   notification_count?: number
   notes?: string | null
   description?: string | null
+  details?: string | null
   created_at: string
   updated_at: string
   client_name?: string

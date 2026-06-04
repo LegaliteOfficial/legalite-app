@@ -624,6 +624,7 @@ export const CasesQueryDoc = graphql(/* GraphQL */ `
       pending_at
       notification_count
       description
+      details
       notes
       client_name
       created_at
@@ -655,6 +656,7 @@ export const CaseQueryDoc = graphql(/* GraphQL */ `
       pending_at
       notification_count
       description
+      details
       notes
       client_name
       created_at
@@ -686,6 +688,7 @@ export const CreateCaseMutationDoc = graphql(/* GraphQL */ `
       pending_at
       notification_count
       description
+      details
       notes
       client_name
       created_at
@@ -717,6 +720,7 @@ export const UpdateCaseMutationDoc = graphql(/* GraphQL */ `
       pending_at
       notification_count
       description
+      details
       notes
       client_name
       created_at

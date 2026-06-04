@@ -191,6 +191,9 @@ export const caseSchema = z.object({
   next_court_date: z.string().optional().or(z.literal('')),
   date_opened: z.string().optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
+  // JSON blob of the extended new-case form fields (reminders, statute, tags,
+  // billing, permissions, …). Owned by the case editor; opaque to the backend.
+  details: z.string().optional(),
 })
 
 export const taskSchema = z.object({

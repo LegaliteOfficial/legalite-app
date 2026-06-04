@@ -951,9 +951,7 @@ export default function CasesPage() {
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                onClick={() =>
-                                  openModal({ type: 'editCase', id: row.id })
-                                }
+                                onClick={() => router.push(`/cases/${row.id}/edit`)}
                                 aria-label="Edit case"
                               >
                                 <Pencil size={13} style={{ color: 'var(--text-muted)' }} />

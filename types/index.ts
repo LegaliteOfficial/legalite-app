@@ -67,6 +67,10 @@ export interface Case {
   notification_count?: number
   notes?: string | null
   description?: string | null
+  // JSON string of the extended new-case form fields (reminders, statute,
+  // tags, billing, permissions, task lists, document folders, allocations,
+  // related contacts, conflict checks). Parsed by the case editor + detail page.
+  details?: string | null
   created_at: string
   updated_at: string
   // Joined fields (optional, from queries with joins)
