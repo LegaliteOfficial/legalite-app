@@ -75,6 +75,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { ClientForm } from '@/components/shared/ClientForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
+import { PriorityButton } from '@/components/shared/PriorityButton'
 import { useClients } from '@/hooks/use-clients'
 import { useCases } from '@/hooks/use-cases'
 import {
@@ -759,9 +760,18 @@ export default function ClientsPage() {
                       </td>
                     )}
                     <td className="px-4 py-3">
-                      <RowMenu
-                        clientName={c.full_name}
-                        onView={() => setViewClient(c)}
+                      <div className="flex items-center gap-1 justify-end">
+                        {/* Always-visible priority star — first-class
+                            affordance so users don't have to dig
+                            into the row menu to flag a client. */}
+                        <PriorityButton
+                          entityType="client"
+                          entityId={c.id}
+                          label={c.full_name}
+                        />
+                        <RowMenu
+                          clientName={c.full_name}
+                          onView={() => setViewClient(c)}
                         onEdit={() =>
                           openModal({ type: 'editClient', id: c.id })
                         }
@@ -771,15 +781,16 @@ export default function ClientsPage() {
                           // ?client= query param and seeds client_ids.
                           router.push(`/cases/new?client=${c.id}`)
                         }
-                        onDelete={() =>
-                          openModal({
-                            type: 'confirmDelete',
-                            entity: 'client',
-                            id: c.id,
-                            name: c.full_name,
-                          })
-                        }
-                      />
+                          onDelete={() =>
+                            openModal({
+                              type: 'confirmDelete',
+                              entity: 'client',
+                              id: c.id,
+                              name: c.full_name,
+                            })
+                          }
+                        />
+                      </div>
                     </td>
                   </tr>
                 )

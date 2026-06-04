@@ -52,6 +52,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { CaseForm } from '@/components/shared/CaseForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
+import { PriorityButton } from '@/components/shared/PriorityButton'
 import { useCases } from '@/hooks/use-cases'
 import { useUIStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -941,38 +942,52 @@ export default function CasesPage() {
                             }}
                           >
                             <div
-                              className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
-                              // Stop propagation here so clicking
-                              // Edit / Delete doesn't ALSO drill into
-                              // the detail page via the row's click
+                              className="flex gap-0.5 justify-end items-center"
+                              // Stop propagation so clicking any
+                              // action doesn't ALSO drill into the
+                              // detail page via the row's click
                               // handler.
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() =>
-                                  openModal({ type: 'editCase', id: row.id })
-                                }
-                                aria-label="Edit case"
-                              >
-                                <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() =>
-                                  openModal({
-                                    type: 'confirmDelete',
-                                    entity: 'case',
-                                    id: row.id,
-                                    name: row.title,
-                                  })
-                                }
-                                aria-label="Delete case"
-                              >
-                                <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
-                              </Button>
+                              {/* Priority star is always visible —
+                                  doubles as an at-a-glance indicator
+                                  of which cases are flagged. */}
+                              <PriorityButton
+                                entityType="case"
+                                entityId={row.id}
+                                label={row.title}
+                                metadata={{
+                                  next_court_date: row.next_court_date ?? null,
+                                  case_code: row.case_code ?? null,
+                                }}
+                              />
+                              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() =>
+                                    openModal({ type: 'editCase', id: row.id })
+                                  }
+                                  aria-label="Edit case"
+                                >
+                                  <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() =>
+                                    openModal({
+                                      type: 'confirmDelete',
+                                      entity: 'case',
+                                      id: row.id,
+                                      name: row.title,
+                                    })
+                                  }
+                                  aria-label="Delete case"
+                                >
+                                  <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
+                                </Button>
+                              </div>
                             </div>
                           </td>
                         </tr>

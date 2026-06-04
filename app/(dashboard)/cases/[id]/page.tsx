@@ -52,6 +52,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { CaseEventComposerDialog } from '@/components/shared/CaseEventComposerDialog'
 import { useCase, useDeleteCase, useUpdateCase } from '@/hooks/use-cases'
 import { useClients } from '@/hooks/use-clients'
 import { useDocuments } from '@/hooks/use-documents'
@@ -113,9 +114,13 @@ export default function CaseDetailPage({
   const { data: kase, isLoading, error } = useCase(id)
   const { data: clients } = useClients()
   const { data: documents } = useDocuments()
-  const { data: deadlines } = useDeadlines()
+  const { data: deadlines, refetch: refetchDeadlines } = useDeadlines()
   const updateMutation = useUpdateCase()
   const deleteMutation = useDeleteCase()
+
+  // Calendar add-event composer state. The button in the Calendar
+  // section opens this dialog pre-linked to the current case.
+  const [addEventOpen, setAddEventOpen] = useState(false)
 
   // Derived state: documents + deadlines linked to this case.
   const caseDocuments = useMemo(
@@ -426,11 +431,7 @@ export default function CaseDetailPage({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  toast.info(
-                    'Event creation ships with the deadlines screen.',
-                  )
-                }
+                onClick={() => setAddEventOpen(true)}
               >
                 <Plus size={13} strokeWidth={2} />
                 Add event
@@ -468,6 +469,20 @@ export default function CaseDetailPage({
           </Section>
         </div>
       </div>
+
+      {/* Add-event composer — pre-links the new deadline to this
+          case so the user doesn't have to re-pick it. Refetches
+          deadlines on save so the new event shows up immediately
+          in the Calendar section above. */}
+      <CaseEventComposerDialog
+        open={addEventOpen}
+        onOpenChange={setAddEventOpen}
+        caseId={kase.id}
+        caseTitle={kase.title}
+        onSaved={() => {
+          void refetchDeadlines()
+        }}
+      />
     </div>
   )
 }

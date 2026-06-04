@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/layout/Sidebar'
 import { NavigationProgress } from '@/components/shared/NavigationProgress'
 import { AuthGuard } from '@/components/shared/AuthGuard'
+import { PriorityRemindersBoot } from '@/components/shared/PriorityRemindersBoot'
 
 export default function DashboardLayout({
   children,
@@ -9,6 +10,10 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard>
+      {/* Mount priority-reminder scanner once at the layout level
+          so flagged-case hearing reminders fire anywhere inside
+          the authenticated app, not just on the dashboard page. */}
+      <PriorityRemindersBoot />
       <div
         className="h-screen overflow-hidden p-3"
         style={{
