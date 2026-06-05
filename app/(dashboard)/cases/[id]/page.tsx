@@ -28,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { CaseEventComposerDialog } from '@/components/shared/CaseEventComposerDialog'
+import { StartTimerDialog } from '@/components/shared/StartTimerDialog'
 import { useCase, useDeleteCase, useUpdateCase } from '@/hooks/use-cases'
 import { useClients } from '@/hooks/use-clients'
 import { useDocuments } from '@/hooks/use-documents'
@@ -88,9 +90,18 @@ export default function CaseDetailPage({
   const { data: kase, isLoading, error } = useCase(id)
   const { data: clients } = useClients()
   const { data: documents } = useDocuments()
-  const { data: deadlines } = useDeadlines()
+  const { data: deadlines, refetch: refetchDeadlines } = useDeadlines()
   const updateMutation = useUpdateCase()
   const deleteMutation = useDeleteCase()
+
+  // Calendar add-event composer state. The button in the Calendar
+  // section opens this dialog pre-linked to the current case.
+  const [addEventOpen, setAddEventOpen] = useState(false)
+  // Billable-hour timer dialog. Opens from the "Time working hours"
+  // button next to the status pill — pre-linked to this case + its
+  // client, with a starter description so the entry lands on the
+  // Unbilled Time list with sensible context.
+  const [timerOpen, setTimerOpen] = useState(false)
 
   // Derived state: documents + deadlines linked to this case.
   const caseDocuments = useMemo(
@@ -218,6 +229,45 @@ export default function CaseDetailPage({
               <ArrowLeft size={16} strokeWidth={1.75} />
             </button>
             <div className="flex items-center gap-2 shrink-0">
+              {/*
+               * Time working hours — opens the billable-hour timer
+               * dialog for this case. Disabled until the client
+               * record loads (we need the client_id for rate
+               * resolution + the time entry). Pre-fills a
+               * description like "Work on {case title}" so the
+               * resulting entry is meaningful on the Unbilled
+               * Time list.
+               */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!client) {
+                    toast.error("Client record hasn't loaded yet.")
+                    return
+                  }
+                  setTimerOpen(true)
+                }}
+                disabled={!client}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full border cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  borderColor: 'var(--border-soft)',
+                  background: 'var(--surface-card)',
+                  color: 'var(--text-primary)',
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) => {
+                  if (e.currentTarget.disabled) return
+                  e.currentTarget.style.background = 'var(--surface-sunken)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--surface-card)'
+                }}
+                title="Start a billable-hour timer for this case"
+              >
+                <Clock size={13} strokeWidth={1.75} />
+                Time working hours
+              </button>
               <StatusPill
                 current={currentStatus}
                 onChange={(v) => patch({ status: v })}
@@ -481,11 +531,7 @@ export default function CaseDetailPage({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  toast.info(
-                    'Event creation ships with the deadlines screen.',
-                  )
-                }
+                onClick={() => setAddEventOpen(true)}
               >
                 <Plus size={13} strokeWidth={2} />
                 Add event
@@ -523,6 +569,32 @@ export default function CaseDetailPage({
           </Section>
         </div>
       </div>
+
+      {/* Add-event composer — pre-links the new deadline to this
+          case so the user doesn't have to re-pick it. Refetches
+          deadlines on save so the new event shows up immediately
+          in the Calendar section above. */}
+      <CaseEventComposerDialog
+        open={addEventOpen}
+        onOpenChange={setAddEventOpen}
+        caseId={kase.id}
+        caseTitle={kase.title}
+        onSaved={() => {
+          void refetchDeadlines()
+        }}
+      />
+      {/* Billable-hour timer dialog. The button above sets
+          `timerOpen` to true; the dialog handles the rate gate
+          and start screen, then starts the timer via the store.
+          The active timer indicator + 30-min prompts then live in
+          the dashboard layout's TimeTrackerBoot. */}
+      <StartTimerDialog
+        open={timerOpen}
+        onOpenChange={setTimerOpen}
+        clientId={client?.id ?? null}
+        caseId={kase.id}
+        initialDescription={`Work on ${kase.title}`}
+      />
     </div>
   )
 }

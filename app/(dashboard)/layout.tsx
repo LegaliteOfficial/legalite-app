@@ -1,6 +1,8 @@
 import { Sidebar } from '@/components/layout/Sidebar'
 import { NavigationProgress } from '@/components/shared/NavigationProgress'
 import { AuthGuard } from '@/components/shared/AuthGuard'
+import { PriorityRemindersBoot } from '@/components/shared/PriorityRemindersBoot'
+import { TimeTrackerBoot } from '@/components/shared/TimeTrackerBoot'
 
 export default function DashboardLayout({
   children,
@@ -9,6 +11,15 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard>
+      {/* Mount priority-reminder scanner once at the layout level
+          so flagged-case hearing reminders fire anywhere inside
+          the authenticated app, not just on the dashboard page. */}
+      <PriorityRemindersBoot />
+      {/* Billable-hour timer system. Runs the 30-min check-in
+          scheduler, mounts the check-in dialog, and renders the
+          floating active-timer widget. Lives at the layout level
+          so a running timer follows the partner across pages. */}
+      <TimeTrackerBoot />
       <div
         className="h-screen overflow-hidden p-3"
         style={{

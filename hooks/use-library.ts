@@ -140,11 +140,14 @@ export function useDownloadLibraryItem() {
 
 // Direct Supabase upload for library files — outside the GraphQL graph because
 // binary file upload via GraphQL multipart adds complexity for no benefit here.
+//
+// The Supabase client is constructed lazily inside `mutateAsync` rather
+// than at hook-call time. Eager init would crash any page using this
+// hook when `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+// are missing — most notably DEV_BYPASS without a backend reachable.
+// Lazy init keeps the page rendering and only surfaces the env
+// requirement when the partner actually tries to upload.
 export function useUploadLibraryFile() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
   const [isPending, setIsPending] = useState(false)
 
   return {
@@ -158,6 +161,20 @@ export function useUploadLibraryFile() {
       userId: string
       category: string
     }) => {
+      if (DEV_BYPASS) {
+        throw new Error(
+          'File uploads are disabled in dev bypass mode. Connect a Supabase project to enable them.',
+        )
+      }
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (!url || !anonKey) {
+        throw new Error(
+          'Supabase project URL / anon key are not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY before uploading.',
+        )
+      }
+      const supabase = createBrowserClient(url, anonKey)
+
       setIsPending(true)
       try {
       const path = `${userId}/${category}/${Date.now()}_${file.name}`

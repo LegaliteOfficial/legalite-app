@@ -390,7 +390,7 @@ function SettingsPageInner() {
   return (
     <div
       className="flex-1 overflow-y-auto p-6"
-      style={{ background: 'var(--cream)' }}
+      style={{ background: 'var(--surface-card)' }}
     >
       <Link
         href="/settings"

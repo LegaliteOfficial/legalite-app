@@ -41,6 +41,7 @@ import {
   CalendarClock,
   Check,
   ChevronDown,
+  Clock,
   Edit3,
   Eye,
   Filter,
@@ -75,6 +76,8 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { ClientForm } from '@/components/shared/ClientForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
+import { StartTimerDialog } from '@/components/shared/StartTimerDialog'
+import { PriorityButton } from '@/components/shared/PriorityButton'
 import { useClients } from '@/hooks/use-clients'
 import { useCases } from '@/hooks/use-cases'
 import {
@@ -242,6 +245,11 @@ export default function ClientsPage() {
   // without re-deriving from the list on every render.
   const [viewClient, setViewClient] = useState<Client | null>(null)
   const [manageClient, setManageClient] = useState<Client | null>(null)
+  // The "Start timer" row action sets this to a client id, which
+  // opens the StartTimerDialog. Keeping it as just the id (not the
+  // whole client object) means the dialog re-reads from useClients
+  // and stays correct if the underlying record is edited mid-flow.
+  const [timerClientId, setTimerClientId] = useState<string | null>(null)
 
   // ── Derived list ────────────────────────────────────────────────
   const filteredAndSorted = useMemo(() => {
@@ -759,9 +767,18 @@ export default function ClientsPage() {
                       </td>
                     )}
                     <td className="px-4 py-3">
-                      <RowMenu
-                        clientName={c.full_name}
-                        onView={() => setViewClient(c)}
+                      <div className="flex items-center gap-1 justify-end">
+                        {/* Always-visible priority star — first-class
+                            affordance so users don't have to dig
+                            into the row menu to flag a client. */}
+                        <PriorityButton
+                          entityType="client"
+                          entityId={c.id}
+                          label={c.full_name}
+                        />
+                        <RowMenu
+                          clientName={c.full_name}
+                          onView={() => setViewClient(c)}
                         onEdit={() =>
                           openModal({ type: 'editClient', id: c.id })
                         }
@@ -771,15 +788,17 @@ export default function ClientsPage() {
                           // ?client= query param and seeds client_ids.
                           router.push(`/cases/new?client=${c.id}`)
                         }
-                        onDelete={() =>
-                          openModal({
-                            type: 'confirmDelete',
-                            entity: 'client',
-                            id: c.id,
-                            name: c.full_name,
-                          })
-                        }
-                      />
+                        onStartTimer={() => setTimerClientId(c.id)}
+                          onDelete={() =>
+                            openModal({
+                              type: 'confirmDelete',
+                              entity: 'client',
+                              id: c.id,
+                              name: c.full_name,
+                            })
+                          }
+                        />
+                      </div>
                     </td>
                   </tr>
                 )
@@ -790,6 +809,17 @@ export default function ClientsPage() {
 
         <ClientForm />
         <DeleteDialog />
+        {/* Billable-hour timer entry point — opened by the
+            "Time working hours" item in the row action menu. The
+            dialog walks through the rate gate when needed, then
+            kicks off the timer; the 30-min check-ins + floating
+            active-timer widget live in TimeTrackerBoot at the
+            dashboard layout level so they survive navigation. */}
+        <StartTimerDialog
+          open={timerClientId !== null}
+          onOpenChange={(o) => !o && setTimerClientId(null)}
+          clientId={timerClientId}
+        />
 
         {/* View dialog — read-only client snapshot opened from the
             row menu. Shows contact info, primary case status, and
@@ -1330,12 +1360,14 @@ function RowMenu({
   onView,
   onEdit,
   onAssignCase,
+  onStartTimer,
   onDelete,
 }: {
   clientName: string
   onView: () => void
   onEdit: () => void
   onAssignCase: () => void
+  onStartTimer: () => void
   onDelete: () => void
 }) {
   return (
@@ -1374,6 +1406,18 @@ function RowMenu({
         >
           <UserIcon size={13} strokeWidth={1.75} />
           Assign case
+        </DropdownMenuItem>
+        {/*
+         * Start a billable-hour timer for this client. Opens the
+         * StartTimerDialog (mounted at the page level), which
+         * walks through the rate gate if needed before starting.
+         */}
+        <DropdownMenuItem
+          onClick={onStartTimer}
+          className="text-[13px] cursor-pointer"
+        >
+          <Clock size={13} strokeWidth={1.75} />
+          Time working hours
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onDelete}

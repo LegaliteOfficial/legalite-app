@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import {
   ChevronRight, Upload, X, Check, AlertTriangle,
@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { useFirmStore } from '@/stores/firm.store'
 
 type TabId = 'account' | 'payment' | 'admin'
 
@@ -71,7 +72,7 @@ export default function AccountInfoPage() {
   const [activeTab, setActiveTab] = useState<TabId>('account')
 
   return (
-    <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--cream)' }}>
+    <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--surface-card)' }}>
       <div className="flex items-center gap-2 text-sm mb-5" style={{ color: 'var(--navy)' }}>
         <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Settings</Link>
         <ChevronRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
@@ -120,12 +121,74 @@ export default function AccountInfoPage() {
 }
 
 function AccountInfoForm() {
-  const [form, setForm] = useState(DEFAULT_FORM)
-  const [logoName, setLogoName] = useState<string | null>(null)
+  // Branding store backs the sidebar wordmark + logo + colour chip.
+  // Read each piece once so we can pre-fill the form from persisted
+  // values, and so Save can write back through `setBranding`.
+  const persistedFirmName = useFirmStore((s) => s.firmName)
+  const persistedFirmLogo = useFirmStore((s) => s.firmLogoDataUrl)
+  const persistedBrandColor = useFirmStore((s) => s.firmBrandColor)
+  const setBranding = useFirmStore((s) => s.setBranding)
+
+  const [form, setForm] = useState(() => ({
+    ...DEFAULT_FORM,
+    firmName: persistedFirmName ?? '',
+  }))
+  // Track both the filename (for the chooser UI) and the data URL
+  // (for actual upload + sidebar render). Initialised from the
+  // store so reopening the page shows the currently-active logo.
+  const [logoName, setLogoName] = useState<string | null>(
+    persistedFirmLogo ? 'firm-logo.png' : null,
+  )
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(
+    persistedFirmLogo,
+  )
+  // Brand colour state — separate from the logo so users can swap
+  // between the two as they decide. `null` means no colour picked;
+  // the sidebar shows just the wordmark.
+  const [brandColor, setBrandColor] = useState<string | null>(
+    persistedBrandColor,
+  )
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Re-sync local state if the store changes from elsewhere (e.g.
+  // a logout + login as a different user). Cheap — runs at most
+  // once per branding write.
+  useEffect(() => {
+    setForm((f) => ({ ...f, firmName: persistedFirmName ?? f.firmName }))
+    setLogoDataUrl(persistedFirmLogo)
+    if (!persistedFirmLogo) setLogoName(null)
+    setBrandColor(persistedBrandColor)
+  }, [persistedFirmName, persistedFirmLogo, persistedBrandColor])
 
   const setField = <K extends keyof typeof DEFAULT_FORM>(key: K, value: (typeof DEFAULT_FORM)[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
+
+  /**
+   * Read the picked file as a base64 data URL so it can be both
+   * previewed (Image src) and persisted (localStorage). 2 MB cap
+   * matches the copy under the upload control; anything bigger is
+   * rejected with a toast.
+   */
+  const handlePickFile = (file: File) => {
+    const MAX_BYTES = 2 * 1024 * 1024
+    if (file.size > MAX_BYTES) {
+      toast.error('Logo is larger than 2 MB. Pick a smaller file.')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const url = typeof reader.result === 'string' ? reader.result : null
+      if (!url) {
+        toast.error("Couldn't read that file. Try a different format.")
+        return
+      }
+      setLogoName(file.name)
+      setLogoDataUrl(url)
+    }
+    reader.onerror = () =>
+      toast.error("Couldn't read that file. Try a different format.")
+    reader.readAsDataURL(file)
+  }
 
   const handleSave = () => {
     if (!form.firmName.trim()) {
@@ -136,13 +199,26 @@ function AccountInfoForm() {
       toast.error('Country is required.')
       return
     }
-    // No backend wired yet — Supabase is unreachable. Local toast only.
-    toast.success('Saved (dev preview — not persisted while backend is offline).')
+    // Persist the three branding fields so the sidebar updates
+    // immediately + the values survive a reload. The rest of the
+    // form (address, contact, formats, LEDES ID) still has no
+    // backend so it stays toast-only.
+    setBranding({
+      firmName: form.firmName.trim(),
+      firmLogoDataUrl: logoDataUrl,
+      firmBrandColor: brandColor,
+    })
+    toast.success('Firm details saved. The sidebar will reflect the new branding.')
   }
 
   const handleCancel = () => {
-    setForm(DEFAULT_FORM)
-    setLogoName(null)
+    setForm({
+      ...DEFAULT_FORM,
+      firmName: persistedFirmName ?? '',
+    })
+    setLogoName(persistedFirmLogo ? 'firm-logo.png' : null)
+    setLogoDataUrl(persistedFirmLogo)
+    setBrandColor(persistedBrandColor)
     toast.message('Changes discarded.')
   }
 
@@ -163,9 +239,21 @@ function AccountInfoForm() {
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0]
-              if (file) setLogoName(file.name)
+              if (file) handlePickFile(file)
             }}
           />
+          {/* Live preview of the picked / persisted logo. Square
+              chip mirrors the sidebar's render so users can see
+              what the wordmark will look like before saving. */}
+          {logoDataUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoDataUrl}
+              alt="Firm logo preview"
+              className="h-10 w-10 rounded-md object-contain border shrink-0"
+              style={{ borderColor: 'var(--border)', background: 'white' }}
+            />
+          )}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -177,7 +265,11 @@ function AccountInfoForm() {
           {logoName && (
             <button
               type="button"
-              onClick={() => { setLogoName(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+              onClick={() => {
+                setLogoName(null)
+                setLogoDataUrl(null)
+                if (fileInputRef.current) fileInputRef.current.value = ''
+              }}
               className="rounded-md border h-10 px-3 hover:bg-black/[0.02] transition-colors"
               style={{ borderColor: 'var(--border)', color: '#6B7280' }}
               aria-label="Remove selected file"
@@ -188,11 +280,16 @@ function AccountInfoForm() {
           <button
             type="button"
             onClick={() => {
-              if (!logoName) {
-                toast.error('Select a file to upload first.')
+              if (!logoDataUrl) {
+                toast.error('Select a file first.')
                 return
               }
-              toast.success(`Logo "${logoName}" uploaded (dev preview).`)
+              // Apply the logo to the live branding immediately —
+              // no need to wait for the full Save Changes button.
+              // The sidebar picks up the new image on the next
+              // render tick.
+              setBranding({ firmLogoDataUrl: logoDataUrl })
+              toast.success(`Logo "${logoName}" applied to the sidebar.`)
             }}
             className="inline-flex items-center justify-center gap-1.5 rounded-md px-4 h-10 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: 'var(--navy)' }}
@@ -203,6 +300,24 @@ function AccountInfoForm() {
         <p className="text-xs mt-2 leading-relaxed" style={{ color: '#9CA3AF' }}>
           Accepted logo formats are JPEG, PNG or GIF. Logos should not exceed 2MB in size.
           Ideal logo dimensions are 5.5 : 1.0, however the system will attempt to appropriately size the image to fit according to bill dimensions.
+        </p>
+      </Section>
+
+      {/* Brand Colour */}
+      {/* For firms that don't want to upload a logo (or haven't
+          designed one yet) — pick a colour and the sidebar shows a
+          coloured chip with the firm's initials in place of a logo
+          image. Logo wins if both are set; clearing the logo falls
+          back to the colour chip. */}
+      <Section title="Brand Colour">
+        <BrandColorPicker
+          value={brandColor}
+          onChange={(c) => setBrandColor(c)}
+          firmName={form.firmName || 'LegaLite'}
+        />
+        <p className="text-xs mt-2 leading-relaxed" style={{ color: '#9CA3AF' }}>
+          Used in place of a logo when none is uploaded. The sidebar
+          chip will show your firm's initials on this colour.
         </p>
       </Section>
 
@@ -848,4 +963,158 @@ function SelectNative({
       ))}
     </select>
   )
+}
+
+// ── Brand colour picker ────────────────────────────────────────────────
+
+/**
+ * Preset brand-colour swatches. Tuned to read well against the
+ * sidebar's dark glass background — included LegaLite's two house
+ * accents plus a few colours common in legal-firm branding
+ * (forest, burgundy, slate, indigo). The eyedropper at the end is
+ * the native HTML colour input for "anything else".
+ */
+const BRAND_COLOR_PRESETS = [
+  { value: '#0D1B2A', label: 'Navy' },
+  { value: '#C9972B', label: 'Gold' },
+  { value: '#1B4332', label: 'Forest' },
+  { value: '#7B1F23', label: 'Burgundy' },
+  { value: '#3A4A5D', label: 'Slate' },
+  { value: '#3F3D7E', label: 'Indigo' },
+  { value: '#0F766E', label: 'Teal' },
+  { value: '#374151', label: 'Charcoal' },
+] as const
+
+/**
+ * Picker UI: a row of preset swatches + a custom colour input +
+ * a clear button. Every change calls back immediately so the form
+ * state stays in sync with the visible selection.
+ *
+ * Live preview chip on the right shows what the sidebar will
+ * render with the current colour + firm name — same shape, same
+ * initials, same contrast logic — so the user picks with
+ * confidence.
+ */
+function BrandColorPicker({
+  value,
+  onChange,
+  firmName,
+}: {
+  value: string | null
+  onChange: (color: string | null) => void
+  firmName: string
+}) {
+  const initials = firmName
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || '?'
+  // If the current value isn't one of the presets, surface it on
+  // the custom-colour input so the user sees they're using a
+  // bespoke shade.
+  const isCustom = value !== null && !BRAND_COLOR_PRESETS.some((p) => p.value === value)
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      {/* Live preview chip — square, mirrors the sidebar render. */}
+      <span
+        aria-hidden
+        title="Sidebar preview"
+        className="inline-flex items-center justify-center h-10 w-10 rounded-md text-[12px] font-semibold border shrink-0"
+        style={{
+          background: value ?? 'transparent',
+          color: value ? readableTextOnBg(value) : '#9CA3AF',
+          borderColor: value ? value : 'var(--border)',
+        }}
+      >
+        {value ? initials : '—'}
+      </span>
+
+      {/* Preset swatch row. Selected preset gets a ring so the
+          active choice stays obvious. */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {BRAND_COLOR_PRESETS.map((p) => {
+          const active = value === p.value
+          return (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => onChange(p.value)}
+              title={p.label}
+              aria-label={`${p.label} brand colour`}
+              aria-pressed={active}
+              className="h-7 w-7 rounded-md transition-transform cursor-pointer hover:scale-110"
+              style={{
+                background: p.value,
+                boxShadow: active
+                  ? '0 0 0 2px white, 0 0 0 4px var(--gold)'
+                  : '0 0 0 1px var(--border)',
+              }}
+            />
+          )
+        })}
+        {/* Custom colour input — native HTML colour picker. The
+            label wraps it so the entire chip is clickable. */}
+        <label
+          title="Custom colour"
+          className="relative h-7 w-7 rounded-md cursor-pointer overflow-hidden flex items-center justify-center"
+          style={{
+            background: 'white',
+            border: '1px solid var(--border)',
+            boxShadow: isCustom ? '0 0 0 2px white, 0 0 0 4px var(--gold)' : undefined,
+          }}
+        >
+          <input
+            type="color"
+            value={value && /^#[0-9a-f]{6}$/i.test(value) ? value : '#888888'}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+          {/* Diagonal rainbow strip hinting at "any colour". */}
+          <span
+            aria-hidden
+            className="absolute inset-1 rounded-sm"
+            style={{
+              background:
+                'conic-gradient(from 180deg, #ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #6366f1, #ec4899, #ef4444)',
+              opacity: 0.85,
+            }}
+          />
+        </label>
+      </div>
+
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="ml-1 text-xs font-semibold underline underline-offset-2"
+          style={{ color: '#6B7280' }}
+        >
+          Clear colour
+        </button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Mirrors the Sidebar's contrast helper so the preview chip in
+ * this picker uses the exact same text-colour logic as the live
+ * sidebar render — what the user sees here is what they get.
+ */
+function readableTextOnBg(bg: string): string {
+  let hex = bg.trim()
+  if (hex.startsWith('#')) hex = hex.slice(1)
+  if (hex.length === 3) {
+    hex = hex.split('').map((c) => c + c).join('')
+  }
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return '#FFFFFF'
+  const r = parseInt(hex.slice(0, 2), 16) / 255
+  const g = parseInt(hex.slice(2, 4), 16) / 255
+  const b = parseInt(hex.slice(4, 6), 16) / 255
+  const srgb = (c: number) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  const lum = 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b)
+  return lum > 0.42 ? '#0D1B2A' : '#FFFFFF'
 }

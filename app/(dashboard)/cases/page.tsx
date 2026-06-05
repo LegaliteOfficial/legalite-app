@@ -52,6 +52,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { CaseForm } from '@/components/shared/CaseForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
+import { PriorityButton } from '@/components/shared/PriorityButton'
 import { useCases } from '@/hooks/use-cases'
 import { useUIStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -599,17 +600,17 @@ export default function CasesPage() {
     const bySearch = !q
       ? byStatus
       : byStatus.filter(
-          (c) =>
-            c.title?.toLowerCase().includes(q) ||
-            c.client_name?.toLowerCase().includes(q) ||
-            c.case_code?.toLowerCase().includes(q) ||
-            c.suit_number?.toLowerCase().includes(q) ||
-            c.court?.toLowerCase().includes(q) ||
-            c.assigned_lawyer?.toLowerCase().includes(q) ||
-            c.originating_lawyer?.toLowerCase().includes(q) ||
-            c.case_type?.toLowerCase().includes(q) ||
-            c.case_stage?.toLowerCase().includes(q),
-        )
+        (c) =>
+          c.title?.toLowerCase().includes(q) ||
+          c.client_name?.toLowerCase().includes(q) ||
+          c.case_code?.toLowerCase().includes(q) ||
+          c.suit_number?.toLowerCase().includes(q) ||
+          c.court?.toLowerCase().includes(q) ||
+          c.assigned_lawyer?.toLowerCase().includes(q) ||
+          c.originating_lawyer?.toLowerCase().includes(q) ||
+          c.case_type?.toLowerCase().includes(q) ||
+          c.case_stage?.toLowerCase().includes(q),
+      )
     return applyDrawerFilters(bySearch, filters)
   }, [allCases, statusFilter, search, filters])
 
@@ -941,36 +942,52 @@ export default function CasesPage() {
                             }}
                           >
                             <div
-                              className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
-                              // Stop propagation here so clicking
-                              // Edit / Delete doesn't ALSO drill into
-                              // the detail page via the row's click
+                              className="flex gap-0.5 justify-end items-center"
+                              // Stop propagation so clicking any
+                              // action doesn't ALSO drill into the
+                              // detail page via the row's click
                               // handler.
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => router.push(`/cases/${row.id}/edit`)}
-                                aria-label="Edit case"
-                              >
-                                <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() =>
-                                  openModal({
-                                    type: 'confirmDelete',
-                                    entity: 'case',
-                                    id: row.id,
-                                    name: row.title,
-                                  })
-                                }
-                                aria-label="Delete case"
-                              >
-                                <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
-                              </Button>
+                              {/* Priority star is always visible —
+                                  doubles as an at-a-glance indicator
+                                  of which cases are flagged. */}
+                              <PriorityButton
+                                entityType="case"
+                                entityId={row.id}
+                                label={row.title}
+                                metadata={{
+                                  next_court_date: row.next_court_date ?? null,
+                                  case_code: row.case_code ?? null,
+                                }}
+                              />
+                              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() =>
+                                    openModal({ type: 'editCase', id: row.id })
+                                  }
+                                  aria-label="Edit case"
+                                >
+                                  <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() =>
+                                    openModal({
+                                      type: 'confirmDelete',
+                                      entity: 'case',
+                                      id: row.id,
+                                      name: row.title,
+                                    })
+                                  }
+                                  aria-label="Delete case"
+                                >
+                                  <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
+                                </Button>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -1871,19 +1888,19 @@ function FilterSelect({
         <option value="">{placeholder}</option>
         {groups
           ? groups.map((g) => (
-              <optgroup key={g.label} label={g.label}>
-                {g.options.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </optgroup>
-            ))
+            <optgroup key={g.label} label={g.label}>
+              {g.options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </optgroup>
+          ))
           : (options ?? []).map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
       </select>
       <div
         className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1"
