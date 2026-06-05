@@ -1,29 +1,5 @@
 'use client'
 
-/**
- * Case detail page
- * ----------------
- * Full-screen, document-centric view that opens when a row on /cases
- * is clicked. Mirrors the bespoke design the user supplied:
- *
- *   Header — back arrow + breadcrumb · title (long, multi-line) ·
- *            status pill (clickable dropdown to switch Open/Pending/
- *            Closed) · three-dot overflow menu (Edit / Delete).
- *   Metadata rows — Date added · Assigned to · Originating attorney ·
- *                   Client. Each row has a hover-revealed pencil that
- *                   opens an inline editor; commits via
- *                   `useUpdateCase().mutateAsync`.
- *   Sections —
- *     - Preferred case outcome (single-line, click pencil to edit).
- *     - Case description (paragraph, "read more" when truncated).
- *     - Documents (cards in grid/list view, "+ Create document").
- *     - Calendar (Deadline cards keyed off `case_id`, "+ Add event").
- *
- * All mutations route through the existing GraphQL hooks. DEV_BYPASS
- * returns the dev sample case so the page is interactive without a
- * running backend.
- */
-
 import { use, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
