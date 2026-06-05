@@ -152,7 +152,11 @@ function OnboardingBanner({ onDismiss }: { onDismiss: () => void }) {
         </Link>
         , or{' '}
         <Link
-          href="/firm/billing"
+          // Routes to the plan picker / upgrade flow (the page
+          // that used to live at /billing). The bills management
+          // UI moved into /billing itself, so subscribe lives
+          // one level down at /billing/plans.
+          href="/billing/plans"
           className="font-medium hover:underline underline-offset-2"
           style={{ color: 'var(--gold)' }}
         >
