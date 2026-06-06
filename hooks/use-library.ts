@@ -8,7 +8,7 @@ import {
   LibraryItemsQueryDoc,
   ToggleLibraryItemFavoriteMutationDoc,
   UpdateLibraryItemMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/library'
 
 export interface LibraryItem {
   id: string

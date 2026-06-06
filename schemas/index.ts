@@ -194,6 +194,15 @@ export const caseSchema = z.object({
   // JSON blob of the extended new-case form fields (reminders, statute, tags,
   // billing, permissions, …). Owned by the case editor; opaque to the backend.
   details: z.string().optional(),
+  // Firm members assigned to the case (they're notified by email on create).
+  assignments: z
+    .array(
+      z.object({
+        member_id: z.string(),
+        assignment_role: z.string().optional(),
+      }),
+    )
+    .optional(),
 })
 
 export const taskSchema = z.object({

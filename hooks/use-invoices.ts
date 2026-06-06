@@ -5,7 +5,7 @@ import {
   InvoiceQueryDoc,
   InvoicesQueryDoc,
   UpdateInvoiceMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/invoices'
 import type { InvoiceFormData } from '@/schemas'
 import type { Invoice } from '@/types'
 

@@ -1,13 +1,11 @@
 'use client'
 
 import {
+  AcceptInviteMutationDoc,
   LoginMutationDoc,
   RegisterOwnerMutationDoc,
-} from '@/lib/graphql/mutations/auth'
-import {
-  AcceptInviteMutationDoc,
-  InvitationLookupQueryDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/auth'
+import { InvitationLookupQueryDoc } from '@/lib/graphql/invitations'
 import { useAuthStore } from '@/stores/auth.store'
 import type {
   AcceptInviteMutation,

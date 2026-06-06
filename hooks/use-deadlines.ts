@@ -5,7 +5,7 @@ import {
   DeadlinesQueryDoc,
   DeleteDeadlineMutationDoc,
   UpdateDeadlineMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/deadlines'
 // DEV_SAMPLE_DEADLINES lives in a server-safe module so the
 // /api/calendar/feeds/[scope] route can reuse the exact same
 // records when generating subscribed iCal feeds in dev mode.

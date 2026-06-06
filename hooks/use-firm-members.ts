@@ -1,15 +1,17 @@
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
   FirmMembersQueryDoc,
-  PendingInvitationsQueryDoc,
-  InviteMemberMutationDoc,
-  ResendInvitationMutationDoc,
-  RevokeInvitationMutationDoc,
   ChangeMemberRoleMutationDoc,
   ChangeProfessionalTitleMutationDoc,
   DeactivateMemberMutationDoc,
   ReactivateMemberMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/members'
+import {
+  PendingInvitationsQueryDoc,
+  InviteMemberMutationDoc,
+  ResendInvitationMutationDoc,
+  RevokeInvitationMutationDoc,
+} from '@/lib/graphql/invitations'
 import {
   type FirmMembersQuery,
   type PendingInvitationsQuery,

@@ -26,7 +26,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import { useMutation } from '@apollo/client/react'
-import { GoogleAuthMutationDoc } from '@/lib/graphql/operations'
+import { GoogleAuthMutationDoc } from '@/lib/graphql/auth'
 
 function CallbackInner() {
   const router = useRouter()

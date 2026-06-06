@@ -54,6 +54,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useClients } from '@/hooks/use-clients'
 import { useCases, useCreateCase, useUpdateCase } from '@/hooks/use-cases'
+import { useFirmMembers } from '@/hooks/use-firm-members'
+import {
+  useCaseAssignments,
+  useSetCaseAssignments,
+} from '@/hooks/use-case-assignments'
 import type { Case } from '@/types'
 import { useAuthStore } from '@/stores/auth.store'
 import { CASE_STAGES, PRACTICE_AREAS } from '@/lib/case-options'
@@ -127,6 +132,9 @@ export interface NewCaseForm {
   client_ids: string[]
   // Case details
   description: string
+  // Firm members assigned to the case (real member ids). Notified by email
+  // when the case is created. Distinct from the free-text lawyer names above.
+  assigned_member_ids: string[]
   responsible_lawyer: string
   originating_lawyer: string
   responsible_staff: string
@@ -184,6 +192,7 @@ const TODAY = new Date().toISOString().slice(0, 10)
 export const INITIAL_FORM: NewCaseForm = {
   client_ids: [''],
   description: '',
+  assigned_member_ids: [],
   responsible_lawyer: '',
   originating_lawyer: '',
   responsible_staff: '',
@@ -236,6 +245,7 @@ const toDateInput = (v?: string | null) => (v ? v.slice(0, 10) : '')
 const CORE_KEYS: ReadonlySet<keyof NewCaseForm> = new Set([
   'client_ids',
   'description',
+  'assigned_member_ids',
   'responsible_lawyer',
   'originating_lawyer',
   'court',
@@ -376,7 +386,25 @@ export function NewCasePageInner({
   const prefilledClientId = searchParams.get('client') ?? ''
   const createMutation = useCreateCase()
   const updateMutation = useUpdateCase()
+  const setCaseAssignments = useSetCaseAssignments()
   const { data: clients } = useClients()
+  const { data: firmMembers } = useFirmMembers()
+
+  // Active firm members available to assign, as {id, name} options.
+  const memberOptions = useMemo(
+    () =>
+      (firmMembers ?? [])
+        .filter((m) => m.status === 'active')
+        .map((m) => ({ id: m.id, name: m.name || m.email })),
+    [firmMembers],
+  )
+
+  // In edit mode, seed the team picker from the case's existing assignments
+  // (once they load) so saving doesn't wipe the team.
+  const { data: existingAssignments } = useCaseAssignments(
+    isEdit ? caseId : undefined,
+  )
+  const seededAssignees = useRef(false)
   const { data: existingCases } = useCases()
   const { user } = useAuthStore()
 
@@ -414,6 +442,14 @@ export function NewCasePageInner({
 
   // Cancel returns to the case detail when editing, the list when creating.
   const cancelTarget = isEdit && caseId ? `/cases/${caseId}` : '/cases'
+
+  // Seed the team picker from existing assignments once, in edit mode.
+  useEffect(() => {
+    if (!isEdit || seededAssignees.current || !existingAssignments) return
+    seededAssignees.current = true
+    const ids = existingAssignments.map((a) => a.member_id)
+    if (ids.length > 0) setForm((f) => ({ ...f, assigned_member_ids: ids }))
+  }, [isEdit, existingAssignments])
 
   // Tag manager dialog — opens from the Tags field's "Manage tags" link.
   // Stays at the page level so a single mount is shared across all the
@@ -492,14 +528,26 @@ export function NewCasePageInner({
         details: buildCaseDetails(form),
       }
 
+      // Real member assignments (notified by email on create). assignment_role
+      // defaults to collaborator; responsible/originating are free-text above.
+      const assignments = form.assigned_member_ids.map((id) => ({
+        member_id: id,
+        assignment_role: 'collaborator',
+      }))
+
       if (isEdit && caseId) {
+        // UpdateCaseInput has no assignments field — persist the team
+        // separately so the update payload stays whitelisted.
         await updateMutation.mutateAsync({ id: caseId, data: payload })
+        await setCaseAssignments.mutateAsync(caseId, assignments)
         toast.success('Case updated successfully.')
         router.push(`/cases/${caseId}`)
         return
       }
 
-      await createMutation.mutateAsync(payload)
+      await createMutation.mutateAsync(
+        assignments.length > 0 ? { ...payload, assignments } : payload,
+      )
       toast.success('Case created successfully.')
       if (alsoRunConflictCheck) {
         toast.info('Conflict check will run as soon as the conflict-check screen ships.')
@@ -606,6 +654,7 @@ export function NewCasePageInner({
                 form={form}
                 setField={setField}
                 firmUserOptions={firmUserOptions}
+                memberOptions={memberOptions}
                 onOpenTagSettings={() => setTagsDialogOpen(true)}
               />
             </Section>
@@ -1343,11 +1392,13 @@ function CaseDetailsSection({
   form,
   setField,
   firmUserOptions,
+  memberOptions,
   onOpenTagSettings,
 }: {
   form: NewCaseForm
   setField: <K extends keyof NewCaseForm>(key: K, val: NewCaseForm[K]) => void
   firmUserOptions: string[]
+  memberOptions: { id: string; name: string }[]
   onOpenTagSettings: () => void
 }) {
   return (
@@ -1386,6 +1437,18 @@ function CaseDetailsSection({
             options={firmUserOptions}
           />
         </div>
+      </div>
+
+      <div>
+        <FieldLabel>Assign team members</FieldLabel>
+        <MemberMultiPicker
+          value={form.assigned_member_ids}
+          onChange={(v) => setField('assigned_member_ids', v)}
+          members={memberOptions}
+        />
+        <p className="mt-1 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+          Selected members are added to the case team and emailed when the case is created.
+        </p>
       </div>
 
       <div>
@@ -2111,6 +2174,63 @@ function FirmUserMultiPicker({
                 onClick={() => onChange(value.filter((x) => x !== u))}
                 className="cursor-pointer"
                 aria-label={`Remove ${u}`}
+              >
+                <X size={11} strokeWidth={1.75} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Picks real firm members by id (value = member id, label = name). Selected
+// members become the case team and are notified by email on case creation.
+function MemberMultiPicker({
+  value,
+  onChange,
+  members,
+}: {
+  value: string[]
+  onChange: (next: string[]) => void
+  members: { id: string; name: string }[]
+}) {
+  const byId = new Map(members.map((m) => [m.id, m]))
+  const available = members.filter((m) => !value.includes(m.id))
+  const everythingPicked = members.length > 0 && available.length === 0
+
+  return (
+    <div className="space-y-2">
+      <NativeSelect
+        value=""
+        onChange={(picked) => {
+          if (picked && !value.includes(picked)) onChange([...value, picked])
+        }}
+        placeholder={
+          members.length === 0
+            ? 'No firm members yet'
+            : everythingPicked
+              ? 'All members added'
+              : 'Find a firm member'
+        }
+        options={available.map((m) => ({ value: m.id, label: m.name }))}
+        disabled={members.length === 0 || everythingPicked}
+      />
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((id) => (
+            <span
+              key={id}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11.5px] font-medium"
+              style={{ background: 'var(--surface-sunken)', color: 'var(--text-secondary)' }}
+            >
+              {byId.get(id)?.name ?? 'Member'}
+              <button
+                type="button"
+                onClick={() => onChange(value.filter((x) => x !== id))}
+                className="cursor-pointer"
+                aria-label="Remove member"
               >
                 <X size={11} strokeWidth={1.75} />
               </button>

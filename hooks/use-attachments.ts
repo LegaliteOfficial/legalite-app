@@ -6,7 +6,7 @@ import {
   AttachmentDownloadUrlQueryDoc,
   CreateAttachmentMutationDoc,
   DeleteAttachmentMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/attachments'
 import type { AttachmentsQuery } from '@/types/generated/graphql'
 import { useAuthStore } from '@/stores/auth.store'
 

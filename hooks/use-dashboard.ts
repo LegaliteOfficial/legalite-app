@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react'
-import { DashboardStatsQueryDoc } from '@/lib/graphql/operations'
+import { DashboardStatsQueryDoc } from '@/lib/graphql/dashboard'
 import type { DashboardStats } from '@/types'
 
 // DEV ONLY — return firm-leader-shaped mock data while Supabase is unreachable.

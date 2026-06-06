@@ -5,7 +5,7 @@ import {
   CreateClientMutationDoc,
   DeleteClientMutationDoc,
   UpdateClientMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/clients'
 import type { ClientFormData } from '@/schemas'
 import type { Client } from '@/types'
 import type {

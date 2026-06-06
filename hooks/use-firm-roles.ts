@@ -7,7 +7,7 @@ import {
   UpdateFirmRoleMutationDoc,
   ArchiveFirmRoleMutationDoc,
   SetMemberRolesMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/roles'
 import type {
   FirmRolesQuery,
   PermissionCatalogQuery,

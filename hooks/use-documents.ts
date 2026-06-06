@@ -5,7 +5,7 @@ import {
   DocumentQueryDoc,
   DocumentsQueryDoc,
   UpdateDocumentMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/documents'
 import type { DocumentFormData } from '@/schemas'
 import type { Document } from '@/types'
 

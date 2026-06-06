@@ -28,7 +28,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useApolloClient } from '@apollo/client/react'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useAuthStore } from '@/stores/auth.store'
-import { MeQueryDoc } from '@/lib/graphql/operations'
+import { MeQueryDoc } from '@/lib/graphql/auth'
 
 /** Subscribe to Zustand persist hydration without setState-in-effect. */
 function useStoreHydration(): boolean {

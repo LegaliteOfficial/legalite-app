@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@apollo/client/react'
 import {
   CaseAssignmentsQueryDoc,
   SetCaseAssignmentsMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/assignments'
 import type { CaseAssignmentsQuery } from '@/types/generated/graphql'
 
 

@@ -5,7 +5,7 @@ import {
   TaskQueryDoc,
   TasksQueryDoc,
   UpdateTaskMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/tasks'
 import type { TaskFormData } from '@/schemas'
 import type { Task } from '@/types'
 

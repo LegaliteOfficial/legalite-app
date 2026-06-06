@@ -12,7 +12,7 @@ import { useQuery, useMutation } from '@apollo/client/react'
 import {
   ClientAssignmentsQueryDoc,
   SetClientAssignmentsMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/assignments'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 

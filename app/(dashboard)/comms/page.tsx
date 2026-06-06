@@ -18,7 +18,7 @@ import {
   CreateMessageMutationDoc,
   DeleteMessageMutationDoc,
   MessagesQueryDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/comms'
 import { toast } from 'sonner'
 
 type ChannelFilter = 'all' | 'email' | 'sms' | 'whatsapp' | 'in_app'

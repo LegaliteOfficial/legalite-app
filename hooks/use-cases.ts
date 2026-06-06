@@ -5,7 +5,7 @@ import {
   CreateCaseMutationDoc,
   DeleteCaseMutationDoc,
   UpdateCaseMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/cases'
 import type { CaseFormData } from '@/schemas'
 import type { Case, CaseStatus } from '@/types'
 import type {

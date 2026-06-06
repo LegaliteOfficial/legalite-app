@@ -38,7 +38,7 @@ import { useMutation } from '@apollo/client/react'
 import {
   ChangePasswordMutationDoc,
   UpdateProfileMutationDoc,
-} from '@/lib/graphql/operations'
+} from '@/lib/graphql/settings'
 import { toast } from 'sonner'
 
 type SectionId = 'profile' | 'notifications' | 'security' | 'appearance' | 'integrations'

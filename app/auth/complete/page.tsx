@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { useMutation } from '@apollo/client/react'
-import { GoogleAuthMutationDoc } from '@/lib/graphql/operations'
+import { GoogleAuthMutationDoc } from '@/lib/graphql/auth'
 
 function AuthCompleteInner() {
   const router = useRouter()
