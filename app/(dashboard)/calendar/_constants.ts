@@ -12,6 +12,7 @@ export type {
   ReminderChannel,
   Reminder,
   SlotPrefill,
+  Participant,
 } from './_types'
 
 /** Pixels per hour for the time-grid. Picked to fit multi-line labels. */

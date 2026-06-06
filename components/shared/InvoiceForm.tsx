@@ -2,7 +2,12 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  FormDrawer,
+  FormDrawerBody,
+  FormDrawerFooter,
+  FormDrawerHeader,
+} from '@/components/ui/form-drawer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -73,15 +78,18 @@ export function InvoiceForm() {
   }
 
   return (
-    <Dialog open onOpenChange={closeModal}>
-      <DialogContent className="sm:max-w-[540px] p-0 overflow-hidden rounded-2xl" style={{ background: 'var(--cream-white)', borderColor: 'var(--border)' }}>
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="font-heading text-lg" style={{ color: 'var(--navy)' }}>
-            {isEdit ? 'Edit Invoice' : 'New Invoice'}
-          </DialogTitle>
-          <p className="text-[12px] text-gray-400 mt-0.5">{isEdit ? 'Update the details below.' : 'Fill in the details below to create a new invoice.'}</p>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
+    <FormDrawer open onOpenChange={closeModal} size="md">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+        <FormDrawerHeader
+          title={isEdit ? 'Edit invoice' : 'New invoice'}
+          description={
+            isEdit
+              ? 'Update the details below.'
+              : 'Fill in the details below to create a new invoice.'
+          }
+          onClose={closeModal}
+        />
+        <FormDrawerBody className="space-y-4">
           <div>
             <Label htmlFor="client_id" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Client *</Label>
             <Select value={form.watch('client_id')} onValueChange={(v) => v && form.setValue('client_id', v)}>
@@ -127,14 +135,16 @@ export function InvoiceForm() {
             <Label htmlFor="description" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Description</Label>
             <Textarea id="description" rows={3} className="rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('description')} />
           </div>
-          <DialogFooter className="px-6 py-4 border-t" style={{ borderColor: 'var(--border)', background: 'rgba(13,27,42,0.015)' }}>
-            <Button type="button" variant="outline" onClick={closeModal} className="rounded-lg text-[13px]">Cancel</Button>
-            <Button type="submit" disabled={isPending} className="rounded-lg text-[13px] font-semibold shadow-sm" style={{ background: 'var(--gold)' }}>
-              {isPending ? <><Spinner size={14} /> Saving...</> : isEdit ? 'Update' : 'Create Invoice'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </FormDrawerBody>
+        <FormDrawerFooter>
+          <Button type="button" variant="outline" onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? <><Spinner size={14} /> Saving…</> : isEdit ? 'Update' : 'Create invoice'}
+          </Button>
+        </FormDrawerFooter>
+      </form>
+    </FormDrawer>
   )
 }

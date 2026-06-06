@@ -304,7 +304,9 @@ export const EventAttendeeFieldsFragmentDoc = graphql(/* GraphQL */ `
   fragment EventAttendeeFields on EventAttendee {
     id
     event_id
+    kind
     member_id
+    client_id
     response
     name
     professional_title

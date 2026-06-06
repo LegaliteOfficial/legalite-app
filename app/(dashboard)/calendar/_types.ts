@@ -45,3 +45,10 @@ export interface SlotPrefill {
   startMinutes: number
   endMinutes: number
 }
+
+/** An event participant — either a firm member or a client. */
+export interface Participant {
+  kind: 'member' | 'client'
+  id: string
+  name: string
+}

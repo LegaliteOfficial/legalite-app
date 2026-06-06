@@ -1,7 +1,6 @@
 'use client'
 
-import { Bell, ChevronDown, Users, X } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Bell, ChevronDown, Mail, X } from 'lucide-react'
 import {
   REMINDER_OFFSETS,
   type Reminder,
@@ -10,12 +9,12 @@ import {
 } from '../_constants'
 
 /**
- * One row in the event-dialog Reminders section. Offset dropdown +
- * push/email segmented control + remove button; when channel is
- * 'email' a recipients input renders below.
+ * One row in the event-dialog Reminders section: an offset dropdown, an
+ * in-app/email channel toggle, and a remove button. Reminders fan out to all
+ * of the event's participants — there's no per-reminder recipient field.
  *
- * Parent owns the array; this component only edits its own reminder
- * via `onChange(patch)`.
+ * Parent owns the array; this component only edits its own reminder via
+ * `onChange(patch)`.
  */
 export function ReminderRow({
   reminder,
@@ -28,7 +27,7 @@ export function ReminderRow({
 }) {
   return (
     <div
-      className="rounded-lg border p-2.5 space-y-2"
+      className="rounded-lg border p-2.5"
       style={{
         borderColor: 'var(--border-soft)',
         background: 'var(--surface-card)',
@@ -55,21 +54,6 @@ export function ReminderRow({
           <X size={13} strokeWidth={1.75} />
         </button>
       </div>
-
-      {reminder.channel === 'email' && (
-        <div>
-          <Input
-            value={reminder.emails}
-            onChange={(e) => onChange({ emails: e.target.value })}
-            placeholder="recipient@firm.com, partner@example.com"
-            className="h-9 text-[13px]"
-          />
-          <p className="mt-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            Comma-separated email addresses. We&rsquo;ll send the reminder to
-            each one at the scheduled time.
-          </p>
-        </div>
-      )}
     </div>
   )
 }
@@ -131,7 +115,7 @@ function ChannelSegmented({
             key={channel}
             type="button"
             onClick={() => onChange(channel)}
-            className="px-3 text-[12.5px] font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5 capitalize"
+            className="px-3 text-[12.5px] font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5"
             style={{
               background: active
                 ? 'var(--accent-today-tint-strong)'
@@ -144,9 +128,9 @@ function ChannelSegmented({
             {channel === 'push' ? (
               <Bell size={11} strokeWidth={1.75} />
             ) : (
-              <Users size={11} strokeWidth={1.75} />
+              <Mail size={11} strokeWidth={1.75} />
             )}
-            {channel}
+            {channel === 'push' ? 'In-app' : 'Email'}
           </button>
         )
       })}

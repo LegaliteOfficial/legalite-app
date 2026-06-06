@@ -2,8 +2,14 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import {
+  FormDrawer,
+  FormDrawerBody,
+  FormDrawerFooter,
+  FormDrawerHeader,
+  FormDrawerSection,
+} from '@/components/ui/form-drawer'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -16,6 +22,27 @@ import { CASE_STAGES, PRACTICE_AREAS } from '@/lib/case-options'
 import { Spinner } from '@/components/shared/Spinner'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
+
+const EMPTY: CaseFormData = {
+  title: '',
+  client_id: '',
+  court: '',
+  suit_number: '',
+  opposing_party: '',
+  case_type: '',
+  case_stage: '',
+  assigned_lawyer: '',
+  originating_lawyer: '',
+  status: 'Open',
+  next_court_date: '',
+  date_opened: '',
+  notes: '',
+}
+
+const labelCls =
+  'text-[12px] font-semibold mb-1.5 block'
+
+const inputCls = 'h-10 rounded-lg text-[13px]'
 
 export function CaseForm() {
   const { modal, closeModal } = useUIStore()
@@ -31,11 +58,7 @@ export function CaseForm() {
   const form = useForm<CaseFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(caseSchema) as any,
-    defaultValues: {
-      title: '', client_id: '', court: '', suit_number: '', opposing_party: '',
-      case_type: '', case_stage: '', assigned_lawyer: '', originating_lawyer: '',
-      status: 'Open', next_court_date: '', date_opened: '', notes: '',
-    },
+    defaultValues: EMPTY,
   })
 
   useEffect(() => {
@@ -56,13 +79,7 @@ export function CaseForm() {
         notes: existing.notes ?? '',
       })
     }
-    if (isAdd) {
-      form.reset({
-        title: '', client_id: '', court: '', suit_number: '', opposing_party: '',
-        case_type: '', case_stage: '', assigned_lawyer: '', originating_lawyer: '',
-        status: 'Open', next_court_date: '', date_opened: '', notes: '',
-      })
-    }
+    if (isAdd) form.reset(EMPTY)
     // form.reset is stable; depending on existing.id avoids re-running on
     // every TanStack Query data re-emission (which would loop with form.reset).
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,28 +105,28 @@ export function CaseForm() {
   }
 
   return (
-    <Dialog open onOpenChange={closeModal}>
-      <DialogContent className="sm:max-w-[540px] p-0 overflow-hidden rounded-2xl" style={{ background: 'var(--cream-white)', borderColor: 'var(--border)' }}>
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="font-heading text-lg" style={{ color: 'var(--navy)' }}>
-            {isEdit ? 'Edit Case' : 'Open New Case'}
-          </DialogTitle>
-          <p className="text-[12px] text-gray-400 mt-0.5">{isEdit ? 'Update the details below.' : 'Fill in the details below to create a new case.'}</p>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
-          <div>
-            <Label htmlFor="title" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Case Title *</Label>
-            <Input id="title" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('title')} />
-            {form.formState.errors.title && (
-              <p className="text-xs text-red-500 mt-1">{form.formState.errors.title.message}</p>
-            )}
-          </div>
-          <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="client_id" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Client *</Label>
+    <FormDrawer open onOpenChange={closeModal} size="lg">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+        <FormDrawerHeader
+          title={isEdit ? 'Edit case' : 'Open new case'}
+          description={isEdit ? 'Update the details below.' : 'Fill in the details below to create a new case.'}
+          onClose={closeModal}
+        />
+
+        <FormDrawerBody>
+          <FormDrawerSection title="Basic info">
+            <Field
+              id="title"
+              label="Case title *"
+              error={form.formState.errors.title?.message}
+            >
+              <Input id="title" className={inputCls} {...form.register('title')} />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field id="client_id" label="Client *" error={form.formState.errors.client_id?.message}>
                 <Select value={form.watch('client_id')} onValueChange={(v) => v && form.setValue('client_id', v)}>
-                  <SelectTrigger className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }}>
+                  <SelectTrigger className={inputCls}>
                     <SelectValue placeholder="Select client" />
                   </SelectTrigger>
                   <SelectContent>
@@ -118,115 +135,129 @@ export function CaseForm() {
                     ))}
                   </SelectContent>
                 </Select>
-                {form.formState.errors.client_id && (
-                  <p className="text-xs text-red-500 mt-1">{form.formState.errors.client_id.message}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="status" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Status</Label>
+              </Field>
+              <Field id="status" label="Status">
                 <Select value={form.watch('status')} onValueChange={(v) => v && form.setValue('status', v as CaseFormData['status'])}>
-                  <SelectTrigger className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }}><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={inputCls}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Open">Open</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Closed">Closed</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="court" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Court</Label>
-              <Input id="court" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('court')} />
+          </FormDrawerSection>
+
+          <FormDrawerSection title="Court details">
+            <div className="grid grid-cols-2 gap-3">
+              <Field id="court" label="Court">
+                <Input id="court" className={inputCls} {...form.register('court')} />
+              </Field>
+              <Field id="suit_number" label="Suit number">
+                <Input id="suit_number" className={inputCls} {...form.register('suit_number')} />
+              </Field>
             </div>
-            <div>
-              <Label htmlFor="suit_number" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Suit Number</Label>
-              <Input id="suit_number" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('suit_number')} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field id="opposing_party" label="Opposing party">
+                <Input id="opposing_party" className={inputCls} {...form.register('opposing_party')} />
+              </Field>
+              <Field id="next_court_date" label="Next court date">
+                <Input id="next_court_date" type="date" className={inputCls} {...form.register('next_court_date')} />
+              </Field>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="opposing_party" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Opposing Party</Label>
-              <Input id="opposing_party" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('opposing_party')} />
-            </div>
-            <div>
-              <Label htmlFor="next_court_date" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Next Court Date</Label>
-              <Input id="next_court_date" type="date" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('next_court_date')} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="case_type" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Practice area</Label>
-              <Select
-                value={form.watch('case_type') ?? ''}
-                onValueChange={(v) => v && form.setValue('case_type', v)}
-              >
-                <SelectTrigger
-                  id="case_type"
-                  className="h-10 rounded-lg text-[13px]"
-                  style={{ borderColor: 'var(--border)' }}
+          </FormDrawerSection>
+
+          <FormDrawerSection title="Practice details">
+            <div className="grid grid-cols-2 gap-3">
+              <Field id="case_type" label="Practice area">
+                <Select
+                  value={form.watch('case_type') ?? ''}
+                  onValueChange={(v) => v && form.setValue('case_type', v)}
                 >
-                  <SelectValue placeholder="Find a practice area" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRACTICE_AREAS.map((pa) => (
-                    <SelectItem key={pa} value={pa}>
-                      {pa}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="case_stage" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Case stage</Label>
-              <Select
-                value={form.watch('case_stage') ?? ''}
-                onValueChange={(v) => v && form.setValue('case_stage', v)}
-              >
-                <SelectTrigger
-                  id="case_stage"
-                  className="h-10 rounded-lg text-[13px]"
-                  style={{ borderColor: 'var(--border)' }}
+                  <SelectTrigger id="case_type" className={inputCls}>
+                    <SelectValue placeholder="Find a practice area" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRACTICE_AREAS.map((pa) => (
+                      <SelectItem key={pa} value={pa}>{pa}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field id="case_stage" label="Case stage">
+                <Select
+                  value={form.watch('case_stage') ?? ''}
+                  onValueChange={(v) => v && form.setValue('case_stage', v)}
                 >
-                  <SelectValue placeholder="Find a case stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CASE_STAGES.map((stage) => (
-                    <SelectItem key={stage} value={stage}>
-                      {stage}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger id="case_stage" className={inputCls}>
+                    <SelectValue placeholder="Find a case stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CASE_STAGES.map((stage) => (
+                      <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="assigned_lawyer" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Responsible lawyer</Label>
-              <Input id="assigned_lawyer" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('assigned_lawyer')} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field id="assigned_lawyer" label="Responsible lawyer">
+                <Input id="assigned_lawyer" className={inputCls} {...form.register('assigned_lawyer')} />
+              </Field>
+              <Field id="originating_lawyer" label="Originating lawyer">
+                <Input id="originating_lawyer" className={inputCls} {...form.register('originating_lawyer')} />
+              </Field>
             </div>
-            <div>
-              <Label htmlFor="originating_lawyer" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Originating lawyer</Label>
-              <Input id="originating_lawyer" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('originating_lawyer')} />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="date_opened" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Open date</Label>
-            <Input id="date_opened" type="date" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('date_opened')} />
-          </div>
-          <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
-            <Label htmlFor="notes" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Notes</Label>
-            <Textarea id="notes" rows={3} className="rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('notes')} />
-          </div>
-          <DialogFooter className="px-6 py-4 border-t" style={{ borderColor: 'var(--border)', background: 'rgba(13,27,42,0.015)' }}>
-            <Button type="button" variant="outline" onClick={closeModal} className="rounded-lg text-[13px]">Cancel</Button>
-            <Button type="submit" disabled={isPending} className="rounded-lg text-[13px] font-semibold shadow-sm" style={{ background: 'var(--gold)' }}>
-              {isPending ? <><Spinner size={14} /> Saving...</> : isEdit ? 'Update' : 'Open Case'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <Field id="date_opened" label="Open date">
+              <Input id="date_opened" type="date" className={inputCls} {...form.register('date_opened')} />
+            </Field>
+          </FormDrawerSection>
+
+          <FormDrawerSection title="Notes">
+            <Field id="notes" label="Notes" hideLabel>
+              <Textarea id="notes" rows={4} className="rounded-lg text-[13px]" {...form.register('notes')} />
+            </Field>
+          </FormDrawerSection>
+        </FormDrawerBody>
+
+        <FormDrawerFooter>
+          <Button type="button" variant="outline" onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? <><Spinner size={14} /> Saving…</> : isEdit ? 'Update' : 'Open case'}
+          </Button>
+        </FormDrawerFooter>
+      </form>
+    </FormDrawer>
+  )
+}
+
+// ── Field wrapper ─────────────────────────────────────────────────────────
+
+function Field({
+  id,
+  label,
+  error,
+  hideLabel,
+  children,
+}: {
+  id: string
+  label: string
+  error?: string
+  hideLabel?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      {!hideLabel && (
+        <Label htmlFor={id} className={labelCls} style={{ color: 'var(--text-primary)' }}>
+          {label}
+        </Label>
+      )}
+      {children}
+      {error && <p className="text-[11.5px] mt-1" style={{ color: '#C0392B' }}>{error}</p>}
+    </div>
   )
 }

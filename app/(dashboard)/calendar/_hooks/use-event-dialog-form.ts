@@ -1,27 +1,52 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
   useCreateCalendarEvent,
   useDeleteCalendarEvent,
   useUpdateCalendarEvent,
+  useCalendarEvent,
 } from '@/hooks/use-calendar'
+import { useFirmMembers } from '@/hooks/use-firm-members'
+import { useClients } from '@/hooks/use-clients'
+import { useCases } from '@/hooks/use-cases'
+import { useAuthStore } from '@/stores/auth.store'
 import type { Deadline } from '@/hooks/use-deadlines'
-import { DEFAULT_EVENT_MINUTES, type SlotPrefill, type Reminder } from '../_constants'
-import { minutesToHHMM } from '../_lib/date'
 import {
-  daysToOffsetKey,
-  newReminderId,
-  offsetMinutes,
-  summariseReminders,
-} from '../_lib/reminders'
+  DEFAULT_EVENT_MINUTES,
+  REMINDER_OFFSETS,
+  type SlotPrefill,
+  type Reminder,
+  type ReminderOffsetKey,
+  type Participant,
+} from '../_constants'
+import { minutesToHHMM } from '../_lib/date'
+import { newReminderId, offsetMinutes } from '../_lib/reminders'
+
+// Map a reminder's minute lead time to the closest preset offset key.
+function minutesToOffsetKey(minutes: number): ReminderOffsetKey {
+  let bestKey: ReminderOffsetKey = REMINDER_OFFSETS[0].key
+  let diff = Infinity
+  for (const o of REMINDER_OFFSETS) {
+    const d = Math.abs(o.minutes - minutes)
+    if (d < diff) {
+      diff = d
+      bestKey = o.key
+    }
+  }
+  return bestKey
+}
+
+function hhmm(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
 
 /**
- * Encapsulates ALL form state and persistence for the event dialog.
- * The page component just passes `open`, `prefill`, `editing`, and the
- * close callback — everything else (fields, validation, mutations,
- * toasts) lives here.
+ * Encapsulates ALL form state + persistence for the event dialog. Participants
+ * are firm members and/or clients: the signed-in user is added by default, and
+ * a linked case auto-adds its client. Edit mode prefills exactly from the
+ * stored event (times, attendees, reminders).
  */
 export function useEventDialogForm({
   open,
@@ -38,6 +63,14 @@ export function useEventDialogForm({
   const updateMutation = useUpdateCalendarEvent()
   const deleteMutation = useDeleteCalendarEvent()
 
+  const { data: members } = useFirmMembers()
+  const { data: clients } = useClients()
+  const { data: cases } = useCases()
+  const currentUserId = useAuthStore((s) => s.user?.id)
+
+  // In edit mode, pull the full event (attendees + reminders) to prefill from.
+  const { data: fullEvent } = useCalendarEvent(editing?.id)
+
   const mode: 'create' | 'edit' = editing ? 'edit' : 'create'
 
   const [title, setTitle] = useState('')
@@ -46,42 +79,44 @@ export function useEventDialogForm({
   const [endTime, setEndTime] = useState('10:00')
   const [caseId, setCaseId] = useState('')
   const [description, setDescription] = useState('')
-  const [participants, setParticipants] = useState<string[]>([])
+  const [participants, setParticipants] = useState<Participant[]>([])
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  // Reset on every open. Edit mode hydrates from the Deadline; create
-  // mode falls back to prefill or "today + next round hour".
+  // The signed-in user as a member participant (default attendee).
+  const selfParticipant = (() => {
+    const me = (members ?? []).find(
+      (m) => m.profile_id === currentUserId && m.status === 'active',
+    )
+    return me ? ({ kind: 'member', id: me.id, name: me.name } as Participant) : null
+  })()
+
+  // Reset scalar fields on open. Defaults: create → today/prefill + self
+  // participant; edit → values from the adapted Deadline (exact values land
+  // once `fullEvent` resolves, below).
+  const hydratedFor = useRef<string | null>(null)
   useEffect(() => {
     if (!open) return
+    hydratedFor.current = null
 
     if (editing) {
       const due = new Date(editing.due_date)
-      const isoDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, '0')}-${String(due.getDate()).padStart(2, '0')}`
       setTitle(editing.title)
       setDescription(editing.description ?? '')
       setCaseId(editing.case_id ?? '')
-      setDate(isoDate)
-      setStartTime(`${String(due.getHours()).padStart(2, '0')}:${String(due.getMinutes()).padStart(2, '0')}`)
-      const end = new Date(due.getTime() + DEFAULT_EVENT_MINUTES * 60 * 1000)
-      setEndTime(`${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`)
+      setDate(due.toISOString().slice(0, 10))
+      setStartTime(hhmm(due))
+      setEndTime(hhmm(new Date(due.getTime() + DEFAULT_EVENT_MINUTES * 60 * 1000)))
       setParticipants([])
-      setReminders([
-        {
-          id: newReminderId(),
-          offset: daysToOffsetKey(editing.reminder_days),
-          channel: 'push',
-          emails: '',
-        },
-      ])
+      setReminders([])
       return
     }
 
     setTitle('')
     setDescription('')
     setCaseId('')
-    setParticipants([])
+    setParticipants(selfParticipant ? [selfParticipant] : [])
     setReminders([])
 
     if (prefill) {
@@ -94,10 +129,70 @@ export function useEventDialogForm({
       now.setHours(now.getHours() + 1)
       setDate(now.toISOString().slice(0, 10))
       setStartTime(now.toTimeString().slice(0, 5))
-      const end = new Date(now.getTime() + 60 * 60 * 1000)
-      setEndTime(end.toTimeString().slice(0, 5))
+      setEndTime(new Date(now.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5))
     }
+    // selfParticipant intentionally omitted: a late members fetch is handled
+    // by the create-mode self-seed effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, prefill, editing])
+
+  // Create mode: once members load, make sure the signed-in user is present.
+  useEffect(() => {
+    if (!open || editing || !selfParticipant) return
+    setParticipants((prev) =>
+      prev.some((p) => p.kind === 'member' && p.id === selfParticipant.id)
+        ? prev
+        : [selfParticipant, ...prev],
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing, selfParticipant?.id])
+
+  // Edit mode: prefill exact times, participants and reminders from the event.
+  useEffect(() => {
+    if (!open || !editing || !fullEvent || fullEvent.id !== editing.id) return
+    if (hydratedFor.current === fullEvent.id) return
+    hydratedFor.current = fullEvent.id
+
+    const start = new Date(fullEvent.start_time)
+    const end = new Date(fullEvent.end_time)
+    setDate(start.toISOString().slice(0, 10))
+    setStartTime(hhmm(start))
+    setEndTime(hhmm(end))
+    setCaseId(fullEvent.case_id ?? '')
+    setParticipants(
+      fullEvent.attendees.map((a) =>
+        a.kind === 'client'
+          ? { kind: 'client', id: a.client_id ?? '', name: a.name }
+          : { kind: 'member', id: a.member_id ?? '', name: a.name },
+      ),
+    )
+    setReminders(
+      fullEvent.reminders.map((r) => ({
+        id: newReminderId(),
+        offset: minutesToOffsetKey(r.minutes_before),
+        channel: r.method === 'email' ? 'email' : 'push',
+        emails: '',
+      })),
+    )
+  }, [open, editing, fullEvent])
+
+  // When a case is linked, auto-add its client as a participant.
+  useEffect(() => {
+    if (!open || !caseId) return
+    const kase = (cases ?? []).find((c) => c.id === caseId)
+    const clientId = kase?.client_id
+    if (!clientId) return
+    const name =
+      (clients ?? []).find((c) => c.id === clientId)?.full_name ??
+      kase?.client_name ??
+      'Client'
+    setParticipants((prev) =>
+      prev.some((p) => p.kind === 'client' && p.id === clientId)
+        ? prev
+        : [...prev, { kind: 'client', id: clientId, name }],
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, caseId, cases, clients])
 
   const canSave = title.trim().length > 0 && !submitting && !deleting
 
@@ -107,18 +202,21 @@ export function useEventDialogForm({
     try {
       const start = new Date(`${date}T${startTime}:00`)
       let end = new Date(`${date}T${endTime}:00`)
-      // Guard against an end at/before start (e.g. crossing midnight is out of
-      // scope here) — fall back to the default duration.
       if (end.getTime() <= start.getTime()) {
         end = new Date(start.getTime() + DEFAULT_EVENT_MINUTES * 60 * 1000)
       }
 
-      // Map the form's reminder rows to the events API: offset → minutes_before,
-      // channel → delivery method. Email reminders go to the event's attendees.
       const reminderInput = reminders.map((r) => ({
         minutes_before: offsetMinutes(r.offset),
         method: r.channel === 'email' ? 'email' : 'in_app',
       }))
+
+      const memberIds = participants
+        .filter((p) => p.kind === 'member')
+        .map((p) => p.id)
+      const clientIds = participants
+        .filter((p) => p.kind === 'client')
+        .map((p) => p.id)
 
       const base = {
         title: title.trim(),
@@ -126,6 +224,8 @@ export function useEventDialogForm({
         start_time: start.toISOString(),
         end_time: end.toISOString(),
         case_id: caseId || undefined,
+        attendee_member_ids: memberIds,
+        attendee_client_ids: clientIds,
         reminders: reminderInput,
       }
 
@@ -135,17 +235,16 @@ export function useEventDialogForm({
         await createMutation.mutateAsync({ ...base, event_type: 'meeting' })
       }
 
-      const reminderSummary = summariseReminders(reminders)
-      const participantSummary =
+      const bits = [
         participants.length > 0
-          ? `${participants.length} participant${participants.length === 1 ? '' : 's'} notified`
-          : null
-      const tail = [participantSummary, reminderSummary].filter(Boolean).join(' · ')
-      toast.success(
-        mode === 'edit'
-          ? `Event updated${tail ? '. ' + tail : '.'}`
-          : `Event saved${tail ? '. ' + tail : '.'}`,
-      )
+          ? `${participants.length} participant${participants.length === 1 ? '' : 's'}`
+          : null,
+        reminders.length > 0
+          ? `${reminders.length} reminder${reminders.length === 1 ? '' : 's'}`
+          : null,
+      ].filter(Boolean)
+      const tail = bits.length ? `. ${bits.join(' · ')}` : '.'
+      toast.success(mode === 'edit' ? `Event updated${tail}` : `Event saved${tail}`)
       onClose()
     } catch (err) {
       toast.error(
@@ -180,7 +279,6 @@ export function useEventDialogForm({
   const addReminder = () =>
     setReminders((prev) => [
       ...prev,
-      // Default new reminders to "15 minutes before, push" — the common case.
       { id: newReminderId(), offset: '15m', channel: 'push', emails: '' },
     ])
 
