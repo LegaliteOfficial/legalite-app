@@ -22,6 +22,19 @@ export const AttachmentDownloadUrlQueryDoc = graphql(/* GraphQL */ `
   }
 `)
 
+// Get a one-time signed upload target (service-role authorised) so the browser
+// can upload to private Storage without a Supabase session — avoids the storage
+// RLS policy entirely.
+export const CreateAttachmentUploadUrlMutationDoc = graphql(/* GraphQL */ `
+  mutation CreateAttachmentUploadUrl($input: CreateAttachmentUploadUrlInput!) {
+    createAttachmentUploadUrl(input: $input) {
+      path
+      token
+      signed_url
+    }
+  }
+`)
+
 export const CreateAttachmentMutationDoc = graphql(/* GraphQL */ `
   mutation CreateAttachment($input: CreateAttachmentInput!) {
     createAttachment(input: $input) {

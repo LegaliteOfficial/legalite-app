@@ -298,3 +298,58 @@ export const CaseFieldsFragmentDoc = graphql(/* GraphQL */ `
   }
 `)
 
+
+/** Calendar event attendee (flattened member display fields + RSVP). */
+export const EventAttendeeFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment EventAttendeeFields on EventAttendee {
+    id
+    event_id
+    member_id
+    response
+    name
+    professional_title
+    avatar_url
+  }
+`)
+
+/** A reminder scheduled against an event. */
+export const EventReminderFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment EventReminderFields on EventReminder {
+    id
+    event_id
+    minutes_before
+    method
+    remind_at
+    status
+    sent_at
+  }
+`)
+
+/** Calendar event with its attendees + reminders + context labels. */
+export const CalendarEventFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment CalendarEventFields on CalendarEvent {
+    id
+    firm_id
+    created_by
+    case_id
+    client_id
+    title
+    description
+    location
+    event_type
+    status
+    start_time
+    end_time
+    all_day
+    case_title
+    client_name
+    attendees {
+      ...EventAttendeeFields
+    }
+    reminders {
+      ...EventReminderFields
+    }
+    created_at
+    updated_at
+  }
+`)

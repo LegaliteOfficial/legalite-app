@@ -1,22 +1,25 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Paperclip, Upload, Download, Trash2, FileText } from 'lucide-react'
+import { Download, Eye, Paperclip, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Spinner } from '@/components/shared/Spinner'
+import { AttachmentPreviewDialog } from '@/components/shared/AttachmentPreviewDialog'
 import {
   useAttachments,
-  useUploadAttachment,
-  useDeleteAttachment,
   useAttachmentDownload,
-  type EntityType,
+  useDeleteAttachment,
+  useUploadAttachment,
   type Attachment,
+  type EntityType,
 } from '@/hooks/use-attachments'
+import { getFileKind, iconForKind } from '@/lib/attachments/file-kind'
 
 /**
  * Reusable files panel for a client or case detail view. Uploads stream
- * straight to private Supabase Storage; the list + signed-URL downloads come
- * over GraphQL. Drop it in with `<AttachmentsPanel entityType="case" entityId={id} />`.
+ * straight to private Supabase Storage; the list + signed-URL downloads
+ * come over GraphQL. Drop it in with
+ * `<AttachmentsPanel entityType="case" entityId={id} />`.
  */
 export function AttachmentsPanel({
   entityType,
@@ -31,6 +34,7 @@ export function AttachmentsPanel({
   const download = useAttachmentDownload()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
+  const [previewing, setPreviewing] = useState<Attachment | null>(null)
 
   const files = data ?? []
 
@@ -61,6 +65,8 @@ export function AttachmentsPanel({
     try {
       await remove.mutateAsync(a.id)
       toast.success(`Removed ${a.file_name}.`)
+      // If the deleted row is currently being previewed, close the dialog.
+      if (previewing?.id === a.id) setPreviewing(null)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not delete file.')
     }
@@ -69,7 +75,11 @@ export function AttachmentsPanel({
   return (
     <section
       className="rounded-2xl border p-6"
-      style={{ background: 'var(--cream-white)', borderColor: 'var(--border)', boxShadow: '0 4px 24px rgba(13,27,42,0.05)' }}
+      style={{
+        background: 'var(--cream-white)',
+        borderColor: 'var(--border)',
+        boxShadow: '0 4px 24px rgba(13,27,42,0.05)',
+      }}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -100,22 +110,16 @@ export function AttachmentsPanel({
         />
       </div>
 
-      {/* Drop zone */}
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+      <DropZone
+        dragging={dragging}
+        onDragOver={() => setDragging(true)}
         onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); void handleFiles(e.dataTransfer.files) }}
-        onClick={() => inputRef.current?.click()}
-        className="rounded-xl border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors mb-4"
-        style={{
-          borderColor: dragging ? 'var(--gold)' : 'var(--border)',
-          background: dragging ? 'rgba(201,151,43,0.06)' : 'transparent',
+        onDrop={(files) => {
+          setDragging(false)
+          void handleFiles(files)
         }}
-      >
-        <p className="text-[13px]" style={{ color: '#6B7280' }}>
-          Drag and drop files here, or <span className="font-semibold" style={{ color: 'var(--gold-dark)' }}>browse</span>.
-        </p>
-      </div>
+        onPick={() => inputRef.current?.click()}
+      />
 
       {isLoading ? (
         <div className="flex items-center gap-2 py-6 justify-center" style={{ color: '#6B7280' }}>
@@ -128,42 +132,141 @@ export function AttachmentsPanel({
       ) : (
         <ul className="divide-y" style={{ borderColor: 'var(--border)' }}>
           {files.map((a) => (
-            <li key={a.id} className="flex items-center gap-3 py-3">
-              <div
-                className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
-                style={{ background: 'rgba(13,27,42,0.06)' }}
-              >
-                <FileText size={16} strokeWidth={2} style={{ color: 'var(--navy)' }} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate" style={{ color: 'var(--navy)' }}>{a.file_name}</p>
-                <p className="text-[12px]" style={{ color: '#9CA3AF' }}>
-                  {formatBytes(a.file_size)} · {formatDate(a.created_at)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleDownload(a)}
-                aria-label={`Download ${a.file_name}`}
-                className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:bg-black/[0.04]"
-                style={{ color: 'var(--navy)' }}
-              >
-                <Download size={15} strokeWidth={2} />
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleDelete(a)}
-                aria-label={`Delete ${a.file_name}`}
-                className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:bg-black/[0.04]"
-                style={{ color: '#B91C1C' }}
-              >
-                <Trash2 size={15} strokeWidth={2} />
-              </button>
-            </li>
+            <AttachmentRow
+              key={a.id}
+              attachment={a}
+              onPreview={() => setPreviewing(a)}
+              onDownload={() => void handleDownload(a)}
+              onDelete={() => void handleDelete(a)}
+            />
           ))}
         </ul>
       )}
+
+      <AttachmentPreviewDialog
+        attachment={previewing}
+        open={previewing !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviewing(null)
+        }}
+        getUrl={download.getUrl}
+        onDownload={(a) => void handleDownload(a)}
+      />
     </section>
+  )
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────
+
+function DropZone({
+  dragging,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onPick,
+}: {
+  dragging: boolean
+  onDragOver: () => void
+  onDragLeave: () => void
+  onDrop: (files: FileList) => void
+  onPick: () => void
+}) {
+  return (
+    <div
+      onDragOver={(e) => { e.preventDefault(); onDragOver() }}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => { e.preventDefault(); onDrop(e.dataTransfer.files) }}
+      onClick={onPick}
+      className="rounded-xl border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors mb-4"
+      style={{
+        borderColor: dragging ? 'var(--gold)' : 'var(--border)',
+        background: dragging ? 'rgba(201,151,43,0.06)' : 'transparent',
+      }}
+    >
+      <p className="text-[13px]" style={{ color: '#6B7280' }}>
+        Drag and drop files here, or <span className="font-semibold" style={{ color: 'var(--gold-dark)' }}>browse</span>.
+      </p>
+    </div>
+  )
+}
+
+function AttachmentRow({
+  attachment,
+  onPreview,
+  onDownload,
+  onDelete,
+}: {
+  attachment: Attachment
+  onPreview: () => void
+  onDownload: () => void
+  onDelete: () => void
+}) {
+  const kind = getFileKind(attachment.file_name, attachment.file_type)
+  const Icon = iconForKind(kind)
+  return (
+    <li
+      onClick={onPreview}
+      className="group flex items-center gap-3 py-3 cursor-pointer transition-colors rounded-lg px-2 -mx-2 hover:bg-black/[0.02]"
+    >
+      <div
+        className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
+        style={{ background: 'rgba(13,27,42,0.06)' }}
+      >
+        <Icon size={16} strokeWidth={2} style={{ color: 'var(--navy)' }} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold truncate" style={{ color: 'var(--navy)' }}>
+          {attachment.file_name}
+        </p>
+        <p className="text-[12px]" style={{ color: '#9CA3AF' }}>
+          {formatBytes(attachment.file_size)} · {formatDate(attachment.created_at)}
+        </p>
+      </div>
+      <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+        <RowButton
+          icon={<Eye size={15} strokeWidth={2} />}
+          color="var(--navy)"
+          ariaLabel={`Preview ${attachment.file_name}`}
+          onClick={onPreview}
+        />
+        <RowButton
+          icon={<Download size={15} strokeWidth={2} />}
+          color="var(--navy)"
+          ariaLabel={`Download ${attachment.file_name}`}
+          onClick={onDownload}
+        />
+        <RowButton
+          icon={<Trash2 size={15} strokeWidth={2} />}
+          color="#B91C1C"
+          ariaLabel={`Delete ${attachment.file_name}`}
+          onClick={onDelete}
+        />
+      </div>
+    </li>
+  )
+}
+
+function RowButton({
+  icon,
+  color,
+  ariaLabel,
+  onClick,
+}: {
+  icon: React.ReactNode
+  color: string
+  ariaLabel: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:bg-black/[0.04]"
+      style={{ color }}
+    >
+      {icon}
+    </button>
   )
 }
 

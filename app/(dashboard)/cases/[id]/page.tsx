@@ -33,7 +33,8 @@ import { StartTimerDialog } from '@/components/shared/StartTimerDialog'
 import { useCase, useDeleteCase, useUpdateCase } from '@/hooks/use-cases'
 import { useClients } from '@/hooks/use-clients'
 import { useDocuments } from '@/hooks/use-documents'
-import { useDeadlines } from '@/hooks/use-deadlines'
+import { useCalendarEvents } from '@/hooks/use-calendar'
+import { eventToDeadline } from '../../calendar/_lib/adapt'
 import { AttachmentsPanel } from '@/components/shared/AttachmentsPanel'
 import type { CaseStatus, Client } from '@/types'
 
@@ -90,7 +91,11 @@ export default function CaseDetailPage({
   const { data: kase, isLoading, error } = useCase(id)
   const { data: clients } = useClients()
   const { data: documents } = useDocuments()
-  const { data: deadlines, refetch: refetchDeadlines } = useDeadlines()
+  const { data: calendarEvents, refetch: refetchDeadlines } = useCalendarEvents()
+  const deadlines = useMemo(
+    () => calendarEvents?.map(eventToDeadline),
+    [calendarEvents],
+  )
   const updateMutation = useUpdateCase()
   const deleteMutation = useDeleteCase()
 

@@ -27,6 +27,9 @@ type Documents = {
     "\n  fragment MessageFields on Message {\n    id\n    user_id\n    client_id\n    subject\n    body\n    channel\n    direction\n    status\n    client_name\n    created_at\n    updated_at\n  }\n": typeof types.MessageFieldsFragmentDoc,
     "\n  fragment DocumentFields on Document {\n    id\n    user_id\n    case_id\n    client_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    created_at\n    updated_at\n  }\n": typeof types.DocumentFieldsFragmentDoc,
     "\n  fragment CaseFields on Case {\n    id\n    firm_id\n    user_id\n    client_id\n    case_code\n    title\n    court\n    suit_number\n    opposing_party\n    case_type\n    case_stage\n    assigned_lawyer\n    originating_lawyer\n    status\n    date_opened\n    next_court_date\n    closed_at\n    pending_at\n    notification_count\n    description\n    details\n    notes\n    client_name\n    created_at\n    updated_at\n  }\n": typeof types.CaseFieldsFragmentDoc,
+    "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    member_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n": typeof types.EventAttendeeFieldsFragmentDoc,
+    "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": typeof types.EventReminderFieldsFragmentDoc,
+    "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n": typeof types.CalendarEventFieldsFragmentDoc,
     "\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n": typeof types.AiConversationsDocument,
     "\n  query AiConversation($id: ID!) {\n    aiConversation(id: $id) {\n      id\n      title\n      created_at\n      updated_at\n      messages {\n        id\n        role\n        content\n        sources\n        created_at\n      }\n    }\n  }\n": typeof types.AiConversationDocument,
     "\n  mutation AiChat($input: AiChatInput!) {\n    aiChat(input: $input) {\n      response\n      conversation_id\n      sources {\n        id\n        title\n        content\n        similarity\n      }\n    }\n  }\n": typeof types.AiChatDocument,
@@ -37,6 +40,7 @@ type Documents = {
     "\n  mutation SetCaseAssignments($input: SetCaseAssignmentsInput!) {\n    setCaseAssignments(input: $input) {\n      id\n      case_id\n      member_id\n      assignment_role\n      name\n      professional_title\n      avatar_url\n    }\n  }\n": typeof types.SetCaseAssignmentsDocument,
     "\n  query Attachments($entity_type: String!, $entity_id: ID!) {\n    attachments(entity_type: $entity_type, entity_id: $entity_id) {\n      ...AttachmentFields\n    }\n  }\n": typeof types.AttachmentsDocument,
     "\n  query AttachmentDownloadUrl($id: ID!) {\n    attachmentDownloadUrl(id: $id) {\n      url\n    }\n  }\n": typeof types.AttachmentDownloadUrlDocument,
+    "\n  mutation CreateAttachmentUploadUrl($input: CreateAttachmentUploadUrlInput!) {\n    createAttachmentUploadUrl(input: $input) {\n      path\n      token\n      signed_url\n    }\n  }\n": typeof types.CreateAttachmentUploadUrlDocument,
     "\n  mutation CreateAttachment($input: CreateAttachmentInput!) {\n    createAttachment(input: $input) {\n      ...AttachmentFields\n    }\n  }\n": typeof types.CreateAttachmentDocument,
     "\n  mutation DeleteAttachment($id: ID!) {\n    deleteAttachment(id: $id)\n  }\n": typeof types.DeleteAttachmentDocument,
     "\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.LoginDocument,
@@ -45,6 +49,12 @@ type Documents = {
     "\n  mutation GoogleAuth($input: GoogleAuthInput!) {\n    googleAuth(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.GoogleAuthDocument,
     "\n  mutation SwitchFirm($input: SwitchFirmInput!) {\n    switchFirm(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.SwitchFirmDocument,
     "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n": typeof types.MeDocument,
+    "\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CalendarEventsDocument,
+    "\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CalendarEventDocument,
+    "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CreateCalendarEventDocument,
+    "\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.UpdateCalendarEventDocument,
+    "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n": typeof types.DeleteCalendarEventDocument,
+    "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.RespondToEventDocument,
     "\n  query Cases {\n    cases {\n      ...CaseFields\n    }\n  }\n": typeof types.CasesDocument,
     "\n  query Case($id: ID!) {\n    case(id: $id) {\n      ...CaseFields\n    }\n  }\n": typeof types.CaseDocument,
     "\n  mutation CreateCase($input: CreateCaseInput!) {\n    createCase(input: $input) {\n      ...CaseFields\n    }\n  }\n": typeof types.CreateCaseDocument,
@@ -129,6 +139,9 @@ const documents: Documents = {
     "\n  fragment MessageFields on Message {\n    id\n    user_id\n    client_id\n    subject\n    body\n    channel\n    direction\n    status\n    client_name\n    created_at\n    updated_at\n  }\n": types.MessageFieldsFragmentDoc,
     "\n  fragment DocumentFields on Document {\n    id\n    user_id\n    case_id\n    client_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    created_at\n    updated_at\n  }\n": types.DocumentFieldsFragmentDoc,
     "\n  fragment CaseFields on Case {\n    id\n    firm_id\n    user_id\n    client_id\n    case_code\n    title\n    court\n    suit_number\n    opposing_party\n    case_type\n    case_stage\n    assigned_lawyer\n    originating_lawyer\n    status\n    date_opened\n    next_court_date\n    closed_at\n    pending_at\n    notification_count\n    description\n    details\n    notes\n    client_name\n    created_at\n    updated_at\n  }\n": types.CaseFieldsFragmentDoc,
+    "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    member_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n": types.EventAttendeeFieldsFragmentDoc,
+    "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": types.EventReminderFieldsFragmentDoc,
+    "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n": types.CalendarEventFieldsFragmentDoc,
     "\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n": types.AiConversationsDocument,
     "\n  query AiConversation($id: ID!) {\n    aiConversation(id: $id) {\n      id\n      title\n      created_at\n      updated_at\n      messages {\n        id\n        role\n        content\n        sources\n        created_at\n      }\n    }\n  }\n": types.AiConversationDocument,
     "\n  mutation AiChat($input: AiChatInput!) {\n    aiChat(input: $input) {\n      response\n      conversation_id\n      sources {\n        id\n        title\n        content\n        similarity\n      }\n    }\n  }\n": types.AiChatDocument,
@@ -139,6 +152,7 @@ const documents: Documents = {
     "\n  mutation SetCaseAssignments($input: SetCaseAssignmentsInput!) {\n    setCaseAssignments(input: $input) {\n      id\n      case_id\n      member_id\n      assignment_role\n      name\n      professional_title\n      avatar_url\n    }\n  }\n": types.SetCaseAssignmentsDocument,
     "\n  query Attachments($entity_type: String!, $entity_id: ID!) {\n    attachments(entity_type: $entity_type, entity_id: $entity_id) {\n      ...AttachmentFields\n    }\n  }\n": types.AttachmentsDocument,
     "\n  query AttachmentDownloadUrl($id: ID!) {\n    attachmentDownloadUrl(id: $id) {\n      url\n    }\n  }\n": types.AttachmentDownloadUrlDocument,
+    "\n  mutation CreateAttachmentUploadUrl($input: CreateAttachmentUploadUrlInput!) {\n    createAttachmentUploadUrl(input: $input) {\n      path\n      token\n      signed_url\n    }\n  }\n": types.CreateAttachmentUploadUrlDocument,
     "\n  mutation CreateAttachment($input: CreateAttachmentInput!) {\n    createAttachment(input: $input) {\n      ...AttachmentFields\n    }\n  }\n": types.CreateAttachmentDocument,
     "\n  mutation DeleteAttachment($id: ID!) {\n    deleteAttachment(id: $id)\n  }\n": types.DeleteAttachmentDocument,
     "\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.LoginDocument,
@@ -147,6 +161,12 @@ const documents: Documents = {
     "\n  mutation GoogleAuth($input: GoogleAuthInput!) {\n    googleAuth(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.GoogleAuthDocument,
     "\n  mutation SwitchFirm($input: SwitchFirmInput!) {\n    switchFirm(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.SwitchFirmDocument,
     "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n": types.MeDocument,
+    "\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n": types.CalendarEventsDocument,
+    "\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n": types.CalendarEventDocument,
+    "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.CreateCalendarEventDocument,
+    "\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.UpdateCalendarEventDocument,
+    "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n": types.DeleteCalendarEventDocument,
+    "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.RespondToEventDocument,
     "\n  query Cases {\n    cases {\n      ...CaseFields\n    }\n  }\n": types.CasesDocument,
     "\n  query Case($id: ID!) {\n    case(id: $id) {\n      ...CaseFields\n    }\n  }\n": types.CaseDocument,
     "\n  mutation CreateCase($input: CreateCaseInput!) {\n    createCase(input: $input) {\n      ...CaseFields\n    }\n  }\n": types.CreateCaseDocument,
@@ -287,6 +307,18 @@ export function graphql(source: "\n  fragment CaseFields on Case {\n    id\n    
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    member_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n"): (typeof documents)["\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    member_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n"): (typeof documents)["\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -327,6 +359,10 @@ export function graphql(source: "\n  query AttachmentDownloadUrl($id: ID!) {\n  
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation CreateAttachmentUploadUrl($input: CreateAttachmentUploadUrlInput!) {\n    createAttachmentUploadUrl(input: $input) {\n      path\n      token\n      signed_url\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAttachmentUploadUrl($input: CreateAttachmentUploadUrlInput!) {\n    createAttachmentUploadUrl(input: $input) {\n      path\n      token\n      signed_url\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation CreateAttachment($input: CreateAttachmentInput!) {\n    createAttachment(input: $input) {\n      ...AttachmentFields\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAttachment($input: CreateAttachmentInput!) {\n    createAttachment(input: $input) {\n      ...AttachmentFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -356,6 +392,30 @@ export function graphql(source: "\n  mutation SwitchFirm($input: SwitchFirmInput
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n"): (typeof documents)["\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

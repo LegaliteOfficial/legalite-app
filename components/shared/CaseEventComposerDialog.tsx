@@ -41,7 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useCreateDeadline } from '@/hooks/use-deadlines'
+import { useCreateCalendarEvent } from '@/hooks/use-calendar'
 
 type Priority = 'High' | 'Medium' | 'Low'
 
@@ -95,7 +95,7 @@ export function CaseEventComposerDialog({
   caseTitle,
   onSaved,
 }: CaseEventComposerDialogProps) {
-  const createMutation = useCreateDeadline()
+  const createMutation = useCreateCalendarEvent()
 
   const [title, setTitle] = useState('')
   const [date, setDate] = useState('')
@@ -126,18 +126,16 @@ export function CaseEventComposerDialog({
     setSubmitting(true)
     try {
       const t = time || '09:00'
-      const due_date = new Date(`${date}T${t}:00`).toISOString()
+      const start = new Date(`${date}T${t}:00`)
       await createMutation.mutateAsync({
         title: title.trim(),
-        description: description.trim() || null,
-        due_date,
-        priority,
-        status: 'Pending',
+        description: description.trim() || undefined,
+        start_time: start.toISOString(),
+        end_time: new Date(start.getTime() + 60 * 60 * 1000).toISOString(),
+        event_type: 'meeting',
         // Pre-link the event to this case.
         case_id: caseId,
-        // No reminder by default — the user can set one via the
-        // calendar page once the event surfaces there.
-        reminder_days: null,
+        // No reminder by default — the user can add one via the calendar.
       })
       toast.success(
         `Added "${title.trim()}" to ${caseTitle || 'the case'}.`,

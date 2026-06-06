@@ -3,6 +3,7 @@ import { NavigationProgress } from '@/components/shared/NavigationProgress'
 import { AuthGuard } from '@/components/shared/AuthGuard'
 import { PriorityRemindersBoot } from '@/components/shared/PriorityRemindersBoot'
 import { TimeTrackerBoot } from '@/components/shared/TimeTrackerBoot'
+import { EventNoticeBanner } from '@/components/shared/EventNoticeBanner'
 
 export default function DashboardLayout({
   children,
@@ -47,6 +48,8 @@ export default function DashboardLayout({
               zoom: 1.1,
             }}
           >
+            {/* Global notice: prompts when a calendar event is now / imminent. */}
+            <EventNoticeBanner />
             {children}
           </main>
         </div>

@@ -5,10 +5,10 @@ import {
   AttachmentsQueryDoc,
   AttachmentDownloadUrlQueryDoc,
   CreateAttachmentMutationDoc,
+  CreateAttachmentUploadUrlMutationDoc,
   DeleteAttachmentMutationDoc,
 } from '@/lib/graphql/attachments'
 import type { AttachmentsQuery } from '@/types/generated/graphql'
-import { useAuthStore } from '@/stores/auth.store'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 const BUCKET = 'attachments'
@@ -31,24 +31,19 @@ export function useAttachments(entityType: EntityType, entityId?: string) {
 }
 
 /**
- * Upload a file for a client or case: bytes go straight to the private
- * Supabase Storage bucket (namespaced by firm/entity), then the metadata row
- * is recorded over GraphQL. Mirrors useUploadLibraryFile. Returns the created
+ * Upload a file for a client or case. The app authenticates with its own JWT
+ * (no Supabase session), so the browser can't write to the private bucket
+ * directly — Storage RLS would reject it. Instead the backend (service role)
+ * issues a one-time signed upload URL; the browser streams the bytes to it,
+ * then the metadata row is recorded over GraphQL. Returns the created
  * Attachment so the caller can optimistically prepend it.
  *
- * Lazy Supabase init
- * ------------------
- * The Supabase client used to be constructed at hook-call time, which
- * meant any page mounting <AttachmentsPanel/> (case detail, client
- * detail, etc.) crashed instantly in any environment missing
- * `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — most
- * notably DEV_BYPASS mode with no backend reachable. Now we build the
- * client *inside* `mutateAsync` so the page renders fine and the
- * Supabase env requirement only surfaces when the partner actually
- * tries to upload.
+ * The Supabase client is built lazily inside `mutateAsync` so pages mounting
+ * <AttachmentsPanel/> render fine even when the Supabase env vars are absent
+ * (e.g. DEV_BYPASS) — the requirement only surfaces on an actual upload.
  */
 export function useUploadAttachment() {
-  const activeMembership = useAuthStore((s) => s.activeMembership)
+  const [createUploadUrl] = useMutation(CreateAttachmentUploadUrlMutationDoc)
   const [createAttachment] = useMutation(CreateAttachmentMutationDoc, {
     refetchQueries: [AttachmentsQueryDoc],
   })
@@ -65,11 +60,6 @@ export function useUploadAttachment() {
       entityType: EntityType
       entityId: string
     }) => {
-      // Short-circuit in DEV_BYPASS mode — there's no real storage
-      // backend to write to, so swap a clear thrown error for the
-      // obscure "@supabase/ssr: Your project's URL and API key are
-      // required" message that would otherwise blow up if env vars
-      // are missing.
       if (DEV_BYPASS) {
         throw new Error(
           'File uploads are disabled in dev bypass mode. Connect a Supabase project to enable them.',
@@ -82,24 +72,38 @@ export function useUploadAttachment() {
           'Supabase project URL / anon key are not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY before uploading.',
         )
       }
-      const supabase = createBrowserClient(url, anonKey)
 
       setIsPending(true)
       try {
-        const firmId = activeMembership?.firm_id ?? 'no-firm'
-        const safeName = file.name.replace(/[^\w.\-]+/g, '_')
-        const path = `${firmId}/${entityType}/${entityId}/${Date.now()}_${safeName}`
-        const { data, error } = await supabase.storage
+        // 1) Ask the backend (service role) for a signed upload target.
+        const target = await createUploadUrl({
+          variables: {
+            input: {
+              entity_type: entityType,
+              entity_id: entityId,
+              file_name: file.name,
+            },
+          },
+        })
+        const upload = target.data?.createAttachmentUploadUrl
+        if (!upload) throw new Error('Could not start the upload. Please try again.')
+
+        // 2) Stream the bytes to the signed URL — no Storage RLS involved.
+        const supabase = createBrowserClient(url, anonKey)
+        const { error } = await supabase.storage
           .from(BUCKET)
-          .upload(path, file, { cacheControl: '3600', upsert: false })
+          .uploadToSignedUrl(upload.path, upload.token, file, {
+            contentType: file.type || undefined,
+          })
         if (error) throw new Error(`Upload failed: ${error.message}`)
 
+        // 3) Record the metadata row.
         const res = await createAttachment({
           variables: {
             input: {
               entity_type: entityType,
               entity_id: entityId,
-              storage_path: data.path,
+              storage_path: upload.path,
               file_name: file.name,
               file_type: file.type || null,
               file_size: file.size,
