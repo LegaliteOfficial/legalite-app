@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Download, Eye, Paperclip, Trash2, Upload } from 'lucide-react'
+import { DownloadSimple, Eye, Paperclip, Trash, UploadSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Spinner } from '@/components/shared/Spinner'
 import { AttachmentPreviewDialog } from '@/components/shared/AttachmentPreviewDialog'
@@ -98,7 +98,7 @@ export function AttachmentsPanel({
           className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           style={{ background: 'linear-gradient(135deg, #C9972B 0%, #B8860B 100%)' }}
         >
-          {upload.isPending ? <Spinner size={14} /> : <Upload size={14} strokeWidth={2.5} />}
+          {upload.isPending ? <Spinner size={14} /> : <UploadSimple size={14} strokeWidth={2.5} />}
           {upload.isPending ? 'Uploading…' : 'Upload'}
         </button>
         <input
@@ -230,13 +230,13 @@ function AttachmentRow({
           onClick={onPreview}
         />
         <RowButton
-          icon={<Download size={15} strokeWidth={2} />}
+          icon={<DownloadSimple size={15} strokeWidth={2} />}
           color="var(--navy)"
-          ariaLabel={`Download ${attachment.file_name}`}
+          ariaLabel={`DownloadSimple ${attachment.file_name}`}
           onClick={onDownload}
         />
         <RowButton
-          icon={<Trash2 size={15} strokeWidth={2} />}
+          icon={<Trash size={15} strokeWidth={2} />}
           color="#B91C1C"
           ariaLabel={`Delete ${attachment.file_name}`}
           onClick={onDelete}

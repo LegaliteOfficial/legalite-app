@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
-import { Check, Pencil, Plus, Tag as TagIcon, Trash2, X } from 'lucide-react'
+import { Check, Pencil, Plus, Tag as TagIcon, Trash, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -279,7 +279,7 @@ export function TagSettingsDialog({
                             }}
                             aria-label={`Delete tag ${tag.name}`}
                           >
-                            <Trash2 size={13} strokeWidth={1.75} />
+                            <Trash size={13} strokeWidth={1.75} />
                           </button>
                         </>
                       )}

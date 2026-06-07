@@ -18,7 +18,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Sparkles, Star, X } from 'lucide-react'
+import { Sparkle, Star, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth.store'
 import {
@@ -106,7 +106,7 @@ export function BillingPrioritySuggestions() {
     const cutCount = Math.max(1, Math.ceil(ranked.length * TOP_PERCENTILE))
     const topSlice = ranked.slice(0, cutCount)
 
-    // 3. Filter out anyone already flagged (any level) or anyone
+    // 3. Funnel out anyone already flagged (any level) or anyone
     //    the user has dismissed in this window.
     const records = usePriorityStore.getState().records
     return topSlice
@@ -162,7 +162,7 @@ export function BillingPrioritySuggestions() {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2 min-w-0">
-          <Sparkles
+          <Sparkle
             size={16}
             strokeWidth={1.75}
             className="mt-0.5 shrink-0"

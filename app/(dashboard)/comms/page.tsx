@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { MessageSquare, Plus, Mail, Phone, Send, Trash2, Search } from 'lucide-react'
+import { ChatCircle, Plus, Envelope, Phone, PaperPlaneTilt, Trash, MagnifyingGlass } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,11 +23,11 @@ import { toast } from 'sonner'
 
 type ChannelFilter = 'all' | 'email' | 'sms' | 'whatsapp' | 'in_app'
 
-const CHANNEL_ICONS: Record<string, typeof Mail> = {
-  email: Mail,
+const CHANNEL_ICONS: Record<string, typeof Envelope> = {
+  email: Envelope,
   sms: Phone,
-  whatsapp: MessageSquare,
-  in_app: Send,
+  whatsapp: ChatCircle,
+  in_app: PaperPlaneTilt,
 }
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -115,7 +115,7 @@ export default function CommsPage() {
           actions={
             <>
               <div className="relative w-56">
-                <Search
+                <MagnifyingGlass
                   size={14}
                   strokeWidth={1.75}
                   className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -176,7 +176,7 @@ export default function CommsPage() {
                 className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full"
                 style={{ background: 'var(--surface-sunken)' }}
               >
-                <MessageSquare size={18} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+                <ChatCircle size={18} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
               </div>
               <p className="text-[13.5px] font-medium" style={{ color: 'var(--text-primary)' }}>
                 No messages found
@@ -196,7 +196,7 @@ export default function CommsPage() {
             >
               <ul className="divide-y" style={{ borderColor: 'var(--border-soft)' }}>
                 {filtered.map((msg) => {
-                  const Icon = CHANNEL_ICONS[msg.channel] ?? Mail
+                  const Icon = CHANNEL_ICONS[msg.channel] ?? Envelope
                   return (
                     <li
                       key={msg.id}
@@ -259,7 +259,7 @@ export default function CommsPage() {
                           onClick={() => deleteMutation.mutate(msg.id)}
                           aria-label="Delete message"
                         >
-                          <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
+                          <Trash size={13} style={{ color: 'var(--text-muted)' }} />
                         </Button>
                       </div>
                     </li>
@@ -318,7 +318,7 @@ export default function CommsPage() {
                         {selected.full_name}
                       </p>
                       <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                        {selected.email && <span className="flex items-center gap-1"><Mail size={9} /> {selected.email}</span>}
+                        {selected.email && <span className="flex items-center gap-1"><Envelope size={9} /> {selected.email}</span>}
                         {selected.phone && <span className="flex items-center gap-1"><Phone size={9} /> {selected.phone}</span>}
                       </div>
                     </div>

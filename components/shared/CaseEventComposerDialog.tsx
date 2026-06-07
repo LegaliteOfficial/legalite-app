@@ -28,7 +28,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

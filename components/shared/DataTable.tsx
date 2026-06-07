@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
+import { CaretLeft, CaretRight, Tray } from '@phosphor-icons/react'
 import {
   Table,
   TableBody,
@@ -52,7 +52,7 @@ export function DataTable<T extends { id: string }>({
           className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full"
           style={{ background: 'var(--surface-sunken)' }}
         >
-          <Inbox size={18} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+          <Tray size={18} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
         </div>
         <p className="text-[13.5px] font-medium" style={{ color: 'var(--text-primary)' }}>
           {emptyMessage}
@@ -144,7 +144,7 @@ export function DataTable<T extends { id: string }>({
               onClick={() => setPage((p) => p - 1)}
               ariaLabel="Previous page"
             >
-              <ChevronLeft size={13} strokeWidth={1.75} />
+              <CaretLeft size={13} strokeWidth={1.75} />
             </PageButton>
             {Array.from({ length: totalPages }, (_, i) => (
               <PageButton
@@ -161,7 +161,7 @@ export function DataTable<T extends { id: string }>({
               onClick={() => setPage((p) => p + 1)}
               ariaLabel="Next page"
             >
-              <ChevronRight size={13} strokeWidth={1.75} />
+              <CaretRight size={13} strokeWidth={1.75} />
             </PageButton>
           </div>
         </div>

@@ -2,17 +2,7 @@
  * Static category metadata + tab list for the documents route.
  */
 
-import {
-  BookOpen,
-  Briefcase,
-  FileText,
-  Gavel,
-  Home,
-  LayoutGrid,
-  PenTool,
-  Scale,
-  Users,
-} from 'lucide-react'
+import { BookOpen, Briefcase, FileText, Gavel, House, SquaresFour, PencilLine, Scales, Users } from '@phosphor-icons/react'
 import type {
   Tab,
   TemplateCategory,
@@ -24,12 +14,12 @@ export { TABS, LIBRARY_CATEGORIES } from './_types'
 export type { Tab, LibraryCategory, TemplateCategory, TemplateCategoryColors, TemplateCategoryId } from './_types'
 
 export const CATEGORIES: TemplateCategory[] = [
-  { id: 'all', label: 'All Templates', icon: LayoutGrid },
-  { id: 'litigation', label: 'Litigation', icon: Scale },
+  { id: 'all', label: 'All Templates', icon: SquaresFour },
+  { id: 'litigation', label: 'Litigation', icon: Scales },
   { id: 'criminal', label: 'Criminal', icon: Gavel },
   { id: 'family', label: 'Family', icon: Users },
   { id: 'corporate', label: 'Corporate', icon: Briefcase },
-  { id: 'conveyancing', label: 'Conveyancing', icon: Home },
+  { id: 'conveyancing', label: 'Conveyancing', icon: House },
 ]
 
 /**
@@ -54,10 +44,10 @@ export const TAB_DESCRIPTORS: ReadonlyArray<{
   label: string
   icon: typeof FileText
 }> = [
-  { id: 'templates', label: 'Templates', icon: LayoutGrid },
+  { id: 'templates', label: 'Templates', icon: SquaresFour },
   { id: 'drafts',    label: 'Drafts',    icon: FileText },
   { id: 'library',   label: 'Library',   icon: BookOpen },
-  { id: 'editor',    label: 'Editor',    icon: PenTool },
+  { id: 'editor',    label: 'Editor',    icon: PencilLine },
 ]
 
 /** Per-library-category upload accept attribute. */

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Briefcase, ChevronDown, User, X } from 'lucide-react'
+import { Briefcase, CaretDown, User, X } from '@phosphor-icons/react'
 import { useFirmMembers } from '@/hooks/use-firm-members'
 import { useClients } from '@/hooks/use-clients'
 import type { Participant } from '../_constants'
@@ -101,7 +101,7 @@ export function ParticipantsPicker({
         ) : (
           value.map((p) => <Chip key={keyOf(p)} participant={p} onRemove={() => toggle(p)} />)
         )}
-        <ChevronDown size={13} strokeWidth={1.75} className="ml-auto" style={{ color: 'var(--text-muted)' }} />
+        <CaretDown size={13} strokeWidth={1.75} className="ml-auto" style={{ color: 'var(--text-muted)' }} />
       </div>
 
       {open && (

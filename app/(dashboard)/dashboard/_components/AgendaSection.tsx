@@ -15,7 +15,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowRight, CalendarDays, ListTodo, MapPin, Plus } from 'lucide-react'
+import { ArrowRight, CalendarBlank, ListChecks, MapPin, Plus } from '@phosphor-icons/react'
 import { Card } from '@/components/ui/card'
 import { useTasks } from '@/hooks/use-tasks'
 import { useCalendarEvents, EVENT_TYPES } from '@/hooks/use-calendar'
@@ -94,7 +94,7 @@ function TasksDueTodayCard() {
   return (
     <Card padding="none" className="overflow-hidden">
       <CardHead
-        Icon={ListTodo}
+        Icon={ListChecks}
         label="Tasks due today"
         count={today.length}
         href="/tasks"
@@ -185,7 +185,7 @@ function UpcomingEventsCard() {
   return (
     <Card padding="none" className="overflow-hidden">
       <CardHead
-        Icon={CalendarDays}
+        Icon={CalendarBlank}
         label="Upcoming events"
         count={upcoming.length}
         href="/calendar"
@@ -258,7 +258,7 @@ function CardHead({
   accent,
   rightSlot,
 }: {
-  Icon: typeof ListTodo
+  Icon: typeof ListChecks
   label: string
   count: number
   href: string

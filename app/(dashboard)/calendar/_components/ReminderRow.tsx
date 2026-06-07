@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, ChevronDown, Mail, X } from 'lucide-react'
+import { Bell, CaretDown, Envelope, X } from '@phosphor-icons/react'
 import {
   REMINDER_OFFSETS,
   type Reminder,
@@ -84,7 +84,7 @@ function OffsetSelect({
           <option key={o.key} value={o.key}>{o.label}</option>
         ))}
       </select>
-      <ChevronDown
+      <CaretDown
         size={12}
         strokeWidth={1.75}
         className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -128,7 +128,7 @@ function ChannelSegmented({
             {channel === 'push' ? (
               <Bell size={11} strokeWidth={1.75} />
             ) : (
-              <Mail size={11} strokeWidth={1.75} />
+              <Envelope size={11} strokeWidth={1.75} />
             )}
             {channel === 'push' ? 'In-app' : 'Email'}
           </button>

@@ -22,7 +22,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { Star, ArrowRight } from 'lucide-react'
+import { Star, ArrowRight } from '@phosphor-icons/react'
 import { Card, CardTitle } from '@/components/ui/card'
 import {
   usePriorityStore,

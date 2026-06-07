@@ -32,20 +32,7 @@
  */
 
 import { useMemo } from 'react'
-import {
-  AlertTriangle,
-  Bell,
-  Briefcase,
-  Calendar,
-  CheckCircle2,
-  CreditCard,
-  Edit3,
-  FileText,
-  Receipt,
-  Send,
-  Trash2,
-  Users,
-} from 'lucide-react'
+import { Warning, Bell, Briefcase, Calendar, CheckCircle, CreditCard, PencilSimple, FileText, Receipt, PaperPlaneTilt, Trash, Users } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -131,7 +118,7 @@ function fmtDateTime(iso: string): string {
 
 /**
  * Money formatter. Delegates to the firm-currency-aware helper so
- * switching the firm's billing currency in Settings flows through
+ * switching the firm's billing currency in Gear flows through
  * to every label inside the bill detail surface.
  */
 function fmtMoney(n: number): string {
@@ -265,7 +252,7 @@ export function BillDetailDialog({
               border: '1px solid rgba(192, 57, 43, 0.25)',
             }}
           >
-            <AlertTriangle
+            <Warning
               size={14}
               strokeWidth={1.75}
               style={{ color: 'var(--accent-danger)' }}
@@ -624,7 +611,7 @@ export function BillDetailDialog({
                 }}
                 style={{ background: 'var(--gold)', color: 'var(--navy)' }}
               >
-                <Send size={13} strokeWidth={1.75} />
+                <PaperPlaneTilt size={13} strokeWidth={1.75} />
                 Issue
               </Button>
             </>
@@ -637,7 +624,7 @@ export function BillDetailDialog({
               }}
               style={{ background: 'var(--gold)', color: 'var(--navy)' }}
             >
-              <Send size={13} strokeWidth={1.75} />
+              <PaperPlaneTilt size={13} strokeWidth={1.75} />
               Issue
             </Button>
           )}
@@ -674,7 +661,7 @@ export function BillDetailDialog({
           {liveBill.status !== 'Archived' && (
             <>
               <Button variant="outline" onClick={() => onEdit(liveBill)}>
-                <Edit3 size={13} strokeWidth={1.75} />
+                <PencilSimple size={13} strokeWidth={1.75} />
                 Edit
               </Button>
               <Button
@@ -686,7 +673,7 @@ export function BillDetailDialog({
                 }}
                 style={{ color: 'var(--accent-danger)' }}
               >
-                <Trash2 size={13} strokeWidth={1.75} />
+                <Trash size={13} strokeWidth={1.75} />
                 Archive
               </Button>
             </>
@@ -696,7 +683,7 @@ export function BillDetailDialog({
               className="inline-flex items-center gap-1 text-[12.5px]"
               style={{ color: '#2E7D4F' }}
             >
-              <CheckCircle2 size={13} strokeWidth={1.75} />
+              <CheckCircle size={13} strokeWidth={1.75} />
               Fully reconciled
             </span>
           )}

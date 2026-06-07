@@ -28,14 +28,14 @@
  * generated client-side from the in-memory deadlines and saved
  * via a Blob URL.
  *
- * Sharing / Settings / New Calendar tabs are not implemented yet
+ * Sharing / Gear / New Calendar tabs are not implemented yet
  * — clicking them surfaces a "coming soon" toast that points at
  * the right downstream surface, mirroring the More menu pattern.
  */
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Calendar as CalendarIcon, Copy, Download, Rss } from 'lucide-react'
+import { Calendar as CalendarIcon, Copy, DownloadSimple, RssSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useDeadlines } from '@/hooks/use-deadlines'
 import { useAuthStore } from '@/stores/auth.store'
@@ -142,7 +142,7 @@ export default function CalendarFeedsPage() {
     >
       {/* ─── Tab nav ───────────────────────────────────────────── */}
       {/* Horizontal tabs matching the reference layout: Calendar /
-          Feeds / Sharing / Settings / New Calendar. The active tab
+          Feeds / Sharing / Gear / New Calendar. The active tab
           gets a gold underline + bold heading colour; the others
           are muted and either link to the working route or toast. */}
       <div
@@ -297,7 +297,7 @@ function FeedRow({
           button at the end. Title-cased icon labels match the rest
           of the app's "icon + label" convention. */}
       <div className="mt-3 flex items-center gap-2 flex-wrap">
-        <Rss
+        <RssSimple
           size={14}
           strokeWidth={1.75}
           style={{ color: 'var(--text-muted)' }}
@@ -347,7 +347,7 @@ function FeedRow({
         </button>
       </div>
 
-      {/* Download row — fully working today; .ics is generated
+      {/* DownloadSimple row — fully working today; .ics is generated
           client-side from the cached deadlines. */}
       <div className="mt-2 flex items-center gap-2">
         <CalendarIcon
@@ -362,7 +362,7 @@ function FeedRow({
           className="inline-flex items-center gap-1.5 text-[13px] underline underline-offset-2 cursor-pointer"
           style={{ color: 'var(--gold-dark)' }}
         >
-          <Download size={13} strokeWidth={1.75} />
+          <DownloadSimple size={13} strokeWidth={1.75} />
           Download {title} as .ics
         </button>
       </div>

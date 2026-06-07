@@ -19,35 +19,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Bell,
-  Briefcase,
-  Building2,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  ChevronsUpDown,
-  ChevronUp,
-  Columns3,
-  Download,
-  FileText,
-  Filter,
-  Mail,
-  Pencil,
-  Phone,
-  Plus,
-  Receipt,
-  Search,
-  ShieldAlert,
-  Tag,
-  Trash2,
-  User,
-  UserRound,
-  Users,
-  X,
-} from 'lucide-react'
+import { Bell, Briefcase, Buildings, CaretDown, CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight, CaretUpDown, CaretUp, Columns, DownloadSimple, FileText, Funnel, Envelope, Pencil, Phone, Plus, Receipt, MagnifyingGlass, ShieldWarning, Tag, Trash, User, UserCircle, Users, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -87,9 +59,9 @@ interface ColumnDef {
   minWidth: number
   align?: 'left' | 'right'
   sortable?: boolean
-  sortValue?: (row: Contact) => string | number | null
-  render: (row: Contact, expanded: boolean) => React.ReactNode
-  csv?: (row: Contact) => string
+  sortValue?: (row: IdentificationCard) => string | number | null
+  render: (row: IdentificationCard, expanded: boolean) => React.ReactNode
+  csv?: (row: IdentificationCard) => string
 }
 
 /**
@@ -97,7 +69,7 @@ interface ColumnDef {
  * only fields (role pill text, contact category) computed from existing
  * columns. Lets the table render industry-standard without schema changes.
  */
-interface Contact extends Client {
+interface IdentificationCard extends Client {
   // Always "Person" today; gets real values once a `contact_type` column
   // ships on the backend.
   contact_category: 'person' | 'company'
@@ -123,13 +95,13 @@ const TYPE_FILTERS = [
   {
     id: 'people',
     label: 'People',
-    Icon: UserRound,
+    Icon: UserCircle,
     color: TYPE_BADGE_PEOPLE,
   },
   {
     id: 'companies',
     label: 'Companies',
-    Icon: Building2,
+    Icon: Buildings,
     color: TYPE_BADGE_COMPANIES,
   },
 ] as const
@@ -178,9 +150,9 @@ const COLUMNS: ColumnDef[] = [
             aria-hidden
           >
             {isCompany ? (
-              <Building2 size={13} strokeWidth={2} />
+              <Buildings size={13} strokeWidth={2} />
             ) : (
-              <UserRound size={13} strokeWidth={2} />
+              <UserCircle size={13} strokeWidth={2} />
             )}
           </span>
           <span
@@ -382,7 +354,7 @@ function csvEscape(value: string): string {
   return value
 }
 
-function exportToCsv(rows: Contact[], visibleColumnIds: ColumnId[]) {
+function exportToCsv(rows: IdentificationCard[], visibleColumnIds: ColumnId[]) {
   const visibleColumns = COLUMNS.filter((c) => visibleColumnIds.includes(c.id))
   const header = visibleColumns.map((c) => csvEscape(c.label)).join(',')
   const body = rows
@@ -464,7 +436,7 @@ export default function ContactsPage() {
   }, [typeFilter, search, pageSize, contactRoleFilter, contactTagsFilter])
 
   // Augment wire data with display fields.
-  const contacts = useMemo<Contact[]>(() => {
+  const contacts = useMemo<IdentificationCard[]>(() => {
     return (clients ?? []).map((c) => ({
       ...c,
       contact_category: 'person', // TODO: source from a future contact_type column
@@ -752,7 +724,7 @@ export default function ContactsPage() {
 
               <div className="flex items-center gap-2">
                 <div className="relative w-64">
-                  <Search
+                  <MagnifyingGlass
                     size={13}
                     strokeWidth={1.75}
                     className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -949,14 +921,14 @@ export default function ContactsPage() {
                     disabled={safePage === 0}
                     aria-label="First page"
                   >
-                    <ChevronsLeft size={14} strokeWidth={1.75} />
+                    <CaretDoubleLeft size={14} strokeWidth={1.75} />
                   </IconNav>
                   <IconNav
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={safePage === 0}
                     aria-label="Previous page"
                   >
-                    <ChevronLeft size={14} strokeWidth={1.75} />
+                    <CaretLeft size={14} strokeWidth={1.75} />
                   </IconNav>
                   <IconNav
                     onClick={() =>
@@ -965,14 +937,14 @@ export default function ContactsPage() {
                     disabled={safePage >= totalPages - 1}
                     aria-label="Next page"
                   >
-                    <ChevronRight size={14} strokeWidth={1.75} />
+                    <CaretRight size={14} strokeWidth={1.75} />
                   </IconNav>
                   <IconNav
                     onClick={() => setPage(totalPages - 1)}
                     disabled={safePage >= totalPages - 1}
                     aria-label="Last page"
                   >
-                    <ChevronsRight size={14} strokeWidth={1.75} />
+                    <CaretDoubleRight size={14} strokeWidth={1.75} />
                   </IconNav>
                   <span
                     className="ml-2 text-[12px] tabular-nums"
@@ -1005,7 +977,7 @@ export default function ContactsPage() {
                       )
                     }}
                   >
-                    <Download size={13} strokeWidth={1.75} />
+                    <DownloadSimple size={13} strokeWidth={1.75} />
                     Export
                   </Button>
                 </div>
@@ -1116,9 +1088,9 @@ function ColumnsPicker({
         size="sm"
         onClick={() => (open ? cancel() : openPopover())}
       >
-        <Columns3 size={13} strokeWidth={1.75} />
+        <Columns size={13} strokeWidth={1.75} />
         Columns
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -1211,7 +1183,7 @@ function ColumnsPicker({
                     color: 'var(--text-muted)',
                   }}
                 />
-                <ChevronDown
+                <CaretDown
                   size={12}
                   strokeWidth={1.75}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -1251,7 +1223,7 @@ function ColumnsPicker({
 
 /**
  * Filters popover — mirrors the reference contact filter dropdown. Three
- * sections (Contact type radio, Contact tags multi-picker, Custom
+ * sections (IdentificationCard type radio, IdentificationCard tags multi-picker, Custom
  * Fields stub) plus Apply / Clear actions in the footer.
  *
  * Uses the same staged-changes pattern as ColumnsPicker: edits live in
@@ -1351,7 +1323,7 @@ function FiltersPopover({
         size="sm"
         onClick={() => (open ? cancel() : openPopover())}
       >
-        <Filter size={13} strokeWidth={1.75} />
+        <Funnel size={13} strokeWidth={1.75} />
         Filters
         {activeFacetCount > 0 && (
           <span
@@ -1365,7 +1337,7 @@ function FiltersPopover({
             {activeFacetCount}
           </span>
         )}
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -1378,7 +1350,7 @@ function FiltersPopover({
           }}
         >
           <div className="p-4 space-y-5 max-h-[480px] overflow-y-auto">
-            {/* Contact type — two-option radio. Click the selected
+            {/* IdentificationCard type — two-option radio. Click the selected
                 option again to unset. */}
             <div>
               <div
@@ -1430,7 +1402,7 @@ function FiltersPopover({
               </div>
             </div>
 
-            {/* Contact tags — chip-style multi-picker with type-to-
+            {/* IdentificationCard tags — chip-style multi-picker with type-to-
                 search suggestions, identical pattern to the form's
                 Tags input. */}
             <div>
@@ -1577,7 +1549,7 @@ function PageSizeDropdown({
               color: 'var(--text-secondary)',
             }}
           >
-            {value} <ChevronDown size={11} strokeWidth={1.75} />
+            {value} <CaretDown size={11} strokeWidth={1.75} />
           </button>
         }
       />
@@ -1692,9 +1664,9 @@ function SortableHeader({
   }
   const Icon = active
     ? dir === 'asc'
-      ? ChevronUp
-      : ChevronDown
-    : ChevronsUpDown
+      ? CaretUp
+      : CaretDown
+    : CaretUpDown
   return (
     <button
       type="button"
@@ -1738,7 +1710,7 @@ function BulkActionsBar({
         className="text-white"
         style={{ background: '#C0392B' }}
       >
-        <Trash2 size={13} strokeWidth={1.75} />
+        <Trash size={13} strokeWidth={1.75} />
         Delete contact{count === 1 ? '' : 's'}
       </Button>
       <span
@@ -1779,7 +1751,7 @@ function ActionsCell({
   onEdit,
   onBill,
 }: {
-  row: Contact
+  row: IdentificationCard
   onEdit: () => void
   onBill: () => void
 }) {
@@ -1823,7 +1795,7 @@ function ActionsCell({
               }}
               aria-label={`More actions for ${row.full_name}`}
             >
-              <ChevronDown size={12} strokeWidth={1.75} />
+              <CaretDown size={12} strokeWidth={1.75} />
             </button>
           }
         />
@@ -1903,7 +1875,7 @@ function ConflictsPlaceholder() {
         className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
         style={{ background: 'var(--surface-sunken)' }}
       >
-        <ShieldAlert
+        <ShieldWarning
           size={22}
           strokeWidth={1.5}
           style={{ color: 'var(--text-muted)' }}
@@ -1919,7 +1891,7 @@ function ConflictsPlaceholder() {
         className="mt-1.5 text-[12.5px] max-w-md mx-auto"
         style={{ color: 'var(--text-muted)' }}
       >
-        Search past cases and contacts for potential conflicts before
+        MagnifyingGlass past cases and contacts for potential conflicts before
         opening a new matter.
       </p>
     </div>
@@ -1959,5 +1931,5 @@ function ErrorPanel({ onRetry }: { onRetry: () => void }) {
 // contacts with unread comms, briefcase for client-on-case shortcuts,
 // mail/phone iconography for densified rows). Imported up top so the
 // section additions stay one-line edits.
-const _reservedIcons = { Bell, Briefcase, FileText, Mail, Phone }
+const _reservedIcons = { Bell, Briefcase, FileText, Envelope, Phone }
 void _reservedIcons

@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Minus, Plus, Receipt } from 'lucide-react'
+import { Minus, Plus, Receipt } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {

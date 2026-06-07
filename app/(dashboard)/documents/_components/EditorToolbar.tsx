@@ -1,22 +1,6 @@
 'use client'
 
-import {
-  AlignCenter,
-  AlignJustify,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  Heading1,
-  Heading2,
-  Heading3,
-  Italic,
-  List,
-  ListOrdered,
-  Pilcrow,
-  Strikethrough,
-  Underline,
-} from 'lucide-react'
-
+import { TextAlignCenter, TextAlignJustify, TextAlignLeft, TextAlignRight, TextB, TextHOne, TextHTwo, TextHThree, TextItalic, List, ListNumbers, Paragraph, TextStrikethrough, TextUnderline } from '@phosphor-icons/react'
 /**
  * Formatting toolbar — sits between the editor header and the canvas.
  * Buttons fire `document.execCommand(...)` via the parent's `exec`
@@ -38,31 +22,31 @@ export function EditorToolbar({
     >
       <ToolbarGroup>
         <ToolbarBtn onClick={() => exec('bold')} title="Bold (⌘B)">
-          <Bold size={14} />
+          <TextB size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('italic')} title="Italic (⌘I)">
-          <Italic size={14} />
+          <TextItalic size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('underline')} title="Underline (⌘U)">
-          <Underline size={14} />
+          <TextUnderline size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('strikeThrough')} title="Strikethrough">
-          <Strikethrough size={14} />
+          <TextStrikethrough size={14} />
         </ToolbarBtn>
       </ToolbarGroup>
       <ToolbarDiv />
       <ToolbarGroup>
         <ToolbarBtn onClick={() => exec('formatBlock', 'p')} title="Paragraph">
-          <Pilcrow size={14} />
+          <Paragraph size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('formatBlock', 'h1')} title="Heading 1">
-          <Heading1 size={14} />
+          <TextHOne size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('formatBlock', 'h2')} title="Heading 2">
-          <Heading2 size={14} />
+          <TextHTwo size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('formatBlock', 'h3')} title="Heading 3">
-          <Heading3 size={14} />
+          <TextHThree size={14} />
         </ToolbarBtn>
       </ToolbarGroup>
       <ToolbarDiv />
@@ -71,22 +55,22 @@ export function EditorToolbar({
           <List size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('insertOrderedList')} title="Numbered list">
-          <ListOrdered size={14} />
+          <ListNumbers size={14} />
         </ToolbarBtn>
       </ToolbarGroup>
       <ToolbarDiv />
       <ToolbarGroup>
         <ToolbarBtn onClick={() => exec('justifyLeft')} title="Align left">
-          <AlignLeft size={14} />
+          <TextAlignLeft size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('justifyCenter')} title="Align center">
-          <AlignCenter size={14} />
+          <TextAlignCenter size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('justifyRight')} title="Align right">
-          <AlignRight size={14} />
+          <TextAlignRight size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec('justifyFull')} title="Justify">
-          <AlignJustify size={14} />
+          <TextAlignJustify size={14} />
         </ToolbarBtn>
       </ToolbarGroup>
     </div>

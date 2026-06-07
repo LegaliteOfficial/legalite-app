@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeSlash } from '@phosphor-icons/react'
 import { useLoginUser } from '@/hooks/use-auth'
 import { MeDocument } from '@/types/generated/graphql'
 
@@ -236,7 +236,7 @@ function LoginForm() {
                 style={{ color: 'rgba(255,255,255,0.35)' }}
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {errors.password && (

@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react'
+import { Bell } from '@phosphor-icons/react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import type { ColumnDef } from '../_types'
 import { formatDate } from './filters'

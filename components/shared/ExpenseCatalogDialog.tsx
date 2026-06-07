@@ -18,12 +18,12 @@
  *
  * Why a manage dialog instead of a settings page? The catalog is
  * intrinsically a billing concept; surfacing it next to "New bill"
- * keeps it discoverable. A future Settings -> Catalog screen can
+ * keeps it discoverable. A future Gear -> Catalog screen can
  * mount the same form.
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Archive, Check, Plus, Trash2 } from 'lucide-react'
+import { Archive, Check, Plus, Trash } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -473,7 +473,7 @@ export function ExpenseCatalogDialog({
                         color: 'var(--accent-danger)',
                       }}
                     >
-                      <Trash2 size={13} strokeWidth={1.75} />
+                      <Trash size={13} strokeWidth={1.75} />
                       Delete
                     </Button>
                   </div>

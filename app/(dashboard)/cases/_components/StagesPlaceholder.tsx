@@ -1,7 +1,6 @@
 'use client'
 
-import { Sparkles } from 'lucide-react'
-
+import { Sparkle } from '@phosphor-icons/react'
 export function StagesPlaceholder() {
   return (
     <div
@@ -16,7 +15,7 @@ export function StagesPlaceholder() {
         className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
         style={{ background: 'var(--surface-sunken)' }}
       >
-        <Sparkles size={22} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+        <Sparkle size={22} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
       </div>
       <p className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
         Stages admin is coming next

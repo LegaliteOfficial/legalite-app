@@ -1,17 +1,6 @@
 'use client'
 
-import {
-  Calendar as CalendarIcon,
-  CalendarPlus,
-  Check,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  MoreHorizontal,
-  Rss,
-  Settings,
-} from 'lucide-react'
+import { Calendar as CalendarIcon, CalendarPlus, Check, CaretDown, CaretLeft, CaretRight, Funnel, DotsThree, RssSimple, Gear } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -69,10 +58,10 @@ export function CalendarToolbar({
         </Button>
         <div className="inline-flex items-center">
           <ChevronButton onClick={() => onStep(-1)} ariaLabel={stepLabel.prev} side="left">
-            <ChevronLeft size={14} strokeWidth={1.75} />
+            <CaretLeft size={14} strokeWidth={1.75} />
           </ChevronButton>
           <ChevronButton onClick={() => onStep(1)} ariaLabel={stepLabel.next} side="right">
-            <ChevronRight size={14} strokeWidth={1.75} />
+            <CaretRight size={14} strokeWidth={1.75} />
           </ChevronButton>
         </div>
         <MonthPickerPopover
@@ -102,7 +91,7 @@ export function CalendarToolbar({
               >
                 <ViewIcon mode={view} />
                 {view}
-                <ChevronDown size={13} strokeWidth={1.75} />
+                <CaretDown size={13} strokeWidth={1.75} />
               </button>
             }
           />
@@ -142,7 +131,7 @@ export function CalendarToolbar({
                 }}
                 aria-label="Filter by event type"
               >
-                <Filter size={13} strokeWidth={1.75} />
+                <Funnel size={13} strokeWidth={1.75} />
                 Event Types
                 {visibleTypes.size < EVENT_TYPE_OPTIONS.length && (
                   <span
@@ -156,7 +145,7 @@ export function CalendarToolbar({
                     {EVENT_TYPE_OPTIONS.length - visibleTypes.size}
                   </span>
                 )}
-                <ChevronDown size={13} strokeWidth={1.75} />
+                <CaretDown size={13} strokeWidth={1.75} />
               </button>
             }
           />
@@ -207,9 +196,9 @@ export function CalendarToolbar({
                 }}
                 aria-label="More calendar actions"
               >
-                <MoreHorizontal size={13} strokeWidth={1.75} />
+                <DotsThree size={13} strokeWidth={1.75} />
                 More
-                <ChevronDown size={13} strokeWidth={1.75} />
+                <CaretDown size={13} strokeWidth={1.75} />
               </button>
             }
           />
@@ -225,14 +214,14 @@ export function CalendarToolbar({
               onClick={() => toast.info('Calendar settings open from Settings → Calendar.')}
               className="text-[13px] cursor-pointer"
             >
-              <Settings size={13} strokeWidth={1.75} />
+              <Gear size={13} strokeWidth={1.75} />
               Calendar settings
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={onCalendarFeeds}
               className="text-[13px] cursor-pointer"
             >
-              <Rss size={13} strokeWidth={1.75} />
+              <RssSimple size={13} strokeWidth={1.75} />
               Calendar feeds
             </DropdownMenuItem>
           </DropdownMenuContent>

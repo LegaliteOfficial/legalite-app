@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, Briefcase, Edit3, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
+import { Bell, Briefcase, PencilSimple, DotsThree, Plus, Trash } from '@phosphor-icons/react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -225,17 +225,17 @@ function RowMenu({
             className="inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <MoreHorizontal size={14} strokeWidth={2} />
+            <DotsThree size={14} strokeWidth={2} />
           </button>
         }
       />
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={onEdit} className="text-[13px] cursor-pointer">
-          <Edit3 size={13} strokeWidth={1.75} />
+          <PencilSimple size={13} strokeWidth={1.75} />
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onDelete} className="text-[13px] cursor-pointer" style={{ color: 'var(--accent-danger)' }}>
-          <Trash2 size={13} strokeWidth={1.75} />
+          <Trash size={13} strokeWidth={1.75} />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

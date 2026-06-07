@@ -18,30 +18,11 @@
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
+import TextUnderline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useCallback, useEffect } from 'react'
-import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Quote,
-  Undo2,
-  Redo2,
-  Pilcrow,
-} from 'lucide-react'
-
+import { TextB, TextItalic, TextUnderline as UnderlineIcon, TextStrikethrough, TextHOne, TextHTwo, TextHThree, List, ListNumbers, TextAlignLeft, TextAlignCenter, TextAlignRight, TextAlignJustify, Quotes, ArrowUUpLeft, ArrowUUpRight, Paragraph } from '@phosphor-icons/react'
 interface RichEditorProps {
   html: string
   onChange?: (html: string) => void
@@ -111,7 +92,7 @@ export function RichEditor({
         // Disable starter-kit's built-in heading because we want full control
         heading: { levels: [1, 2, 3] },
       }),
-      Underline,
+      TextUnderline,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
         defaultAlignment: 'left',
@@ -191,14 +172,14 @@ export function RichEditor({
             onClick={() => editor.chain().focus().toggleBold().run()}
             title="Bold (Cmd/Ctrl + B)"
           >
-            <Bold size={14} />
+            <TextB size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive('italic')}
             onClick={() => editor.chain().focus().toggleItalic().run()}
             title="Italic (Cmd/Ctrl + I)"
           >
-            <Italic size={14} />
+            <TextItalic size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive('underline')}
@@ -212,7 +193,7 @@ export function RichEditor({
             onClick={() => editor.chain().focus().toggleStrike().run()}
             title="Strikethrough"
           >
-            <Strikethrough size={14} />
+            <TextStrikethrough size={14} />
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -223,28 +204,28 @@ export function RichEditor({
             onClick={() => editor.chain().focus().setParagraph().run()}
             title="Paragraph"
           >
-            <Pilcrow size={14} />
+            <Paragraph size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive('heading', { level: 1 })}
             onClick={() => setHeading(1)}
             title="Heading 1"
           >
-            <Heading1 size={14} />
+            <TextHOne size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive('heading', { level: 2 })}
             onClick={() => setHeading(2)}
             title="Heading 2"
           >
-            <Heading2 size={14} />
+            <TextHTwo size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive('heading', { level: 3 })}
             onClick={() => setHeading(3)}
             title="Heading 3"
           >
-            <Heading3 size={14} />
+            <TextHThree size={14} />
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -262,14 +243,14 @@ export function RichEditor({
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             title="Numbered list"
           >
-            <ListOrdered size={14} />
+            <ListNumbers size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive('blockquote')}
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             title="Blockquote"
           >
-            <Quote size={14} />
+            <Quotes size={14} />
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -280,28 +261,28 @@ export function RichEditor({
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             title="Align left"
           >
-            <AlignLeft size={14} />
+            <TextAlignLeft size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive({ textAlign: 'center' })}
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             title="Align center"
           >
-            <AlignCenter size={14} />
+            <TextAlignCenter size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive({ textAlign: 'right' })}
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             title="Align right"
           >
-            <AlignRight size={14} />
+            <TextAlignRight size={14} />
           </ToolbarButton>
           <ToolbarButton
             active={editor.isActive({ textAlign: 'justify' })}
             onClick={() => editor.chain().focus().setTextAlign('justify').run()}
             title="Justify"
           >
-            <AlignJustify size={14} />
+            <TextAlignJustify size={14} />
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -312,14 +293,14 @@ export function RichEditor({
             onClick={() => editor.chain().focus().undo().run()}
             title="Undo (Cmd/Ctrl + Z)"
           >
-            <Undo2 size={14} />
+            <ArrowUUpLeft size={14} />
           </ToolbarButton>
           <ToolbarButton
             disabled={!editor.can().redo()}
             onClick={() => editor.chain().focus().redo().run()}
             title="Redo (Cmd/Ctrl + Shift + Z)"
           >
-            <Redo2 size={14} />
+            <ArrowUUpRight size={14} />
           </ToolbarButton>
         </div>
       )}

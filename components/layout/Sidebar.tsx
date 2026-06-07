@@ -4,31 +4,16 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { useFirmStore } from '@/stores/firm.store'
-import {
-  LayoutDashboard,
-  Users,
-  Scale,
-  CheckSquare,
-  Contact,
-  FileText,
-  Calendar as CalendarIcon,
-  Timer,
-  Sparkles,
-  MessageSquare,
-  CreditCard,
-  Settings,
-  LogOut,
-} from 'lucide-react'
-
+import { SquaresFour, Users, Scales, CheckSquare, IdentificationCard, FileText, Calendar as CalendarIcon, Timer, Sparkle, ChatCircle, CreditCard, Gear, SignOut } from '@phosphor-icons/react'
 const NAV_GROUPS = [
   {
     label: 'Workspace',
     items: [
-      { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard',       href: '/dashboard' },
+      { id: 'dashboard', Icon: SquaresFour, label: 'Dashboard',       href: '/dashboard' },
       { id: 'clients',   Icon: Users,           label: 'Clients',         href: '/clients' },
-      { id: 'cases',     Icon: Scale,           label: 'Cases',           href: '/cases' },
+      { id: 'cases',     Icon: Scales,           label: 'Cases',           href: '/cases' },
       { id: 'tasks',     Icon: CheckSquare,     label: 'Tasks',           href: '/tasks' },
-      { id: 'contacts',  Icon: Contact,         label: 'Contacts',        href: '/contacts' },
+      { id: 'contacts',  Icon: IdentificationCard,         label: 'Contacts',        href: '/contacts' },
       { id: 'documents', Icon: FileText,        label: 'Documents',       href: '/documents' },
       { id: 'calendar',  Icon: CalendarIcon,    label: 'Calendar',        href: '/calendar' },
       { id: 'deadline',  Icon: Timer,           label: 'Deadline engine', href: '/deadline' },
@@ -37,15 +22,15 @@ const NAV_GROUPS = [
   {
     label: 'Intelligence',
     items: [
-      { id: 'ai',      Icon: Sparkles,      label: 'AI assistant', href: '/ai' },
-      { id: 'comms',   Icon: MessageSquare, label: 'Client comms', href: '/comms' },
+      { id: 'ai',      Icon: Sparkle,      label: 'AI assistant', href: '/ai' },
+      { id: 'comms',   Icon: ChatCircle, label: 'Client comms', href: '/comms' },
       { id: 'billing', Icon: CreditCard,    label: 'Billing',      href: '/billing' },
     ],
   },
   {
     label: 'Account',
     items: [
-      { id: 'settings', Icon: Settings, label: 'Settings', href: '/settings' },
+      { id: 'settings', Icon: Gear, label: 'Settings', href: '/settings' },
     ],
   },
 ]
@@ -60,7 +45,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
-  // Firm branding overrides — when set in Settings -> Account Info
+  // Firm branding overrides — when set in Gear -> Account Info
   // the wordmark/logo at the top of the sidebar switches to the
   // firm's own identity. Falls back to "LegaLite" when both are null.
   const firmName = useFirmStore((s) => s.firmName)
@@ -101,7 +86,7 @@ export function Sidebar() {
     >
       {/* Brand */}
       {/* Default state shows the LegaLite wordmark. Once the firm
-          fills in Settings -> Account Info, the wordmark switches
+          fills in Gear -> Account Info, the wordmark switches
           to the firm name; an uploaded logo (if any) shows as a
           square chip to the left of the text. Truncation handles
           long firm names so the layout stays stable. */}
@@ -241,7 +226,7 @@ export function Sidebar() {
               e.currentTarget.style.color = TEXT_MUTED
             }}
           >
-            <LogOut size={14} strokeWidth={1.75} />
+            <SignOut size={14} strokeWidth={1.75} />
           </button>
         </div>
       </div>

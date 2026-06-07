@@ -27,7 +27,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Clock, OctagonX } from 'lucide-react'
+import { Clock, XCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useClients } from '@/hooks/use-clients'
 import {
@@ -37,7 +37,7 @@ import {
 } from '@/stores/time-tracker-local.store'
 
 // Use the shared currency formatter so changing the firm currency
-// in Billing Settings flows through to the floating timer widget
+// in Billing Gear flows through to the floating timer widget
 // without per-file maintenance.
 import { formatCurrency as fmtMoney } from '@/lib/format-currency'
 
@@ -191,7 +191,7 @@ export function ActiveTimerWidget() {
           e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
         }}
       >
-        <OctagonX size={14} strokeWidth={2} />
+        <XCircle size={14} strokeWidth={2} />
       </button>
 
       {/* Inline keyframes scoped via a unique animation name so we

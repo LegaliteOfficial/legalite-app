@@ -1,6 +1,6 @@
 'use client'
 
-import { FileText, Plus, Tag } from 'lucide-react'
+import { FileText, Plus, Tag } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { CasesTab } from '../_types'

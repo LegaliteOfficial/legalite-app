@@ -11,7 +11,7 @@
  *                     status (clients with no cases are excluded
  *                     from the status-specific tabs but show under
  *                     "All").
- *   - Filter row    — Three placeholder chips (Assigned to / Status /
+ *   - Funnel row    — Three placeholder chips (Assigned to / Status /
  *                     Created on), a search icon that expands into
  *                     an inline input, and an Edit-columns button.
  *                     The chip / edit-columns affordances toast a
@@ -35,27 +35,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  Briefcase,
-  CalendarClock,
-  Check,
-  ChevronDown,
-  Clock,
-  Edit3,
-  Eye,
-  Filter,
-  Mail,
-  MoreHorizontal,
-  Phone,
-  Plus,
-  Search,
-  Settings2,
-  Trash2,
-  User as UserIcon,
-  Users,
-  X,
-} from 'lucide-react'
+import { ArrowsDownUp, Briefcase, CalendarDots, Check, CaretDown, Clock, PencilSimple, Eye, Funnel, Envelope, DotsThree, Phone, Plus, MagnifyingGlass, GearSix, Trash, User as UserIcon, Users, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -221,7 +201,7 @@ export default function ClientsPage() {
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'asc' })
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
-  // Filter chip state. Each chip's selection narrows the table to
+  // Funnel chip state. Each chip's selection narrows the table to
   // rows that match — they intersect with each other AND with the
   // tab nav, so the more constraints the user adds the tighter the
   // result. Empty sets mean "no filter applied" (don't narrow).
@@ -353,7 +333,7 @@ export default function ClientsPage() {
       return next
     })
 
-  // ── Filter toggles ──────────────────────────────────────────────
+  // ── Funnel toggles ──────────────────────────────────────────────
   // Each chip's onSelect callback toggles membership of the option
   // it received. Wrapped so each filter's signature is tight.
   const toggleAssignedTo = (id: string) =>
@@ -466,7 +446,7 @@ export default function ClientsPage() {
           })}
         </div>
 
-        {/* ─── Filter chips row ────────────────────────────────── */}
+        {/* ─── Funnel chips row ────────────────────────────────── */}
         <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Assigned to — multi-select firm members. */}
@@ -489,7 +469,7 @@ export default function ClientsPage() {
                 Distinct from the tab nav which uses case status, so
                 users can intersect "Active client" with "Open case". */}
             <MultiSelectChip
-              icon={<Filter size={12} strokeWidth={1.75} />}
+              icon={<Funnel size={12} strokeWidth={1.75} />}
               label="Status"
               activeCount={statusFilter.size}
               options={CLIENT_STATUSES.map((s) => ({
@@ -503,7 +483,7 @@ export default function ClientsPage() {
 
             {/* Created on — single-select preset windows. */}
             <SingleSelectChip
-              icon={<CalendarClock size={12} strokeWidth={1.75} />}
+              icon={<CalendarDots size={12} strokeWidth={1.75} />}
               label="Created on"
               valueLabel={
                 CREATED_ON_OPTIONS.find((o) => o.key === createdOnFilter)
@@ -521,7 +501,7 @@ export default function ClientsPage() {
           <div className="flex items-center gap-2">
             {searchOpen ? (
               <div className="relative w-56">
-                <Search
+                <MagnifyingGlass
                   size={13}
                   strokeWidth={1.75}
                   className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -561,7 +541,7 @@ export default function ClientsPage() {
                   color: 'var(--text-secondary)',
                 }}
               >
-                <Search size={13} strokeWidth={1.75} />
+                <MagnifyingGlass size={13} strokeWidth={1.75} />
               </button>
             )}
             <DropdownMenu>
@@ -576,7 +556,7 @@ export default function ClientsPage() {
                       color: 'var(--text-primary)',
                     }}
                   >
-                    <Settings2 size={13} strokeWidth={1.75} />
+                    <GearSix size={13} strokeWidth={1.75} />
                     Edit columns
                     {visibleColumns.size < TOGGLEABLE_COLUMNS.length && (
                       <span
@@ -895,7 +875,7 @@ function sortValue(
 // ── Sub-components ─────────────────────────────────────────────────────
 
 /**
- * Filter-chip trigger. Pill-shaped, icon + label + caret, with a
+ * Funnel-chip trigger. Pill-shaped, icon + label + caret, with a
  * gold count badge when one or more options are selected so the
  * user can tell at a glance whether a filter is active.
  */
@@ -948,7 +928,7 @@ function ChipTrigger({
           · {activeText}
         </span>
       )}
-      <ChevronDown
+      <CaretDown
         size={11}
         strokeWidth={1.75}
         style={{ color: 'var(--text-muted)' }}
@@ -1132,7 +1112,7 @@ function SortHeader({
     >
       <span className="inline-flex items-center gap-1.5">
         {label}
-        <ArrowUpDown
+        <ArrowsDownUp
           size={12}
           strokeWidth={1.75}
           style={{
@@ -1381,7 +1361,7 @@ function RowMenu({
             className="inline-flex items-center justify-center h-8 w-8 rounded-md cursor-pointer"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <MoreHorizontal size={15} strokeWidth={2} />
+            <DotsThree size={15} strokeWidth={2} />
           </button>
         }
       />
@@ -1397,7 +1377,7 @@ function RowMenu({
           onClick={onEdit}
           className="text-[13px] cursor-pointer"
         >
-          <Edit3 size={13} strokeWidth={1.75} />
+          <PencilSimple size={13} strokeWidth={1.75} />
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -1424,7 +1404,7 @@ function RowMenu({
           className="text-[13px] cursor-pointer"
           style={{ color: 'var(--accent-danger)' }}
         >
-          <Trash2 size={13} strokeWidth={1.75} />
+          <Trash size={13} strokeWidth={1.75} />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -1526,7 +1506,7 @@ function ClientDetailsDialog({
               value={client.phone || '—'}
             />
             <DetailRow
-              icon={<Mail size={13} strokeWidth={1.75} />}
+              icon={<Envelope size={13} strokeWidth={1.75} />}
               label="Email"
               value={client.email || '—'}
             />
@@ -1543,7 +1523,7 @@ function ClientDetailsDialog({
               }
             />
             <DetailRow
-              icon={<Filter size={13} strokeWidth={1.75} />}
+              icon={<Funnel size={13} strokeWidth={1.75} />}
               label="Client status"
               value={<StatusBadge status={client.status} />}
             />
@@ -1609,7 +1589,7 @@ function ClientDetailsDialog({
               color: 'var(--navy)',
             }}
           >
-            <Edit3 size={13} strokeWidth={1.75} />
+            <PencilSimple size={13} strokeWidth={1.75} />
             Edit
           </Button>
         </DialogFooter>
@@ -1807,8 +1787,8 @@ function ManageAssigneesDialog({
 }
 
 // Suppress unused-import warnings for icons reserved for the next
-// iteration (Phone / Mail / Check go on the Edit-columns dialog,
+// iteration (Phone / Envelope / Check go on the Edit-columns dialog,
 // etc.). Cheaper than churning the import block.
 void Phone
-void Mail
+void Envelope
 void Check

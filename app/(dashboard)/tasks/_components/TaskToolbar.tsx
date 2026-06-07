@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, LayoutGrid, List, ListFilter, Search, Users2 } from 'lucide-react'
+import { Check, SquaresFour, List, FunnelSimple, MagnifyingGlass, UsersThree } from '@phosphor-icons/react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,12 +59,12 @@ export function TaskToolbar({
 }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* Search */}
+      {/* MagnifyingGlass */}
       <div
         className="flex items-center gap-2 h-9 px-3 rounded-lg border flex-1 min-w-[200px] max-w-[340px]"
         style={{ borderColor: 'var(--border-default)', background: 'var(--surface-card)' }}
       >
-        <Search size={14} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+        <MagnifyingGlass size={14} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
         <input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -74,7 +74,7 @@ export function TaskToolbar({
         />
       </div>
 
-      {/* Filter */}
+      {/* Funnel */}
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -87,8 +87,8 @@ export function TaskToolbar({
                 color: 'var(--text-secondary)',
               }}
             >
-              <ListFilter size={14} strokeWidth={1.75} />
-              Filter
+              <FunnelSimple size={14} strokeWidth={1.75} />
+              Funnel
               {activeFilterCount > 0 && (
                 <span
                   className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-semibold tabular-nums"
@@ -133,7 +133,7 @@ export function TaskToolbar({
                     key={a.id}
                     checked={assigneeFilter.has(a.id)}
                     onClick={() => onToggleAssignee(a.id)}
-                    leading={<Users2 size={13} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />}
+                    leading={<UsersThree size={13} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />}
                     label={a.name}
                   />
                 ))}
@@ -153,7 +153,7 @@ export function TaskToolbar({
                 className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border text-[13px] font-medium cursor-pointer"
                 style={{ borderColor: 'var(--border-default)', background: 'var(--surface-card)', color: 'var(--text-secondary)' }}
               >
-                <LayoutGrid size={14} strokeWidth={1.75} />
+                <SquaresFour size={14} strokeWidth={1.75} />
                 {GROUP_LABELS[groupBy]}
               </button>
             }
@@ -180,7 +180,7 @@ export function TaskToolbar({
         aria-label="View"
       >
         <ViewButton active={view === 'list'} onClick={() => onViewChange('list')} icon={<List size={14} strokeWidth={2} />} label="List" />
-        <ViewButton active={view === 'board'} onClick={() => onViewChange('board')} icon={<LayoutGrid size={14} strokeWidth={2} />} label="Board" />
+        <ViewButton active={view === 'board'} onClick={() => onViewChange('board')} icon={<SquaresFour size={14} strokeWidth={2} />} label="Board" />
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { PenTool, Scale } from 'lucide-react'
+import { PencilLine, Scales } from '@phosphor-icons/react'
 import type { DocumentTemplate } from '@/lib/templates'
 import { CATEGORY_COLORS, CATEGORY_FALLBACK } from '../_constants'
 
@@ -57,7 +57,7 @@ export function TemplateCard({
           border: '1px solid rgba(201,151,43,0.2)',
         }}
       >
-        <PenTool size={10} />
+        <PencilLine size={10} />
         Quick Setup
       </button>
     </div>
@@ -111,7 +111,7 @@ function DocumentPreview({
               border: `0.5px solid ${colors.accent}40`,
             }}
           >
-            <Scale size={8} style={{ color: colors.accent }} />
+            <Scales size={8} style={{ color: colors.accent }} />
           </div>
           <div
             className="font-bold tracking-wide"

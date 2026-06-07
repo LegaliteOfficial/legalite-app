@@ -4,9 +4,9 @@
  * New contact creation page
  * -------------------------
  * Replaces the legacy `ClientForm` dialog for the CREATE flow. Mirrors
- * the reference New Contact screen: a sticky top bar (Save / Save & open new
+ * the reference New IdentificationCard screen: a sticky top bar (Save / Save & open new
  * case / Cancel), then a single-column form broken into sections —
- * Contact information, Email, Phone, Website, Address, Tags, Custom
+ * IdentificationCard information, Email, Phone, Website, Address, Tags, Custom
  * fields, Billing preferences.
  *
  * Schema reality check: the current Client interface only carries a
@@ -21,17 +21,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import {
-  Building2,
-  Camera,
-  ChevronDown,
-  ChevronRight,
-  HelpCircle,
-  Plus,
-  Upload,
-  User,
-  UserRound,
-} from 'lucide-react'
+import { Buildings, Camera, CaretDown, CaretRight, Question, Plus, UploadSimple, User, UserCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -834,9 +824,9 @@ function CollapsibleSection({
           style={{ color: 'var(--text-primary)' }}
         >
           {open ? (
-            <ChevronDown size={14} strokeWidth={2} />
+            <CaretDown size={14} strokeWidth={2} />
           ) : (
-            <ChevronRight size={14} strokeWidth={2} />
+            <CaretRight size={14} strokeWidth={2} />
           )}
           {label}
         </span>
@@ -920,7 +910,7 @@ function NativeSelect({
           </option>
         ))}
       </select>
-      <ChevronDown
+      <CaretDown
         size={13}
         strokeWidth={1.75}
         className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -930,7 +920,7 @@ function NativeSelect({
   )
 }
 
-// ── Section: Contact information ───────────────────────────────────────
+// ── Section: IdentificationCard information ───────────────────────────────────────
 
 function ContactInfoSection({
   form,
@@ -962,14 +952,14 @@ function ContactInfoSection({
             <TypeChip
               active={form.contact_type === 'person'}
               onClick={() => setField('contact_type', 'person')}
-              Icon={UserRound}
+              Icon={UserCircle}
               label="Person"
               tint="#0EA5E9"
             />
             <TypeChip
               active={form.contact_type === 'company'}
               onClick={() => setField('contact_type', 'company')}
-              Icon={Building2}
+              Icon={Buildings}
               label="Company"
               tint="#8B5CF6"
             />
@@ -1138,7 +1128,7 @@ function ProfilePhotoUpload() {
           style={{ color: 'var(--text-primary)' }}
         >
           Profile photo
-          <HelpCircle
+          <Question
             size={11}
             strokeWidth={1.75}
             style={{ color: 'var(--text-muted)' }}
@@ -1154,7 +1144,7 @@ function ProfilePhotoUpload() {
           className="inline-flex items-center gap-1 text-[12px] font-medium cursor-pointer whitespace-nowrap"
           style={{ color: 'var(--gold-dark)' }}
         >
-          <Upload size={11} strokeWidth={1.75} />
+          <UploadSimple size={11} strokeWidth={1.75} />
           Upload photo
         </button>
       </div>
@@ -1658,7 +1648,7 @@ function BillingPreferencesContent({
       <div>
         <FieldLabel>
           Payment profile{' '}
-          <HelpCircle
+          <Question
             size={11}
             strokeWidth={1.75}
             style={{
@@ -1760,7 +1750,7 @@ function BillingPreferencesContent({
         <div>
           <FieldLabel>
             LEDES client ID{' '}
-            <HelpCircle
+            <Question
               size={11}
               strokeWidth={1.75}
               style={{
@@ -1780,7 +1770,7 @@ function BillingPreferencesContent({
         <div>
           <FieldLabel>
             Tax Identifier{' '}
-            <HelpCircle
+            <Question
               size={11}
               strokeWidth={1.75}
               style={{
@@ -1826,7 +1816,7 @@ function EmployeesContent({
   ) => void
 }) {
   const { data: clients } = useClients()
-  // Person picker options. Filter out the current contact being
+  // Person picker options. Funnel out the current contact being
   // created from the list (you can't be your own employee), and sort
   // alphabetically so the dropdown is scannable.
   const personOptions = useMemo(() => {

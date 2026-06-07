@@ -21,7 +21,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { BookMarked, Briefcase, Check, Info, Plus, Trash2 } from 'lucide-react'
+import { BookBookmark, Briefcase, Check, Info, Plus, Trash } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -273,7 +273,7 @@ export function BillComposerDialog({
     if (!canSave) return
     setSubmitting(true)
     try {
-      // Filter out fully-blank rows so we don't persist noise.
+      // Funnel out fully-blank rows so we don't persist noise.
       const trimmedItems = items
         .filter(
           (it) =>
@@ -478,7 +478,7 @@ export function BillComposerDialog({
                   }}
                   title="Add a small reusable expense (paper, photocopy, filing fee...)"
                 >
-                  <BookMarked size={11} strokeWidth={2.25} />
+                  <BookBookmark size={11} strokeWidth={2.25} />
                   Add expense
                 </button>
                 <button
@@ -569,7 +569,7 @@ export function BillComposerDialog({
                     className="inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer disabled:opacity-30"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    <Trash2 size={12} strokeWidth={1.75} />
+                    <Trash size={12} strokeWidth={1.75} />
                   </button>
                 </div>
               ))}

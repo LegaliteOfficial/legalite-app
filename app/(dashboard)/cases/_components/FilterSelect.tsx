@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, X } from 'lucide-react'
+import { CaretDown, X } from '@phosphor-icons/react'
 import type { OptionGroup } from '../_types'
 
 /**
@@ -81,7 +81,7 @@ export function FilterSelect({
             <X size={12} strokeWidth={1.75} />
           </button>
         )}
-        <ChevronDown size={13} strokeWidth={1.75} />
+        <CaretDown size={13} strokeWidth={1.75} />
       </div>
       {disabled && disabledHint && (
         <p className="mt-1 text-[11px]" style={{ color: 'var(--text-subtle)' }}>

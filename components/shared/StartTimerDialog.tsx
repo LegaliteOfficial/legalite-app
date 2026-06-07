@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Clock, Pencil, Play, Receipt } from 'lucide-react'
+import { Clock, Pencil, Play, Receipt } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

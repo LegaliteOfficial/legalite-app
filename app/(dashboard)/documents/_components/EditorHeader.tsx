@@ -1,6 +1,6 @@
 'use client'
 
-import { Download, FileText, Printer } from 'lucide-react'
+import { DownloadSimple, FileText, Printer } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/shared/Spinner'
 
@@ -76,7 +76,7 @@ export function EditorHeader({
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Button variant="outline" size="sm" onClick={onExport}>
-          <Download size={13} strokeWidth={1.75} />
+          <DownloadSimple size={13} strokeWidth={1.75} />
           Export
         </Button>
         <Button variant="outline" size="sm" onClick={onPrint}>

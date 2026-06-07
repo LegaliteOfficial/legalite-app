@@ -1,6 +1,6 @@
 'use client'
 
-import { FileText, Search } from 'lucide-react'
+import { FileText, MagnifyingGlass } from '@phosphor-icons/react'
 import { Input } from '@/components/ui/input'
 import { DOCUMENT_TEMPLATES, type DocumentTemplate } from '@/lib/templates'
 import { CategoryFilterRow } from './CategoryFilterRow'
@@ -43,7 +43,7 @@ export function TemplatesTab({
           </p>
         </div>
         <div className="relative w-72">
-          <Search
+          <MagnifyingGlass
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
           />

@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import {
-  ChevronRight, ChevronLeft, Search, SlidersHorizontal, MoreVertical, Plus, FolderLock,
-} from 'lucide-react'
+import { CaretRight, CaretLeft, MagnifyingGlass, SlidersHorizontal, DotsThreeVertical, Plus, FolderLock } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useFirmRoles, useArchiveFirmRole, type FirmRole } from '@/hooks/use-firm-roles'
 import { Spinner } from '@/components/shared/Spinner'
@@ -81,8 +79,8 @@ export default function RolesPage() {
     <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--surface-card)' }}>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm mb-5" style={{ color: 'var(--navy)' }}>
-        <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Settings</Link>
-        <ChevronRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
+        <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Gear</Link>
+        <CaretRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
         <span className="font-bold">Roles and Permissions</span>
       </div>
 
@@ -137,7 +135,7 @@ export default function RolesPage() {
 
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search size={14} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+              <MagnifyingGlass size={14} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
               <input
                 type="search"
                 value={query}
@@ -222,7 +220,7 @@ export default function RolesPage() {
             className="h-8 w-8 rounded-md border flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/[0.02]"
             style={{ borderColor: 'var(--border)', background: 'white' }}
           >
-            <ChevronLeft size={14} strokeWidth={2} style={{ color: 'var(--navy)' }} />
+            <CaretLeft size={14} strokeWidth={2} style={{ color: 'var(--navy)' }} />
           </button>
           <button
             type="button"
@@ -232,7 +230,7 @@ export default function RolesPage() {
             className="h-8 w-8 rounded-md border flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/[0.02]"
             style={{ borderColor: 'var(--border)', background: 'white' }}
           >
-            <ChevronRight size={14} strokeWidth={2} style={{ color: 'var(--navy)' }} />
+            <CaretRight size={14} strokeWidth={2} style={{ color: 'var(--navy)' }} />
           </button>
           <span className="text-sm" style={{ color: '#6B7280' }}>
             {total === 0 ? 'No results found' : `${start}–${end} of ${total}`}
@@ -268,7 +266,7 @@ function RowMenu({ role }: { role: Role }) {
         className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:bg-black/[0.04]"
         style={{ color: 'var(--navy)' }}
       >
-        <MoreVertical size={16} strokeWidth={2} />
+        <DotsThreeVertical size={16} strokeWidth={2} />
       </button>
       {open && (
         <div

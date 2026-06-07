@@ -20,7 +20,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Check, CreditCard, Users } from 'lucide-react'
+import { Check, CreditCard, Users } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

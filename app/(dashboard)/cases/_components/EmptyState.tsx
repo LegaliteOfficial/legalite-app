@@ -1,6 +1,6 @@
 'use client'
 
-import { Briefcase } from 'lucide-react'
+import { Briefcase } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 
 export function EmptyState({

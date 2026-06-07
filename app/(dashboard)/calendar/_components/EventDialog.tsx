@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, Briefcase, ChevronDown, Plus, Users } from 'lucide-react'
+import { Bell, Briefcase, CaretDown, Plus, Users } from '@phosphor-icons/react'
 import {
   Dialog,
   DialogContent,
@@ -233,7 +233,7 @@ function LinkedCaseField({
             </option>
           ))}
         </select>
-        <ChevronDown
+        <CaretDown
           size={13}
           strokeWidth={1.75}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"

@@ -31,30 +31,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  Bell,
-  BookMarked,
-  CalendarClock,
-  Check,
-  ChevronDown,
-  Coins,
-  CreditCard,
-  Edit3,
-  Eye,
-  FileText,
-  Filter,
-  MoreHorizontal,
-  Plus,
-  Receipt,
-  Search,
-  Send,
-  Settings2,
-  Sparkles,
-  Trash2,
-  Users,
-  X,
-} from 'lucide-react'
+import { ArrowsDownUp, Bell, BookBookmark, CalendarDots, Check, CaretDown, Coins, CreditCard, PencilSimple, Eye, FileText, Funnel, DotsThree, Plus, Receipt, MagnifyingGlass, PaperPlaneTilt, GearSix, Sparkle, Trash, Users, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -246,7 +223,7 @@ export default function BillingPage() {
     } else {
       list = list.filter((b) => b.status !== 'Archived')
     }
-    // Search by bill number or client name.
+    // MagnifyingGlass by bill number or client name.
     const q = search.trim().toLowerCase()
     if (q) {
       list = list.filter((b) => {
@@ -360,7 +337,7 @@ export default function BillingPage() {
           </div>
           <div className="flex items-center gap-2">
             {/*
-             * Catalog + Settings — firm-wide billing controls. Live
+             * Catalog + Gear — firm-wide billing controls. Live
              * inline with Record payment / New bill because partners
              * tend to reach for them in the same flow (set currency
              * before issuing the first foreign-currency bill, edit
@@ -373,7 +350,7 @@ export default function BillingPage() {
               onClick={() => setCatalogOpen(true)}
               title="Manage reusable line items"
             >
-              <BookMarked size={13} strokeWidth={1.75} />
+              <BookBookmark size={13} strokeWidth={1.75} />
               Expense catalog
             </Button>
             <Button
@@ -408,7 +385,7 @@ export default function BillingPage() {
                   >
                     <Plus size={14} strokeWidth={2.25} />
                     New bills
-                    <ChevronDown size={13} strokeWidth={1.75} />
+                    <CaretDown size={13} strokeWidth={1.75} />
                   </button>
                 }
               />
@@ -442,7 +419,7 @@ export default function BillingPage() {
                   }
                   className="text-[13px] cursor-pointer"
                 >
-                  <Sparkles size={13} strokeWidth={1.75} />
+                  <Sparkle size={13} strokeWidth={1.75} />
                   Upgrade plan
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -653,7 +630,7 @@ function BillsSubView({
         <div className="flex items-center gap-2">
           {searchOpen ? (
             <div className="relative w-56">
-              <Search
+              <MagnifyingGlass
                 size={13}
                 strokeWidth={1.75}
                 className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -693,7 +670,7 @@ function BillsSubView({
                 color: 'var(--text-secondary)',
               }}
             >
-              <Search size={13} strokeWidth={1.75} />
+              <MagnifyingGlass size={13} strokeWidth={1.75} />
             </button>
           )}
           <DropdownMenu>
@@ -708,7 +685,7 @@ function BillsSubView({
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <Settings2 size={13} strokeWidth={1.75} />
+                  <GearSix size={13} strokeWidth={1.75} />
                   Columns
                   {visibleColumns.size < TOGGLEABLE_COLUMNS.length && (
                     <span
@@ -762,7 +739,7 @@ function BillsSubView({
               color: 'var(--text-primary)',
             }}
           >
-            <Filter size={13} strokeWidth={1.75} />
+            <Funnel size={13} strokeWidth={1.75} />
             Filters
           </button>
         </div>
@@ -1073,7 +1050,7 @@ function BillRow({
                   className="inline-flex items-center justify-center h-8 w-8 rounded-md cursor-pointer"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  <MoreHorizontal size={15} strokeWidth={2} />
+                  <DotsThree size={15} strokeWidth={2} />
                 </button>
               }
             />
@@ -1093,7 +1070,7 @@ function BillRow({
                   }}
                   className="text-[13px] cursor-pointer"
                 >
-                  <Edit3 size={13} strokeWidth={1.75} />
+                  <PencilSimple size={13} strokeWidth={1.75} />
                   Submit for approval
                 </DropdownMenuItem>
               )}
@@ -1106,7 +1083,7 @@ function BillRow({
                   }}
                   className="text-[13px] cursor-pointer"
                 >
-                  <Send size={13} strokeWidth={1.75} />
+                  <PaperPlaneTilt size={13} strokeWidth={1.75} />
                   Issue bill
                 </DropdownMenuItem>
               )}
@@ -1130,7 +1107,7 @@ function BillRow({
                   className="text-[13px] cursor-pointer"
                 >
                   <Bell size={13} strokeWidth={1.75} />
-                  Send payment reminder
+                  PaperPlaneTilt payment reminder
                 </DropdownMenuItem>
               )}
               {bill.status !== 'Archived' && (
@@ -1142,7 +1119,7 @@ function BillRow({
                   className="text-[13px] cursor-pointer"
                   style={{ color: 'var(--accent-danger)' }}
                 >
-                  <Trash2 size={13} strokeWidth={1.75} />
+                  <Trash size={13} strokeWidth={1.75} />
                   Archive
                 </DropdownMenuItem>
               )}
@@ -2149,7 +2126,7 @@ function UnbilledRow({
             onClick={() => setExpanded((e) => !e)}
             className="inline-flex items-center gap-1.5 cursor-pointer hover:underline"
           >
-            <ChevronDown
+            <CaretDown
               size={12}
               strokeWidth={2}
               style={{
@@ -2339,7 +2316,7 @@ function SortHeader({
         }`}
       >
         {label}
-        <ArrowUpDown
+        <ArrowsDownUp
           size={12}
           strokeWidth={1.75}
           style={{
@@ -2365,7 +2342,7 @@ function formatDate(iso: string): string {
 
 /**
  * Money formatter — delegates to the shared currency helper so the
- * firm's billing currency (set in Billing Settings) flows through
+ * firm's billing currency (set in Billing Gear) flows through
  * every label on the billing surfaces. Negative balances surface
  * with a leading minus from the formatter itself.
  */
@@ -2470,6 +2447,6 @@ function ClientRateBadge({ clientId }: { clientId: string }) {
 // the priority suggestion (Task #24) plugs in.
 void outstandingFor
 
-// `CalendarClock` is reserved for the in-page filter chip work in
+// `CalendarDots` is reserved for the in-page filter chip work in
 // the next iteration. Keep the import warm so the diff stays tight.
-void CalendarClock
+void CalendarDots

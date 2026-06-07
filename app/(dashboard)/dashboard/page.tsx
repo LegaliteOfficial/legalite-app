@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import {
-  Users, Scale, CheckSquare, FolderOpen, CalendarClock, UserPlus, FileText, Timer,
-  Info, X,
-  ChevronDown, ChevronLeft, ChevronRight, HelpCircle,
-} from 'lucide-react'
+import { Users, Scales, CheckSquare, FolderOpen, CalendarDots, UserPlus, FileText, Timer, Info, X, CaretDown, CaretLeft, CaretRight, Question } from '@phosphor-icons/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Card,
@@ -21,7 +17,7 @@ import type { DashboardStats } from '@/types'
 
 const QUICK_ACTIONS = [
   { label: 'Add new client', Icon: UserPlus, href: '/clients' },
-  { label: 'Open new case', Icon: Scale, href: '/cases' },
+  { label: 'Open new case', Icon: Scales, href: '/cases' },
   { label: 'Generate document', Icon: FileText, href: '/documents' },
   { label: 'Calculate deadline', Icon: Timer, href: '/deadline' },
 ]
@@ -129,7 +125,7 @@ function OnboardingBanner({ onDismiss }: { onDismiss: () => void }) {
           Welcome to LegaLite.
         </span>{' '}
         <Link
-          // Routes to Settings -> Account Info, the live surface
+          // Routes to Gear -> Account Info, the live surface
           // where firm-level setup (firm name, address, country,
           // billing contact) actually lives. `/firm/settings` used
           // to point at a placeholder route that never shipped.
@@ -273,7 +269,7 @@ function PersonalDashboard() {
 function FirmDashboard({ stats, isLoading }: { stats: DashboardStats | undefined; isLoading: boolean }) {
   const statCards = [
     { label: 'Total clients', value: stats?.total_clients ?? 0, Icon: Users },
-    { label: 'Active cases', value: stats?.active_cases ?? 0, Icon: Scale },
+    { label: 'Active cases', value: stats?.active_cases ?? 0, Icon: Scales },
     { label: 'Pending tasks', value: stats?.pending_tasks ?? 0, Icon: CheckSquare },
     { label: 'Invoices due', value: stats?.total_invoices_due ?? 0, Icon: FolderOpen },
   ]
@@ -291,7 +287,7 @@ function FirmDashboard({ stats, isLoading }: { stats: DashboardStats | undefined
         <Card padding="none" className="col-span-2 overflow-hidden">
           <div className="flex items-center justify-between px-6 pt-5 pb-3">
             <div className="flex items-center gap-2">
-              <CalendarClock size={15} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+              <CalendarDots size={15} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
               <CardTitle className="text-base">Upcoming court dates</CardTitle>
             </div>
             <Link
@@ -385,8 +381,8 @@ function FirmOverview() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Pill>GHS (GH) <ChevronDown size={12} strokeWidth={2} /></Pill>
-          <Pill>All users <ChevronDown size={12} strokeWidth={2} /></Pill>
+          <Pill>GHS (GH) <CaretDown size={12} strokeWidth={2} /></Pill>
+          <Pill>All users <CaretDown size={12} strokeWidth={2} /></Pill>
           <div
             className="flex items-center rounded-lg border overflow-hidden"
             style={{ borderColor: 'var(--border-default)', background: 'var(--surface-card)' }}
@@ -397,7 +393,7 @@ function FirmOverview() {
               aria-label="Previous year"
               className="px-2 py-1.5 hover:bg-black/5 transition-colors"
             >
-              <ChevronLeft size={13} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+              <CaretLeft size={13} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
             </button>
             <span className="px-3 text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>
               {year}
@@ -408,7 +404,7 @@ function FirmOverview() {
               aria-label="Next year"
               className="px-2 py-1.5 hover:bg-black/5 transition-colors"
             >
-              <ChevronRight size={13} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+              <CaretRight size={13} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
             </button>
           </div>
         </div>
@@ -420,7 +416,7 @@ function FirmOverview() {
           style={{ borderColor: 'var(--border-soft)' }}
         >
           <button type="button" onClick={() => setExpanded((v) => !v)} className="flex items-center gap-2">
-            <ChevronDown
+            <CaretDown
               size={15}
               strokeWidth={2}
               style={{
@@ -432,7 +428,7 @@ function FirmOverview() {
             <span className="font-heading text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
               Utilisation
             </span>
-            <HelpCircle size={12} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
+            <Question size={12} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
           </button>
           <div className="flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--text-muted)' }}>
             <span>
@@ -441,7 +437,7 @@ function FirmOverview() {
                 Jan 1 – May 21, {year}
               </span>
             </span>
-            <HelpCircle size={12} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
+            <Question size={12} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
           </div>
         </div>
 
@@ -455,7 +451,7 @@ function FirmOverview() {
                 >
                   Rate average
                 </span>
-                <HelpCircle size={11} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
+                <Question size={11} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
               </div>
               <div className="h-24 flex items-center justify-center">
                 <p className="text-[12px] text-center" style={{ color: 'var(--text-muted)' }}>
@@ -471,7 +467,7 @@ function FirmOverview() {
                   >
                     Totals
                   </span>
-                  <HelpCircle size={11} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
+                  <Question size={11} strokeWidth={1.75} style={{ color: 'var(--text-subtle)' }} />
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <TotalsMini label="Billable" color={UTILISATION_COLORS.billable} />

@@ -2,17 +2,7 @@
 
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import {
-  BookOpen,
-  ChevronDown,
-  Copy,
-  Check,
-  Scale,
-  Building2,
-  Briefcase,
-  Sparkles,
-  ExternalLink,
-} from 'lucide-react'
+import { BookOpen, CaretDown, Copy, Check, Scales, Buildings, Briefcase, Sparkle, ArrowSquareOut } from '@phosphor-icons/react'
 import type {
   AskResponse,
   Citation,
@@ -82,7 +72,7 @@ export function AnswerCard({ response }: AnswerCardProps) {
               className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
               style={{ background: 'var(--surface-sunken)', color: 'var(--text-muted)' }}
             >
-              <Sparkles size={10} strokeWidth={1.75} />
+              <Sparkle size={10} strokeWidth={1.75} />
               {humanizeIntent(response.query_intent)}
             </span>
           )}
@@ -141,7 +131,7 @@ export function AnswerCard({ response }: AnswerCardProps) {
       {structured?.applicable_law && structured.applicable_law.length > 0 && (
         <CitationGroup
           title="Applicable law"
-          Icon={Scale}
+          Icon={Scales}
           items={structured.applicable_law}
           kind="law"
         />
@@ -151,7 +141,7 @@ export function AnswerCard({ response }: AnswerCardProps) {
       {structured?.relevant_public_cases && structured.relevant_public_cases.length > 0 && (
         <CitationGroup
           title="Relevant cases"
-          Icon={Building2}
+          Icon={Buildings}
           items={structured.relevant_public_cases}
           kind="case"
         />
@@ -206,7 +196,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 interface CitationGroupProps {
   title: string
-  Icon: typeof Scale
+  Icon: typeof Scales
   items: StructuredCitation[]
   kind: 'law' | 'case'
   accent?: boolean
@@ -242,7 +232,7 @@ function CitationGroup({ title, Icon, items, kind, accent }: CitationGroupProps)
             {items.length}
           </span>
         </span>
-        <ChevronDown
+        <CaretDown
           size={14}
           strokeWidth={1.75}
           style={{
@@ -346,7 +336,7 @@ function SourcesBlock({ citations }: { citations: Citation[] }) {
             className="mt-2.5 inline-flex items-center gap-1 text-[11.5px] font-medium hover:underline underline-offset-2"
             style={{ color: 'var(--gold)' }}
           >
-            <ExternalLink size={11} strokeWidth={1.75} />
+            <ArrowSquareOut size={11} strokeWidth={1.75} />
             {expanded ? 'Show fewer' : `Show ${citations.length - 3} more`}
           </button>
         )}

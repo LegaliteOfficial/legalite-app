@@ -2,20 +2,7 @@
 
 import { use, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowLeft,
-  Calendar as CalendarIcon,
-  Check,
-  ChevronDown,
-  Clock,
-  FileText,
-  Grid3x3,
-  List,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  X,
-} from 'lucide-react'
+import { ArrowLeft, Calendar as CalendarIcon, Check, CaretDown, Clock, FileText, GridFour, List, DotsThree, Pencil, Plus, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -297,7 +284,7 @@ export default function CaseDetailPage({
                       }}
                       aria-label="More actions"
                     >
-                      <MoreHorizontal size={16} strokeWidth={1.75} />
+                      <DotsThree size={16} strokeWidth={1.75} />
                     </button>
                   }
                 />
@@ -638,7 +625,7 @@ function StatusPill({
               aria-hidden
             />
             {current.label}
-            <ChevronDown size={12} strokeWidth={1.75} />
+            <CaretDown size={12} strokeWidth={1.75} />
           </button>
         }
       />
@@ -1303,7 +1290,7 @@ function CollapsibleSection({
         >
           {label}
         </span>
-        <ChevronDown
+        <CaretDown
           size={16}
           strokeWidth={1.75}
           style={{
@@ -1629,7 +1616,7 @@ function DocumentsViewToggle({
     >
       {(['grid', 'list'] as const).map((mode) => {
         const active = value === mode
-        const Icon = mode === 'grid' ? Grid3x3 : List
+        const Icon = mode === 'grid' ? GridFour : List
         return (
           <button
             key={mode}
@@ -1790,7 +1777,7 @@ function DocumentRowMenu() {
             }}
             aria-label="Document actions"
           >
-            <MoreHorizontal size={14} strokeWidth={1.75} />
+            <DotsThree size={14} strokeWidth={1.75} />
           </button>
         }
       />
@@ -1805,7 +1792,7 @@ function DocumentRowMenu() {
           className="text-[12.5px] cursor-pointer"
           onClick={() => toast.info('Document download ships next.')}
         >
-          Download
+          DownloadSimple
         </DropdownMenuItem>
         <DropdownMenuItem
           className="text-[12.5px] cursor-pointer"
@@ -2069,7 +2056,7 @@ function CalendarEventCard({
               }}
               aria-label="Event actions"
             >
-              <MoreHorizontal size={14} strokeWidth={1.75} />
+              <DotsThree size={14} strokeWidth={1.75} />
             </button>
           }
         />

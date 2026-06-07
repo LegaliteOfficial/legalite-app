@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useTasks, useUpdateTask, useDeleteTask, type Task } from '@/hooks/use-tasks'
@@ -106,7 +106,7 @@ export default function TasksPage() {
     )
   }, [allTasks])
 
-  // ── Filter ──────────────────────────────────────────────────────
+  // ── Funnel ──────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return allTasks.filter((t) => {

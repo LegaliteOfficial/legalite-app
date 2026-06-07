@@ -1,6 +1,6 @@
 'use client'
 
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { PriorityButton } from '@/components/shared/PriorityButton'
 import type { Case } from '@/types'
@@ -95,7 +95,7 @@ export function CasesTableRow({
               onClick={() => onDelete(row.id, row.title)}
               aria-label="Delete case"
             >
-              <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
+              <Trash size={13} style={{ color: 'var(--text-muted)' }} />
             </Button>
           </div>
         </div>

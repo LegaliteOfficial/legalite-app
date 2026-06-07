@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Briefcase, Bell, ChevronRight, Edit3, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
+import { Briefcase, Bell, CaretRight, PencilSimple, DotsThree, Plus, Trash } from '@phosphor-icons/react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,7 +76,7 @@ export function TaskListView({
                 style={{ color: 'var(--text-muted)', transform: isCollapsed ? 'none' : 'rotate(90deg)' }}
                 aria-label={isCollapsed ? 'Expand' : 'Collapse'}
               >
-                <ChevronRight size={14} strokeWidth={2} />
+                <CaretRight size={14} strokeWidth={2} />
               </button>
               {group.glyph ?? (
                 <span className="w-2 h-2 rounded-full" style={{ background: group.color }} aria-hidden />
@@ -236,17 +236,17 @@ function RowMenu({
             className="inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <MoreHorizontal size={14} strokeWidth={2} />
+            <DotsThree size={14} strokeWidth={2} />
           </button>
         }
       />
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={onEdit} className="text-[13px] cursor-pointer">
-          <Edit3 size={13} strokeWidth={1.75} />
+          <PencilSimple size={13} strokeWidth={1.75} />
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onCycleStatus} className="text-[13px] cursor-pointer">
-          <ChevronRight size={13} strokeWidth={1.75} />
+          <CaretRight size={13} strokeWidth={1.75} />
           Advance status
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -254,7 +254,7 @@ function RowMenu({
           className="text-[13px] cursor-pointer"
           style={{ color: 'var(--accent-danger)' }}
         >
-          <Trash2 size={13} strokeWidth={1.75} />
+          <Trash size={13} strokeWidth={1.75} />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

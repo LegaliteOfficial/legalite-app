@@ -3,11 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ChevronRight, Info,
-  Users, Briefcase, Clock, CreditCard, Landmark, Receipt,
-  Settings as SettingsIcon, ShieldAlert, ListChecks, Trash2, Lock,
-} from 'lucide-react'
+import { CaretRight, Info, Users, Briefcase, Clock, CreditCard, Bank, Receipt, Gear as SettingsIcon, ShieldWarning, ListChecks, Trash, Lock } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useCreateFirmRole } from '@/hooks/use-firm-roles'
 
@@ -98,7 +94,7 @@ const PERMISSION_SECTIONS: SectionDef[] = [
     description: 'Provides access to financial management, including bills and client fund requests.',
     newCount: 2,
     groups: [
-      { id: 'accounts',     label: 'Accounts',      Icon: Landmark,    permissions: [
+      { id: 'accounts',     label: 'Accounts',      Icon: Bank,    permissions: [
         { id: 'view-accounts',         label: 'View trust and operating accounts' },
         { id: 'manage-account-info',   label: 'Manage account information' },
       ]},
@@ -141,7 +137,7 @@ const PERMISSION_SECTIONS: SectionDef[] = [
       {
         id: 'conflict',
         label: 'Conflict check',
-        Icon: ShieldAlert,
+        Icon: ShieldWarning,
         permissions: [
           { id: 'manage-conflict-checks',   label: 'Manage conflict checks' },
           { id: 'view-conflict-report',     label: 'View conflict check report' },
@@ -159,7 +155,7 @@ const PERMISSION_SECTIONS: SectionDef[] = [
         { id: 'view-assigned-tasks', label: 'View tasks from assigned matters' },
         { id: 'view-all-tasks',      label: 'View tasks across the firm' },
       ]},
-      { id: 'bulk-tasks',   label: 'Bulk delete tasks', Icon: Trash2,  permissions: [
+      { id: 'bulk-tasks',   label: 'Bulk delete tasks', Icon: Trash,  permissions: [
         { id: 'bulk-delete-tasks',   label: 'Bulk delete tasks' },
       ]},
     ],
@@ -309,7 +305,7 @@ export default function CreateRolePage() {
       toast.error('Role description is required.')
       return
     }
-    // Send only the granted, configurable permissions. The always-on
+    // PaperPlaneTilt only the granted, configurable permissions. The always-on
     // "non-configurable" slugs are implicit and not part of the backend
     // catalog, so they're excluded to avoid an "unknown permission" rejection.
     const selectedPermissions = Object.entries(permissions)
@@ -339,10 +335,10 @@ export default function CreateRolePage() {
         <div className="px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 text-sm mb-1" style={{ color: 'var(--navy)' }}>
-              <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Settings</Link>
-              <ChevronRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
+              <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Gear</Link>
+              <CaretRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
               <Link href="/settings/roles" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Roles</Link>
-              <ChevronRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
+              <CaretRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
               <span className="font-bold">Create custom role</span>
             </div>
             <h1 className="font-heading text-2xl font-extrabold leading-tight" style={{ color: 'var(--navy)' }}>

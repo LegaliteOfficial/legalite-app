@@ -1,6 +1,6 @@
 'use client'
 
-import { FileText, Pencil, Trash2 } from 'lucide-react'
+import { FileText, Pencil, Trash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import type { Document, Case } from '@/types'
 
@@ -103,7 +103,7 @@ export function DraftCard({
             title="Delete draft"
             onClick={() => onDelete(doc.id, doc.title)}
           >
-            <Trash2 size={13} className="text-red-500" />
+            <Trash size={13} className="text-red-500" />
           </Button>
         </div>
       </div>

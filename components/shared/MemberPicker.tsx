@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, User, X } from 'lucide-react'
+import { CaretDown, User, X } from '@phosphor-icons/react'
 import { useFirmMembers } from '@/hooks/use-firm-members'
 
 /** A picked firm member — the minimal shape the task composer needs. */
@@ -104,7 +104,7 @@ export function MemberPicker({
         ) : (
           value.map((m) => <Chip key={m.id} member={m} onRemove={() => toggle(m)} />)
         )}
-        <ChevronDown size={13} strokeWidth={1.75} className="ml-auto" style={{ color: 'var(--text-muted)' }} />
+        <CaretDown size={13} strokeWidth={1.75} className="ml-auto" style={{ color: 'var(--text-muted)' }} />
       </div>
 
       {open && (

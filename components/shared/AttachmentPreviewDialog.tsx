@@ -8,7 +8,7 @@
  *   video    → <video controls>
  *   audio    → <audio controls>
  *   text     → fetched and rendered in <pre> (capped at 1 MB)
- *   office / archive / other → "Preview unavailable" + Download CTA
+ *   office / archive / other → "Preview unavailable" + DownloadSimple CTA
  *
  * The signed URL is fetched on open and re-fetched any time the
  * attachment id changes. The URL stays in memory only — no
@@ -17,7 +17,7 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
-import { Download, ExternalLink, FileText, X } from 'lucide-react'
+import { DownloadSimple, ArrowSquareOut, FileText, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/shared/Spinner'
 import type { Attachment } from '@/hooks/use-attachments'
@@ -148,8 +148,8 @@ function PreviewHeader({
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Button variant="outline" size="sm" onClick={onDownload}>
-          <Download size={13} strokeWidth={1.75} />
-          Download
+          <DownloadSimple size={13} strokeWidth={1.75} />
+          DownloadSimple
         </Button>
         <button
           onClick={onClose}
@@ -313,7 +313,7 @@ function TextPreview({ url, onDownload }: { url: string; onDownload: () => void 
             borderColor: 'var(--border-soft)',
           }}
         >
-          Showing the first {Math.round(MAX_TEXT_BYTES / 1024)} KB. Download to read the whole file.
+          Showing the first {Math.round(MAX_TEXT_BYTES / 1024)} KB. DownloadSimple to read the whole file.
         </div>
       )}
       <pre
@@ -352,12 +352,12 @@ function UnsupportedFallback({
         {kindLabel} preview isn’t supported in the browser.
       </p>
       <p className="text-[12.5px] max-w-md" style={{ color: 'var(--text-muted)' }}>
-        Download the file to open it in {kindLabel === 'Office document' ? 'Word, Excel, or another desktop app' : 'a native app'}.
+        DownloadSimple the file to open it in {kindLabel === 'Office document' ? 'Word, Excel, or another desktop app' : 'a native app'}.
       </p>
       <div className="mt-3 flex items-center gap-2">
         <Button size="sm" onClick={onDownload}>
-          <Download size={13} strokeWidth={1.75} />
-          Download
+          <DownloadSimple size={13} strokeWidth={1.75} />
+          DownloadSimple
         </Button>
         <a
           href={url}
@@ -370,7 +370,7 @@ function UnsupportedFallback({
             color: 'var(--text-primary)',
           }}
         >
-          <ExternalLink size={12} strokeWidth={1.75} />
+          <ArrowSquareOut size={12} strokeWidth={1.75} />
           Open in new tab
         </a>
       </div>
@@ -388,8 +388,8 @@ function Fallback({ message, onDownload }: { message: string; onDownload: () => 
         {message}
       </p>
       <Button variant="outline" size="sm" onClick={onDownload}>
-        <Download size={13} strokeWidth={1.75} />
-        Download instead
+        <DownloadSimple size={13} strokeWidth={1.75} />
+        DownloadSimple instead
       </Button>
     </div>
   )

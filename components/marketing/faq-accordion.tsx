@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-
+import { CaretDown } from '@phosphor-icons/react'
 interface FAQItem {
   question: string
   answer: string
@@ -26,7 +25,7 @@ export function FAQAccordion({ items }: { items: FAQItem[] }) {
               <strong className="text-white text-base [font-family:Inter,Arial,sans-serif] font-medium">
                 {item.question}
               </strong>
-              <ChevronDown
+              <CaretDown
                 size={18}
                 className={`text-white/60 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`}
               />

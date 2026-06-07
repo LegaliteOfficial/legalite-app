@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Download,
-} from 'lucide-react'
+import { CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight, DownloadSimple } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import type { PageSize } from '../_types'
 import { ExpandRowsToggle } from './ExpandRowsToggle'
@@ -54,28 +48,28 @@ export function PaginationFooter({
     >
       <div className="flex items-center gap-1">
         <IconNav onClick={() => onPageChange(0)} disabled={atFirst} aria-label="First page">
-          <ChevronsLeft size={14} strokeWidth={1.75} />
+          <CaretDoubleLeft size={14} strokeWidth={1.75} />
         </IconNav>
         <IconNav
           onClick={() => onPageChange(Math.max(0, page - 1))}
           disabled={atFirst}
           aria-label="Previous page"
         >
-          <ChevronLeft size={14} strokeWidth={1.75} />
+          <CaretLeft size={14} strokeWidth={1.75} />
         </IconNav>
         <IconNav
           onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
           disabled={atLast}
           aria-label="Next page"
         >
-          <ChevronRight size={14} strokeWidth={1.75} />
+          <CaretRight size={14} strokeWidth={1.75} />
         </IconNav>
         <IconNav
           onClick={() => onPageChange(totalPages - 1)}
           disabled={atLast}
           aria-label="Last page"
         >
-          <ChevronsRight size={14} strokeWidth={1.75} />
+          <CaretDoubleRight size={14} strokeWidth={1.75} />
         </IconNav>
         <span
           className="ml-2 text-[12px] tabular-nums"
@@ -89,7 +83,7 @@ export function PaginationFooter({
         <PageSizeDropdown value={pageSize} onChange={onPageSizeChange} />
         <ExpandRowsToggle expanded={expandRows} onChange={onExpandRowsChange} />
         <Button variant="outline" size="sm" disabled={!canExport} onClick={onExport}>
-          <Download size={13} strokeWidth={1.75} />
+          <DownloadSimple size={13} strokeWidth={1.75} />
           Export
         </Button>
       </div>

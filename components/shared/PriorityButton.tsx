@@ -29,7 +29,7 @@
  * single source of truth for prioritisation across the app.
  */
 
-import { Star } from 'lucide-react'
+import { Star } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import {
   DropdownMenu,

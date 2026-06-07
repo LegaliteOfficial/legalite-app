@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
+import { CaretDown, CaretUp, CaretUpDown } from '@phosphor-icons/react'
 import type { ColumnDef, SortDir } from '../_types'
 
 /**
@@ -33,7 +33,7 @@ export function SortableHeader({
     )
   }
 
-  const Icon = active ? (dir === 'asc' ? ChevronUp : ChevronDown) : ChevronsUpDown
+  const Icon = active ? (dir === 'asc' ? CaretUp : CaretDown) : CaretUpDown
 
   return (
     <button

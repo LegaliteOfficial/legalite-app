@@ -26,28 +26,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import {
-  Briefcase,
-  Building2,
-  CalendarClock,
-  Check,
-  ChevronDown,
-  CircleDollarSign,
-  ClipboardList,
-  FileText,
-  FolderTree,
-  GitFork,
-  ListChecks,
-  Plus,
-  Settings2,
-  ShieldCheck,
-  ShieldOff,
-  Tag,
-  Trash2,
-  Users,
-  Bell,
-  X,
-} from 'lucide-react'
+import { Briefcase, Buildings, CalendarDots, Check, CaretDown, Coin, ClipboardText, FileText, TreeStructure, GitFork, ListChecks, Plus, GearSix, ShieldCheck, ShieldSlash, Tag, Trash, Users, Bell, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -77,19 +56,19 @@ interface SectionDef {
 }
 
 const SECTIONS: SectionDef[] = [
-  { id: 'template', label: 'Template information', Icon: ClipboardList },
+  { id: 'template', label: 'Template information', Icon: ClipboardText },
   { id: 'clients', label: 'Clients', Icon: Users },
   { id: 'case-details', label: 'Case details', Icon: Briefcase },
   { id: 'permissions', label: 'Case permissions', Icon: ShieldCheck },
   { id: 'notifications', label: 'Case notifications', Icon: Bell },
-  { id: 'block-users', label: 'Block users', Icon: ShieldOff },
+  { id: 'block-users', label: 'Block users', Icon: ShieldSlash },
   { id: 'related-contacts', label: 'Related contacts', Icon: GitFork },
-  { id: 'custom-fields', label: 'Custom fields', Icon: Settings2 },
-  { id: 'billing', label: 'Billing preference', Icon: CircleDollarSign },
+  { id: 'custom-fields', label: 'Custom fields', Icon: GearSix },
+  { id: 'billing', label: 'Billing preference', Icon: Coin },
   { id: 'tasks', label: 'Task lists', Icon: ListChecks },
-  { id: 'documents', label: 'Document folders', Icon: FolderTree },
+  { id: 'documents', label: 'Document folders', Icon: TreeStructure },
   { id: 'reports', label: 'Reports', Icon: FileText },
-  { id: 'conflicts', label: 'Conflict checks', Icon: Building2 },
+  { id: 'conflicts', label: 'Conflict checks', Icon: Buildings },
 ]
 
 // ── Form state ──────────────────────────────────────────────────────────
@@ -1034,7 +1013,7 @@ function NativeSelect({
               </option>
             ))}
       </select>
-      <ChevronDown
+      <CaretDown
         size={13}
         strokeWidth={1.75}
         className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -1157,7 +1136,7 @@ function ContactCombobox({
           color: 'var(--text-primary)',
         }}
       />
-      <ChevronDown
+      <CaretDown
         size={13}
         strokeWidth={1.75}
         className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -2317,7 +2296,7 @@ function RelatedContactsSection({
               onClick={() => removeRow(row.id)}
               aria-label="Remove related contact"
             >
-              <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
+              <Trash size={13} style={{ color: 'var(--text-muted)' }} />
             </Button>
           </div>
           <Checkbox
@@ -2914,5 +2893,5 @@ function ConflictChecksSection({
 // Suppress unused imports warning for icons exposed for future sections.
 // Keeps the icon imports near the top tidy so the section registry can
 // pull from a single shared set when new sections land.
-const _unusedReservedIcons = { CalendarClock }
+const _unusedReservedIcons = { CalendarDots }
 void _unusedReservedIcons

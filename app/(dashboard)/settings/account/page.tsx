@@ -3,31 +3,8 @@
 import { Suspense, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import {
-  User,
-  Lock,
-  Bell,
-  Palette,
-  Plug,
-  Building,
-  Phone,
-  CreditCard,
-  Mail,
-  MessageSquare,
-  Clock,
-  Briefcase,
-  DollarSign,
-  Shield,
-  Monitor,
-  PanelLeft,
-  Minimize2,
-  Calendar,
-  Key,
-  Copy,
-  Eye,
-  EyeOff,
-} from 'lucide-react'
+import { CaretLeft } from '@phosphor-icons/react'
+import { User, Lock, Bell, Palette, Plug, Building, Phone, CreditCard, Envelope, ChatCircle, Clock, Briefcase, CurrencyDollar, Shield, Monitor, Sidebar, CornersIn, Calendar, Key, Copy, Eye, EyeSlash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -201,7 +178,7 @@ function Card({
 }
 
 // ===========================================================================
-// Main Settings Page
+// Main Gear Page
 // ===========================================================================
 
 const VALID_SECTIONS: readonly SectionId[] = ['profile', 'notifications', 'security', 'appearance', 'integrations']
@@ -397,7 +374,7 @@ function SettingsPageInner() {
         className="inline-flex items-center gap-1 text-xs font-semibold mb-3 hover:opacity-70 transition-opacity"
         style={{ color: '#6B7280' }}
       >
-        <ChevronLeft size={14} strokeWidth={2} /> Back to settings
+        <CaretLeft size={14} strokeWidth={2} /> Back to settings
       </Link>
       <h1
         className="font-heading text-xl font-bold mb-6"
@@ -461,7 +438,7 @@ function SettingsPageInner() {
                 <div>
                   <SectionLabel>
                     <div className="flex items-center gap-1.5">
-                      <Mail size={12} /> Email
+                      <Envelope size={12} /> Email
                     </div>
                   </SectionLabel>
                   <Input
@@ -556,7 +533,7 @@ function SettingsPageInner() {
             >
               <div className="max-w-lg divide-y" style={{ borderColor: '#F3F4F6' }}>
                 <ToggleRow
-                  icon={Mail}
+                  icon={Envelope}
                   label="Email Notifications"
                   description="Receive important updates and summaries via email."
                   checked={notifications.emailNotifications}
@@ -568,7 +545,7 @@ function SettingsPageInner() {
                   }
                 />
                 <ToggleRow
-                  icon={MessageSquare}
+                  icon={ChatCircle}
                   label="SMS Alerts"
                   description="Get text messages for urgent notifications."
                   checked={notifications.smsAlerts}
@@ -604,7 +581,7 @@ function SettingsPageInner() {
                   }
                 />
                 <ToggleRow
-                  icon={DollarSign}
+                  icon={CurrencyDollar}
                   label="Billing Alerts"
                   description="Get notified about invoices and payment activity."
                   checked={notifications.billingAlerts}
@@ -660,7 +637,7 @@ function SettingsPageInner() {
                         style={{ color: '#9CA3AF' }}
                       >
                         {showCurrentPassword ? (
-                          <EyeOff size={16} />
+                          <EyeSlash size={16} />
                         ) : (
                           <Eye size={16} />
                         )}
@@ -689,7 +666,7 @@ function SettingsPageInner() {
                         style={{ color: '#9CA3AF' }}
                       >
                         {showNewPassword ? (
-                          <EyeOff size={16} />
+                          <EyeSlash size={16} />
                         ) : (
                           <Eye size={16} />
                         )}
@@ -861,7 +838,7 @@ function SettingsPageInner() {
                 <div>
                   <SectionLabel>
                     <div className="flex items-center gap-1.5">
-                      <PanelLeft size={12} /> Sidebar Position
+                      <Sidebar size={12} /> Sidebar Position
                     </div>
                   </SectionLabel>
                   <div className="flex gap-3 mt-2">
@@ -898,7 +875,7 @@ function SettingsPageInner() {
 
                 {/* Compact Mode */}
                 <ToggleRow
-                  icon={Minimize2}
+                  icon={CornersIn}
                   label="Compact Mode"
                   description="Reduce spacing and padding for denser information display."
                   checked={appearance.compactMode}
@@ -959,7 +936,7 @@ function SettingsPageInner() {
                 <div className="max-w-lg">
                   <SectionLabel>
                     <div className="flex items-center gap-1.5">
-                      <Mail size={12} /> Email Provider
+                      <Envelope size={12} /> Email Provider
                     </div>
                   </SectionLabel>
                   <div className="flex gap-3 mt-2">
@@ -1024,7 +1001,7 @@ function SettingsPageInner() {
                         onClick={() => setShowApiKey(!showApiKey)}
                       >
                         {showApiKey ? (
-                          <EyeOff size={16} />
+                          <EyeSlash size={16} />
                         ) : (
                           <Eye size={16} />
                         )}

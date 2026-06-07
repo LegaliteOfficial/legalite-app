@@ -19,8 +19,8 @@ export type TemplateCategoryId =
 export interface TemplateCategory {
   id: TemplateCategoryId
   label: string
-  /** Lucide icon component reference. Not typed strictly so callers can
-   *  pass any LucideIcon without parametric generics noise. */
+  /** Phosphor icon component reference. Not typed strictly so callers
+   *  can pass any Icon without parametric generics noise. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any
 }

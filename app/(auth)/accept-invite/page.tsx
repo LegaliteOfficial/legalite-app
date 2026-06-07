@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff, Building2, ShieldCheck, AlertTriangle } from 'lucide-react'
+import { Eye, EyeSlash, Buildings, ShieldCheck, Warning } from '@phosphor-icons/react'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { acceptInviteSchema, type AcceptInviteFormData } from '@/schemas'
 import { useAcceptInvite, useInvitationLookup } from '@/hooks/use-auth'
@@ -140,7 +140,7 @@ function AcceptInviteInner() {
             className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: 'rgba(201,151,43,0.18)' }}
           >
-            <Building2 size={17} strokeWidth={2} style={{ color: 'var(--gold-light)' }} />
+            <Buildings size={17} strokeWidth={2} style={{ color: 'var(--gold-light)' }} />
           </div>
           <div className="min-w-0">
             <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -208,7 +208,7 @@ function AcceptInviteInner() {
               style={{ color: 'rgba(255,255,255,0.35)' }}
               tabIndex={-1}
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
             </button>
           </div>
           {errors.password && <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>}
@@ -236,7 +236,7 @@ function AcceptInviteInner() {
               style={{ color: 'rgba(255,255,255,0.35)' }}
               tabIndex={-1}
             >
-              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showConfirm ? <EyeSlash size={16} /> : <Eye size={16} />}
             </button>
           </div>
           {errors.confirmPassword && <p className="text-red-400 text-xs mt-1.5">{errors.confirmPassword.message}</p>}
@@ -368,7 +368,7 @@ function InvalidState({ title, body }: { title: string; body: string }) {
         className="h-12 w-12 rounded-2xl flex items-center justify-center mb-5"
         style={{ background: 'rgba(220,38,38,0.14)', border: '1px solid rgba(220,38,38,0.3)' }}
       >
-        <AlertTriangle size={22} strokeWidth={2} style={{ color: '#FCA5A5' }} />
+        <Warning size={22} strokeWidth={2} style={{ color: '#FCA5A5' }} />
       </div>
       <h1 className="font-heading text-2xl font-bold text-white mb-2">{title}</h1>
       <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>{body}</p>

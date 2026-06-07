@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, Search } from 'lucide-react'
+import { BookOpen, MagnifyingGlass } from '@phosphor-icons/react'
 import { Input } from '@/components/ui/input'
 import { FileUploadZone } from '@/components/shared/FileUploadZone'
 import { LibraryCard } from '@/components/shared/LibraryCard'
@@ -67,7 +67,7 @@ export function LibraryTab({
           </p>
         </div>
         <div className="relative w-72">
-          <Search
+          <MagnifyingGlass
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
           />
@@ -172,7 +172,7 @@ function EmptyLibrary({ category }: { category: LibraryCategory }) {
         No {CATEGORY_NOUNS[category]} yet
       </p>
       <p className="text-[12px]" style={{ color: '#9CA3AF' }}>
-        Upload your first {category} using the drop zone above.
+        UploadSimple your first {category} using the drop zone above.
       </p>
     </div>
   )

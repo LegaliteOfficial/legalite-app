@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { Timer, Plus, AlertTriangle, CheckCircle2, Clock, Trash2, Pencil, Calendar, Bell, BellOff } from 'lucide-react'
+import { Timer, Plus, Warning, CheckCircle, Clock, Trash, Pencil, Calendar, Bell, BellSlash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -186,7 +186,7 @@ export default function DeadlinePage() {
                     color: notificationsEnabled ? 'var(--gold)' : 'var(--text-secondary)',
                   }}
                 >
-                  {notificationsEnabled ? <Bell size={14} strokeWidth={1.75} /> : <BellOff size={14} strokeWidth={1.75} />}
+                  {notificationsEnabled ? <Bell size={14} strokeWidth={1.75} /> : <BellSlash size={14} strokeWidth={1.75} />}
                   {notificationsEnabled ? 'Notifications on' : 'Notifications off'}
                 </Button>
               )}
@@ -200,13 +200,13 @@ export default function DeadlinePage() {
 
         <div className="mt-6 grid grid-cols-3 gap-4">
           <DeadlineStat
-            Icon={AlertTriangle}
+            Icon={Warning}
             label="Overdue"
             value={stats?.overdue_count ?? 0}
             valueColor={stats?.overdue_count ? '#C0392B' : undefined}
           />
           <DeadlineStat Icon={Clock} label="This week" value={stats?.upcoming_this_week?.length ?? 0} />
-          <DeadlineStat Icon={CheckCircle2} label="Total" value={deadlines?.length ?? 0} />
+          <DeadlineStat Icon={CheckCircle} label="Total" value={deadlines?.length ?? 0} />
         </div>
 
         <div className="mt-6 flex items-center gap-1">
@@ -270,7 +270,7 @@ export default function DeadlinePage() {
                 {deadlines.map((d) => {
                   const overdue = d.status === 'Pending' && isOverdue(d.due_date)
                   const dotColor = d.status === 'Done' ? '#2E7D4F' : overdue ? '#C0392B' : 'var(--gold)'
-                  const StatusIcon = d.status === 'Done' ? CheckCircle2 : overdue ? AlertTriangle : Calendar
+                  const StatusIcon = d.status === 'Done' ? CheckCircle : overdue ? Warning : Calendar
                   return (
                     <li
                       key={d.id}
@@ -328,7 +328,7 @@ export default function DeadlinePage() {
                             onClick={() => handleMarkDone(d.id)}
                             aria-label="Mark done"
                           >
-                            <CheckCircle2 size={13} style={{ color: '#2E7D4F' }} />
+                            <CheckCircle size={13} style={{ color: '#2E7D4F' }} />
                           </Button>
                         )}
                         <Button
@@ -345,7 +345,7 @@ export default function DeadlinePage() {
                           onClick={() => handleDelete(d.id)}
                           aria-label="Delete"
                         >
-                          <Trash2 size={13} style={{ color: 'var(--text-muted)' }} />
+                          <Trash size={13} style={{ color: 'var(--text-muted)' }} />
                         </Button>
                       </div>
                     </li>
@@ -430,7 +430,7 @@ export default function DeadlinePage() {
 function DeadlineStat({
   Icon, label, value, valueColor,
 }: {
-  Icon: typeof AlertTriangle
+  Icon: typeof Warning
   label: string
   value: number
   valueColor?: string

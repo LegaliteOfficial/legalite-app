@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState, useRef } from 'react'
-import { Upload, FileText, X } from 'lucide-react'
+import { UploadSimple, FileText, X } from '@phosphor-icons/react'
 import { Spinner } from './Spinner'
 
 interface FileUploadZoneProps {
@@ -110,7 +110,7 @@ export function FileUploadZone({
             className="h-10 w-10 rounded-full flex items-center justify-center"
             style={{ background: `${config.accent}10` }}
           >
-            <Upload size={18} style={{ color: config.accent }} />
+            <UploadSimple size={18} style={{ color: config.accent }} />
           </div>
           <p className="text-sm font-medium" style={{ color: 'var(--navy)' }}>
             {config.label}

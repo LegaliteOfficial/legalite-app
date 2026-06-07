@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { FileText, Search } from 'lucide-react'
+import { FileText, MagnifyingGlass } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { Case, Document } from '@/types'
@@ -58,7 +58,7 @@ export function DraftsTab({
           </p>
         </div>
         <div className="relative w-72">
-          <Search
+          <MagnifyingGlass
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
           />

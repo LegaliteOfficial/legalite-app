@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, Columns3 } from 'lucide-react'
+import { CaretDown, Columns } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -22,14 +22,14 @@ export function ColumnsPicker({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        // Base UI Menu.Trigger always renders its own <button>. We use the
+        // Base UI List.Trigger always renders its own <button>. We use the
         // `render` prop (NOT `asChild` — that's a Radix-ism) so it composes
         // with our Button rather than wrapping it.
         render={
           <Button variant="outline" size="sm">
-            <Columns3 size={13} strokeWidth={1.75} />
+            <Columns size={13} strokeWidth={1.75} />
             Columns
-            <ChevronDown size={12} strokeWidth={1.75} />
+            <CaretDown size={12} strokeWidth={1.75} />
           </Button>
         }
       />
@@ -46,7 +46,7 @@ export function ColumnsPicker({
           return (
             <DropdownMenuItem
               key={col.id}
-              // Base UI's Menu.Item fires `onClick`. `closeOnClick={false}`
+              // Base UI's List.Item fires `onClick`. `closeOnClick={false}`
               // keeps the menu open so the user can toggle several columns
               // in one go without re-opening.
               closeOnClick={false}

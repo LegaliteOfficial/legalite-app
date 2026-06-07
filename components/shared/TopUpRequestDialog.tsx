@@ -30,15 +30,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Bell,
-  Check,
-  Copy,
-  Mail,
-  Phone,
-  RefreshCw,
-  Users,
-} from 'lucide-react'
+import { Bell, Check, Copy, Envelope, Phone, ArrowsClockwise, Users } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,7 +61,7 @@ type RequestKind = 'generic' | 'specific'
 
 // Money is formatted through the firm-currency-aware helper so the
 // top-up email body / subject pick up whatever billing currency the
-// firm has set in Settings.
+// firm has set in Gear.
 function fmtMoney(n: number): string {
   return formatCurrency(n)
 }
@@ -153,7 +145,7 @@ export function TopUpRequestDialog({
 
   // Firm name resolution flows through `useEffectiveFirmName` so the
   // chain stays consistent across every client-facing surface:
-  //   1. Settings -> Account Info branding override (if customised)
+  //   1. Gear -> Account Info branding override (if customised)
   //   2. activeMembership.firm_name captured at sign-up
   //   3. legacy user.firm (for old persisted auth blobs)
   //   4. fallback 'our firm' — never the product name, because this
@@ -466,7 +458,7 @@ export function TopUpRequestDialog({
             >
               {(
                 [
-                  { key: 'email', label: 'Email', Icon: Mail },
+                  { key: 'email', label: 'Email', Icon: Envelope },
                   { key: 'phone', label: 'Phone call', Icon: Phone },
                   { key: 'in_person', label: 'In person', Icon: Users },
                 ] as const
@@ -540,7 +532,7 @@ export function TopUpRequestDialog({
                     className="inline-flex items-center gap-1 text-[11.5px] font-semibold underline underline-offset-2 cursor-pointer"
                     style={{ color: 'var(--accent-today)' }}
                   >
-                    <RefreshCw size={10} strokeWidth={2} />
+                    <ArrowsClockwise size={10} strokeWidth={2} />
                     Reset template
                   </button>
                 </div>
@@ -576,7 +568,7 @@ export function TopUpRequestDialog({
                     <>
                       The template uses a generic reference to your firm
                       while branding is still set up. Add your firm name
-                      in <a href="/settings/account-info" className="underline underline-offset-2">Settings &rsaquo; Account Info</a>{' '}
+                      in <a href="/settings/account-info" className="underline underline-offset-2">Gear &rsaquo; Account Info</a>{' '}
                       and it will flow into every email and statement.
                     </>
                   )}
@@ -657,7 +649,7 @@ export function TopUpRequestDialog({
                 onClick={handleSendEmail}
                 style={{ background: 'var(--gold)', color: 'var(--navy)' }}
               >
-                <Mail size={13} strokeWidth={1.75} />
+                <Envelope size={13} strokeWidth={1.75} />
                 Open in mail
               </Button>
             </>

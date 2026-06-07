@@ -1,25 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Check,
-  Crown,
-  Building2,
-  Users,
-  Sparkles,
-  ChevronDown,
-  Zap,
-  Shield,
-  FileText,
-  MessageSquare,
-  BarChart3,
-  Clock,
-  Palette,
-  Code,
-  Phone,
-  Headphones,
-  UserPlus,
-} from 'lucide-react'
+import { Check, Crown, Buildings, Users, Sparkle, CaretDown, Lightning, Shield, FileText, ChatCircle, ChartBar, Clock, Palette, Code, Phone, Headphones, UserPlus } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -31,16 +13,16 @@ const plans = [
     description: 'For individual lawyers getting started',
     price: 0,
     period: '/month',
-    Icon: Zap,
+    Icon: Lightning,
     isCurrent: true,
     isPopular: false,
     features: [
       { text: '5 clients', Icon: Users },
       { text: '3 cases', Icon: FileText },
-      { text: '5 AI queries/day', Icon: Sparkles },
+      { text: '5 AI queries/day', Icon: Sparkle },
       { text: '2 document templates', Icon: FileText },
-      { text: 'Community support', Icon: MessageSquare },
-      { text: 'Basic dashboard', Icon: BarChart3 },
+      { text: 'Community support', Icon: ChatCircle },
+      { text: 'Basic dashboard', Icon: ChartBar },
     ],
   },
   {
@@ -55,10 +37,10 @@ const plans = [
     features: [
       { text: 'Unlimited clients', Icon: Users },
       { text: 'Unlimited cases', Icon: FileText },
-      { text: '50 AI queries/day', Icon: Sparkles },
+      { text: '50 AI queries/day', Icon: Sparkle },
       { text: 'All 12 document templates', Icon: FileText },
-      { text: 'Priority email support', Icon: MessageSquare },
-      { text: 'Full dashboard analytics', Icon: BarChart3 },
+      { text: 'Priority email support', Icon: ChatCircle },
+      { text: 'Full dashboard analytics', Icon: ChartBar },
       { text: 'Deadline engine', Icon: Clock },
       { text: 'Document library', Icon: FileText },
       { text: 'Client communications', Icon: Phone },
@@ -70,18 +52,18 @@ const plans = [
     description: 'For a firm of up to 15 users',
     price: 999,
     period: '/month',
-    Icon: Building2,
+    Icon: Buildings,
     isCurrent: false,
     isPopular: false,
     features: [
       { text: 'Everything in Premium', Icon: Check },
       { text: 'Up to 15 team members', Icon: UserPlus },
-      { text: 'Unlimited AI queries', Icon: Sparkles },
+      { text: 'Unlimited AI queries', Icon: Sparkle },
       { text: 'Custom document templates', Icon: FileText },
       { text: 'Dedicated account manager', Icon: Headphones },
       { text: 'White-label branding', Icon: Palette },
       { text: 'API access', Icon: Code },
-      { text: 'Advanced analytics & reporting', Icon: BarChart3 },
+      { text: 'Advanced analytics & reporting', Icon: ChartBar },
       { text: 'Priority phone & chat support', Icon: Phone },
       { text: 'Team collaboration tools', Icon: Users },
     ],
@@ -133,7 +115,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         <span className="text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
           {question}
         </span>
-        <ChevronDown
+        <CaretDown
           size={16}
           strokeWidth={1.75}
           style={{

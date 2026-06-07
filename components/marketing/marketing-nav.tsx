@@ -2,8 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
-
+import { List, X } from '@phosphor-icons/react'
 const NAV_LINKS = [
   { href: '/product/case-management', label: 'Case management' },
   { href: '/product/legal-research', label: 'Legal research' },
@@ -66,7 +65,7 @@ export function MarketingNav() {
           className="md:hidden text-white p-2"
           onClick={() => setOpen((v) => !v)}
         >
-          {open ? <X size={20} /> : <Menu size={20} />}
+          {open ? <X size={20} /> : <List size={20} />}
         </button>
       </div>
 

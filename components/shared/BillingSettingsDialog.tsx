@@ -16,15 +16,15 @@
  *      client doesn't have a client-specific rate set. Captures
  *      the "standard rate card" most boutique firms keep.
  *
- * Why one dialog (not Settings -> Billing page)? Partners reach for
+ * Why one dialog (not Gear -> Billing page)? Partners reach for
  * the gear at the moment they realise a client should be billed in
  * USD or the firm rate is off. Putting it next to "New bill" keeps
- * the friction low. A future "Billing" tab on the global Settings
+ * the friction low. A future "Billing" tab on the global Gear
  * page can mount the same form.
  */
 
 import { useEffect, useState } from 'react'
-import { Check, Coins, DollarSign } from 'lucide-react'
+import { Check, Coins, CurrencyDollar } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -205,7 +205,7 @@ function SettingsForm({
               htmlFor="bs-rate"
               className="text-[13px] font-semibold inline-flex items-center gap-1.5"
             >
-              <DollarSign size={12} strokeWidth={2} />
+              <CurrencyDollar size={12} strokeWidth={2} />
               Firm default hourly rate
             </Label>
             <p

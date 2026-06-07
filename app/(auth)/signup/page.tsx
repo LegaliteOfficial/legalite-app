@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeSlash } from '@phosphor-icons/react'
 import { useRegisterUser } from '@/hooks/use-auth'
 
 // Mapped to backend's firm_type enum.
@@ -289,7 +289,7 @@ export default function SignupPage() {
                 style={{ color: 'rgba(255,255,255,0.35)' }}
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {errors.password && (
@@ -331,7 +331,7 @@ export default function SignupPage() {
                 style={{ color: 'rgba(255,255,255,0.35)' }}
                 tabIndex={-1}
               >
-                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showConfirm ? <EyeSlash size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {errors.confirmPassword && (

@@ -37,16 +37,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import {
-  Calendar,
-  ChevronLeft,
-  Download,
-  FileText,
-  Filter,
-  Printer,
-  RefreshCw,
-  Users,
-} from 'lucide-react'
+import { Calendar, CaretLeft, DownloadSimple, FileText, Funnel, Printer, ArrowsClockwise, Users } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -60,7 +51,7 @@ import {
 } from '@/stores/bills-local.store'
 import { formatCurrency } from '@/lib/format-currency'
 
-// ── Filter option lists ───────────────────────────────────────────────
+// ── Funnel option lists ───────────────────────────────────────────────
 
 const CLIENT_SCOPES = [
   { key: 'all', label: 'All Clients' },
@@ -120,7 +111,7 @@ export default function StatementsPage() {
   const { data: clients } = useClients()
   const { data: cases } = useCases()
 
-  // ── Filter state ────────────────────────────────────────────────
+  // ── Funnel state ────────────────────────────────────────────────
   const [showZeroBalance, setShowZeroBalance] = useState(true)
   const [showUnbilledWithFunds, setShowUnbilledWithFunds] = useState(false)
   const [clientScope, setClientScope] = useState<ClientScope>('all')
@@ -237,7 +228,7 @@ export default function StatementsPage() {
           className="inline-flex items-center gap-1 text-[12.5px] font-medium hover:underline underline-offset-2"
           style={{ color: 'var(--text-secondary)' }}
         >
-          <ChevronLeft size={13} strokeWidth={1.75} />
+          <CaretLeft size={13} strokeWidth={1.75} />
           Back to bills
         </Link>
 
@@ -261,7 +252,7 @@ export default function StatementsPage() {
       </div>
 
       <div className="grid grid-cols-[360px_1fr] gap-4 px-6 pb-12">
-        {/* ── Filter column ───────────────────────────────────── */}
+        {/* ── Funnel column ───────────────────────────────────── */}
         <div
           className="rounded-xl border p-4 statements-chrome"
           style={{
@@ -270,7 +261,7 @@ export default function StatementsPage() {
           }}
         >
           {/* Filters */}
-          <SectionLabel icon={<Filter size={13} strokeWidth={1.75} />}>
+          <SectionLabel icon={<Funnel size={13} strokeWidth={1.75} />}>
             Filters
           </SectionLabel>
           <ToggleRow
@@ -437,7 +428,7 @@ export default function StatementsPage() {
               variant="outline"
               onClick={() => handleGenerate('ZIP')}
             >
-              <Download size={13} strokeWidth={1.75} />
+              <DownloadSimple size={13} strokeWidth={1.75} />
               ZIP
             </Button>
           </div>
@@ -495,7 +486,7 @@ export default function StatementsPage() {
                 className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold underline underline-offset-2 cursor-pointer"
                 style={{ color: 'var(--accent-today)' }}
               >
-                <RefreshCw size={11} strokeWidth={2} />
+                <ArrowsClockwise size={11} strokeWidth={2} />
                 Loosen filters
               </button>
             </div>
@@ -516,7 +507,7 @@ export default function StatementsPage() {
   )
 }
 
-// ── Filter / data plumbing ────────────────────────────────────────────
+// ── Funnel / data plumbing ────────────────────────────────────────────
 
 interface Statement {
   client_id: string

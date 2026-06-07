@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, Filter, Search } from 'lucide-react'
+import { CaretDown, Funnel, MagnifyingGlass } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { STATUS_FILTERS } from '../_constants'
@@ -73,7 +73,7 @@ export function CasesToolbar({
 
       <div className="flex items-center gap-2">
         <div className="relative w-64">
-          <Search
+          <MagnifyingGlass
             size={13}
             strokeWidth={1.75}
             className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -94,7 +94,7 @@ export function CasesToolbar({
         <ColumnsPicker visible={visibleColumns} onChange={onColumnsChange} />
 
         <Button variant="outline" size="sm" onClick={onOpenFilters}>
-          <Filter size={13} strokeWidth={1.75} />
+          <Funnel size={13} strokeWidth={1.75} />
           Filters
           {activeFilterCount > 0 && (
             <span
@@ -104,7 +104,7 @@ export function CasesToolbar({
               {activeFilterCount}
             </span>
           )}
-          <ChevronDown size={12} strokeWidth={1.75} />
+          <CaretDown size={12} strokeWidth={1.75} />
         </Button>
       </div>
     </div>

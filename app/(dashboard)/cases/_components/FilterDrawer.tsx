@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { Plus, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Button } from '@/components/ui/button'

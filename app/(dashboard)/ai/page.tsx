@@ -2,18 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import {
-  Send,
-  Scale,
-  BookOpen,
-  Search,
-  Plus,
-  MessageSquare,
-  Trash2,
-  Clock,
-  PanelLeftClose,
-  PanelLeft,
-} from 'lucide-react'
+import { PaperPlaneTilt, Scales, BookOpen, MagnifyingGlass, Plus, ChatCircle, Trash, Clock, SidebarSimple, Sidebar } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
@@ -32,9 +21,9 @@ import {
 import { AnswerCard } from '@/components/ai/AnswerCard'
 
 const SUGGESTIONS = [
-  { Icon: Scale,    text: 'What are the grounds for judicial review in Ghana?' },
+  { Icon: Scales,    text: 'What are the grounds for judicial review in Ghana?' },
   { Icon: BookOpen, text: 'Summarize the Matrimonial Causes Act provisions on divorce.' },
-  { Icon: Search,   text: 'Find precedents on breach of contract in commercial disputes.' },
+  { Icon: MagnifyingGlass,   text: 'Find precedents on breach of contract in commercial disputes.' },
 ]
 
 export default function AiAssistantPage() {
@@ -240,7 +229,7 @@ function ConversationSidebar({
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {sessions.length === 0 ? (
           <div className="text-center p-4">
-            <MessageSquare
+            <ChatCircle
               size={18}
               strokeWidth={1.75}
               className="mx-auto mb-2"
@@ -268,7 +257,7 @@ function ConversationSidebar({
                   if (!isActive) e.currentTarget.style.background = 'transparent'
                 }}
               >
-                <MessageSquare
+                <ChatCircle
                   size={13}
                   strokeWidth={1.75}
                   className="mt-0.5 shrink-0"
@@ -295,7 +284,7 @@ function ConversationSidebar({
                   style={{ color: 'var(--text-muted)' }}
                   aria-label="Delete conversation"
                 >
-                  <Trash2 size={11} strokeWidth={1.75} />
+                  <Trash size={11} strokeWidth={1.75} />
                 </button>
               </div>
             )
@@ -332,7 +321,7 @@ function ChatHeader({
           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
         >
-          {sidebarOpen ? <PanelLeftClose size={14} strokeWidth={1.75} /> : <PanelLeft size={14} strokeWidth={1.75} />}
+          {sidebarOpen ? <SidebarSimple size={14} strokeWidth={1.75} /> : <Sidebar size={14} strokeWidth={1.75} />}
         </button>
         <h1
           className="font-heading text-lg font-semibold tracking-tight"
@@ -515,7 +504,7 @@ function Composer({
           className="h-11 w-11 shrink-0"
           aria-label="Send"
         >
-          <Send size={15} strokeWidth={1.75} />
+          <PaperPlaneTilt size={15} strokeWidth={1.75} />
         </Button>
       </div>
       <p

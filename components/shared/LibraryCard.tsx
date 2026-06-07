@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, FileText, Newspaper, Star, Download, Trash2, MoreVertical } from 'lucide-react'
+import { BookOpen, FileText, Newspaper, Star, DownloadSimple, Trash, DotsThreeVertical } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import type { LibraryItem } from '@/hooks/use-library'
 
@@ -80,7 +80,7 @@ export function LibraryCard({
             disabled={isDownloading}
             onClick={(e) => { e.stopPropagation(); onDownload(item.id) }}
           >
-            <Download size={14} />
+            <DownloadSimple size={14} />
           </Button>
           <Button
             variant="ghost"
@@ -88,7 +88,7 @@ export function LibraryCard({
             className="h-7 w-7 p-0"
             onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
           >
-            <Trash2 size={14} className="text-red-400" />
+            <Trash size={14} className="text-red-400" />
           </Button>
         </div>
       </div>

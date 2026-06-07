@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, Calendar as CalendarIcon, Plus } from 'lucide-react'
+import { Bell, Calendar as CalendarIcon, Plus } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 
 /**

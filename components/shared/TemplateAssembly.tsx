@@ -22,32 +22,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
-import {
-  Search,
-  Check,
-  RotateCcw,
-  AlertCircle,
-  ArrowLeft,
-  Download,
-  Printer,
-  Sparkles,
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Pilcrow,
-  FileText,
-  X,
-} from 'lucide-react'
+import { MagnifyingGlass, Check, ArrowCounterClockwise, WarningCircle, ArrowLeft, DownloadSimple, Printer, Sparkle, TextB, TextItalic, TextUnderline, TextStrikethrough, TextHOne, TextHTwo, TextHThree, List, ListNumbers, TextAlignLeft, TextAlignCenter, TextAlignRight, TextAlignJustify, Paragraph, FileText, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -392,7 +367,7 @@ export function TemplateAssembly({ template, onBack, onSaved }: TemplateAssembly
               </div>
             ) : (
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <Input
                   value={clientQuery}
                   onChange={(e) => { setClientQuery(e.target.value); setShowClientList(true) }}
@@ -441,7 +416,7 @@ export function TemplateAssembly({ template, onBack, onSaved }: TemplateAssembly
               </Label>
               {clientCases.length === 0 ? (
                 <div className="px-3 py-2.5 rounded-lg flex items-start gap-2" style={{ background: 'rgba(192,57,43,0.04)', border: '1px solid rgba(192,57,43,0.15)' }}>
-                  <AlertCircle size={14} className="mt-0.5 flex-shrink-0" style={{ color: '#C0392B' }} />
+                  <WarningCircle size={14} className="mt-0.5 flex-shrink-0" style={{ color: '#C0392B' }} />
                   <div>
                     <p className="text-[12px] font-medium" style={{ color: '#C0392B' }}>No cases for this client.</p>
                     <p className="text-[11px]" style={{ color: '#6B7280' }}>Open a case from the Cases page first.</p>
@@ -554,7 +529,7 @@ export function TemplateAssembly({ template, onBack, onSaved }: TemplateAssembly
               {/* Actions */}
               <div className="border-t pt-4 mt-3" style={{ borderColor: 'var(--border)' }}>
                 <div className="grid grid-cols-2 gap-2 mb-2">
-                  <Button variant="outline" onClick={handleExport} className="h-10"><Download size={14} className="mr-1.5" /> Export</Button>
+                  <Button variant="outline" onClick={handleExport} className="h-10"><DownloadSimple size={14} className="mr-1.5" /> Export</Button>
                   <Button variant="outline" onClick={handlePrint} className="h-10"><Printer size={14} className="mr-1.5" /> Print</Button>
                 </div>
                 <Button
@@ -575,30 +550,30 @@ export function TemplateAssembly({ template, onBack, onSaved }: TemplateAssembly
           <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border)' }}>
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--navy)' }}>Preview</h2>
             <span className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,151,43,0.1)', color: 'var(--gold)' }}>
-              <Sparkles size={12} /> Live
+              <Sparkle size={12} /> Live
             </span>
           </div>
           {/* Rich text toolbar — execCommand is deprecated but preserves the
               custom HTML formatting from generateDocumentHTML pixel-for-pixel,
               which TipTap's strict schema strips. */}
           <div className="flex items-center gap-0.5 px-3 py-2 border-b flex-wrap" style={{ borderColor: 'var(--border)', background: 'rgba(13,27,42,0.02)' }}>
-            <ToolbarBtn onClick={() => execCommand('bold')} title="Bold (Cmd/Ctrl+B)"><Bold size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('italic')} title="Italic (Cmd/Ctrl+I)"><Italic size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('underline')} title="Underline (Cmd/Ctrl+U)"><Underline size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('strikeThrough')} title="Strikethrough"><Strikethrough size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('bold')} title="Bold (Cmd/Ctrl+B)"><TextB size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('italic')} title="Italic (Cmd/Ctrl+I)"><TextItalic size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('underline')} title="Underline (Cmd/Ctrl+U)"><TextUnderline size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('strikeThrough')} title="Strikethrough"><TextStrikethrough size={14} /></ToolbarBtn>
             <ToolbarDiv />
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'p')} title="Paragraph"><Pilcrow size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h1')} title="Heading 1"><Heading1 size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h2')} title="Heading 2"><Heading2 size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h3')} title="Heading 3"><Heading3 size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('formatBlock', 'p')} title="Paragraph"><Paragraph size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h1')} title="Heading 1"><TextHOne size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h2')} title="Heading 2"><TextHTwo size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h3')} title="Heading 3"><TextHThree size={14} /></ToolbarBtn>
             <ToolbarDiv />
             <ToolbarBtn onClick={() => execCommand('insertUnorderedList')} title="Bullet list"><List size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('insertOrderedList')} title="Numbered list"><ListOrdered size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('insertOrderedList')} title="Numbered list"><ListNumbers size={14} /></ToolbarBtn>
             <ToolbarDiv />
-            <ToolbarBtn onClick={() => execCommand('justifyLeft')} title="Align left"><AlignLeft size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('justifyCenter')} title="Align center"><AlignCenter size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('justifyRight')} title="Align right"><AlignRight size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('justifyFull')} title="Justify"><AlignJustify size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('justifyLeft')} title="Align left"><TextAlignLeft size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('justifyCenter')} title="Align center"><TextAlignCenter size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('justifyRight')} title="Align right"><TextAlignRight size={14} /></ToolbarBtn>
+            <ToolbarBtn onClick={() => execCommand('justifyFull')} title="Justify"><TextAlignJustify size={14} /></ToolbarBtn>
           </div>
           <div
             ref={editorRef}
@@ -683,7 +658,7 @@ function FieldLabel({
           style={{ color: 'var(--gold)' }}
           title="Reset to case default"
         >
-          <RotateCcw size={9} />
+          <ArrowCounterClockwise size={9} />
           Reset
         </button>
       )}
@@ -694,7 +669,7 @@ function FieldLabel({
 function FieldWarning({ text }: { text: string }) {
   return (
     <p className="text-[10px] mt-1 flex items-center gap-1" style={{ color: '#C0392B' }}>
-      <AlertCircle size={10} />
+      <WarningCircle size={10} />
       {text}
     </p>
   )

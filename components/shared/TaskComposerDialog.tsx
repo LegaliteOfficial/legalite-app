@@ -20,7 +20,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Bell, Briefcase, Check, Plus, Users, X } from 'lucide-react'
+import { Bell, Briefcase, Check, Plus, Users, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

@@ -12,7 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Bell, CalendarClock, X } from 'lucide-react'
+import { Bell, CalendarDots, X } from '@phosphor-icons/react'
 import { useCalendarEvents, type CalendarEvent } from '@/hooks/use-calendar'
 
 // How early (minutes before start) to begin prompting.
@@ -122,7 +122,7 @@ export function EventNoticeBanner() {
         }}
       >
         {primary.imminent ? (
-          <CalendarClock size={15} strokeWidth={2} />
+          <CalendarDots size={15} strokeWidth={2} />
         ) : (
           <Bell size={15} strokeWidth={2} />
         )}

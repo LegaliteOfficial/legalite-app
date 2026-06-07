@@ -1,14 +1,14 @@
 'use client'
 
 /**
- * Contact detail page (industry-standard)
+ * IdentificationCard detail page (industry-standard)
  * ----------------------------------
  * Full-screen detail view for a single contact. Top bar carries the
  * contact avatar, full name, and three header actions (Quick bill,
  * New client funds request, Edit contact). Below the tabs sits a
  * two-column dashboard:
  *
- *   Left column   →  Contact information · Custom fields · Billing information
+ *   Left column   →  IdentificationCard information · Custom fields · Billing information
  *   Right column  →  Client's cases · Associated cases
  *
  * Each card is a `<CollapsibleCard>` that opens by default; the chevron
@@ -19,44 +19,14 @@
  *   - `useClient(id)` for the contact record
  *   - `useCases()` filtered by `client_id` for the cases panel
  *
- * Edit Contact today routes to /contacts/new with the contact id; once
+ * Edit IdentificationCard today routes to /contacts/new with the contact id; once
  * the contact-detail form lands as an in-place edit modal we'll swap
  * to that.
  */
 
 import { use, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Bell,
-  Bold,
-  Building2,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Columns3,
-  Copy,
-  Download,
-  Filter,
-  FolderOpen,
-  Highlighter,
-  Italic,
-  Link as LinkIcon,
-  List,
-  ListOrdered,
-  Mail,
-  Pause,
-  Phone,
-  Play,
-  Plus,
-  Redo2,
-  Search,
-  Underline,
-  Undo2,
-  UserRound,
-  X,
-} from 'lucide-react'
+import { Bell, TextB, Buildings, CaretDown, CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight, Columns, Copy, DownloadSimple, Funnel, FolderOpen, HighlighterCircle, TextItalic, Link as LinkIcon, List, ListNumbers, Envelope, Pause, Phone, Play, Plus, ArrowUUpRight, MagnifyingGlass, TextUnderline, ArrowUUpLeft, UserCircle, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -151,7 +121,7 @@ export default function ContactDetailPage({
     )
   }, [contact?.full_name])
 
-  // Cases linked to this contact. Filter all-cases by client_id so the
+  // Cases linked to this contact. Funnel all-cases by client_id so the
   // panel doesn't need a dedicated GraphQL query yet.
   const clientCases = useMemo(() => {
     if (!cases || !contact) return [] as Case[]
@@ -216,7 +186,7 @@ export default function ContactDetailPage({
             aria-hidden
           >
             {isCompany ? (
-              <Building2 size={16} strokeWidth={2} />
+              <Buildings size={16} strokeWidth={2} />
             ) : (
               initials
             )}
@@ -250,7 +220,7 @@ export default function ContactDetailPage({
           >
             New client funds request
           </HeaderBtn>
-          {/* Primary action — gold pill, matches the New Contact page
+          {/* Primary action — gold pill, matches the New IdentificationCard page
               Save button so the design language is consistent. */}
           <button
             type="button"
@@ -442,9 +412,9 @@ function CollapsibleCard({
           aria-expanded={open}
         >
           {open ? (
-            <ChevronDown size={14} strokeWidth={2} />
+            <CaretDown size={14} strokeWidth={2} />
           ) : (
-            <ChevronRight size={14} strokeWidth={2} />
+            <CaretRight size={14} strokeWidth={2} />
           )}
           {label}
         </button>
@@ -700,7 +670,7 @@ function CasesCard({
                     }}
                     aria-hidden
                   >
-                    <UserRound size={12} strokeWidth={1.75} />
+                    <UserCircle size={12} strokeWidth={1.75} />
                   </span>
                   <span className="text-[13px] font-medium truncate">
                     {c.title}
@@ -874,7 +844,7 @@ const DOC_PAGE_SIZES = [25, 50, 100] as const
 
 /**
  * Documents tab body. Mirrors the reference contact-scoped documents view:
- * toolbar (Filter by keyword · Priority · Columns · Filters · New) plus
+ * toolbar (Funnel by keyword · Priority · Columns · Filters · New) plus
  * either an empty-state illustration or a table of files.
  *
  * Today every dev contact has zero documents (the Document schema
@@ -889,7 +859,7 @@ function DocumentsTab({ contactId }: { contactId: string }) {
     () => (allDocs ?? []).filter((d) => d.client_id === contactId),
     [allDocs, contactId],
   )
-  // Cases owned by this contact — used by the Upload dialog's
+  // Cases owned by this contact — used by the UploadSimple dialog's
   // Matter picker so users can attach the new file to one of the
   // contact's open cases without leaving the page.
   const contactCases = useMemo(
@@ -919,7 +889,7 @@ function DocumentsTab({ contactId }: { contactId: string }) {
   const [page, setPage] = useState(0)
   const [expandRows, setExpandRows] = useState(false)
 
-  // ── Filter pipeline ──────────────────────────────────────────────
+  // ── Funnel pipeline ──────────────────────────────────────────────
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return docs.filter((d) => {
@@ -986,7 +956,7 @@ function DocumentsTab({ contactId }: { contactId: string }) {
         style={{ borderColor: 'var(--border-soft)' }}
       >
         <div className="relative w-64">
-          <Search
+          <MagnifyingGlass
             size={13}
             strokeWidth={1.75}
             className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -1090,14 +1060,14 @@ function DocumentsTab({ contactId }: { contactId: string }) {
             disabled={safePage === 0}
             aria-label="First page"
           >
-            <ChevronsLeft size={14} strokeWidth={1.75} />
+            <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={safePage === 0}
             aria-label="Previous page"
           >
-            <ChevronLeft size={14} strokeWidth={1.75} />
+            <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn
             onClick={() =>
@@ -1106,14 +1076,14 @@ function DocumentsTab({ contactId }: { contactId: string }) {
             disabled={safePage >= totalPages - 1}
             aria-label="Next page"
           >
-            <ChevronRight size={14} strokeWidth={1.75} />
+            <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn
             onClick={() => setPage(totalPages - 1)}
             disabled={safePage >= totalPages - 1}
             aria-label="Last page"
           >
-            <ChevronsRight size={14} strokeWidth={1.75} />
+            <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
             className="ml-2 text-[12px] tabular-nums"
@@ -1137,7 +1107,7 @@ function DocumentsTab({ contactId }: { contactId: string }) {
                     color: 'var(--text-secondary)',
                   }}
                 >
-                  {pageSize} <ChevronDown size={11} strokeWidth={1.75} />
+                  {pageSize} <CaretDown size={11} strokeWidth={1.75} />
                 </button>
               }
             />
@@ -1328,7 +1298,7 @@ const EMPTY_BILL_FILTERS: BillFilters = {
 
 /**
  * Bills tab body. Mirrors the reference contact-scoped bills view: status
- * sub-tabs · Search by ID · Columns popover · Filters popover · table
+ * sub-tabs · MagnifyingGlass by ID · Columns popover · Filters popover · table
  * (or empty state) · paging + Export footer.
  *
  * Data flows through `useInvoices()` filtered to `client_id ===
@@ -1383,7 +1353,7 @@ function BillsTab({ contactId }: { contactId: string }) {
 
   const filtered = useMemo(() => {
     return byStatus.filter((inv) => {
-      // Search by ID — substring match because IDs may be long UUIDs.
+      // MagnifyingGlass by ID — substring match because IDs may be long UUIDs.
       const q = search.trim().toLowerCase()
       if (q && !inv.id.toLowerCase().includes(q)) return false
 
@@ -1471,7 +1441,7 @@ function BillsTab({ contactId }: { contactId: string }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="relative w-56">
-            <Search
+            <MagnifyingGlass
               size={13}
               strokeWidth={1.75}
               className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -1548,14 +1518,14 @@ function BillsTab({ contactId }: { contactId: string }) {
             disabled={safePage === 0}
             aria-label="First page"
           >
-            <ChevronsLeft size={14} strokeWidth={1.75} />
+            <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={safePage === 0}
             aria-label="Previous page"
           >
-            <ChevronLeft size={14} strokeWidth={1.75} />
+            <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn
             onClick={() =>
@@ -1564,14 +1534,14 @@ function BillsTab({ contactId }: { contactId: string }) {
             disabled={safePage >= totalPages - 1}
             aria-label="Next page"
           >
-            <ChevronRight size={14} strokeWidth={1.75} />
+            <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn
             onClick={() => setPage(totalPages - 1)}
             disabled={safePage >= totalPages - 1}
             aria-label="Last page"
           >
-            <ChevronsRight size={14} strokeWidth={1.75} />
+            <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
             className="ml-2 text-[12px] tabular-nums"
@@ -1596,7 +1566,7 @@ function BillsTab({ contactId }: { contactId: string }) {
                   }}
                 >
                   {pageSize}{' '}
-                  <ChevronDown size={11} strokeWidth={1.75} />
+                  <CaretDown size={11} strokeWidth={1.75} />
                 </button>
               }
             />
@@ -1623,7 +1593,7 @@ function BillsTab({ contactId }: { contactId: string }) {
               )
             }
           >
-            <Download size={13} strokeWidth={1.75} />
+            <DownloadSimple size={13} strokeWidth={1.75} />
             Export
           </Button>
         </div>
@@ -1718,9 +1688,9 @@ function BillsColumnsPopover({
         size="sm"
         onClick={() => (open ? setOpen(false) : openPopover())}
       >
-        <Columns3 size={13} strokeWidth={1.75} />
+        <Columns size={13} strokeWidth={1.75} />
         Columns
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -1901,7 +1871,7 @@ function BillsFiltersPopover({
         size="sm"
         onClick={() => (open ? setOpen(false) : openPopover())}
       >
-        <Filter size={13} strokeWidth={1.75} />
+        <Funnel size={13} strokeWidth={1.75} />
         Filters
         {activeCount > 0 && (
           <span
@@ -1911,7 +1881,7 @@ function BillsFiltersPopover({
             {activeCount}
           </span>
         )}
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -2096,7 +2066,7 @@ function BillFilterSelect({
             </option>
           ))}
         </select>
-        <ChevronDown
+        <CaretDown
           size={13}
           strokeWidth={1.75}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -2315,7 +2285,7 @@ function BillRow({
                 }}
                 aria-label={`Actions for invoice ${invoice.id}`}
               >
-                <ChevronDown size={12} strokeWidth={1.75} />
+                <CaretDown size={12} strokeWidth={1.75} />
               </button>
             }
           />
@@ -2332,7 +2302,7 @@ function BillRow({
               }
               className="text-[12.5px] cursor-pointer"
             >
-              Send
+              PaperPlaneTilt
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() =>
@@ -2672,16 +2642,16 @@ function TransactionsTab({ contactId }: { contactId: string }) {
       >
         <div className="flex items-center gap-1">
           <PagerBtn onClick={() => {}} disabled aria-label="First page">
-            <ChevronsLeft size={14} strokeWidth={1.75} />
+            <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Previous page">
-            <ChevronLeft size={14} strokeWidth={1.75} />
+            <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Next page">
-            <ChevronRight size={14} strokeWidth={1.75} />
+            <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Last page">
-            <ChevronsRight size={14} strokeWidth={1.75} />
+            <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
             className="ml-2 text-[12px] tabular-nums"
@@ -2743,7 +2713,7 @@ function TxnColumnsPopover({
         }}
       >
         Columns
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -3257,7 +3227,7 @@ function CommunicationsTab({ contactId }: { contactId: string }) {
               </option>
             ))}
           </select>
-          <ChevronDown
+          <CaretDown
             size={12}
             strokeWidth={1.75}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -3287,9 +3257,9 @@ function CommunicationsTab({ contactId }: { contactId: string }) {
             toast.info('Advanced comm filters ship with the comms backend.')
           }
         >
-          <Filter size={13} strokeWidth={1.75} />
+          <Funnel size={13} strokeWidth={1.75} />
           Filters
-          <ChevronDown size={12} strokeWidth={1.75} />
+          <CaretDown size={12} strokeWidth={1.75} />
         </Button>
       </div>
 
@@ -3304,16 +3274,16 @@ function CommunicationsTab({ contactId }: { contactId: string }) {
       >
         <div className="flex items-center gap-1">
           <PagerBtn onClick={() => {}} disabled aria-label="First page">
-            <ChevronsLeft size={14} strokeWidth={1.75} />
+            <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Previous page">
-            <ChevronLeft size={14} strokeWidth={1.75} />
+            <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Next page">
-            <ChevronRight size={14} strokeWidth={1.75} />
+            <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Last page">
-            <ChevronsRight size={14} strokeWidth={1.75} />
+            <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
             className="ml-2 text-[12px] tabular-nums"
@@ -3364,7 +3334,7 @@ function CommunicationsTab({ contactId }: { contactId: string }) {
             disabled
             onClick={() => toast.info('Communications export ships next.')}
           >
-            <Download size={13} strokeWidth={1.75} />
+            <DownloadSimple size={13} strokeWidth={1.75} />
             Export
           </Button>
         </div>
@@ -3377,7 +3347,7 @@ function CommunicationsTab({ contactId }: { contactId: string }) {
 
 /**
  * Sub-tab button used by the Logs / Secure messages / Client portals
- * row. Underline indicator on active, same treatment as the page-
+ * row. TextUnderline indicator on active, same treatment as the page-
  * level tab bar above.
  */
 function CommSubTabButton({
@@ -3436,7 +3406,7 @@ function CommNewDropdown() {
             }}
           >
             New
-            <ChevronDown size={12} strokeWidth={2} />
+            <CaretDown size={12} strokeWidth={2} />
           </button>
         }
       />
@@ -3451,7 +3421,7 @@ function CommNewDropdown() {
           onClick={() => toast.info('Email log form is coming next.')}
           className="text-[12.5px] cursor-pointer"
         >
-          <Mail size={12} strokeWidth={1.75} /> New email log
+          <Envelope size={12} strokeWidth={1.75} /> New email log
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -3505,9 +3475,9 @@ function CommColumnsPopover({
           setOpen(!open)
         }}
       >
-        <Columns3 size={13} strokeWidth={1.75} />
+        <Columns size={13} strokeWidth={1.75} />
         Columns
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -3652,7 +3622,7 @@ function NoLogsEmptyState() {
           size="sm"
           onClick={() => toast.info('Email log form is coming next.')}
         >
-          <Mail size={12} strokeWidth={1.75} />
+          <Envelope size={12} strokeWidth={1.75} />
           New email log
         </Button>
       </div>
@@ -3813,7 +3783,7 @@ const NOTE_COLUMNS: NoteColumn[] = [
  *   - Footer: paging + Expand rows + Export.
  *
  * The "New note" button opens a dialog with a Subject, a rich-text
- * Note area, a File-note-to (Matter/Contact) toggle, a contact
+ * Note area, a File-note-to (Matter/IdentificationCard) toggle, a contact
  * picker, a Date, an optional Recorded time entry, and a
  * Notifications picker.
  */
@@ -3915,7 +3885,7 @@ function NotesTab({
 
         <div className="flex items-center gap-2">
           <div className="relative w-56">
-            <Search
+            <MagnifyingGlass
               size={13}
               strokeWidth={1.75}
               className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -3949,16 +3919,16 @@ function NotesTab({
       >
         <div className="flex items-center gap-1">
           <PagerBtn onClick={() => {}} disabled aria-label="First page">
-            <ChevronsLeft size={14} strokeWidth={1.75} />
+            <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Previous page">
-            <ChevronLeft size={14} strokeWidth={1.75} />
+            <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Next page">
-            <ChevronRight size={14} strokeWidth={1.75} />
+            <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <PagerBtn onClick={() => {}} disabled aria-label="Last page">
-            <ChevronsRight size={14} strokeWidth={1.75} />
+            <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
             className="ml-2 text-[12px] tabular-nums"
@@ -4009,7 +3979,7 @@ function NotesTab({
             disabled
             onClick={() => toast.info('Notes export ships next.')}
           >
-            <Download size={13} strokeWidth={1.75} />
+            <DownloadSimple size={13} strokeWidth={1.75} />
             Export
           </Button>
         </div>
@@ -4263,9 +4233,9 @@ function NoteColumnsPopover({
           setOpen(!open)
         }}
       >
-        <Columns3 size={13} strokeWidth={1.75} />
+        <Columns size={13} strokeWidth={1.75} />
         Columns
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -4384,13 +4354,13 @@ function NoteColumnsPopover({
  * "New note" dialog. Follows the standard pattern:
  *   - Subject (required-ish text)
  *   - Note: a rich-text style block. The toolbar is a row of icon
- *     buttons (Bold / Italic / Underline / Highlight / Ordered list /
+ *     buttons (TextB / TextItalic / TextUnderline / Highlight / Ordered list /
  *     Bullet list / Link / Undo / Redo) sitting above a textarea.
  *     Today the toolbar buttons are visual-only — the editor uses
  *     a plain textarea until the Tiptap version drift is resolved.
- *   - File note to… Matter / Contact pill toggle (Contact-default
+ *   - File note to… Matter / IdentificationCard pill toggle (IdentificationCard-default
  *     since this dialog is reached from a contact page).
- *   - Contact picker (locked to the current contact today).
+ *   - IdentificationCard picker (locked to the current contact today).
  *   - Date (defaults to today).
  *   - Recorded time — optional time entry with the duration input
  *     and the gold play button (timer is a future enhancement).
@@ -4507,7 +4477,7 @@ function NewNoteDialog({
             <NoteEditor value={body} onChange={setBody} />
           </div>
 
-          {/* File note to + Contact picker — split row. */}
+          {/* File note to + IdentificationCard picker — split row. */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label
@@ -4570,7 +4540,7 @@ function NewNoteDialog({
                     {contact.email ? ` (${contact.email})` : ''}
                   </option>
                 </select>
-                <ChevronDown
+                <CaretDown
                   size={13}
                   strokeWidth={1.75}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -4687,7 +4657,7 @@ function NewNoteDialog({
  *
  * Active extensions:
  *   - StarterKit  → paragraph, bold, italic, strike, lists, history
- *   - Underline   → <u> mark
+ *   - TextUnderline   → <u> mark
  *   - Highlight   → <mark> mark (multi-colour off; single yellow)
  *   - Link        → <a> mark with safe-URL sanitisation
  *   - Placeholder → "Type something" prompt when the doc is empty
@@ -4771,28 +4741,28 @@ function NoteEditor({
           active={editor?.isActive('bold')}
           onClick={() => editor?.chain().focus().toggleBold().run()}
         >
-          <Bold size={14} strokeWidth={2} />
+          <TextB size={14} strokeWidth={2} />
         </ToolbarBtn>
         <ToolbarBtn
           label="Italic"
           active={editor?.isActive('italic')}
           onClick={() => editor?.chain().focus().toggleItalic().run()}
         >
-          <Italic size={14} strokeWidth={2} />
+          <TextItalic size={14} strokeWidth={2} />
         </ToolbarBtn>
         <ToolbarBtn
           label="Underline"
           active={editor?.isActive('underline')}
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
         >
-          <Underline size={14} strokeWidth={2} />
+          <TextUnderline size={14} strokeWidth={2} />
         </ToolbarBtn>
         <ToolbarBtn
           label="Highlight"
           active={editor?.isActive('highlight')}
           onClick={() => editor?.chain().focus().toggleHighlight().run()}
         >
-          <Highlighter size={14} strokeWidth={2} />
+          <HighlighterCircle size={14} strokeWidth={2} />
         </ToolbarBtn>
         <ToolbarSep />
         <ToolbarBtn
@@ -4800,7 +4770,7 @@ function NoteEditor({
           active={editor?.isActive('orderedList')}
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
         >
-          <ListOrdered size={14} strokeWidth={2} />
+          <ListNumbers size={14} strokeWidth={2} />
         </ToolbarBtn>
         <ToolbarBtn
           label="Bullet list"
@@ -4823,14 +4793,14 @@ function NoteEditor({
             disabled={!editor?.can().undo()}
             onClick={() => editor?.chain().focus().undo().run()}
           >
-            <Undo2 size={14} strokeWidth={2} />
+            <ArrowUUpLeft size={14} strokeWidth={2} />
           </ToolbarBtn>
           <ToolbarBtn
             label="Redo"
             disabled={!editor?.can().redo()}
             onClick={() => editor?.chain().focus().redo().run()}
           >
-            <Redo2 size={14} strokeWidth={2} />
+            <ArrowUUpRight size={14} strokeWidth={2} />
           </ToolbarBtn>
         </span>
       </div>
@@ -5029,7 +4999,7 @@ function NotificationsPicker({
             </span>
           ))
         )}
-        <ChevronDown
+        <CaretDown
           size={13}
           strokeWidth={1.75}
           className="ml-auto"
@@ -5047,7 +5017,7 @@ function NotificationsPicker({
           }}
           role="listbox"
         >
-          {/* Search row — narrows the option list by name. */}
+          {/* MagnifyingGlass row — narrows the option list by name. */}
           <div
             className="px-3 py-2 border-b"
             style={{ borderColor: 'var(--border-soft)' }}
@@ -5293,7 +5263,7 @@ function SortPopover({
         onClick={() => setOpen((v) => !v)}
       >
         Priority
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -5409,9 +5379,9 @@ function ColumnsPopover({
         size="sm"
         onClick={() => (open ? setOpen(false) : openPopover())}
       >
-        <Columns3 size={13} strokeWidth={1.75} />
+        <Columns size={13} strokeWidth={1.75} />
         Columns
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -5598,7 +5568,7 @@ function FiltersPopover({
         size="sm"
         onClick={() => (open ? setOpen(false) : openPopover())}
       >
-        <Filter size={13} strokeWidth={1.75} />
+        <Funnel size={13} strokeWidth={1.75} />
         Filters
         {activeCount > 0 && (
           <span
@@ -5608,7 +5578,7 @@ function FiltersPopover({
             {activeCount}
           </span>
         )}
-        <ChevronDown size={12} strokeWidth={1.75} />
+        <CaretDown size={12} strokeWidth={1.75} />
       </Button>
       {open && (
         <div
@@ -5761,7 +5731,7 @@ function NewDropdown({
             }}
           >
             New
-            <ChevronDown size={12} strokeWidth={2} />
+            <CaretDown size={12} strokeWidth={2} />
           </button>
         }
       />
@@ -5770,13 +5740,13 @@ function NewDropdown({
           onClick={onUploadFiles}
           className="text-[12.5px] cursor-pointer"
         >
-          Upload files
+          UploadSimple files
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onUploadFolder}
           className="text-[12.5px] cursor-pointer"
         >
-          Upload folder
+          UploadSimple folder
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onCreateFolder}
@@ -6128,7 +6098,7 @@ function DocumentRow({
                 }}
                 aria-label={`Actions for ${doc.title}`}
               >
-                <ChevronDown size={12} strokeWidth={1.75} />
+                <CaretDown size={12} strokeWidth={1.75} />
               </button>
             }
           />
@@ -6143,7 +6113,7 @@ function DocumentRow({
               onClick={() => toast.info('Document downloads ship next.')}
               className="text-[12.5px] cursor-pointer"
             >
-              Download
+              DownloadSimple
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => toast.info('Document moves ship next.')}
@@ -6197,7 +6167,7 @@ const DOCUMENT_CATEGORIES = [
 ] as const
 
 /**
- * One staged file inside the Upload dialog. The user can stack
+ * One staged file inside the UploadSimple dialog. The user can stack
  * multiple of these via "+ Add another file"; each row carries its
  * own metadata (file name, matter, received date, category, author).
  */
@@ -6229,12 +6199,12 @@ function emptyStagedFile(): StagedFile {
 }
 
 /**
- * Upload dialog — opens from New ▸ Upload files. Mirrors the reference
+ * UploadSimple dialog — opens from New ▸ UploadSimple files. Mirrors the reference
  * modal: file row + metadata fields (File name · Matter · Received
  * date · Category · Author), with "+ Add another file" to attach
- * more in a single submission, then Upload / Cancel.
+ * more in a single submission, then UploadSimple / Cancel.
  *
- * On Upload we call `useCreateDocument().mutateAsync` once per staged
+ * On UploadSimple we call `useCreateDocument().mutateAsync` once per staged
  * file. Most metadata maps cleanly onto the existing Document schema
  * (`title`, `template_type`, `case_id`, `client_id`); `received_date`
  * and `author` are kept in form state and surfaced once those columns
@@ -6312,7 +6282,7 @@ function UploadDialog({
     } catch (err) {
       toast.error(
         err instanceof Error
-          ? `Upload failed: ${err.message}`
+          ? `UploadSimple failed: ${err.message}`
           : 'Upload failed. Please try again.',
       )
     } finally {
@@ -6334,7 +6304,7 @@ function UploadDialog({
             className="text-[18px] font-semibold"
             style={{ color: 'var(--text-primary)' }}
           >
-            Upload
+            UploadSimple
           </DialogTitle>
         </DialogHeader>
 
@@ -6402,7 +6372,7 @@ function UploadDialog({
             {submitting
               ? 'Uploading…'
               : staged.length > 1
-                ? `Upload ${staged.length} files`
+                ? `UploadSimple ${staged.length} files`
                 : 'Upload'}
           </button>
           <button
@@ -6432,7 +6402,7 @@ function UploadDialog({
 }
 
 /**
- * One file-row inside the Upload dialog. Renders the file picker
+ * One file-row inside the UploadSimple dialog. Renders the file picker
  * (chip with filename + Replace) above the metadata form (File name,
  * Matter, Received date, Category, Author). Splits the filename into
  * `fileName` + `extension` on selection so the user can edit the
@@ -6612,7 +6582,7 @@ function UploadRow({
               </option>
             ))}
           </select>
-          <ChevronDown
+          <CaretDown
             size={13}
             strokeWidth={1.75}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -6672,7 +6642,7 @@ function UploadRow({
                 </option>
               ))}
             </select>
-            <ChevronDown
+            <CaretDown
               size={13}
               strokeWidth={1.75}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -6707,7 +6677,7 @@ function UploadRow({
 }
 
 /**
- * Upload-folder dialog. Variant of UploadDialog where the user picks
+ * UploadSimple-folder dialog. Variant of UploadDialog where the user picks
  * a whole directory; we display the folder name (read-only chip), the
  * matter / received date / category metadata, and create one Document
  * row per file in the folder on submit.
@@ -6821,7 +6791,7 @@ function UploadFolderDialog({
             className="text-[18px] font-semibold"
             style={{ color: 'var(--text-primary)' }}
           >
-            Upload
+            UploadSimple
           </DialogTitle>
         </DialogHeader>
 
@@ -6911,7 +6881,7 @@ function UploadFolderDialog({
                   </option>
                 ))}
               </select>
-              <ChevronDown
+              <CaretDown
                 size={13}
                 strokeWidth={1.75}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -6969,7 +6939,7 @@ function UploadFolderDialog({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
+                <CaretDown
                   size={13}
                   strokeWidth={1.75}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -6994,7 +6964,7 @@ function UploadFolderDialog({
               submitting
                 ? 'Uploading…'
                 : files.length > 1
-                  ? `Upload ${files.length} files`
+                  ? `UploadSimple ${files.length} files`
                   : 'Upload'
             }
           />
@@ -7120,7 +7090,7 @@ function CreateFolderDialog({
                   </option>
                 ))}
               </select>
-              <ChevronDown
+              <CaretDown
                 size={13}
                 strokeWidth={1.75}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -7338,7 +7308,7 @@ function CreateFromTemplateDialog({
                   </option>
                 ))}
               </select>
-              <ChevronDown
+              <CaretDown
                 size={13}
                 strokeWidth={1.75}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"

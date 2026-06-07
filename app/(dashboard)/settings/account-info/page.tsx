@@ -2,10 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import {
-  ChevronRight, Upload, X, Check, AlertTriangle,
-  Crown, CreditCard, CalendarDays, Users as UsersIcon, ArrowRightLeft, Shield, ArrowRight,
-} from 'lucide-react'
+import { CaretRight, UploadSimple, X, Check, Warning, Crown, CreditCard, CalendarBlank, Users as UsersIcon, ArrowsLeftRight, Shield, ArrowRight } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -74,8 +71,8 @@ export default function AccountInfoPage() {
   return (
     <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--surface-card)' }}>
       <div className="flex items-center gap-2 text-sm mb-5" style={{ color: 'var(--navy)' }}>
-        <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Settings</Link>
-        <ChevronRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
+        <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Gear</Link>
+        <CaretRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
         <span className="font-bold">Account and Payment Info</span>
       </div>
 
@@ -294,7 +291,7 @@ function AccountInfoForm() {
             className="inline-flex items-center justify-center gap-1.5 rounded-md px-4 h-10 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: 'var(--navy)' }}
           >
-            <Upload size={14} strokeWidth={2.25} /> Upload Logo
+            <UploadSimple size={14} strokeWidth={2.25} /> Upload Logo
           </button>
         </div>
         <p className="text-xs mt-2 leading-relaxed" style={{ color: '#9CA3AF' }}>
@@ -401,9 +398,9 @@ function AccountInfoForm() {
         </div>
       </div>
 
-      {/* Format Settings */}
+      {/* Format Gear */}
       <SectionDivider />
-      <h3 className="font-heading text-base font-bold mb-3" style={{ color: 'var(--navy)' }}>Format Settings</h3>
+      <h3 className="font-heading text-base font-bold mb-3" style={{ color: 'var(--navy)' }}>Format Gear</h3>
       <div className="mb-8 space-y-4">
         <div>
           <FieldLabel>Date format</FieldLabel>
@@ -767,7 +764,7 @@ function AccountAdministrationTab() {
           ctaLabel="Manage billing"
         />
         <PowerCard
-          Icon={CalendarDays}
+          Icon={CalendarBlank}
           title="Firm Calendar"
           body="Sole control over court dates, deadlines, and the firm-wide calendar."
           href="/firm/calendar"
@@ -781,7 +778,7 @@ function AccountAdministrationTab() {
           ctaLabel="Designate administrators"
         />
         <PowerCard
-          Icon={ArrowRightLeft}
+          Icon={ArrowsLeftRight}
           title="Ownership Transfer"
           body="There is only one firm owner. Ownership is transferable to another member, but never duplicated."
           href="/settings/transfer-ownership"
@@ -793,7 +790,7 @@ function AccountAdministrationTab() {
       <SectionEyebrow>If something goes wrong</SectionEyebrow>
       <div className="space-y-4">
         <RefinedCallout
-          Icon={AlertTriangle}
+          Icon={Warning}
           title="If the firm owner is no longer at the firm"
           body={
             <>
@@ -870,7 +867,7 @@ function PowerCard({
 function RefinedCallout({
   Icon, title, body, action,
 }: {
-  Icon: typeof AlertTriangle
+  Icon: typeof Warning
   title: string
   body: React.ReactNode
   action?: { label: string; onClick: () => void }

@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown } from 'lucide-react'
+import { CaretDown } from '@phosphor-icons/react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +29,7 @@ export function PageSizeDropdown({
               color: 'var(--text-secondary)',
             }}
           >
-            {value} <ChevronDown size={11} strokeWidth={1.75} />
+            {value} <CaretDown size={11} strokeWidth={1.75} />
           </button>
         }
       />

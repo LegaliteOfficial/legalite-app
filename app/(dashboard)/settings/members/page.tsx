@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import {
-  ChevronRight, Search, Plus, MoreVertical, UserPlus, Mail, Users, ShieldCheck, Clock,
-} from 'lucide-react'
+import { CaretRight, MagnifyingGlass, Plus, DotsThreeVertical, UserPlus, Envelope, Users, ShieldCheck, Clock } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -73,8 +71,8 @@ export default function FirmMembersPage() {
     <div className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--cream)' }}>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm mb-5" style={{ color: 'var(--navy)' }}>
-        <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Settings</Link>
-        <ChevronRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
+        <Link href="/settings" className="hover:opacity-70 transition-opacity" style={{ color: '#6B7280' }}>Gear</Link>
+        <CaretRight size={14} strokeWidth={2.25} style={{ color: '#9CA3AF' }} />
         <span className="font-bold">Firm members</span>
       </div>
 
@@ -140,7 +138,7 @@ export default function FirmMembersPage() {
           </div>
 
           <div className="relative">
-            <Search size={14} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+            <MagnifyingGlass size={14} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
             <input
               type="search"
               value={query}
@@ -260,7 +258,7 @@ function MemberRowMenu({ member }: { member: FirmMember }) {
         className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:bg-black/[0.04]"
         style={{ color: 'var(--navy)' }}
       >
-        <MoreVertical size={16} strokeWidth={2} />
+        <DotsThreeVertical size={16} strokeWidth={2} />
       </button>
       {open && (
         <div
@@ -300,7 +298,7 @@ function InvitationsTable({
   if (invites.length === 0) {
     return (
       <EmptyState
-        icon={<Mail size={28} strokeWidth={1.5} style={{ color: 'var(--navy)' }} />}
+        icon={<Envelope size={28} strokeWidth={1.5} style={{ color: 'var(--navy)' }} />}
         title="No pending invitations"
         body="Invitations you send appear here until they are accepted or expire."
         action={onInvite}
@@ -380,7 +378,7 @@ function InvitationRowMenu({ invitation }: { invitation: PendingInvitation }) {
         className="h-8 w-8 rounded-md flex items-center justify-center transition-colors hover:bg-black/[0.04]"
         style={{ color: 'var(--navy)' }}
       >
-        <MoreVertical size={16} strokeWidth={2} />
+        <DotsThreeVertical size={16} strokeWidth={2} />
       </button>
       {open && (
         <div

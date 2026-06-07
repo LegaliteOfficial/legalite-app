@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CaretDown, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { addDays, sameDay, startOfWeek } from '../_lib/date'
 
 /**
@@ -88,7 +88,7 @@ export function MonthPickerPopover({
         aria-expanded={open}
       >
         {label}
-        <ChevronDown size={13} strokeWidth={1.75} />
+        <CaretDown size={13} strokeWidth={1.75} />
       </button>
       {open && (
         <div
@@ -144,10 +144,10 @@ function PopoverHeader({
       </div>
       <div className="inline-flex items-center gap-1">
         <NavButton onClick={onPrev} ariaLabel="Previous month">
-          <ChevronLeft size={14} strokeWidth={1.75} />
+          <CaretLeft size={14} strokeWidth={1.75} />
         </NavButton>
         <NavButton onClick={onNext} ariaLabel="Next month">
-          <ChevronRight size={14} strokeWidth={1.75} />
+          <CaretRight size={14} strokeWidth={1.75} />
         </NavButton>
       </div>
     </div>

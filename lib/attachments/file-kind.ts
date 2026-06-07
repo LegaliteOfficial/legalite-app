@@ -5,19 +5,7 @@
  * right icon.
  */
 
-import type { LucideIcon } from 'lucide-react'
-import {
-  File,
-  FileArchive,
-  FileAudio,
-  FileCode,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileVideo,
-  Presentation,
-} from 'lucide-react'
-
+import { File, FileZip, FileAudio, FileCode, FileImage, FileXls, FileText, FileVideo, PresentationChart, type Icon } from '@phosphor-icons/react'
 export type FileKind =
   | 'pdf'
   | 'image'
@@ -91,7 +79,7 @@ export function getFileKind(name: string, mime?: string | null): FileKind {
   return 'other'
 }
 
-export function iconForKind(kind: FileKind): LucideIcon {
+export function iconForKind(kind: FileKind): Icon {
   switch (kind) {
     case 'pdf':
     case 'office-doc':  return FileText
@@ -99,9 +87,9 @@ export function iconForKind(kind: FileKind): LucideIcon {
     case 'video':       return FileVideo
     case 'audio':       return FileAudio
     case 'text':        return FileCode
-    case 'office-sheet':return FileSpreadsheet
-    case 'office-slide':return Presentation
-    case 'archive':     return FileArchive
+    case 'office-sheet':return FileXls
+    case 'office-slide':return PresentationChart
+    case 'archive':     return FileZip
     case 'other':       return File
   }
 }

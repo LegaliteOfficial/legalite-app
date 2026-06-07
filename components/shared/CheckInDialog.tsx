@@ -26,7 +26,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Clock, OctagonX } from 'lucide-react'
+import { CheckCircle, Clock, XCircle } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -198,7 +198,7 @@ export function CheckInDialog() {
               color: 'var(--accent-danger)',
             }}
           >
-            <OctagonX size={13} strokeWidth={2} />
+            <XCircle size={13} strokeWidth={2} />
             Stop and save
           </Button>
           <Button
@@ -208,7 +208,7 @@ export function CheckInDialog() {
               color: 'var(--navy)',
             }}
           >
-            <CheckCircle2 size={13} strokeWidth={2} />
+            <CheckCircle size={13} strokeWidth={2} />
             Yes, still working
           </Button>
         </DialogFooter>
