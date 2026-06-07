@@ -21,7 +21,7 @@ import { PageHeader } from '@/components/shared/PageHeader'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Spinner } from '@/components/shared/Spinner'
-import { useDocuments, useCreateDocument, useDeleteDocument } from '@/hooks/use-documents'
+import { useDocuments, useCreateDocument, useUpdateDocument, useDeleteDocument } from '@/hooks/use-documents'
 import { useCases } from '@/hooks/use-cases'
 import { useLibrary, useCreateLibraryItem, useUploadLibraryFile, useToggleFavorite, useDeleteLibraryItem, useDownloadLibraryItem } from '@/hooks/use-library'
 import { FileUploadZone } from '@/components/shared/FileUploadZone'
@@ -85,7 +85,11 @@ export default function DocumentsPage() {
   const { data: documents, isLoading, error } = useDocuments()
   const { data: documentCases } = useCases()
   const createMutation = useCreateDocument()
+  const updateMutation = useUpdateDocument()
   const deleteDocumentMutation = useDeleteDocument()
+  // When set, the editor is editing an existing draft → Save updates it
+  // instead of creating a new one.
+  const [editingDocId, setEditingDocId] = useState<string | null>(null)
   const [draftSearch, setDraftSearch] = useState('')
   const { openModal } = useUIStore()
   const { user } = useAuthStore()
@@ -176,6 +180,7 @@ export default function DocumentsPage() {
     const html = generateDocumentHTML(id, 'High Court (General Division)', '', tmpl.name, placeholderFields)
     setPreviewContent(preview)
     setEditorHTML(html)
+    setEditingDocId(null)
     setActiveTab('editor')
   }, [])
 
@@ -199,6 +204,7 @@ export default function DocumentsPage() {
     setPreviewContent(content)
     const html = generateDocumentHTML(selectedTemplate, court, suitNumber, draftTitle, templateFields)
     setEditorHTML(html)
+    setEditingDocId(null)
     setActiveTab('editor')
     toast.success('Document generated successfully.')
   }, [selectedTemplate, court, suitNumber, draftTitle, templateFields])
@@ -208,20 +214,28 @@ export default function DocumentsPage() {
     // Prefer the live DOM HTML (captures any execCommand edits the user
     // made in the editor since the last onInput event).
     const content = editorRef.current?.innerHTML || editorHTML || previewContent
+    const data = {
+      title: draftTitle,
+      template_type: template?.name ?? 'Custom',
+      court,
+      suit_number: suitNumber,
+      content,
+    }
     try {
-      await createMutation.mutateAsync({
-        title: draftTitle,
-        template_type: template?.name ?? 'Custom',
-        court,
-        suit_number: suitNumber,
-        content,
-      })
-      toast.success('Draft saved.')
+      if (editingDocId) {
+        await updateMutation.mutateAsync({ id: editingDocId, data })
+        toast.success('Draft updated.')
+      } else {
+        const created = await createMutation.mutateAsync(data)
+        // Keep editing this draft so a second save updates rather than dupes.
+        if (created?.id) setEditingDocId(created.id)
+        toast.success('Draft saved.')
+      }
       setActiveTab('drafts')
     } catch {
       toast.error('Unable to save document. Please try again.')
     }
-  }, [draftTitle, template, court, suitNumber, editorHTML, previewContent, createMutation])
+  }, [draftTitle, template, court, suitNumber, editorHTML, previewContent, editingDocId, createMutation, updateMutation])
 
   const handleExport = useCallback(() => {
     const content = editorRef.current?.innerText ?? previewContent
@@ -630,9 +644,11 @@ export default function DocumentsPage() {
                             title="Open in editor"
                             onClick={() => {
                               setEditorHTML(doc.content ?? '')
+                              setPreviewContent(doc.content ?? '')
                               setDraftTitle(doc.title ?? '')
                               setCourt(doc.court ?? '')
                               setSuitNumber(doc.suit_number ?? '')
+                              setEditingDocId(doc.id)
                               setActiveTab('editor')
                             }}
                           >
@@ -765,50 +781,177 @@ export default function DocumentsPage() {
 
       {/* Editor Tab */}
       {activeTab === 'editor' && (
-        <div className="rounded-xl border" style={{ background: 'white', borderColor: 'var(--border)' }}>
-          <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border)' }}>
-            <div className="flex items-center gap-3">
-              <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--navy)' }}>{draftTitle || 'Untitled Document'}</h2>
-              {court && <StatusBadge status={court.split('(')[0].trim()} />}
+        <div
+          className="rounded-2xl border flex flex-col overflow-hidden"
+          style={{
+            background: 'var(--surface-card)',
+            borderColor: 'var(--border-soft)',
+            boxShadow: 'var(--shadow-xs)',
+          }}
+        >
+          {/* Header — title input + meta + actions. */}
+          <div
+            className="flex items-center justify-between gap-4 px-5 py-3 border-b shrink-0"
+            style={{ borderColor: 'var(--border-soft)' }}
+          >
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <FileText
+                size={16}
+                strokeWidth={1.75}
+                style={{ color: 'var(--text-muted)' }}
+                className="shrink-0"
+              />
+              <input
+                value={draftTitle}
+                onChange={(e) => setDraftTitle(e.target.value)}
+                placeholder="Untitled document"
+                className="flex-1 min-w-0 font-heading text-[15px] font-semibold bg-transparent outline-none border-b border-transparent focus:border-[var(--border-default)] transition-colors"
+                style={{ color: 'var(--text-primary)' }}
+              />
+              {(court || suitNumber) && (
+                <div className="flex items-center gap-2 shrink-0">
+                  {court && (
+                    <span
+                      className="text-[11.5px] px-2 py-0.5 rounded-md"
+                      style={{
+                        background: 'var(--surface-sunken)',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      {court.split('(')[0].trim()}
+                    </span>
+                  )}
+                  {suitNumber && (
+                    <span
+                      className="font-mono text-[11px] tracking-wide"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {suitNumber}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleExport}><Download size={14} className="mr-1.5" /> Export</Button>
-              <Button variant="outline" size="sm" onClick={handlePrint}><Printer size={14} className="mr-1.5" /> Print</Button>
-              <Button size="sm" onClick={handleSave} disabled={createMutation.isPending} style={{ background: 'var(--gold)' }} className="text-white">
-                {createMutation.isPending ? <><Spinner size={14} /> Saving...</> : 'Save'}
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download size={13} strokeWidth={1.75} />
+                Export
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePrint}>
+                <Printer size={13} strokeWidth={1.75} />
+                Print
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending ? (
+                  <>
+                    <Spinner size={13} /> Saving…
+                  </>
+                ) : (
+                  editingDocId ? 'Save changes' : 'Save draft'
+                )}
               </Button>
             </div>
           </div>
-          {/* Rich text toolbar — execCommand is deprecated but preserves
-              custom HTML formatting from generateDocumentHTML. */}
-          <div className="flex items-center gap-0.5 px-3 py-2 border-b flex-wrap" style={{ borderColor: 'var(--border)', background: 'rgba(13,27,42,0.02)' }}>
-            <ToolbarBtn onClick={() => execCommand('bold')} title="Bold (Cmd/Ctrl+B)"><Bold size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('italic')} title="Italic (Cmd/Ctrl+I)"><Italic size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('underline')} title="Underline (Cmd/Ctrl+U)"><Underline size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('strikeThrough')} title="Strikethrough"><Strikethrough size={14} /></ToolbarBtn>
-            <ToolbarDiv />
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'p')} title="Paragraph"><Pilcrow size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h1')} title="Heading 1"><Heading1 size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h2')} title="Heading 2"><Heading2 size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('formatBlock', 'h3')} title="Heading 3"><Heading3 size={14} /></ToolbarBtn>
-            <ToolbarDiv />
-            <ToolbarBtn onClick={() => execCommand('insertUnorderedList')} title="Bullet list"><List size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('insertOrderedList')} title="Numbered list"><ListOrdered size={14} /></ToolbarBtn>
-            <ToolbarDiv />
-            <ToolbarBtn onClick={() => execCommand('justifyLeft')} title="Align left"><AlignLeft size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('justifyCenter')} title="Align center"><AlignCenter size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('justifyRight')} title="Align right"><AlignRight size={14} /></ToolbarBtn>
-            <ToolbarBtn onClick={() => execCommand('justifyFull')} title="Justify"><AlignJustify size={14} /></ToolbarBtn>
-          </div>
+
+          {/* Toolbar — grouped controls. */}
           <div
-            ref={editorRef}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => setEditorHTML((e.target as HTMLDivElement).innerHTML)}
-            className="p-8 min-h-[600px] focus:outline-none leading-relaxed"
-            style={{ fontFamily: "'Times New Roman', serif", color: '#1a1a1a', fontSize: '13pt', lineHeight: '1.8' }}
-            dangerouslySetInnerHTML={{ __html: editorHTML || '<div style="color:#9CA3AF;font-family:inherit;font-size:13px;">Start typing your legal document here, or switch to the Templates tab to use a template...</div>' }}
-          />
+            className="flex items-center gap-0.5 px-3 py-1.5 border-b flex-wrap shrink-0"
+            style={{
+              borderColor: 'var(--border-soft)',
+              background: 'var(--surface-card)',
+            }}
+          >
+            <ToolbarGroup>
+              <ToolbarBtn onClick={() => execCommand('bold')} title="Bold (⌘B)">
+                <Bold size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('italic')} title="Italic (⌘I)">
+                <Italic size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('underline')} title="Underline (⌘U)">
+                <Underline size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('strikeThrough')} title="Strikethrough">
+                <Strikethrough size={14} />
+              </ToolbarBtn>
+            </ToolbarGroup>
+            <ToolbarDiv />
+            <ToolbarGroup>
+              <ToolbarBtn onClick={() => execCommand('formatBlock', 'p')} title="Paragraph">
+                <Pilcrow size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('formatBlock', 'h1')} title="Heading 1">
+                <Heading1 size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('formatBlock', 'h2')} title="Heading 2">
+                <Heading2 size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('formatBlock', 'h3')} title="Heading 3">
+                <Heading3 size={14} />
+              </ToolbarBtn>
+            </ToolbarGroup>
+            <ToolbarDiv />
+            <ToolbarGroup>
+              <ToolbarBtn onClick={() => execCommand('insertUnorderedList')} title="Bullet list">
+                <List size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('insertOrderedList')} title="Numbered list">
+                <ListOrdered size={14} />
+              </ToolbarBtn>
+            </ToolbarGroup>
+            <ToolbarDiv />
+            <ToolbarGroup>
+              <ToolbarBtn onClick={() => execCommand('justifyLeft')} title="Align left">
+                <AlignLeft size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('justifyCenter')} title="Align center">
+                <AlignCenter size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('justifyRight')} title="Align right">
+                <AlignRight size={14} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => execCommand('justifyFull')} title="Justify">
+                <AlignJustify size={14} />
+              </ToolbarBtn>
+            </ToolbarGroup>
+          </div>
+
+          {/* Canvas — gray "desk" surrounding a paper-like document page. */}
+          <div
+            className="flex-1 overflow-y-auto px-6 py-8"
+            style={{ background: 'var(--surface-sunken)' }}
+          >
+            <div
+              ref={editorRef}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={(e) =>
+                setEditorHTML((e.target as HTMLDivElement).innerHTML)
+              }
+              className="document-editor mx-auto rounded-md focus:outline-none"
+              style={{
+                background: '#FFFFFF',
+                color: '#1A1A1A',
+                fontFamily: "'Times New Roman', Georgia, serif",
+                fontSize: '13pt',
+                lineHeight: 1.7,
+                minHeight: 'calc(11in * 0.92)',
+                maxWidth: '8.5in',
+                padding: '0.75in 1in',
+                boxShadow:
+                  '0 2px 4px rgba(13,27,42,0.04), 0 12px 28px -8px rgba(13,27,42,0.10)',
+              }}
+              dangerouslySetInnerHTML={{
+                __html:
+                  editorHTML ||
+                  '<p style="color:#9CA3AF;font-family:var(--font-euclid,system-ui,sans-serif);font-size:13px;">Start typing your legal document here, or switch to the Templates tab to use a template.</p>',
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -832,18 +975,41 @@ function ToolbarBtn({
   return (
     <button
       type="button"
-      onMouseDown={(e) => { e.preventDefault(); onClick() }}
+      // onMouseDown + preventDefault so the editor selection isn't lost
+      // when the user clicks a formatting button.
+      onMouseDown={(e) => {
+        e.preventDefault()
+        onClick()
+      }}
       title={title}
-      className="h-8 w-8 rounded flex items-center justify-center transition-colors"
-      style={{ color: '#374151' }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(13,27,42,0.05)')}
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      className="h-8 w-8 rounded-md flex items-center justify-center transition-colors cursor-pointer"
+      style={{ color: 'var(--text-secondary)' }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--surface-sunken)'
+        e.currentTarget.style.color = 'var(--text-primary)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent'
+        e.currentTarget.style.color = 'var(--text-secondary)'
+      }}
     >
       {children}
     </button>
   )
 }
 
+/** Groups related toolbar buttons so the visual rhythm reads as
+ *  bold/italic/… | h1/h2/… | list/list-ordered | align-… */
+function ToolbarGroup({ children }: { children: React.ReactNode }) {
+  return <div className="flex items-center gap-0.5">{children}</div>
+}
+
 function ToolbarDiv() {
-  return <div className="w-px h-5 bg-gray-200 mx-1" />
+  return (
+    <div
+      aria-hidden
+      className="w-px h-5 mx-1.5"
+      style={{ background: 'var(--border-soft)' }}
+    />
+  )
 }

@@ -221,3 +221,23 @@
   pointer-events: none;
   height: 0;
 }
+
+/* Document editor (contentEditable + execCommand) — legal-document
+ * typography inside the white "page" surface on /documents.
+ * Word/Pages-style heading + list defaults so execCommand output
+ * (h1/h2/h3/ul/ol/justify-*) renders cleanly. */
+.document-editor h1 { font-size: 22pt; font-weight: 700; margin: 1.25rem 0 0.5rem; line-height: 1.25; color: #0D1B2A; }
+.document-editor h2 { font-size: 17pt; font-weight: 700; margin: 1rem 0 0.5rem;    line-height: 1.3;  color: #0D1B2A; }
+.document-editor h3 { font-size: 14pt; font-weight: 700; margin: 0.875rem 0 0.4rem;line-height: 1.3;  color: #0D1B2A; }
+.document-editor p  { margin: 0.6rem 0; }
+.document-editor ul, .document-editor ol { margin: 0.6rem 0; padding-left: 2rem; }
+.document-editor ul { list-style-type: disc; }
+.document-editor ol { list-style-type: decimal; }
+.document-editor li { margin: 0.2rem 0; }
+.document-editor blockquote { border-left: 3px solid var(--gold); padding-left: 1rem; margin: 0.75rem 0; color: #4B5563; font-style: italic; }
+.document-editor strong, .document-editor b { font-weight: 700; }
+.document-editor em, .document-editor i { font-style: italic; }
+.document-editor u { text-decoration: underline; }
+.document-editor s, .document-editor strike { text-decoration: line-through; }
+.document-editor a { color: var(--gold-dark); text-decoration: underline; }
+.document-editor hr { border: none; border-top: 1px solid #E5E7EB; margin: 1.25rem 0; }

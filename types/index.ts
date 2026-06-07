@@ -97,6 +97,7 @@ export interface Task {
 
 export interface Document {
   id: string
+  firm_id?: string | null
   user_id: string
   case_id?: string | null
   client_id?: string | null
@@ -107,6 +108,8 @@ export interface Document {
   parties?: string | null
   judge?: string | null
   content?: string | null
+  case_title?: string | null
+  client_name?: string | null
   created_at: string
   updated_at: string
 }

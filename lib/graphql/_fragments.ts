@@ -249,6 +249,7 @@ export const MessageFieldsFragmentDoc = graphql(/* GraphQL */ `
 export const DocumentFieldsFragmentDoc = graphql(/* GraphQL */ `
   fragment DocumentFields on Document {
     id
+    firm_id
     user_id
     case_id
     client_id
@@ -259,6 +260,8 @@ export const DocumentFieldsFragmentDoc = graphql(/* GraphQL */ `
     parties
     judge
     content
+    case_title
+    client_name
     created_at
     updated_at
   }
