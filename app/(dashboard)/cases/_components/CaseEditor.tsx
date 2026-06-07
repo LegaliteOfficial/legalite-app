@@ -1268,10 +1268,23 @@ function RadioOption({
   label: React.ReactNode
   hint?: React.ReactNode
 }) {
+  // Button-radio pattern instead of <input type="radio"> wrapped in a
+  // <label>. The native pattern has subtle issues — the label proxy
+  // double-fires the change event on some browsers, and the sr-only
+  // input can hold focus in a way that confuses parent re-renders. A
+  // button with role="radio" + type="button" sidesteps both, and a
+  // type="button" guarantees it won't submit any ancestor form.
   return (
-    <label className="inline-flex items-start gap-2.5 cursor-pointer select-none">
+    <button
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      onClick={onChange}
+      className="inline-flex items-start gap-2.5 cursor-pointer select-none text-left"
+    >
       <span
-        className="inline-flex h-[18px] w-[18px] mt-0.5 items-center justify-center rounded-full border transition-colors"
+        aria-hidden
+        className="inline-flex h-[18px] w-[18px] mt-0.5 items-center justify-center rounded-full border transition-colors shrink-0"
         style={{
           borderColor: checked ? 'var(--gold)' : 'var(--border-default)',
           background: 'transparent',
@@ -1300,13 +1313,7 @@ function RadioOption({
           </span>
         )}
       </span>
-      <input
-        type="radio"
-        checked={checked}
-        onChange={onChange}
-        className="sr-only"
-      />
-    </label>
+    </button>
   )
 }
 
