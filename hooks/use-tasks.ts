@@ -6,12 +6,35 @@ import {
   TasksQueryDoc,
   UpdateTaskMutationDoc,
 } from '@/lib/graphql/tasks'
-import type { TaskFormData } from '@/schemas'
-import type { Task } from '@/types'
+import type {
+  TasksQuery,
+  CreateTaskInput,
+  UpdateTaskInput,
+} from '@/types/generated/graphql'
 
 // Skip Apollo round-trip in dev bypass — otherwise every navigation to
 // /tasks hangs for the network timeout before the empty state renders.
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+
+export type Task = TasksQuery['tasks'][number]
+export type TaskAssignee = Task['assignees'][number]
+export type TaskReminder = Task['reminders'][number]
+
+/**
+ * Reminder lead times offered in the task composer. Reminders fire
+ * relative to the task's due date, so a due date is required for any
+ * of these to actually send.
+ */
+export const TASK_REMINDER_PRESETS: { minutes: number; label: string }[] = [
+  { minutes: 15, label: '15 minutes before' },
+  { minutes: 30, label: '30 minutes before' },
+  { minutes: 60, label: '1 hour before' },
+  { minutes: 120, label: '2 hours before' },
+  { minutes: 1440, label: '1 day before' },
+  { minutes: 2880, label: '2 days before' },
+  { minutes: 4320, label: '3 days before' },
+  { minutes: 10080, label: '1 week before' },
+]
 
 export function useTasks() {
   const { data, loading, error, refetch } = useQuery(TasksQueryDoc, {
@@ -48,12 +71,9 @@ export function useCreateTask() {
   return {
     isPending: state.loading,
     error: state.error,
-    mutateAsync: async (data: TaskFormData) => {
-      const res = await mutate({ variables: { input: data } })
+    mutateAsync: async (input: CreateTaskInput) => {
+      const res = await mutate({ variables: { input } })
       return res.data?.createTask
-    },
-    mutate: (data: TaskFormData) => {
-      void mutate({ variables: { input: data } })
     },
   }
 }
@@ -70,13 +90,10 @@ export function useUpdateTask() {
       data,
     }: {
       id: string
-      data: Partial<TaskFormData>
+      data: UpdateTaskInput
     }) => {
       const res = await mutate({ variables: { id, input: data } })
       return res.data?.updateTask
-    },
-    mutate: ({ id, data }: { id: string; data: Partial<TaskFormData> }) => {
-      void mutate({ variables: { id, input: data } })
     },
   }
 }
@@ -90,9 +107,6 @@ export function useDeleteTask() {
     error: state.error,
     mutateAsync: async (id: string) => {
       await mutate({ variables: { id } })
-    },
-    mutate: (id: string) => {
-      void mutate({ variables: { id } })
     },
   }
 }

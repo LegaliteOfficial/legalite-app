@@ -1,25 +1,22 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Users, Scale, CheckSquare, FolderOpen, CalendarClock, UserPlus, FileText, Timer,
-  Info, X, ListTodo, CalendarDays, Plus,
+  Info, X,
   ChevronDown, ChevronLeft, ChevronRight, HelpCircle,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Card,
-  CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
 } from '@/components/ui/card'
 import { useDashboardStats } from '@/hooks/use-dashboard'
 import { useAuthStore } from '@/stores/auth.store'
-import { useTasksLocalStore } from '@/stores/tasks-local.store'
-import { useDeadlines } from '@/hooks/use-deadlines'
 import { PrioritiesPanel } from '@/components/shared/PrioritiesPanel'
+import { AgendaSection } from './_components/AgendaSection'
 import type { DashboardStats } from '@/types'
 
 const QUICK_ACTIONS = [
@@ -72,7 +69,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-6">
-          {activeTab === 'personal' && <PersonalDashboard stats={stats} isLoading={isLoading} />}
+          {activeTab === 'personal' && <PersonalDashboard />}
           {activeTab === 'firm' && <FirmDashboard stats={stats} isLoading={isLoading} />}
           {activeTab === 'feed' && <FirmFeed activity={stats?.recent_activity} isLoading={isLoading} />}
         </div>
@@ -212,152 +209,17 @@ function TabBar({ active, onChange }: { active: TabId; onChange: (id: TabId) => 
 
 // ── Personal ───────────────────────────────────────────────────────────────
 
-/**
- * How many agenda items the cards render before collapsing the
- * remainder into a "+N more" hint. Three balances at-a-glance
- * scanning against not pushing the rest of the dashboard down too
- * far when the agenda is busy.
- */
-const MAX_AGENDA_PREVIEW = 3
-
-/** Shape rendered by `AgendaCard` for each preview row. */
-interface AgendaItem {
-  key: string
-  title: string
-  when: string
-  href?: string
-}
-
-/**
- * "When" string surfaced next to each agenda row. Tasks are usually
- * same-day so a "9:00 am" suffices; events can be days away so we
- * include the date for non-today rows. `includeWeekdayForToday`
- * keeps the task variant pure-time and the event variant
- * date-aware.
- */
-function formatAgendaWhen(
-  iso: string,
-  isTaskCard: boolean,
-): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  const startOfToday = new Date()
-  startOfToday.setHours(0, 0, 0, 0)
-  const startOfTomorrow = new Date(startOfToday)
-  startOfTomorrow.setDate(startOfToday.getDate() + 1)
-  const isToday =
-    d.getTime() >= startOfToday.getTime() &&
-    d.getTime() < startOfTomorrow.getTime()
-  const time = d.toLocaleTimeString('en-GB', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-  if (isToday || isTaskCard) return time
-  return `${d.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-  })} · ${time}`
-}
-
-function PersonalDashboard({ stats, isLoading }: { stats: DashboardStats | undefined; isLoading: boolean }) {
+function PersonalDashboard() {
   // Falls back to the same dev sentinel PriorityButton uses so the
   // panel surfaces flags set under DEV_BYPASS where there's no
   // real user in the auth store.
   const userId = useAuthStore((s) => s.user?.id) ?? 'dev-user'
 
-  // ── Today's agenda counts ──────────────────────────────────────
-  // Tasks card surfaces the user's tasks due TODAY (intentionally
-  // narrow — that's the daily-todo flavour). Calendar card surfaces
-  // the user's TOTAL upcoming events (today and beyond) so they
-  // can see what's on the horizon without scrolling to the calendar
-  // page. Both cards list the next 3 items as a quick-glance preview;
-  // the count badge always reflects the full bucket size, not just
-  // the visible slice. Subscribe to the tasks revision counter as a
-  // stable re-render trigger; records come from getState() so
-  // SSR / CSR snapshot identity stays consistent.
-  const tasksRevision = useTasksLocalStore((s) => s.revision)
-  const { data: deadlines } = useDeadlines()
-
-  const todayAgenda = useMemo(() => {
-    const startOfToday = new Date()
-    startOfToday.setHours(0, 0, 0, 0)
-    const startOfTomorrow = new Date(startOfToday)
-    startOfTomorrow.setDate(startOfToday.getDate() + 1)
-
-    const inToday = (iso: string | null | undefined): boolean => {
-      if (!iso) return false
-      const t = new Date(iso).getTime()
-      return (
-        Number.isFinite(t) &&
-        t >= startOfToday.getTime() &&
-        t < startOfTomorrow.getTime()
-      )
-    }
-    const isUpcoming = (iso: string | null | undefined): boolean => {
-      if (!iso) return false
-      const t = new Date(iso).getTime()
-      return Number.isFinite(t) && t >= startOfToday.getTime()
-    }
-
-    const tasks = Object.values(useTasksLocalStore.getState().tasks)
-      .filter((t) => t.status !== 'Done' && inToday(t.due_at))
-      .sort((a, b) => (a.due_at ?? '').localeCompare(b.due_at ?? ''))
-
-    // Calendar card scopes to upcoming (today + future) so the
-    // count reflects everything the user still has to attend, not
-    // just today's slice.
-    const events = (deadlines ?? [])
-      .filter((d) => isUpcoming(d.due_date))
-      .sort((a, b) => a.due_date.localeCompare(b.due_date))
-
-    return { tasks, events }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksRevision, deadlines])
-
-  // Turn each filtered list into the visible preview items + how
-  // many are hidden behind the "+N more" cap.
-  const tasksPreviewItems: AgendaItem[] = todayAgenda.tasks
-    .slice(0, MAX_AGENDA_PREVIEW)
-    .map((t) => ({
-      key: t.id,
-      title: t.title,
-      when: formatAgendaWhen(t.due_at!, true),
-      href: '/tasks',
-    }))
-  const eventsPreviewItems: AgendaItem[] = todayAgenda.events
-    .slice(0, MAX_AGENDA_PREVIEW)
-    .map((d) => ({
-      key: d.id,
-      title: d.title,
-      when: formatAgendaWhen(d.due_date, false),
-      href: '/calendar',
-    }))
-
   return (
     <div className="space-y-6">
 
-      <section>
-        <SectionHeading title="Today’s agenda" />
-        <div className="grid grid-cols-2 gap-4 mt-4 items-start">
-          <AgendaCard
-            count={todayAgenda.tasks.length}
-            label="Tasks due today"
-            emptyMessage="No tasks due today"
-            previewItems={tasksPreviewItems}
-            Icon={ListTodo}
-            addHref="/tasks"
-          />
-          <AgendaCard
-            count={todayAgenda.events.length}
-            label="Upcoming calendar events"
-            emptyMessage="No upcoming events"
-            previewItems={eventsPreviewItems}
-            Icon={CalendarDays}
-            addHref="/calendar"
-          />
-        </div>
-      </section>
+      {/* Today's agenda — live tasks due today + upcoming calendar events. */}
+      <AgendaSection />
 
       {/* Personal priorities — only the current user's flags. */}
       <PrioritiesPanel scope="user" userId={userId} />
@@ -403,135 +265,6 @@ function PersonalDashboard({ stats, isLoading }: { stats: DashboardStats | undef
         </div>
       </Card>
     </div>
-  )
-}
-
-function AgendaCard({
-  count, label, emptyMessage, previewItems, Icon, addHref,
-}: {
-  count: number
-  label: string
-  emptyMessage: string
-  /**
-   * Up to `MAX_AGENDA_PREVIEW` items rendered as a list under the
-   * label. When `count > previewItems.length` we show a "+N more"
-   * line so users know there's more behind the click-through.
-   */
-  previewItems: AgendaItem[]
-  Icon: typeof ListTodo
-  addHref: string
-}) {
-  // When at least one item is on the board, the count number reads
-  // as the "live" colour (gold) instead of the muted default so the
-  // tile reads as an active todo rather than a generic widget.
-  const hasItems = count > 0
-  const overflow = Math.max(0, count - previewItems.length)
-  return (
-    <Card padding="lg">
-      {/* Top row — count + label + Add. The number stays visually
-          prominent; the list lives in the body below. */}
-      <div className="flex items-center gap-5">
-        <div className="flex items-center gap-2.5">
-          <span
-            className="font-heading text-[28px] font-semibold leading-none tracking-tight tabular-nums"
-            style={{
-              color: hasItems ? 'var(--accent-today)' : 'var(--text-primary)',
-            }}
-          >
-            {count}
-          </span>
-          <Link
-            href={addHref}
-            aria-label={`Add ${label}`}
-            className="w-6 h-6 rounded-full flex items-center justify-center border transition-colors hover:bg-black/5"
-            style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
-          >
-            <Plus size={12} strokeWidth={2} />
-          </Link>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <Icon size={13} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
-            <span
-              className="text-[11.5px] font-medium uppercase tracking-wider"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              {label}
-            </span>
-          </div>
-          {!hasItems && (
-            <p
-              className="text-[13px] mt-0.5"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              {emptyMessage}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Preview body — list of up to 3 items. Each row links to
-          the relevant detail surface; the row uses a thin top border
-          for visual separation from the count header. */}
-      {hasItems && previewItems.length > 0 && (
-        <ul
-          className="mt-3 -mx-2 flex flex-col"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {previewItems.map((item) => (
-            <li key={item.key}>
-              {item.href ? (
-                <Link
-                  href={item.href}
-                  className="flex items-center justify-between gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-[var(--surface-overlay)]"
-                >
-                  <span
-                    className="text-[13px] truncate font-medium"
-                    style={{ color: 'var(--text-primary)' }}
-                    title={item.title}
-                  >
-                    {item.title}
-                  </span>
-                  <span
-                    className="text-[11.5px] tabular-nums shrink-0"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {item.when}
-                  </span>
-                </Link>
-              ) : (
-                <div className="flex items-center justify-between gap-3 px-2 py-1.5">
-                  <span
-                    className="text-[13px] truncate font-medium"
-                    style={{ color: 'var(--text-primary)' }}
-                    title={item.title}
-                  >
-                    {item.title}
-                  </span>
-                  <span
-                    className="text-[11.5px] tabular-nums shrink-0"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {item.when}
-                  </span>
-                </div>
-              )}
-            </li>
-          ))}
-          {overflow > 0 && (
-            <li className="px-2 pt-1">
-              <Link
-                href={addHref}
-                className="text-[11.5px] font-medium hover:underline underline-offset-2"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                +{overflow} more →
-              </Link>
-            </li>
-          )}
-        </ul>
-      )}
-    </Card>
   )
 }
 

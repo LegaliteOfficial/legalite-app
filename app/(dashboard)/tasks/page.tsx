@@ -1,328 +1,332 @@
 'use client'
 
 /**
- * Tasks page
- * ----------
- * Personal todo kanban — three lanes (Pending / In Progress / Done)
- * backed by `useTasksLocalStore`. Each card surfaces title +
- * priority pill + labels + due date + notes excerpt, plus the
- * shared PriorityButton for cross-app flagging.
+ * Tasks — Linear-inspired work board.
  *
- * Card movement is click-to-cycle on the status pill (Pending →
- * In Progress → Done → Pending) so the kanban works without a
- * drag-and-drop library. Add Task lives at the top of each lane
- * so the new row lands in that lane by default.
+ * Firm-shared tasks backed by the GraphQL `tasks` query. Two views:
+ *   - List  — dense, grouped rows (by status / priority / assignee) with
+ *             the signature status + priority glyphs, inline status cycle.
+ *   - Board — three-lane kanban.
  *
- * Why the page reads from `useTasksLocalStore` instead of the
- * legacy `useTasks` hook: the GraphQL backend's task table doesn't
- * carry the new `labels` / `reminder_offset` fields yet. The local
- * store owns the new fields in DEV_BYPASS and seeds the kanban
- * with a handful of dev tasks so the empty state isn't the first
- * thing every developer sees on /tasks.
+ * Plus a toolbar (search, priority + assignee filters, group-by) and a
+ * progress strip. Tasks are assigned to firm members; assignees are
+ * emailed on assignment and reminders fire as emails before the due date.
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import {
-  AlertTriangle,
-  Bell,
-  Briefcase,
-  CheckCircle2,
-  Clock,
-  Edit3,
-  Loader2,
-  MoreHorizontal,
-  Plus,
-  RotateCcw,
-  Tag,
-  Trash2,
-} from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { useTasks, useUpdateTask, useDeleteTask, type Task } from '@/hooks/use-tasks'
+import { TaskComposerDialog } from '@/components/shared/TaskComposerDialog'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { useCases } from '@/hooks/use-cases'
+  TaskToolbar,
+  type AssigneeOption,
+  type GroupBy,
+  type TaskView,
+} from './_components/TaskToolbar'
+import { TaskListView, type TaskGroup } from './_components/TaskListView'
+import { TaskBoardView } from './_components/TaskBoardView'
 import {
-  REMINDER_OFFSET_OPTIONS,
-  useTasksLocalStore,
-  type LocalTask,
+  PRIORITIES,
+  PRIORITY_META,
+  PriorityIcon,
+  STATUSES,
+  STATUS_META,
+  StatusIcon,
+  normPriority,
+  normStatus,
   type TaskPriority,
   type TaskStatus,
-} from '@/stores/tasks-local.store'
-import { TaskComposerDialog } from '@/components/shared/TaskComposerDialog'
-import { PriorityButton } from '@/components/shared/PriorityButton'
+} from './_components/task-meta'
 
-// ── Lane definitions ───────────────────────────────────────────────────
-
-const LANES: {
-  key: TaskStatus
-  label: string
-  Icon: typeof Clock
-  dot: string
-  next: TaskStatus
-}[] = [
-  // `next` drives the click-to-cycle status pill: Pending → In
-  // Progress → Done → Pending.
-  {
-    key: 'Pending',
-    label: 'Pending',
-    Icon: Clock,
-    dot: '#C9972B',
-    next: 'In Progress',
-  },
-  {
-    key: 'In Progress',
-    label: 'In progress',
-    Icon: Loader2,
-    dot: '#2563EB',
-    next: 'Done',
-  },
-  {
-    key: 'Done',
-    label: 'Done',
-    Icon: CheckCircle2,
-    dot: '#2E7D4F',
-    next: 'Pending',
-  },
-]
-
-const PRIORITY_STYLE: Record<
-  TaskPriority,
-  { color: string; bg: string }
-> = {
-  High: {
-    color: 'var(--accent-danger, #C0392B)',
-    bg: 'rgba(192, 57, 43, 0.12)',
-  },
-  Medium: {
-    color: 'var(--accent-today, #C9972B)',
-    bg: 'var(--accent-today-tint, rgba(201, 151, 43, 0.12))',
-  },
-  Low: {
-    color: 'var(--text-secondary, #6B7280)',
-    bg: 'var(--surface-sunken, rgba(0,0,0,0.04))',
-  },
-}
-
-// ── Page ───────────────────────────────────────────────────────────────
+const VIEW_KEY = 'll:tasks-view'
 
 export default function TasksPage() {
-  // Subscribe to the revision counter only (stable primitive). Read
-  // the actual records via getState() inside useMemo — same SSR-safe
-  // pattern as the priority store. See stores/priority.store.ts for
-  // the full reasoning.
-  const revision = useTasksLocalStore((s) => s.revision)
-  const tasks = useMemo(
-    () => Object.values(useTasksLocalStore.getState().tasks),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [revision],
-  )
-  const setStatus = useTasksLocalStore((s) => s.setStatus)
-  const deleteTask = useTasksLocalStore((s) => s.deleteTask)
+  const { data: tasks, isLoading } = useTasks()
+  const updateTask = useUpdateTask()
+  const deleteTask = useDeleteTask()
 
-  const { data: cases } = useCases()
-  const caseTitleById = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const c of cases ?? []) map.set(c.id, c.title)
-    return map
-  }, [cases])
+  const allTasks = useMemo(() => tasks ?? [], [tasks])
 
-  // Hydrate the store once on mount. Mirrors the priority-store
-  // approach; `skipHydration: true` keeps SSR and first CSR consistent.
+  // ── View + filter state ─────────────────────────────────────────
+  const [view, setView] = useState<TaskView>('list')
+  const [groupBy, setGroupBy] = useState<GroupBy>('status')
+  const [search, setSearch] = useState('')
+  const [priorityFilter, setPriorityFilter] = useState<Set<TaskPriority>>(new Set())
+  const [assigneeFilter, setAssigneeFilter] = useState<Set<string>>(new Set())
+
+  // Persist the view choice across visits.
   useEffect(() => {
-    void useTasksLocalStore.persist.rehydrate()
+    const saved = typeof window !== 'undefined' ? window.localStorage.getItem(VIEW_KEY) : null
+    if (saved === 'list' || saved === 'board') setView(saved)
   }, [])
+  const changeView = (v: TaskView) => {
+    setView(v)
+    try {
+      window.localStorage.setItem(VIEW_KEY, v)
+    } catch {}
+  }
 
-  // Composer state. `editing` carries the LocalTask when we're
-  // editing, `null` when creating; `defaultStatus` seeds the lane.
+  const togglePriority = (p: TaskPriority) =>
+    setPriorityFilter((prev) => {
+      const next = new Set(prev)
+      next.has(p) ? next.delete(p) : next.add(p)
+      return next
+    })
+  const toggleAssignee = (id: string) =>
+    setAssigneeFilter((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  const clearFilters = () => {
+    setPriorityFilter(new Set())
+    setAssigneeFilter(new Set())
+  }
+
+  // ── Composer ────────────────────────────────────────────────────
   const [composer, setComposer] = useState<{
     open: boolean
-    editing: LocalTask | null
+    editing: Task | null
     defaultStatus: TaskStatus
   }>({ open: false, editing: null, defaultStatus: 'Pending' })
-
   const openCreate = (defaultStatus: TaskStatus) =>
     setComposer({ open: true, editing: null, defaultStatus })
-  const openEdit = (task: LocalTask) =>
-    setComposer({ open: true, editing: task, defaultStatus: task.status })
-  const closeComposer = () =>
-    setComposer((s) => ({ ...s, open: false }))
+  const openEdit = (task: Task) =>
+    setComposer({ open: true, editing: task, defaultStatus: normStatus(task.status) })
+  const closeComposer = () => setComposer((s) => ({ ...s, open: false }))
 
-  // Bucket tasks by lane. Sort by priority then by due date so the
-  // most urgent work bubbles to the top of each column.
-  const grouped: Record<TaskStatus, LocalTask[]> = useMemo(() => {
-    const out: Record<TaskStatus, LocalTask[]> = {
-      Pending: [],
-      'In Progress': [],
-      Done: [],
+  // ── Assignee options (from tasks) ───────────────────────────────
+  const assigneeOptions = useMemo<AssigneeOption[]>(() => {
+    const byId = new Map<string, string>()
+    for (const t of allTasks) for (const a of t.assignees) byId.set(a.member_id, a.name)
+    return Array.from(byId, ([id, name]) => ({ id, name })).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )
+  }, [allTasks])
+
+  // ── Filter ──────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return allTasks.filter((t) => {
+      if (q && !`${t.title} ${t.notes ?? ''} ${t.case_title ?? ''}`.toLowerCase().includes(q))
+        return false
+      if (priorityFilter.size && !priorityFilter.has(normPriority(t.priority))) return false
+      if (assigneeFilter.size && !t.assignees.some((a) => assigneeFilter.has(a.member_id)))
+        return false
+      return true
+    })
+  }, [allTasks, search, priorityFilter, assigneeFilter])
+
+  const sortTasks = (list: Task[]) =>
+    [...list].sort((a, b) => {
+      const dp = PRIORITY_META[normPriority(a.priority)].rank - PRIORITY_META[normPriority(b.priority)].rank
+      if (dp !== 0) return dp
+      if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date)
+      if (a.due_date) return -1
+      if (b.due_date) return 1
+      return b.updated_at.localeCompare(a.updated_at)
+    })
+
+  // ── Grouping (list view) ────────────────────────────────────────
+  const groups = useMemo<TaskGroup[]>(() => {
+    if (groupBy === 'status') {
+      return STATUSES.map((s) => ({
+        id: `status:${s}`,
+        label: STATUS_META[s].label,
+        color: STATUS_META[s].color,
+        glyph: <StatusIcon status={s} size={15} />,
+        addDefaultStatus: s,
+        tasks: sortTasks(filtered.filter((t) => normStatus(t.status) === s)),
+      }))
     }
-    for (const t of tasks) out[t.status].push(t)
-    const pri = (p: TaskPriority) => (p === 'High' ? 0 : p === 'Medium' ? 1 : 2)
-    for (const k of Object.keys(out) as TaskStatus[]) {
-      out[k].sort((a, b) => {
-        const dp = pri(a.priority) - pri(b.priority)
-        if (dp !== 0) return dp
-        // Earlier due dates first; null due dates sink to the bottom.
-        if (a.due_at && b.due_at) return a.due_at.localeCompare(b.due_at)
-        if (a.due_at) return -1
-        if (b.due_at) return 1
-        return b.updated_at.localeCompare(a.updated_at)
-      })
+    if (groupBy === 'priority') {
+      return PRIORITIES.map((p) => ({
+        id: `priority:${p}`,
+        label: `${PRIORITY_META[p].label} priority`,
+        color: PRIORITY_META[p].color,
+        glyph: <PriorityIcon priority={p} size={15} />,
+        tasks: sortTasks(filtered.filter((t) => normPriority(t.priority) === p)),
+      }))
     }
-    return out
-  }, [tasks])
+    // assignee
+    const out: TaskGroup[] = assigneeOptions.map((a) => ({
+      id: `assignee:${a.id}`,
+      label: a.name,
+      color: '#8A8F99',
+      tasks: sortTasks(filtered.filter((t) => t.assignees.some((x) => x.member_id === a.id))),
+    }))
+    const unassigned = sortTasks(filtered.filter((t) => t.assignees.length === 0))
+    if (unassigned.length)
+      out.push({ id: 'assignee:none', label: 'Unassigned', color: '#B5B9C1', tasks: unassigned })
+    return out.filter((g) => g.tasks.length > 0)
+  }, [groupBy, filtered, assigneeOptions])
 
-  const pendingCount = grouped.Pending.length
+  // ── Progress strip ──────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const total = allTasks.length
+    let done = 0
+    let inProgress = 0
+    let overdue = 0
+    const now = Date.now()
+    for (const t of allTasks) {
+      const s = normStatus(t.status)
+      if (s === 'Done') done++
+      else if (s === 'In Progress') inProgress++
+      if (s !== 'Done' && t.due_date && new Date(t.due_date).getTime() < now) overdue++
+    }
+    return { total, done, inProgress, overdue, pct: total ? Math.round((done / total) * 100) : 0 }
+  }, [allTasks])
 
-  const handleDelete = (task: LocalTask) => {
+  const activeFilterCount = priorityFilter.size + assigneeFilter.size
+
+  // ── Handlers ────────────────────────────────────────────────────
+  const handleDelete = async (task: Task) => {
     if (!confirm(`Delete "${task.title}"?`)) return
-    deleteTask(task.id)
-    toast.success(`Deleted "${task.title}".`)
+    try {
+      await deleteTask.mutateAsync(task.id)
+      toast.success(`Deleted "${task.title}".`)
+    } catch (err) {
+      toast.error(err instanceof Error ? `Couldn't delete: ${err.message}` : 'Delete failed.')
+    }
+  }
+  const handleCycleStatus = async (task: Task) => {
+    const next = STATUS_META[normStatus(task.status)].next
+    try {
+      await updateTask.mutateAsync({ id: task.id, data: { status: next } })
+    } catch (err) {
+      toast.error(err instanceof Error ? `Couldn't update: ${err.message}` : 'Update failed.')
+    }
   }
 
-  const handleStatusCycle = (task: LocalTask) => {
-    const lane = LANES.find((l) => l.key === task.status)
-    if (!lane) return
-    setStatus(task.id, lane.next)
-  }
+  const hasTasks = allTasks.length > 0
+  const nothingMatches = hasTasks && filtered.length === 0
 
   return (
-    <div
-      className="flex-1 overflow-y-auto"
-      style={{ background: 'var(--surface-card)' }}
-    >
-      <div className="px-6 py-6">
-        {/* ─── Title + primary action ──────────────────────────── */}
-        <div className="flex items-center justify-between">
+    <div className="flex-1 overflow-y-auto" style={{ background: 'var(--surface-card)' }}>
+      <div className="px-6 py-6 max-w-[1200px] mx-auto">
+        {/* ─── Header ───────────────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-4">
           <div>
             <h1
               className="text-[26px] font-semibold leading-tight tracking-tight"
-              style={{
-                color: 'var(--text-primary)',
-                fontFamily:
-                  'var(--font-heading, "Playfair Display", serif)',
-              }}
+              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-heading, "Playfair Display", serif)' }}
             >
               Tasks
             </h1>
-            <p
-              className="text-[13px] mt-1"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              {tasks.length === 0
-                ? 'No tasks yet — add your first one below.'
-                : `${pendingCount} pending · ${tasks.length} total`}
+            <p className="text-[13px] mt-1" style={{ color: 'var(--text-muted)' }}>
+              {isLoading
+                ? 'Loading tasks…'
+                : !hasTasks
+                  ? 'No tasks yet — assign your first one to the team.'
+                  : `${stats.total} total · ${stats.inProgress} in progress · ${stats.done} done`}
             </p>
           </div>
           <Button
             onClick={() => openCreate('Pending')}
             size="lg"
-            className="rounded-lg"
-            style={{
-              background: 'var(--gold)',
-              color: 'var(--navy)',
-            }}
+            className="rounded-lg shrink-0"
+            style={{ background: 'var(--gold)', color: 'var(--navy)' }}
           >
             <Plus size={14} strokeWidth={2.25} />
             Add task
           </Button>
         </div>
 
-        {/* ─── Kanban ──────────────────────────────────────────── */}
-        <div className="mt-6 grid grid-cols-3 gap-4">
-          {LANES.map((lane) => {
-            const Icon = lane.Icon
-            const laneTasks = grouped[lane.key]
-            return (
-              <div key={lane.key} className="flex flex-col">
-                {/* Lane header */}
-                <div
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-t-2xl border border-b-0"
-                  style={{
-                    background: 'var(--surface-card)',
-                    borderColor: 'var(--border-soft)',
-                  }}
-                >
-                  <span
-                    aria-hidden
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: lane.dot }}
-                  />
-                  <Icon
-                    size={13}
-                    strokeWidth={1.75}
-                    style={{ color: 'var(--text-secondary)' }}
-                  />
-                  <span
-                    className="text-[12.5px] font-semibold tracking-tight"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {lane.label}
-                  </span>
-                  <span
-                    className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1.5 rounded-full text-[10.5px] font-medium tabular-nums"
-                    style={{
-                      background: 'var(--surface-sunken)',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    {laneTasks.length}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => openCreate(lane.key)}
-                    aria-label={`Add task to ${lane.label}`}
-                    className="ml-auto inline-flex items-center justify-center h-6 w-6 rounded-md cursor-pointer transition-colors hover:bg-[var(--surface-overlay)]"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    <Plus size={13} strokeWidth={2} />
-                  </button>
-                </div>
+        {/* ─── Progress strip ───────────────────────────────────── */}
+        {hasTasks && (
+          <div className="mt-4 flex items-center gap-3">
+            <div
+              className="h-1.5 flex-1 rounded-full overflow-hidden"
+              style={{ background: 'var(--surface-sunken)' }}
+            >
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${stats.pct}%`, background: 'var(--gold)' }}
+              />
+            </div>
+            <span className="text-[12px] tabular-nums shrink-0" style={{ color: 'var(--text-muted)' }}>
+              {stats.pct}% complete
+            </span>
+            {stats.overdue > 0 && (
+              <span
+                className="inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded-full shrink-0"
+                style={{ background: 'rgba(192,57,43,0.10)', color: '#C0392B' }}
+              >
+                {stats.overdue} overdue
+              </span>
+            )}
+          </div>
+        )}
 
-                {/* Lane body */}
-                <div
-                  className="flex-1 rounded-b-2xl border p-2 space-y-2 min-h-[240px]"
-                  style={{
-                    background: 'var(--surface-sunken)',
-                    borderColor: 'var(--border-soft)',
-                  }}
-                >
-                  {laneTasks.length === 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => openCreate(lane.key)}
-                      className="w-full h-full min-h-[200px] rounded-lg border border-dashed flex items-center justify-center text-[12px] cursor-pointer"
-                      style={{
-                        borderColor: 'var(--border-soft)',
-                        color: 'var(--text-muted)',
-                        background: 'transparent',
-                      }}
-                    >
-                      Click to add a {lane.label.toLowerCase()} task
-                    </button>
-                  ) : (
-                    laneTasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        caseTitle={
-                          task.case_id
-                            ? caseTitleById.get(task.case_id) ?? null
-                            : null
-                        }
-                        onEdit={() => openEdit(task)}
-                        onDelete={() => handleDelete(task)}
-                        onCycleStatus={() => handleStatusCycle(task)}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            )
-          })}
+        {/* ─── Toolbar ──────────────────────────────────────────── */}
+        <div className="mt-5">
+          <TaskToolbar
+            view={view}
+            onViewChange={changeView}
+            groupBy={groupBy}
+            onGroupByChange={setGroupBy}
+            search={search}
+            onSearchChange={setSearch}
+            priorityFilter={priorityFilter}
+            onTogglePriority={togglePriority}
+            assigneeOptions={assigneeOptions}
+            assigneeFilter={assigneeFilter}
+            onToggleAssignee={toggleAssignee}
+            activeFilterCount={activeFilterCount}
+            onClearFilters={clearFilters}
+          />
+        </div>
+
+        {/* ─── Content ──────────────────────────────────────────── */}
+        <div className="mt-4">
+          {isLoading ? (
+            <div
+              className="rounded-xl border p-10 text-center text-[13px]"
+              style={{ borderColor: 'var(--border-soft)', color: 'var(--text-muted)' }}
+            >
+              Loading tasks…
+            </div>
+          ) : !hasTasks ? (
+            <EmptyState onAdd={() => openCreate('Pending')} />
+          ) : nothingMatches ? (
+            <div
+              className="rounded-xl border p-10 text-center"
+              style={{ borderColor: 'var(--border-soft)' }}
+            >
+              <p className="text-[13.5px] font-medium" style={{ color: 'var(--text-primary)' }}>
+                No tasks match your filters
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('')
+                  clearFilters()
+                }}
+                className="mt-2 text-[12.5px] cursor-pointer"
+                style={{ color: 'var(--gold-dark)' }}
+              >
+                Clear search & filters
+              </button>
+            </div>
+          ) : view === 'list' ? (
+            <TaskListView
+              groups={groups}
+              onCycleStatus={handleCycleStatus}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              onAdd={(g) => openCreate(g.addDefaultStatus ?? 'Pending')}
+            />
+          ) : (
+            <TaskBoardView
+              tasks={sortTasks(filtered)}
+              onCycleStatus={handleCycleStatus}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              onAdd={(s) => openCreate(s)}
+            />
+          )}
         </div>
 
         <TaskComposerDialog
@@ -336,231 +340,34 @@ export default function TasksPage() {
   )
 }
 
-// ── Task card ──────────────────────────────────────────────────────────
-
-/**
- * Single task tile. Surfaces:
- *   - Status pill (click to cycle to the next lane)
- *   - Priority pill (matches the rest of the priority system)
- *   - Title + notes excerpt (line-clamped to 2 lines)
- *   - Label chips (deterministically coloured)
- *   - Due date + overdue flag
- *   - Linked-case ribbon, if any
- *   - Reminder bell if a reminder is configured
- *   - Hover row menu (Edit / Move / Delete) + PriorityButton
- */
-function TaskCard({
-  task,
-  caseTitle,
-  onEdit,
-  onDelete,
-  onCycleStatus,
-}: {
-  task: LocalTask
-  caseTitle: string | null
-  onEdit: () => void
-  onDelete: () => void
-  onCycleStatus: () => void
-}) {
-  const due = task.due_at ? new Date(task.due_at) : null
-  const isOverdue =
-    due && task.status !== 'Done' && due.getTime() < Date.now()
-  const reminderLabel =
-    REMINDER_OFFSET_OPTIONS.find((o) => o.key === task.reminder_offset)?.label ??
-    'No reminder'
-  const priStyle = PRIORITY_STYLE[task.priority]
-  const laneStyle = LANES.find((l) => l.key === task.status)
-
+function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div
-      className="group rounded-xl border p-3 transition-shadow"
-      style={{
-        background: 'var(--surface-card)',
-        borderColor: 'var(--border-soft)',
-        boxShadow: 'var(--shadow-xs)',
-      }}
+      className="rounded-xl border border-dashed p-12 flex flex-col items-center text-center"
+      style={{ borderColor: 'var(--border-default)' }}
     >
-      {/* Row 1 — status pill + priority pill + spacer + row menu */}
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {laneStyle && (
-            <button
-              type="button"
-              onClick={onCycleStatus}
-              title={`Move to ${laneStyle.next}`}
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer transition-opacity hover:opacity-80"
-              style={{
-                background: 'var(--surface-sunken)',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <span
-                aria-hidden
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: laneStyle.dot }}
-              />
-              {laneStyle.label}
-            </button>
-          )}
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
-            style={{ background: priStyle.bg, color: priStyle.color }}
-          >
-            <span
-              aria-hidden
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: priStyle.color }}
-            />
-            {task.priority}
-          </span>
-        </div>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* PriorityButton is part of the cross-app priority system —
-              flagging a task here surfaces it on the personal /
-              firm dashboard panels alongside cases and clients. */}
-          <PriorityButton
-            entityType="case"
-            entityId={`task:${task.id}`}
-            label={task.title}
-            metadata={{ task_status: task.status, due_at: task.due_at ?? null }}
-          />
-          <RowMenu onEdit={onEdit} onCycleStatus={onCycleStatus} onDelete={onDelete} />
-        </div>
-      </div>
-
-      {/* Row 2 — title + notes excerpt */}
-      <div className="mb-2">
-        <button
-          type="button"
-          onClick={onEdit}
-          className="block text-left cursor-pointer w-full"
-        >
-          <p
-            className="text-[13.5px] font-semibold leading-snug"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {task.title}
-          </p>
-          {task.notes && (
-            <p
-              className="text-[12px] mt-1 leading-snug line-clamp-2"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              {task.notes}
-            </p>
-          )}
-        </button>
-      </div>
-
-      {/* Row 3 — labels */}
-      {task.labels.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1 mb-2">
-          {task.labels.map((l) => (
-            <span
-              key={l.id}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium"
-              style={{
-                background: `${l.color}1F`,
-                color: l.color,
-              }}
-            >
-              <Tag size={9} strokeWidth={1.75} />
-              {l.name}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Row 4 — meta: due date + linked case + reminder */}
       <div
-        className="flex items-center gap-2 flex-wrap text-[11.5px] tabular-nums"
-        style={{ color: 'var(--text-muted)' }}
+        className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-3"
+        style={{ background: 'var(--accent-today-tint)' }}
       >
-        {due && (
-          <span
-            className="inline-flex items-center gap-1"
-            style={{ color: isOverdue ? '#C0392B' : 'var(--text-muted)' }}
-          >
-            {isOverdue && <AlertTriangle size={10} strokeWidth={1.75} />}
-            {due.toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-            })}
-          </span>
-        )}
-        {caseTitle && (
-          <span className="inline-flex items-center gap-1 truncate max-w-[160px]">
-            <Briefcase size={10} strokeWidth={1.75} />
-            <span className="truncate">{caseTitle}</span>
-          </span>
-        )}
-        {task.reminder_offset !== 'none' && (
-          <span
-            className="inline-flex items-center gap-1"
-            title={reminderLabel}
-          >
-            <Bell size={10} strokeWidth={1.75} />
-            {reminderLabel.replace(' before', '')}
-          </span>
-        )}
+        <StatusIcon status="In Progress" size={22} />
       </div>
+      <p className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+        Start your firm’s task board
+      </p>
+      <p className="text-[13px] mt-1 max-w-[360px]" style={{ color: 'var(--text-muted)' }}>
+        Create a task, assign it to teammates, and set email reminders so nothing slips
+        before a deadline.
+      </p>
+      <Button
+        onClick={onAdd}
+        size="lg"
+        className="mt-4 rounded-lg"
+        style={{ background: 'var(--gold)', color: 'var(--navy)' }}
+      >
+        <Plus size={14} strokeWidth={2.25} />
+        Add your first task
+      </Button>
     </div>
-  )
-}
-
-// ── Row menu ───────────────────────────────────────────────────────────
-
-function RowMenu({
-  onEdit,
-  onCycleStatus,
-  onDelete,
-}: {
-  onEdit: () => void
-  onCycleStatus: () => void
-  onDelete: () => void
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            aria-label="Task actions"
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <MoreHorizontal size={14} strokeWidth={2} />
-          </button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem
-          onClick={onEdit}
-          className="text-[13px] cursor-pointer"
-        >
-          <Edit3 size={13} strokeWidth={1.75} />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={onCycleStatus}
-          className="text-[13px] cursor-pointer"
-        >
-          <RotateCcw size={13} strokeWidth={1.75} />
-          Move to next status
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={onDelete}
-          className="text-[13px] cursor-pointer"
-          style={{ color: 'var(--accent-danger)' }}
-        >
-          <Trash2 size={13} strokeWidth={1.75} />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }

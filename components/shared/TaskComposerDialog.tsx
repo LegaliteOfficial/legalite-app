@@ -3,79 +3,67 @@
 /**
  * TaskComposerDialog
  * ------------------
- * Slim, focused dialog used by the Tasks page to create or edit a
- * task. Replaces the legacy TaskForm modal so the new kanban can
- * surface labels and reminder presets without dragging the older
- * form's wider scope along.
+ * Create / edit a task, wired to the GraphQL backend. A task can be
+ * assigned to one or more firm members (MemberPicker); each assignee is
+ * emailed when the task is assigned to them, and any reminders configured
+ * here fire as emails to all assignees ahead of the due date (handled by
+ * the task-reminders cron on the backend).
  *
  * Fields (in render order):
  *   - Title              (required)
- *   - Notes              (textarea, multi-line markdown-light)
- *   - Priority           (segmented control: High / Medium / Low)
- *   - Due date + time    (split inputs — defaults to "tomorrow 9am")
- *   - Labels             (chip input with autocomplete from the
- *                         shared label palette; new labels get
- *                         deterministically coloured)
- *   - Reminder           (preset dropdown: None / 15m / 1h / 1d / 3d)
+ *   - Notes              (textarea)
+ *   - Priority           (segmented: High / Medium / Low)
+ *   - Due date + time    (split inputs)
+ *   - Assignees          (firm-member multi-select)
+ *   - Reminders          (offset rows — email, relative to the due date)
  *   - Linked case        (optional, select from useCases())
- *
- * Save writes through `useTasksLocalStore` so the kanban re-renders
- * immediately. When the GraphQL backend ships, swap the
- * mutate-store call for the matching mutation; the dialog's prop
- * shape doesn't need to change.
  */
 
-import { useEffect, useMemo, useState } from 'react'
-import {
-  Bell,
-  Briefcase,
-  Check,
-  Plus,
-  X,
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Bell, Briefcase, Check, Plus, Users, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  FormDrawer,
+  FormDrawerBody,
+  FormDrawerFooter,
+  FormDrawerHeader,
+} from '@/components/ui/form-drawer'
 import { useCases } from '@/hooks/use-cases'
+import { useFirmMembers } from '@/hooks/use-firm-members'
+import { useAuthStore } from '@/stores/auth.store'
 import {
-  colorForLabelName,
-  REMINDER_OFFSET_OPTIONS,
-  useTasksLocalStore,
-  type LocalTask,
-  type ReminderOffsetKey,
-  type TaskLabel,
-  type TaskPriority,
-} from '@/stores/tasks-local.store'
+  TASK_REMINDER_PRESETS,
+  useCreateTask,
+  useUpdateTask,
+  type Task,
+} from '@/hooks/use-tasks'
+import { MemberPicker, type PickedMember } from '@/components/shared/MemberPicker'
+
+type TaskPriority = 'High' | 'Medium' | 'Low'
+type TaskStatus = 'Pending' | 'In Progress' | 'Done'
 
 interface TaskComposerDialogProps {
-  /** Controlled open state. */
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Pre-fill the form with an existing task to switch to edit mode. */
-  editing?: LocalTask | null
-  /**
-   * Optional default status — used when the user clicks "Add task"
-   * from inside a specific lane so the new task lands there.
-   */
-  defaultStatus?: LocalTask['status']
+  editing?: Task | null
+  /** Lane the new task lands in when created from a specific column. */
+  defaultStatus?: TaskStatus
+}
+
+interface ReminderRow {
+  id: string
+  minutes: number
 }
 
 const PRIORITY_OPTIONS: TaskPriority[] = ['High', 'Medium', 'Low']
 
 const PRIORITY_STYLE: Record<TaskPriority, { color: string; bg: string }> = {
-  High: {
-    color: 'var(--accent-danger, #C0392B)',
-    bg: 'rgba(192, 57, 43, 0.12)',
-  },
+  High: { color: 'var(--accent-danger, #C0392B)', bg: 'rgba(192, 57, 43, 0.12)' },
   Medium: {
     color: 'var(--accent-today, #C9972B)',
     bg: 'var(--accent-today-tint, rgba(201, 151, 43, 0.12))',
@@ -86,11 +74,12 @@ const PRIORITY_STYLE: Record<TaskPriority, { color: string; bg: string }> = {
   },
 }
 
-/**
- * Default due-at — tomorrow 9 am local. Set once when the dialog
- * opens for create mode so opening / closing without saving doesn't
- * keep advancing the default.
- */
+function newRowId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
+  return `r-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+/** Default due-at — tomorrow 9am local. */
 function defaultDueAt(): string {
   const d = new Date()
   d.setDate(d.getDate() + 1)
@@ -98,8 +87,8 @@ function defaultDueAt(): string {
   return d.toISOString()
 }
 
-/** Format ISO -> "YYYY-MM-DD" + "HH:MM" pair for the split inputs. */
-function splitDueAt(iso: string | null): { date: string; time: string } {
+/** ISO -> { date: "YYYY-MM-DD", time: "HH:MM" } for the split inputs. */
+function splitDueAt(iso: string | null | undefined): { date: string; time: string } {
   if (!iso) return { date: '', time: '' }
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return { date: '', time: '' }
@@ -110,11 +99,10 @@ function splitDueAt(iso: string | null): { date: string; time: string } {
   }
 }
 
-/** Combine the date + time inputs back into an ISO string. */
+/** Combine date + time back into an ISO string (null when no date). */
 function joinDueAt(date: string, time: string): string | null {
   if (!date) return null
-  const t = time || '09:00'
-  const candidate = new Date(`${date}T${t}:00`)
+  const candidate = new Date(`${date}T${time || '09:00'}:00`)
   if (Number.isNaN(candidate.getTime())) return null
   return candidate.toISOString()
 }
@@ -125,19 +113,11 @@ export function TaskComposerDialog({
   editing,
   defaultStatus = 'Pending',
 }: TaskComposerDialogProps) {
-  const createTask = useTasksLocalStore((s) => s.createTask)
-  const updateTask = useTasksLocalStore((s) => s.updateTask)
-  const ensureLabel = useTasksLocalStore((s) => s.ensureLabel)
-  // Palette for autocomplete. Re-renders when a new label is added
-  // anywhere in the app.
-  const labelRevision = useTasksLocalStore((s) => s.revision)
-  const allLabels = useMemo(
-    () => useTasksLocalStore.getState().labels,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [labelRevision],
-  )
-
+  const createTask = useCreateTask()
+  const updateTask = useUpdateTask()
   const { data: cases } = useCases()
+  const { data: members } = useFirmMembers()
+  const currentUserId = useAuthStore((s) => s.user?.id)
 
   // ── Form state ──────────────────────────────────────────────────
   const [title, setTitle] = useState('')
@@ -145,27 +125,35 @@ export function TaskComposerDialog({
   const [priority, setPriority] = useState<TaskPriority>('Medium')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
-  const [labels, setLabels] = useState<TaskLabel[]>([])
-  const [labelDraft, setLabelDraft] = useState('')
-  const [reminder, setReminder] = useState<ReminderOffsetKey>('none')
-  const [caseId, setCaseId] = useState<string>('')
+  const [assignees, setAssignees] = useState<PickedMember[]>([])
+  const [reminders, setReminders] = useState<ReminderRow[]>([])
+  const [caseId, setCaseId] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Reset / hydrate when the dialog opens. `open` flipping false
-  // keeps the last values mounted briefly during the close animation
-  // — which is fine because we re-hydrate on the next open.
+  // The signed-in user as a member (default assignee in create mode).
+  const selfMember = (members ?? []).find(
+    (m) => m.profile_id === currentUserId && m.status === 'active',
+  )
+
   useEffect(() => {
     if (!open) return
     if (editing) {
-      const { date: d, time: t } = splitDueAt(editing.due_at)
+      const { date: d, time: t } = splitDueAt(editing.due_date)
       setTitle(editing.title)
       setNotes(editing.notes ?? '')
-      setPriority(editing.priority)
+      setPriority((editing.priority as TaskPriority) ?? 'Medium')
       setDate(d)
       setTime(t)
-      setLabels(editing.labels)
-      setLabelDraft('')
-      setReminder(editing.reminder_offset)
+      setAssignees(
+        editing.assignees.map((a) => ({
+          id: a.member_id,
+          name: a.name,
+          title: a.professional_title,
+        })),
+      )
+      setReminders(
+        editing.reminders.map((r) => ({ id: newRowId(), minutes: r.minutes_before })),
+      )
       setCaseId(editing.case_id ?? '')
     } else {
       const def = splitDueAt(defaultDueAt())
@@ -174,76 +162,74 @@ export function TaskComposerDialog({
       setPriority('Medium')
       setDate(def.date)
       setTime(def.time)
-      setLabels([])
-      setLabelDraft('')
-      setReminder('none')
+      setAssignees(
+        selfMember
+          ? [{ id: selfMember.id, name: selfMember.name, title: selfMember.professional_title }]
+          : [],
+      )
+      setReminders([])
       setCaseId('')
     }
     setSubmitting(false)
+    // selfMember resolves async — the seed effect below back-fills it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing])
 
-  const isEditMode = !!editing
-  const canSave = title.trim().length > 0
-
-  // ── Label chip helpers ──────────────────────────────────────────
-  /** Commit the current draft to the chip list. Idempotent. */
-  const commitLabelDraft = () => {
-    const trimmed = labelDraft.trim()
-    if (!trimmed) return
-    const existing = labels.find(
-      (l) => l.name.toLowerCase() === trimmed.toLowerCase(),
+  // Create mode: once members load, ensure the signed-in user is seeded.
+  useEffect(() => {
+    if (!open || editing || !selfMember) return
+    setAssignees((prev) =>
+      prev.some((p) => p.id === selfMember.id)
+        ? prev
+        : [{ id: selfMember.id, name: selfMember.name, title: selfMember.professional_title }, ...prev],
     )
-    if (existing) {
-      setLabelDraft('')
-      return
-    }
-    const persisted = ensureLabel(trimmed)
-    setLabels((prev) => [...prev, persisted])
-    setLabelDraft('')
-  }
-  const removeLabel = (id: string) =>
-    setLabels((prev) => prev.filter((l) => l.id !== id))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing, selfMember?.id])
 
-  /**
-   * Suggestions are palette labels that match the current draft
-   * prefix and aren't already on the task. Cap to keep the popover
-   * tight.
-   */
-  const labelSuggestions = useMemo(() => {
-    if (!labelDraft.trim()) return []
-    const q = labelDraft.trim().toLowerCase()
-    return allLabels
-      .filter(
-        (l) =>
-          l.name.toLowerCase().includes(q) &&
-          !labels.some((picked) => picked.id === l.id),
-      )
-      .slice(0, 5)
-  }, [allLabels, labelDraft, labels])
+  const isEditMode = !!editing
+  const canSave = title.trim().length > 0 && !submitting
 
-  // ── Save ────────────────────────────────────────────────────────
-  const handleSave = () => {
+  const addReminder = () =>
+    setReminders((prev) => [...prev, { id: newRowId(), minutes: 1440 }])
+  const updateReminder = (id: string, minutes: number) =>
+    setReminders((prev) => prev.map((r) => (r.id === id ? { ...r, minutes } : r)))
+  const removeReminder = (id: string) =>
+    setReminders((prev) => prev.filter((r) => r.id !== id))
+
+  const handleSave = async () => {
     if (!canSave) return
     setSubmitting(true)
     try {
-      const due_at = joinDueAt(date, time)
-      const payload = {
+      const due = joinDueAt(date, time)
+      const input = {
         title: title.trim(),
-        notes: notes.trim() || null,
+        notes: notes.trim() || undefined,
         status: editing?.status ?? defaultStatus,
         priority,
-        due_at,
-        reminder_offset: reminder,
-        labels,
-        case_id: caseId || null,
+        due_date: due ?? undefined,
+        case_id: caseId || undefined,
+        assignee_member_ids: assignees.map((a) => a.id),
+        reminders: reminders.map((r) => ({ minutes_before: r.minutes, method: 'email' })),
       }
+
       if (editing) {
-        updateTask(editing.id, payload)
-        toast.success(`Updated "${payload.title}".`)
+        await updateTask.mutateAsync({ id: editing.id, data: input })
       } else {
-        createTask(payload)
-        toast.success(`Added "${payload.title}" to ${payload.status}.`)
+        await createTask.mutateAsync(input)
       }
+
+      const bits = [
+        assignees.length > 0
+          ? `${assignees.length} assignee${assignees.length === 1 ? '' : 's'}`
+          : null,
+        reminders.length > 0
+          ? `${reminders.length} reminder${reminders.length === 1 ? '' : 's'}`
+          : null,
+      ].filter(Boolean)
+      const tail = bits.length ? ` · ${bits.join(' · ')}` : ''
+      toast.success(
+        editing ? `Updated “${input.title}”${tail}` : `Added “${input.title}”${tail}`,
+      )
       onOpenChange(false)
     } catch (err) {
       toast.error(
@@ -255,25 +241,22 @@ export function TaskComposerDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle
-            style={{
-              fontFamily:
-                'var(--font-heading, "Playfair Display", serif)',
-            }}
-          >
-            {isEditMode ? 'Edit task' : 'New task'}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="grid gap-4 py-2">
+    <FormDrawer open={open} onOpenChange={onOpenChange} size="md">
+      <FormDrawerHeader
+        title={isEditMode ? 'Edit task' : 'New task'}
+        description={
+          isEditMode
+            ? 'Update the task, assignees and reminders below.'
+            : 'Capture the next thing that needs doing — assign it to teammates and they’ll be emailed.'
+        }
+        onClose={() => onOpenChange(false)}
+      />
+      <FormDrawerBody className="space-y-0">
+        <div className="grid gap-4">
           {/* Title */}
           <div className="grid gap-1.5">
             <Label htmlFor="task-title" className="text-[13px]">
-              Title{' '}
-              <span style={{ color: 'var(--accent-danger)' }}>*</span>
+              Title <span style={{ color: 'var(--accent-danger)' }}>*</span>
             </Label>
             <Input
               id="task-title"
@@ -320,9 +303,7 @@ export function TaskComposerDialog({
                     className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-[12.5px] font-medium cursor-pointer"
                     style={{
                       background: active ? style.bg : 'transparent',
-                      color: active
-                        ? style.color
-                        : 'var(--text-secondary)',
+                      color: active ? style.color : 'var(--text-secondary)',
                     }}
                   >
                     <span
@@ -364,144 +345,80 @@ export function TaskComposerDialog({
             </div>
           </div>
 
-          {/* Labels */}
+          {/* Assignees */}
           <div className="grid gap-1.5">
-            <Label htmlFor="task-labels" className="text-[13px]">
-              Labels
+            <Label className="text-[13px] inline-flex items-center gap-1.5">
+              <Users size={12} strokeWidth={1.75} />
+              Assignees
             </Label>
-            <div
-              className="rounded-md border px-2 py-1.5 flex flex-wrap items-center gap-1.5"
-              style={{
-                borderColor: 'var(--border-default)',
-                background: 'var(--surface-card)',
-              }}
-              onClick={() => document.getElementById('task-labels')?.focus()}
-            >
-              {labels.map((l) => (
-                <span
-                  key={l.id}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11.5px] font-medium"
-                  style={{
-                    background: `${l.color}1F`, // hex + ~12% alpha
-                    color: l.color,
-                  }}
-                >
-                  {l.name}
-                  <button
-                    type="button"
-                    aria-label={`Remove ${l.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeLabel(l.id)
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <X size={10} strokeWidth={2.25} />
-                  </button>
-                </span>
-              ))}
-              <input
-                id="task-labels"
-                value={labelDraft}
-                onChange={(e) => setLabelDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ',') {
-                    e.preventDefault()
-                    commitLabelDraft()
-                  } else if (
-                    e.key === 'Backspace' &&
-                    labelDraft === '' &&
-                    labels.length > 0
-                  ) {
-                    // Quick-pop the last chip on backspace if the
-                    // draft is empty — feels native for chip inputs.
-                    setLabels((prev) => prev.slice(0, -1))
-                  }
-                }}
-                placeholder={labels.length === 0 ? 'Type and press Enter…' : ''}
-                className="flex-1 min-w-[80px] bg-transparent outline-none text-[13px]"
-                style={{ color: 'var(--text-primary)' }}
-              />
-            </div>
-            {labelSuggestions.length > 0 && (
-              <div
-                className="rounded-md border p-1 flex flex-wrap gap-1"
-                style={{
-                  borderColor: 'var(--border-soft)',
-                  background: 'var(--surface-sunken)',
-                }}
-              >
-                {labelSuggestions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => {
-                      setLabels((prev) => [...prev, s])
-                      setLabelDraft('')
-                    }}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11.5px] font-medium cursor-pointer"
-                    style={{
-                      background: 'var(--surface-card)',
-                      color: s.color,
-                      border: `1px solid ${s.color}33`,
-                    }}
-                  >
-                    <Plus size={9} strokeWidth={2.25} />
-                    {s.name}
-                  </button>
-                ))}
-              </div>
-            )}
-            <p
-              className="text-[11.5px]"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              Press Enter or comma to add. Labels colour-key
-              automatically across the firm.
+            <MemberPicker value={assignees} onChange={setAssignees} />
+            <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+              Each assignee is emailed when the task is assigned to them.
             </p>
           </div>
 
-          {/* Reminder */}
+          {/* Reminders */}
           <div className="grid gap-1.5">
-            <Label
-              htmlFor="task-reminder"
-              className="text-[13px] inline-flex items-center gap-1.5"
-            >
+            <Label className="text-[13px] inline-flex items-center gap-1.5">
               <Bell size={12} strokeWidth={1.75} />
-              Reminder
+              Reminders
             </Label>
-            <select
-              id="task-reminder"
-              value={reminder}
-              onChange={(e) =>
-                setReminder(e.target.value as ReminderOffsetKey)
-              }
-              className="h-9 rounded-md border px-2 text-[13px] bg-transparent"
-              style={{ borderColor: 'var(--border-default)' }}
-              disabled={!date}
-            >
-              {REMINDER_OFFSET_OPTIONS.map((opt) => (
-                <option key={opt.key} value={opt.key}>
-                  {opt.label}
-                </option>
+            <div className="space-y-2">
+              {reminders.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center gap-2 rounded-lg border p-2"
+                  style={{ borderColor: 'var(--border-soft)', background: 'var(--surface-card)' }}
+                >
+                  <select
+                    value={r.minutes}
+                    onChange={(e) => updateReminder(r.id, Number(e.target.value))}
+                    className="flex-1 h-9 rounded-lg border px-3 text-[13px] bg-transparent cursor-pointer"
+                    style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+                  >
+                    {TASK_REMINDER_PRESETS.map((p) => (
+                      <option key={p.minutes} value={p.minutes}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-[11.5px] shrink-0" style={{ color: 'var(--text-muted)' }}>
+                    Email
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeReminder(r.id)}
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer"
+                    style={{ color: 'var(--text-muted)' }}
+                    aria-label="Remove reminder"
+                  >
+                    <X size={13} strokeWidth={1.75} />
+                  </button>
+                </div>
               ))}
-            </select>
-            {!date && (
-              <p
-                className="text-[11.5px]"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                Pick a due date first to enable reminders.
-              </p>
-            )}
+              {reminders.length === 0 && (
+                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                  {date
+                    ? 'No reminders set. Add one to email assignees before the due date.'
+                    : 'Pick a due date to schedule email reminders.'}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={addReminder}
+              disabled={!date}
+              className="mt-1 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer self-start disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ color: 'var(--gold-dark)' }}
+            >
+              <Plus size={13} strokeWidth={2} />
+              Add reminder
+            </button>
           </div>
 
           {/* Linked case */}
           <div className="grid gap-1.5">
-            <Label
-              htmlFor="task-case"
-              className="text-[13px] inline-flex items-center gap-1.5"
-            >
+            <Label htmlFor="task-case" className="text-[13px] inline-flex items-center gap-1.5">
               <Briefcase size={12} strokeWidth={1.75} />
               Linked case (optional)
             </Label>
@@ -521,25 +438,16 @@ export function TaskComposerDialog({
             </select>
           </div>
         </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!canSave || submitting}
-            style={{ background: 'var(--gold)', color: 'var(--navy)' }}
-          >
-            <Check size={13} strokeWidth={2} />
-            {isEditMode ? 'Save changes' : 'Add task'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </FormDrawerBody>
+      <FormDrawerFooter>
+        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave} disabled={!canSave}>
+          <Check size={13} strokeWidth={2} />
+          {submitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Add task'}
+        </Button>
+      </FormDrawerFooter>
+    </FormDrawer>
   )
 }

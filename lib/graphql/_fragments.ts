@@ -142,9 +142,33 @@ export const AttachmentFieldsFragmentDoc = graphql(/* GraphQL */ `
 /**
  * Task row — same shape for list + detail + create + update.
  */
+export const TaskAssigneeFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment TaskAssigneeFields on TaskAssignee {
+    id
+    task_id
+    member_id
+    name
+    professional_title
+    avatar_url
+  }
+`)
+
+export const TaskReminderFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment TaskReminderFields on TaskReminder {
+    id
+    task_id
+    minutes_before
+    method
+    remind_at
+    status
+    sent_at
+  }
+`)
+
 export const TaskFieldsFragmentDoc = graphql(/* GraphQL */ `
   fragment TaskFields on Task {
     id
+    firm_id
     user_id
     client_id
     case_id
@@ -156,6 +180,12 @@ export const TaskFieldsFragmentDoc = graphql(/* GraphQL */ `
     notes
     client_name
     case_title
+    assignees {
+      ...TaskAssigneeFields
+    }
+    reminders {
+      ...TaskReminderFields
+    }
     created_at
     updated_at
   }
