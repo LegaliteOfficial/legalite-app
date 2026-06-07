@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 
-import { ask, AiServiceError } from '@/lib/ai/client'
+import { ask, submitFeedback, AiServiceError } from '@/lib/ai/client'
 import {
   listSessions,
   getSession,
@@ -15,15 +15,17 @@ import {
   appendAssistantTurn,
   dropLastAssistantTurn,
   deleteSession,
+  setTurnFeedback,
   type SessionRecord,
   type Turn,
 } from '@/lib/ai/sessions'
+import type { FeedbackThumbs } from '@/lib/ai/types'
 import { AnswerCard } from '@/components/ai/AnswerCard'
 
 const SUGGESTIONS = [
-  { Icon: Scales,    text: 'What are the grounds for judicial review in Ghana?' },
+  { Icon: Scales, text: 'What are the grounds for judicial review in Ghana?' },
   { Icon: BookOpen, text: 'Summarize the Matrimonial Causes Act provisions on divorce.' },
-  { Icon: MagnifyingGlass,   text: 'Find precedents on breach of contract in commercial disputes.' },
+  { Icon: MagnifyingGlass, text: 'Find precedents on breach of contract in commercial disputes.' },
 ]
 
 export default function AiAssistantPage() {
@@ -83,7 +85,7 @@ export default function AiAssistantPage() {
   const handleSend = useCallback(async () => {
     const question = input.trim()
     if (!question || isLoading) return
-    if (question.length < 3) {
+    if (question.length < 1) {
       toast.error('Question must be at least 3 characters.')
       return
     }
@@ -149,6 +151,43 @@ export default function AiAssistantPage() {
     }
   }, [input, isLoading, activeId, refreshSidebar])
 
+  /**
+   * Persist a thumbs vote (and optional comment) for an assistant
+   * turn. The server upserts on (message_id, organization?, user?) so
+   * we can call this every time the user toggles — no client-side
+   * "have I submitted yet" tracking required. Optimistic UI lives in
+   * AnswerCard's local state; here we only commit to localStorage
+   * once the network call succeeds.
+   */
+  const handleSubmitFeedback = useCallback(
+    async (
+      sessionId: string,
+      messageId: string,
+      input: { thumbs: FeedbackThumbs; comment: string | null },
+    ) => {
+      try {
+        await submitFeedback(messageId, {
+          thumbs: input.thumbs,
+          comment: input.comment ?? undefined,
+        })
+        const updated = setTurnFeedback(sessionId, messageId, {
+          thumbs: input.thumbs,
+          comment: input.comment,
+          submitted_at: new Date().toISOString(),
+        })
+        if (updated) setTurns(updated.turns)
+      } catch (err) {
+        const message =
+          err instanceof AiServiceError
+            ? err.message
+            : 'Could not save your feedback. Please try again.'
+        toast.error(message)
+        throw err // let AnswerCard revert its optimistic state
+      }
+    },
+    [],
+  )
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -180,7 +219,20 @@ export default function AiAssistantPage() {
           ) : (
             <div className="max-w-3xl mx-auto space-y-6">
               {turns.map((turn, i) => (
-                <TurnBubble key={i} turn={turn} />
+                <TurnBubble
+                  key={i}
+                  turn={turn}
+                  onSubmitFeedback={
+                    turn.role === 'assistant' && turn.response.message_id && activeId
+                      ? (input) =>
+                          handleSubmitFeedback(
+                            activeId,
+                            turn.response.message_id as string,
+                            input,
+                          )
+                      : undefined
+                  }
+                />
               ))}
               {isLoading && <LoadingTurn />}
               <div ref={chatEndRef} />
@@ -390,7 +442,16 @@ function EmptyState({ onPick }: { onPick: (text: string) => void }) {
 
 // ── Turn rendering ─────────────────────────────────────────────────────────
 
-function TurnBubble({ turn }: { turn: Turn }) {
+function TurnBubble({
+  turn,
+  onSubmitFeedback,
+}: {
+  turn: Turn
+  onSubmitFeedback?: (input: {
+    thumbs: FeedbackThumbs
+    comment: string | null
+  }) => Promise<void>
+}) {
   if (turn.role === 'user') {
     return (
       <div className="flex justify-end">
@@ -410,7 +471,11 @@ function TurnBubble({ turn }: { turn: Turn }) {
   return (
     <div className="flex justify-start">
       <div className="max-w-[92%] w-full">
-        <AnswerCard response={turn.response} />
+        <AnswerCard
+          response={turn.response}
+          feedback={turn.feedback ?? null}
+          onSubmitFeedback={onSubmitFeedback}
+        />
       </div>
     </div>
   )

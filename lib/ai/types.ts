@@ -87,4 +87,31 @@ export interface AskResponse {
   structured_answer: StructuredAnswer | null
   query_intent: string | null
   query_intent_confidence: number | null
+  // Phase B (self-learning loop): assistant turn id used as the path
+  // segment for POST /ask/{message_id}/feedback. Null when the backend
+  // didn't persist a chat_messages row (e.g. early refusal paths).
+  message_id: string | null
+}
+
+// ───────────────────────── Feedback ─────────────────────────
+
+export type FeedbackThumbs = 'up' | 'down'
+
+export interface FeedbackCreate {
+  thumbs: FeedbackThumbs
+  /** Optional free-text note. Max 2000 chars on the server. */
+  comment?: string | null
+}
+
+export interface FeedbackResponse {
+  id: string
+  message_id: string
+  session_id: string
+  thumbs: FeedbackThumbs
+  comment: string | null
+  answer_confidence: string | null
+  query_intent: string | null
+  refused: boolean
+  created_at: string
+  updated_at: string
 }

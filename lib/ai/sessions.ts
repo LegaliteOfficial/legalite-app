@@ -1,4 +1,4 @@
-import type { AskResponse } from './types'
+import type { AskResponse, FeedbackThumbs } from './types'
 
 /**
  * Lightweight localStorage cache of LegaLite AI sessions.
@@ -21,11 +21,21 @@ import type { AskResponse } from './types'
 const STORAGE_KEY = 'll:ai:sessions'
 const MAX_SESSIONS = 30
 
+/** Local mirror of the latest server-side feedback for an assistant turn. */
+export interface TurnFeedback {
+  thumbs: FeedbackThumbs
+  comment: string | null
+  /** ISO timestamp of the most recent submit — used to ack the user. */
+  submitted_at: string
+}
+
 export interface AssistantTurn {
   role: 'assistant'
   /** Full structured response — render via AnswerCard. */
   response: AskResponse
   created_at: string
+  /** Present once the user has voted. Re-votes overwrite in place. */
+  feedback?: TurnFeedback | null
 }
 
 export interface UserTurn {
@@ -158,6 +168,38 @@ export function dropLastAssistantTurn(id: string): void {
   if (last?.role !== 'assistant') return
   store.map[id] = { ...existing, turns: existing.turns.slice(0, -1) }
   write(store)
+}
+
+/**
+ * Persist (or clear) feedback on a specific assistant turn, located by
+ * the server's `message_id`. Pass `feedback: null` to revert an
+ * optimistic update that the server rejected.
+ *
+ * Returns the updated session record so the caller can rebuild its
+ * in-memory turns array from the canonical source. Returns null when
+ * the session or message id isn't found (the bar shouldn't render in
+ * that case, so the caller will never have reached this).
+ */
+export function setTurnFeedback(
+  sessionId: string,
+  messageId: string,
+  feedback: TurnFeedback | null,
+): SessionRecord | null {
+  const store = read()
+  const existing = store.map[sessionId]
+  if (!existing) return null
+  let mutated = false
+  const turns = existing.turns.map((t) => {
+    if (t.role !== 'assistant') return t
+    if (t.response.message_id !== messageId) return t
+    mutated = true
+    return { ...t, feedback }
+  })
+  if (!mutated) return null
+  const record: SessionRecord = { ...existing, turns }
+  store.map[sessionId] = record
+  write(store)
+  return record
 }
 
 export function deleteSession(id: string): void {

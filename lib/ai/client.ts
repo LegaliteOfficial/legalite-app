@@ -1,4 +1,9 @@
-import type { AskRequest, AskResponse } from './types'
+import type {
+  AskRequest,
+  AskResponse,
+  FeedbackCreate,
+  FeedbackResponse,
+} from './types'
 
 /**
  * Client for the LegaLite AI FastAPI service.
@@ -85,4 +90,74 @@ export async function ask(
   }
 
   return (await res.json()) as AskResponse
+}
+
+/**
+ * POST /ask/{message_id}/feedback — attach 👍 / 👎 (+ optional comment)
+ * to an assistant turn. Re-posting the same message_id UPDATES the
+ * row server-side, so the client can call this freely when the user
+ * toggles their vote — no need to track "have I submitted yet".
+ *
+ * - 404 means the message id is unknown or belongs to another tenant.
+ *   We surface that as a normal AiServiceError so the UI can revert
+ *   the optimistic state.
+ * - 422 is reserved for bad bodies (non-up/down thumbs); the form
+ *   prevents this so we treat it as a programmer error if it fires.
+ */
+export async function submitFeedback(
+  messageId: string,
+  payload: FeedbackCreate,
+  options: { signal?: AbortSignal } = {},
+): Promise<FeedbackResponse> {
+  if (!AI_BASE_URL) {
+    throw new AiServiceError(
+      'AI service URL is not configured. Set NEXT_PUBLIC_LEGALITE_AI_URL.',
+      0,
+    )
+  }
+  if (!messageId) {
+    // Defensive: the UI gates the feedback bar on response.message_id,
+    // but if a stale turn from before the message_id rollout sneaks in
+    // we want a loud error rather than a silent 400.
+    throw new AiServiceError('Missing message id; cannot submit feedback.', 0)
+  }
+
+  let res: Response
+  try {
+    res = await fetch(
+      `${AI_BASE_URL}/ask/${encodeURIComponent(messageId)}/feedback`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+        signal: options.signal,
+      },
+    )
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err
+    throw new AiServiceError(
+      'Network error sending feedback. Please try again.',
+      0,
+      err instanceof Error ? err.message : undefined,
+    )
+  }
+
+  if (!res.ok) {
+    let detail: string | undefined
+    try {
+      const body = (await res.json()) as { detail?: string }
+      detail = body?.detail
+    } catch {
+      // body wasn't JSON
+    }
+    const message =
+      res.status === 404
+        ? "That answer can't be found anymore — feedback won't be saved."
+        : res.status >= 500
+          ? 'The AI service is having trouble right now. Please try again shortly.'
+          : detail ?? `Feedback failed (${res.status}).`
+    throw new AiServiceError(message, res.status, detail)
+  }
+
+  return (await res.json()) as FeedbackResponse
 }

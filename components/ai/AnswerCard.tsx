@@ -1,17 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { BookOpen, CaretDown, Copy, Check, Scales, Buildings, Briefcase, Sparkle, ArrowSquareOut } from '@phosphor-icons/react'
+import { BookOpen, CaretDown, Copy, Check, Scales, Buildings, Briefcase, Sparkle, ArrowSquareOut, ThumbsUp, ThumbsDown, PaperPlaneTilt } from '@phosphor-icons/react'
 import type {
   AskResponse,
   Citation,
   Confidence,
+  FeedbackThumbs,
   StructuredCitation,
 } from '@/lib/ai/types'
+import type { TurnFeedback } from '@/lib/ai/sessions'
 
 interface AnswerCardProps {
   response: AskResponse
+  /**
+   * Persisted feedback for this turn, if any. Drives the visual state
+   * of the thumbs buttons + the comment textarea's initial value.
+   */
+  feedback?: TurnFeedback | null
+  /**
+   * Submit feedback to the AI service. Resolves with the value that
+   * was actually persisted (after the optimistic update) so the card
+   * can sync its local state. Throws on network / 404 errors; the
+   * caller is responsible for reverting state + toasting the user.
+   */
+  onSubmitFeedback?: (input: {
+    thumbs: FeedbackThumbs
+    comment: string | null
+  }) => Promise<void>
 }
 
 const CONFIDENCE_META: Record<
@@ -23,7 +40,7 @@ const CONFIDENCE_META: Record<
   low:    { label: 'Low confidence',    color: '#C0392B', bg: 'rgba(192,57,43,0.10)' },
 }
 
-export function AnswerCard({ response }: AnswerCardProps) {
+export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardProps) {
   const [copied, setCopied] = useState(false)
   const structured = response.structured_answer
   const directAnswer = structured?.direct_answer || response.answer
@@ -163,6 +180,17 @@ export function AnswerCard({ response }: AnswerCardProps) {
         <SourcesBlock citations={response.citations} />
       )}
 
+      {/* Feedback bar — only renders when the backend gave us a
+          message_id to bind to. Sits above the disclaimer so the user
+          reads the answer, then the call to action, then the legal
+          disclaimer at the very bottom. */}
+      {response.message_id && onSubmitFeedback && (
+        <FeedbackBar
+          feedback={feedback ?? null}
+          onSubmit={onSubmitFeedback}
+        />
+      )}
+
       {/* Disclaimer */}
       <p
         className="text-[11px] px-5 py-3 border-t"
@@ -175,6 +203,253 @@ export function AnswerCard({ response }: AnswerCardProps) {
         {response.disclaimer}
       </p>
     </div>
+  )
+}
+
+// ── Feedback bar ─────────────────────────────────────────────────────────
+
+function FeedbackBar({
+  feedback,
+  onSubmit,
+}: {
+  feedback: TurnFeedback | null
+  onSubmit: (input: {
+    thumbs: FeedbackThumbs
+    comment: string | null
+  }) => Promise<void>
+}) {
+  // Local optimistic state — we set it the moment the user clicks so
+  // the buttons feel responsive, then reconcile with the parent prop
+  // when the network call resolves (or reverts on error).
+  const [optimistic, setOptimistic] = useState<FeedbackThumbs | null>(
+    feedback?.thumbs ?? null,
+  )
+  const [comment, setComment] = useState<string>(feedback?.comment ?? '')
+  const [submittingThumbs, setSubmittingThumbs] = useState<FeedbackThumbs | null>(
+    null,
+  )
+  const [submittingComment, setSubmittingComment] = useState(false)
+  const [showCommentBox, setShowCommentBox] = useState(false)
+  const [commentJustSaved, setCommentJustSaved] = useState(false)
+
+  // Reconcile when the parent prop updates (e.g. the page persisted
+  // the vote and pushed a fresh session record back through).
+  useEffect(() => {
+    setOptimistic(feedback?.thumbs ?? null)
+    setComment(feedback?.comment ?? '')
+  }, [feedback?.thumbs, feedback?.comment])
+
+  const handleVote = async (thumbs: FeedbackThumbs) => {
+    // Toggle off the comment box automatically when switching to thumbs-up.
+    if (thumbs === 'up') setShowCommentBox(false)
+    if (thumbs === 'down') setShowCommentBox(true)
+
+    const prev = optimistic
+    setOptimistic(thumbs)
+    setSubmittingThumbs(thumbs)
+    try {
+      await onSubmit({ thumbs, comment: comment.trim() || null })
+    } catch {
+      setOptimistic(prev) // revert
+    } finally {
+      setSubmittingThumbs(null)
+    }
+  }
+
+  const handleSendComment = async () => {
+    if (!optimistic) return
+    const trimmed = comment.trim()
+    setSubmittingComment(true)
+    try {
+      await onSubmit({ thumbs: optimistic, comment: trimmed || null })
+      setCommentJustSaved(true)
+      setTimeout(() => setCommentJustSaved(false), 1800)
+    } catch {
+      // page-level toast surfaces the failure; keep the text so user can retry
+    } finally {
+      setSubmittingComment(false)
+    }
+  }
+
+  const isUp = optimistic === 'up'
+  const isDown = optimistic === 'down'
+  const acked = optimistic !== null
+
+  return (
+    <div
+      className="border-t px-5 py-3 flex items-center justify-between gap-3 flex-wrap"
+      style={{ borderColor: 'var(--border-soft)' }}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className="text-[11.5px] font-medium"
+          style={{ color: acked ? 'var(--text-secondary)' : 'var(--text-muted)' }}
+        >
+          {acked
+            ? optimistic === 'up'
+              ? 'Thanks — glad this helped.'
+              : 'Thanks — your note helps LegaLite improve.'
+            : 'Was this answer helpful?'}
+        </span>
+        <div
+          className="inline-flex items-center rounded-lg border overflow-hidden"
+          style={{ borderColor: 'var(--border-default)' }}
+        >
+          <ThumbButton
+            kind="up"
+            active={isUp}
+            disabled={!!submittingThumbs}
+            loading={submittingThumbs === 'up'}
+            onClick={() => handleVote('up')}
+          />
+          <span
+            aria-hidden
+            className="block w-px self-stretch"
+            style={{ background: 'var(--border-default)' }}
+          />
+          <ThumbButton
+            kind="down"
+            active={isDown}
+            disabled={!!submittingThumbs}
+            loading={submittingThumbs === 'down'}
+            onClick={() => handleVote('down')}
+          />
+        </div>
+      </div>
+
+      {isDown && !showCommentBox && (
+        <button
+          type="button"
+          onClick={() => setShowCommentBox(true)}
+          className="text-[11.5px] font-medium underline underline-offset-2 hover:opacity-80"
+          style={{ color: 'var(--gold-dark)' }}
+        >
+          Add a note
+        </button>
+      )}
+
+      {isDown && showCommentBox && (
+        <div className="w-full mt-1">
+          <div
+            className="rounded-xl border overflow-hidden"
+            style={{
+              borderColor: 'var(--border-default)',
+              background: 'var(--surface-sunken)',
+            }}
+          >
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="What went wrong? Wrong cite, missed an issue, refused unnecessarily…"
+              rows={2}
+              maxLength={2000}
+              className="w-full resize-none bg-transparent px-3 py-2 text-[12.5px] leading-relaxed outline-none"
+              style={{ color: 'var(--text-primary)' }}
+              disabled={submittingComment}
+            />
+            <div
+              className="flex items-center justify-between gap-2 px-3 py-1.5 border-t"
+              style={{
+                borderColor: 'var(--border-soft)',
+                background: 'var(--surface-card)',
+              }}
+            >
+              <span
+                className="text-[10.5px] tabular-nums"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {comment.length}/2000
+              </span>
+              <div className="flex items-center gap-1.5">
+                {commentJustSaved && (
+                  <span
+                    className="text-[10.5px] font-medium inline-flex items-center gap-1"
+                    style={{ color: '#2E7D4F' }}
+                  >
+                    <Check size={10} strokeWidth={2} />
+                    Saved
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowCommentBox(false)}
+                  className="text-[11px] font-medium px-2 py-1 rounded-md hover:opacity-80"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendComment}
+                  disabled={submittingComment}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors disabled:opacity-60"
+                  style={{
+                    background: 'var(--gold)',
+                    color: 'var(--navy)',
+                  }}
+                >
+                  <PaperPlaneTilt size={10} strokeWidth={2} />
+                  {submittingComment ? 'Sending…' : 'Send note'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ThumbButton({
+  kind,
+  active,
+  disabled,
+  loading,
+  onClick,
+}: {
+  kind: FeedbackThumbs
+  active: boolean
+  disabled: boolean
+  loading: boolean
+  onClick: () => void
+}) {
+  const Icon = kind === 'up' ? ThumbsUp : ThumbsDown
+  // Gold-tinted active state for "up" matches the brand affirmation
+  // language. Red-tinted "down" keeps the meaning legible even when
+  // the user is colour-blind to the gold (gold + red are distinguishable
+  // for the most common deuteranomaly).
+  const activeColor = kind === 'up' ? 'var(--gold-dark)' : '#C0392B'
+  const activeBg =
+    kind === 'up' ? 'rgba(201,151,43,0.16)' : 'rgba(192,57,43,0.12)'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={kind === 'up' ? 'Mark as helpful' : 'Mark as not helpful'}
+      aria-pressed={active}
+      className="inline-flex items-center justify-center h-7 w-9 transition-colors disabled:opacity-60"
+      style={{
+        background: active ? activeBg : 'transparent',
+        color: active ? activeColor : 'var(--text-muted)',
+      }}
+      onMouseEnter={(e) => {
+        if (!active && !disabled) e.currentTarget.style.background = 'var(--surface-overlay)'
+      }}
+      onMouseLeave={(e) => {
+        if (!active && !disabled) e.currentTarget.style.background = 'transparent'
+      }}
+    >
+      <Icon
+        size={13}
+        weight={active ? 'fill' : 'regular'}
+        style={{
+          opacity: loading ? 0.55 : 1,
+          transform: loading ? 'scale(0.92)' : 'none',
+          transition: 'transform 120ms ease, opacity 120ms ease',
+        }}
+      />
+    </button>
   )
 }
 
