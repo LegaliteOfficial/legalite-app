@@ -14,14 +14,18 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
-import { Check, Pencil, Plus, Tag as TagIcon, Trash, X } from '@phosphor-icons/react'
+import { Check, Pencil, Tag as TagIcon, Trash, X } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   TAG_COLOURS,
-  useTagsStore,
+  useTags,
+  useCreateTag,
+  useUpdateTag,
+  useDeleteTag,
   type Tag,
-} from '@/stores/tags.store'
+} from '@/hooks/use-tags'
 
 export function TagSettingsDialog({
   open,
@@ -30,10 +34,10 @@ export function TagSettingsDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const tags = useTagsStore((s) => s.tags)
-  const addTag = useTagsStore((s) => s.addTag)
-  const updateTag = useTagsStore((s) => s.updateTag)
-  const removeTag = useTagsStore((s) => s.removeTag)
+  const { data: tags } = useTags()
+  const createTag = useCreateTag()
+  const updateTag = useUpdateTag()
+  const deleteTag = useDeleteTag()
 
   const [name, setName] = useState('')
   const [colour, setColour] = useState<string>(TAG_COLOURS[0])
@@ -51,11 +55,16 @@ export function TagSettingsDialog({
     }
   }, [open])
 
-  const handleCreate = () => {
-    const created = addTag(name, colour)
-    if (!created) return
-    setName('')
-    setColour(TAG_COLOURS[0])
+  const handleCreate = async () => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    try {
+      await createTag.mutateAsync({ name: trimmed, color: colour })
+      setName('')
+      setColour(TAG_COLOURS[0])
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not create tag.')
+    }
   }
 
   const beginEdit = (tag: Tag) => {
@@ -63,12 +72,25 @@ export function TagSettingsDialog({
     setEditName(tag.name)
     setEditColour(tag.color)
   }
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingId) return
     const trimmed = editName.trim()
     if (!trimmed) return
-    updateTag(editingId, { name: trimmed, color: editColour })
-    setEditingId(null)
+    try {
+      await updateTag.mutateAsync(editingId, { name: trimmed, color: editColour })
+      setEditingId(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not update tag.')
+    }
+  }
+  const handleRemove = async (tag: Tag) => {
+    if (!confirm(`Delete the "${tag.name}" tag? It will be removed from all contacts.`))
+      return
+    try {
+      await deleteTag.mutateAsync(tag.id)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not delete tag.')
+    }
   }
 
   return (
@@ -266,7 +288,7 @@ export function TagSettingsDialog({
                           </button>
                           <button
                             type="button"
-                            onClick={() => removeTag(tag.id)}
+                            onClick={() => handleRemove(tag)}
                             className="p-1.5 rounded-md transition-colors cursor-pointer"
                             style={{ color: 'var(--text-muted)' }}
                             onMouseEnter={(e) => {

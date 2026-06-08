@@ -18,7 +18,8 @@ type Documents = {
     "\n  fragment FirmMembershipFields on FirmMembership {\n    firm_id\n    firm_name\n    firm_slug\n    firm_role\n    professional_title\n    status\n  }\n": typeof types.FirmMembershipFieldsFragmentDoc,
     "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n  }\n": typeof types.AuthPayloadFieldsFragmentDoc,
     "\n  fragment FirmFields on Firm {\n    id\n    name\n    slug\n    firm_type\n    registration_number\n    tin\n    year_established\n    email\n    phone\n    website\n    office_address\n    digital_address\n    city\n    region\n    logo_url\n    description\n    plan\n    status\n    owner_profile_id\n    created_at\n    updated_at\n  }\n": typeof types.FirmFieldsFragmentDoc,
-    "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n": typeof types.ClientFieldsFragmentDoc,
+    "\n  fragment TagFields on Tag {\n    id\n    firm_id\n    name\n    color\n    created_at\n    updated_at\n  }\n": typeof types.TagFieldsFragmentDoc,
+    "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    contact_type\n    organization\n    job_title\n    website\n    roles\n    tags {\n      ...TagFields\n    }\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n": typeof types.ClientFieldsFragmentDoc,
     "\n  fragment AttachmentFields on Attachment {\n    id\n    firm_id\n    entity_type\n    entity_id\n    file_name\n    file_type\n    file_size\n    uploaded_by\n    created_at\n    updated_at\n  }\n": typeof types.AttachmentFieldsFragmentDoc,
     "\n  fragment TaskAssigneeFields on TaskAssignee {\n    id\n    task_id\n    member_id\n    name\n    professional_title\n    avatar_url\n  }\n": typeof types.TaskAssigneeFieldsFragmentDoc,
     "\n  fragment TaskReminderFields on TaskReminder {\n    id\n    task_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": typeof types.TaskReminderFieldsFragmentDoc,
@@ -70,6 +71,9 @@ type Documents = {
     "\n  query Messages($clientId: ID, $channel: String) {\n    messages(clientId: $clientId, channel: $channel) {\n      ...MessageFields\n    }\n  }\n": typeof types.MessagesDocument,
     "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      ...MessageFields\n    }\n  }\n": typeof types.CreateMessageDocument,
     "\n  mutation DeleteMessage($id: ID!) {\n    deleteMessage(id: $id)\n  }\n": typeof types.DeleteMessageDocument,
+    "\n  query ConflictCheck($query: String!) {\n    conflictCheck(query: $query) {\n      kind\n      ref_id\n      label\n      sublabel\n      match_field\n    }\n  }\n": typeof types.ConflictCheckDocument,
+    "\n  query ConflictChecks {\n    conflictChecks {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": typeof types.ConflictChecksDocument,
+    "\n  mutation RecordConflictCheck($input: RecordConflictCheckInput!) {\n    recordConflictCheck(input: $input) {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": typeof types.RecordConflictCheckDocument,
     "\n  query DashboardStats {\n    dashboardStats {\n      total_clients\n      active_cases\n      pending_tasks\n      total_invoices_due\n      upcoming_dates {\n        id\n        title\n        court\n        next_court_date\n        client_name\n      }\n      recent_activity {\n        type\n        title\n        created_at\n      }\n    }\n  }\n": typeof types.DashboardStatsDocument,
     "\n  query Deadlines($status: String, $upcoming: Boolean) {\n    deadlines(status: $status, upcoming: $upcoming) {\n      ...DeadlineFields\n    }\n  }\n": typeof types.DeadlinesDocument,
     "\n  query DeadlineStats {\n    deadlineStats {\n      overdue_count\n      upcoming_this_week {\n        ...DeadlineFields\n      }\n    }\n  }\n": typeof types.DeadlineStatsDocument,
@@ -119,6 +123,12 @@ type Documents = {
     "\n  query Profile {\n    profile {\n      id\n      email\n      name\n      role\n      first_name\n      middle_name\n      last_name\n      date_of_birth\n      gender\n      gba_number\n      supreme_court_enrollment_no\n      year_called_to_bar\n      practising_license_no\n      practising_license_year\n      ghana_card_no\n      passport_no\n      bio\n      practice_type\n      office_address\n      digital_address\n      city\n      region\n      work_email\n      work_phone\n      phone\n      avatar_url\n      verification_status\n      verified_at\n      created_at\n      updated_at\n    }\n  }\n": typeof types.ProfileDocument,
     "\n  mutation UpdateProfile($input: UpdateProfileInput!) {\n    updateProfile(input: $input) {\n      id\n      email\n      name\n      role\n      first_name\n      middle_name\n      last_name\n      gba_number\n      supreme_court_enrollment_no\n      year_called_to_bar\n      practising_license_no\n      digital_address\n      city\n      region\n      phone\n      avatar_url\n      verification_status\n      updated_at\n    }\n  }\n": typeof types.UpdateProfileDocument,
     "\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n": typeof types.ChangePasswordDocument,
+    "\n  query Tags {\n    tags {\n      ...TagFields\n    }\n  }\n": typeof types.TagsDocument,
+    "\n  mutation CreateTag($input: CreateTagInput!) {\n    createTag(input: $input) {\n      ...TagFields\n    }\n  }\n": typeof types.CreateTagDocument,
+    "\n  mutation UpdateTag($id: ID!, $input: UpdateTagInput!) {\n    updateTag(id: $id, input: $input) {\n      ...TagFields\n    }\n  }\n": typeof types.UpdateTagDocument,
+    "\n  mutation DeleteTag($id: ID!) {\n    deleteTag(id: $id)\n  }\n": typeof types.DeleteTagDocument,
+    "\n  mutation SetContactTags($input: SetContactTagsInput!) {\n    setContactTags(input: $input) {\n      ...TagFields\n    }\n  }\n": typeof types.SetContactTagsDocument,
+    "\n  mutation TagContacts($input: TagContactsInput!) {\n    tagContacts(input: $input)\n  }\n": typeof types.TagContactsDocument,
     "\n  query Tasks {\n    tasks {\n      ...TaskFields\n    }\n  }\n": typeof types.TasksDocument,
     "\n  query Task($id: ID!) {\n    task(id: $id) {\n      ...TaskFields\n    }\n  }\n": typeof types.TaskDocument,
     "\n  mutation CreateTask($input: CreateTaskInput!) {\n    createTask(input: $input) {\n      ...TaskFields\n    }\n  }\n": typeof types.CreateTaskDocument,
@@ -132,7 +142,8 @@ const documents: Documents = {
     "\n  fragment FirmMembershipFields on FirmMembership {\n    firm_id\n    firm_name\n    firm_slug\n    firm_role\n    professional_title\n    status\n  }\n": types.FirmMembershipFieldsFragmentDoc,
     "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n  }\n": types.AuthPayloadFieldsFragmentDoc,
     "\n  fragment FirmFields on Firm {\n    id\n    name\n    slug\n    firm_type\n    registration_number\n    tin\n    year_established\n    email\n    phone\n    website\n    office_address\n    digital_address\n    city\n    region\n    logo_url\n    description\n    plan\n    status\n    owner_profile_id\n    created_at\n    updated_at\n  }\n": types.FirmFieldsFragmentDoc,
-    "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n": types.ClientFieldsFragmentDoc,
+    "\n  fragment TagFields on Tag {\n    id\n    firm_id\n    name\n    color\n    created_at\n    updated_at\n  }\n": types.TagFieldsFragmentDoc,
+    "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    contact_type\n    organization\n    job_title\n    website\n    roles\n    tags {\n      ...TagFields\n    }\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n": types.ClientFieldsFragmentDoc,
     "\n  fragment AttachmentFields on Attachment {\n    id\n    firm_id\n    entity_type\n    entity_id\n    file_name\n    file_type\n    file_size\n    uploaded_by\n    created_at\n    updated_at\n  }\n": types.AttachmentFieldsFragmentDoc,
     "\n  fragment TaskAssigneeFields on TaskAssignee {\n    id\n    task_id\n    member_id\n    name\n    professional_title\n    avatar_url\n  }\n": types.TaskAssigneeFieldsFragmentDoc,
     "\n  fragment TaskReminderFields on TaskReminder {\n    id\n    task_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": types.TaskReminderFieldsFragmentDoc,
@@ -184,6 +195,9 @@ const documents: Documents = {
     "\n  query Messages($clientId: ID, $channel: String) {\n    messages(clientId: $clientId, channel: $channel) {\n      ...MessageFields\n    }\n  }\n": types.MessagesDocument,
     "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      ...MessageFields\n    }\n  }\n": types.CreateMessageDocument,
     "\n  mutation DeleteMessage($id: ID!) {\n    deleteMessage(id: $id)\n  }\n": types.DeleteMessageDocument,
+    "\n  query ConflictCheck($query: String!) {\n    conflictCheck(query: $query) {\n      kind\n      ref_id\n      label\n      sublabel\n      match_field\n    }\n  }\n": types.ConflictCheckDocument,
+    "\n  query ConflictChecks {\n    conflictChecks {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": types.ConflictChecksDocument,
+    "\n  mutation RecordConflictCheck($input: RecordConflictCheckInput!) {\n    recordConflictCheck(input: $input) {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": types.RecordConflictCheckDocument,
     "\n  query DashboardStats {\n    dashboardStats {\n      total_clients\n      active_cases\n      pending_tasks\n      total_invoices_due\n      upcoming_dates {\n        id\n        title\n        court\n        next_court_date\n        client_name\n      }\n      recent_activity {\n        type\n        title\n        created_at\n      }\n    }\n  }\n": types.DashboardStatsDocument,
     "\n  query Deadlines($status: String, $upcoming: Boolean) {\n    deadlines(status: $status, upcoming: $upcoming) {\n      ...DeadlineFields\n    }\n  }\n": types.DeadlinesDocument,
     "\n  query DeadlineStats {\n    deadlineStats {\n      overdue_count\n      upcoming_this_week {\n        ...DeadlineFields\n      }\n    }\n  }\n": types.DeadlineStatsDocument,
@@ -233,6 +247,12 @@ const documents: Documents = {
     "\n  query Profile {\n    profile {\n      id\n      email\n      name\n      role\n      first_name\n      middle_name\n      last_name\n      date_of_birth\n      gender\n      gba_number\n      supreme_court_enrollment_no\n      year_called_to_bar\n      practising_license_no\n      practising_license_year\n      ghana_card_no\n      passport_no\n      bio\n      practice_type\n      office_address\n      digital_address\n      city\n      region\n      work_email\n      work_phone\n      phone\n      avatar_url\n      verification_status\n      verified_at\n      created_at\n      updated_at\n    }\n  }\n": types.ProfileDocument,
     "\n  mutation UpdateProfile($input: UpdateProfileInput!) {\n    updateProfile(input: $input) {\n      id\n      email\n      name\n      role\n      first_name\n      middle_name\n      last_name\n      gba_number\n      supreme_court_enrollment_no\n      year_called_to_bar\n      practising_license_no\n      digital_address\n      city\n      region\n      phone\n      avatar_url\n      verification_status\n      updated_at\n    }\n  }\n": types.UpdateProfileDocument,
     "\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n": types.ChangePasswordDocument,
+    "\n  query Tags {\n    tags {\n      ...TagFields\n    }\n  }\n": types.TagsDocument,
+    "\n  mutation CreateTag($input: CreateTagInput!) {\n    createTag(input: $input) {\n      ...TagFields\n    }\n  }\n": types.CreateTagDocument,
+    "\n  mutation UpdateTag($id: ID!, $input: UpdateTagInput!) {\n    updateTag(id: $id, input: $input) {\n      ...TagFields\n    }\n  }\n": types.UpdateTagDocument,
+    "\n  mutation DeleteTag($id: ID!) {\n    deleteTag(id: $id)\n  }\n": types.DeleteTagDocument,
+    "\n  mutation SetContactTags($input: SetContactTagsInput!) {\n    setContactTags(input: $input) {\n      ...TagFields\n    }\n  }\n": types.SetContactTagsDocument,
+    "\n  mutation TagContacts($input: TagContactsInput!) {\n    tagContacts(input: $input)\n  }\n": types.TagContactsDocument,
     "\n  query Tasks {\n    tasks {\n      ...TaskFields\n    }\n  }\n": types.TasksDocument,
     "\n  query Task($id: ID!) {\n    task(id: $id) {\n      ...TaskFields\n    }\n  }\n": types.TaskDocument,
     "\n  mutation CreateTask($input: CreateTaskInput!) {\n    createTask(input: $input) {\n      ...TaskFields\n    }\n  }\n": types.CreateTaskDocument,
@@ -275,7 +295,11 @@ export function graphql(source: "\n  fragment FirmFields on Firm {\n    id\n    
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n"];
+export function graphql(source: "\n  fragment TagFields on Tag {\n    id\n    firm_id\n    name\n    color\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment TagFields on Tag {\n    id\n    firm_id\n    name\n    color\n    created_at\n    updated_at\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    contact_type\n    organization\n    job_title\n    website\n    roles\n    tags {\n      ...TagFields\n    }\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    contact_type\n    organization\n    job_title\n    website\n    roles\n    tags {\n      ...TagFields\n    }\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -483,6 +507,18 @@ export function graphql(source: "\n  mutation DeleteMessage($id: ID!) {\n    del
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query ConflictCheck($query: String!) {\n    conflictCheck(query: $query) {\n      kind\n      ref_id\n      label\n      sublabel\n      match_field\n    }\n  }\n"): (typeof documents)["\n  query ConflictCheck($query: String!) {\n    conflictCheck(query: $query) {\n      kind\n      ref_id\n      label\n      sublabel\n      match_field\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ConflictChecks {\n    conflictChecks {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n"): (typeof documents)["\n  query ConflictChecks {\n    conflictChecks {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RecordConflictCheck($input: RecordConflictCheckInput!) {\n    recordConflictCheck(input: $input) {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RecordConflictCheck($input: RecordConflictCheckInput!) {\n    recordConflictCheck(input: $input) {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query DashboardStats {\n    dashboardStats {\n      total_clients\n      active_cases\n      pending_tasks\n      total_invoices_due\n      upcoming_dates {\n        id\n        title\n        court\n        next_court_date\n        client_name\n      }\n      recent_activity {\n        type\n        title\n        created_at\n      }\n    }\n  }\n"): (typeof documents)["\n  query DashboardStats {\n    dashboardStats {\n      total_clients\n      active_cases\n      pending_tasks\n      total_invoices_due\n      upcoming_dates {\n        id\n        title\n        court\n        next_court_date\n        client_name\n      }\n      recent_activity {\n        type\n        title\n        created_at\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -676,6 +712,30 @@ export function graphql(source: "\n  mutation UpdateProfile($input: UpdateProfil
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n"): (typeof documents)["\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query Tags {\n    tags {\n      ...TagFields\n    }\n  }\n"): (typeof documents)["\n  query Tags {\n    tags {\n      ...TagFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateTag($input: CreateTagInput!) {\n    createTag(input: $input) {\n      ...TagFields\n    }\n  }\n"): (typeof documents)["\n  mutation CreateTag($input: CreateTagInput!) {\n    createTag(input: $input) {\n      ...TagFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateTag($id: ID!, $input: UpdateTagInput!) {\n    updateTag(id: $id, input: $input) {\n      ...TagFields\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateTag($id: ID!, $input: UpdateTagInput!) {\n    updateTag(id: $id, input: $input) {\n      ...TagFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteTag($id: ID!) {\n    deleteTag(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteTag($id: ID!) {\n    deleteTag(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetContactTags($input: SetContactTagsInput!) {\n    setContactTags(input: $input) {\n      ...TagFields\n    }\n  }\n"): (typeof documents)["\n  mutation SetContactTags($input: SetContactTagsInput!) {\n    setContactTags(input: $input) {\n      ...TagFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation TagContacts($input: TagContactsInput!) {\n    tagContacts(input: $input)\n  }\n"): (typeof documents)["\n  mutation TagContacts($input: TagContactsInput!) {\n    tagContacts(input: $input)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

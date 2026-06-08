@@ -43,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { TagSettingsDialog } from '@/components/shared/TagSettingsDialog'
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ import { useClient } from '@/hooks/use-clients'
 import { useCases } from '@/hooks/use-cases'
 import { useCreateDocument, useDocuments } from '@/hooks/use-documents'
 import { useInvoices } from '@/hooks/use-invoices'
+import { useTags, useSetContactTags } from '@/hooks/use-tags'
 import { useUIStore } from '@/stores/ui.store'
 import type { Case, Document, Invoice } from '@/types'
 
@@ -103,9 +105,7 @@ export default function ContactDetailPage({
   const [tab, setTab] = useState<Tab>('Dashboard')
 
   // ── Derived data ─────────────────────────────────────────────────
-  // The current schema treats every Client as a person; once a
-  // `contact_type` column ships the tint flips for companies.
-  const isCompany = false
+  const isCompany = contact?.contact_type === 'company'
   const tint = isCompany ? TYPE_BADGE_COMPANIES : TYPE_BADGE_PEOPLE
 
   const initials = useMemo(() => {
@@ -245,6 +245,9 @@ export default function ContactDetailPage({
         </div>
       </header>
 
+      {/* ─── Roles + tags bar ─────────────────────────────────────────── */}
+      <ContactTagsBar contact={contact} />
+
       {/* ─── Scrolling body: tabs + two-column dashboard ─────────────── */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-[1180px] px-6 py-6">
@@ -291,23 +294,23 @@ export default function ContactDetailPage({
           ) : (
             // Body. Two-column grid on lg+, single-column on small.
             <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-5">
-            <div className="space-y-5">
-              <ContactInformationCard contact={contact} />
-              <BillingInformationCard />
+              <div className="space-y-5">
+                <ContactInformationCard contact={contact} />
+                <BillingInformationCard />
+              </div>
+              <div className="space-y-5">
+                <CasesCard
+                  title="Client's cases"
+                  cases={clientCases}
+                  emptyText="This contact has no cases yet."
+                  primaryActionLabel="New case"
+                  onPrimaryAction={() =>
+                    router.push(`/cases/new?client=${contact.id}`)
+                  }
+                />
+                <AssociatedCasesCard contactId={contact.id} />
+              </div>
             </div>
-            <div className="space-y-5">
-              <CasesCard
-                title="Client's cases"
-                cases={clientCases}
-                emptyText="This contact has no cases yet."
-                primaryActionLabel="New case"
-                onPrimaryAction={() =>
-                  router.push(`/cases/new?client=${contact.id}`)
-                }
-              />
-              <AssociatedCasesCard contactId={contact.id} />
-            </div>
-          </div>
           )}
         </div>
       </div>
@@ -501,10 +504,10 @@ function ContactInformationCard({
           value={
             contact.date_of_birth
               ? new Date(contact.date_of_birth).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })
               : null
           }
         />
@@ -2183,17 +2186,17 @@ function BillRow({
   const fmtDate = (iso?: string | null) =>
     iso
       ? new Date(iso).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
       : null
   const fmtMoney = (n?: number | null) =>
     n != null
       ? new Intl.NumberFormat('en-GB', {
-          style: 'currency',
-          currency: 'GHS',
-        }).format(n)
+        style: 'currency',
+        currency: 'GHS',
+      }).format(n)
       : null
 
   const value = (id: BillColumnId): React.ReactNode => {
@@ -2641,16 +2644,16 @@ function TransactionsTab({ contactId }: { contactId: string }) {
         style={{ borderColor: 'var(--border-soft)' }}
       >
         <div className="flex items-center gap-1">
-          <PagerBtn onClick={() => {}} disabled aria-label="First page">
+          <PagerBtn onClick={() => { }} disabled aria-label="First page">
             <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Previous page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Previous page">
             <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Next page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Next page">
             <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Last page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Last page">
             <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
@@ -3273,16 +3276,16 @@ function CommunicationsTab({ contactId }: { contactId: string }) {
         style={{ borderColor: 'var(--border-soft)' }}
       >
         <div className="flex items-center gap-1">
-          <PagerBtn onClick={() => {}} disabled aria-label="First page">
+          <PagerBtn onClick={() => { }} disabled aria-label="First page">
             <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Previous page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Previous page">
             <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Next page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Next page">
             <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Last page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Last page">
             <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
@@ -3918,16 +3921,16 @@ function NotesTab({
         style={{ borderColor: 'var(--border-soft)' }}
       >
         <div className="flex items-center gap-1">
-          <PagerBtn onClick={() => {}} disabled aria-label="First page">
+          <PagerBtn onClick={() => { }} disabled aria-label="First page">
             <CaretDoubleLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Previous page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Previous page">
             <CaretLeft size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Next page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Next page">
             <CaretRight size={14} strokeWidth={1.75} />
           </PagerBtn>
-          <PagerBtn onClick={() => {}} disabled aria-label="Last page">
+          <PagerBtn onClick={() => { }} disabled aria-label="Last page">
             <CaretDoubleRight size={14} strokeWidth={1.75} />
           </PagerBtn>
           <span
@@ -6013,10 +6016,10 @@ function DocumentRow({
   const fmtDate = (iso?: string | null) =>
     iso
       ? new Date(iso).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
       : null
 
   const value = (id: DocColumnId): React.ReactNode => {
@@ -6828,9 +6831,8 @@ function UploadFolderDialog({
               >
                 <span className="truncate">
                   {folderName
-                    ? `${folderName} (${files.length} file${
-                        files.length === 1 ? '' : 's'
-                      })`
+                    ? `${folderName} (${files.length} file${files.length === 1 ? '' : 's'
+                    })`
                     : 'No folder chosen'}
                 </span>
                 <button
@@ -7521,5 +7523,166 @@ function PagerBtn({
     >
       {children}
     </button>
+  )
+}
+
+// ── Roles + tags bar ───────────────────────────────────────────────────────
+
+/**
+ * Surfaces a contact's roles (read-only chips) and tags (editable). Tag
+ * changes persist immediately via `setContactTags`; the firm palette is
+ * managed inline via the Tag settings dialog.
+ */
+function ContactTagsBar({
+  contact,
+}: {
+  contact: NonNullable<ReturnType<typeof useClient>['data']>
+}) {
+  const { data: palette } = useTags()
+  const setContactTags = useSetContactTags()
+  const [open, setOpen] = useState(false)
+  const [manageOpen, setManageOpen] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
+
+  const selected = useMemo(
+    () => new Set((contact.tags ?? []).map((t) => t.id)),
+    [contact.tags],
+  )
+
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+
+  const commit = async (nextIds: string[]) => {
+    try {
+      await setContactTags.mutateAsync(contact.id, nextIds)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not update tags.')
+    }
+  }
+
+  const toggle = (id: string) => {
+    const next = new Set(selected)
+    next.has(id) ? next.delete(id) : next.add(id)
+    void commit(Array.from(next))
+  }
+  const removeTag = (id: string) => {
+    void commit(Array.from(selected).filter((x) => x !== id))
+  }
+
+  return (
+    <div
+      className="border-b px-6 py-2.5 flex items-center gap-2 flex-wrap"
+      style={{ borderColor: 'var(--border-soft)', background: 'var(--surface-card)' }}
+    >
+      {/* Roles */}
+      {(contact.roles ?? []).map((r) => (
+        <span
+          key={r}
+          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold"
+          style={{ background: 'rgba(34,197,94,0.12)', color: '#16A34A' }}
+        >
+          {r}
+        </span>
+      ))}
+
+      <span className="mx-0.5 h-4 w-px" style={{ background: 'var(--border-default)' }} aria-hidden />
+
+      {/* Tags */}
+      {(contact.tags ?? []).map((t) => (
+        <span
+          key={t.id}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium"
+          style={{ background: `${t.color}1F`, color: t.color }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: t.color }} aria-hidden />
+          {t.name}
+          <button
+            type="button"
+            onClick={() => removeTag(t.id)}
+            className="cursor-pointer ml-0.5"
+            aria-label={`Remove ${t.name}`}
+          >
+            <X size={10} strokeWidth={2.5} />
+          </button>
+        </span>
+      ))}
+
+      {/* Add-tag popover */}
+      <div className="relative" ref={wrapperRef}>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11.5px] font-medium border border-dashed cursor-pointer transition-colors"
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
+        >
+          <Plus size={11} strokeWidth={2.25} />
+          Tag
+        </button>
+        {open && (
+          <div
+            className="absolute left-0 top-full mt-1 z-50 w-60 rounded-xl border overflow-hidden"
+            style={{ background: 'var(--surface-card)', borderColor: 'var(--border-default)', boxShadow: 'var(--shadow-lg)' }}
+          >
+            <div className="max-h-[240px] overflow-y-auto py-1">
+              {palette.length === 0 ? (
+                <p className="px-3 py-3 text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
+                  No tags yet.
+                </p>
+              ) : (
+                palette.map((t) => {
+                  const checked = selected.has(t.id)
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => toggle(t.id)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] cursor-pointer transition-colors hover:bg-[var(--surface-sunken)]"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      <span
+                        className="inline-flex h-4 w-4 items-center justify-center rounded-[4px] border shrink-0"
+                        style={{
+                          borderColor: checked ? t.color : 'var(--border-default)',
+                          background: checked ? t.color : 'transparent',
+                        }}
+                      >
+                        {checked && (
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6.5L5 9.5L10 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: t.color }} aria-hidden />
+                      <span className="flex-1 truncate">{t.name}</span>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                setManageOpen(true)
+              }}
+              className="w-full px-3 py-2 text-left text-[12.5px] font-medium border-t cursor-pointer"
+              style={{ borderColor: 'var(--border-soft)', color: 'var(--gold-dark)' }}
+            >
+              Manage tags…
+            </button>
+          </div>
+        )}
+      </div>
+
+      <TagSettingsDialog open={manageOpen} onOpenChange={setManageOpen} />
+    </div>
   )
 }

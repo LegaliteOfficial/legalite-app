@@ -13,18 +13,37 @@ export interface User {
   updated_at: string
 }
 
+/** A tag in the firm's shared palette. */
+export interface Tag {
+  id: string
+  firm_id?: string | null
+  name: string
+  color: string
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Client {
   id: string
+  firm_id?: string | null
   user_id: string
   client_code?: string | null
   full_name: string
+  // person | company — drives the People / Companies split.
+  contact_type: 'person' | 'company'
+  // Company name (for a person's employer) / extra company context.
+  organization?: string | null
+  job_title?: string | null
+  website?: string | null
+  // Contact roles: Client / Lead / Witness / Opposing counsel / Expert / …
+  roles: string[]
+  // Tags assigned to this contact (hydrated from the join table).
+  tags: Tag[]
   email?: string | null
   phone?: string | null
   ghana_card?: string | null
   address?: string | null
-  // ISO yyyy-mm-dd. Optional today — backend column lands with the
-  // contact-detail screen migration. Surfaced in the contacts list
-  // Date of Birth column.
+  // ISO yyyy-mm-dd. Surfaced in the contacts list Date of Birth column.
   date_of_birth?: string | null
   status: 'Active' | 'Inactive'
   notes?: string | null

@@ -518,8 +518,15 @@ function NewContactPageInner() {
             .join(', ')
         : ''
 
+      const primaryWebsite =
+        form.websites.find((w) => w.is_primary)?.url || form.websites[0]?.url || ''
+
       await createMutation.mutateAsync({
         full_name: composedFullName || 'Untitled contact',
+        contact_type: form.contact_type,
+        // A person's employer; for a company the name lives in full_name.
+        organization: form.contact_type === 'person' ? form.company || '' : '',
+        website: primaryWebsite,
         email: primaryEmail?.address || '',
         phone: primaryPhone?.number || '',
         address: addressStr,

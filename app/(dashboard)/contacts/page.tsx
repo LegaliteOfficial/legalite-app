@@ -36,7 +36,9 @@ import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { TagSettingsDialog } from '@/components/shared/TagSettingsDialog'
 import { useClients } from '@/hooks/use-clients'
 import { useUIStore } from '@/stores/ui.store'
-import { useTagsStore } from '@/stores/tags.store'
+import { useTags } from '@/hooks/use-tags'
+import { useConflictSearch, useConflictChecks, useRecordConflictCheck } from '@/hooks/use-conflicts'
+import { Check } from '@phosphor-icons/react'
 import type { Client } from '@/types'
 
 // ── Column registry ─────────────────────────────────────────────────────
@@ -161,15 +163,17 @@ const COLUMNS: ColumnDef[] = [
           >
             {row.full_name}
           </span>
-          <span
-            className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10.5px] font-semibold shrink-0"
-            style={{
-              background: 'rgba(34,197,94,0.12)',
-              color: '#16A34A',
-            }}
-          >
-            {row.role_label}
-          </span>
+          {row.role_label && (
+            <span
+              className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10.5px] font-semibold shrink-0"
+              style={{
+                background: 'rgba(34,197,94,0.12)',
+                color: '#16A34A',
+              }}
+            >
+              {row.role_label}
+            </span>
+          )}
         </span>
       )
     },
@@ -181,8 +185,24 @@ const COLUMNS: ColumnDef[] = [
     defaultVisible: true,
     minWidth: 160,
     sortable: false,
-    render: () => dash, // Wired once contact-tags join table ships.
-    csv: () => '',
+    render: (row) =>
+      row.tags.length === 0 ? (
+        dash
+      ) : (
+        <span className="flex flex-wrap items-center gap-1">
+          {row.tags.map((t) => (
+            <span
+              key={t.id}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10.5px] font-medium"
+              style={{ background: `${t.color}1F`, color: t.color }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: t.color }} aria-hidden />
+              {t.name}
+            </span>
+          ))}
+        </span>
+      ),
+    csv: (row) => row.tags.map((t) => t.name).join('; '),
   },
   {
     id: 'email',
@@ -435,12 +455,13 @@ export default function ContactsPage() {
     setSelected(new Set())
   }, [typeFilter, search, pageSize, contactRoleFilter, contactTagsFilter])
 
-  // Augment wire data with display fields.
+  // Augment wire data with display fields derived from real columns.
   const contacts = useMemo<IdentificationCard[]>(() => {
     return (clients ?? []).map((c) => ({
       ...c,
-      contact_category: 'person', // TODO: source from a future contact_type column
-      role_label: 'Client',
+      contact_category: c.contact_type === 'company' ? 'company' : 'person',
+      // First role is the chip shown next to the name; empty when unroled.
+      role_label: c.roles?.[0] ?? '',
     }))
   }, [clients])
 
@@ -478,22 +499,26 @@ export default function ContactsPage() {
             if (contactRoleFilter === 'none') return role === ''
             return role === 'client'
           })
-    // Apply Tags filter — inert until Client gains a tags column.
-    // Until then, contacts have no tags to match, so any tag selection
-    // would always return an empty list. Skip filtering when there's
-    // nothing to filter against to preserve the dev-data UX.
-    const byTags = byRole
+    // Apply the Tags filter — a contact must carry every selected tag.
+    const byTags =
+      contactTagsFilter.length === 0
+        ? byRole
+        : byRole.filter((c) => {
+            const names = new Set(c.tags.map((t) => t.name.toLowerCase()))
+            return contactTagsFilter.every((t) => names.has(t.toLowerCase()))
+          })
     const q = search.trim().toLowerCase()
     if (!q) return byTags
     return byTags.filter(
       (c) =>
         c.full_name.toLowerCase().includes(q) ||
+        c.organization?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q) ||
         c.phone?.toLowerCase().includes(q) ||
         c.address?.toLowerCase().includes(q) ||
         c.client_code?.toLowerCase().includes(q),
     )
-  }, [contacts, typeFilter, search, contactRoleFilter])
+  }, [contacts, typeFilter, search, contactRoleFilter, contactTagsFilter])
 
   const sorted = useMemo(() => {
     if (!sortBy) return filtered
@@ -1246,7 +1271,7 @@ function FiltersPopover({
   onApply: (role: 'none' | 'client' | null, tags: string[]) => void
   onClear: () => void
 }) {
-  const storeTags = useTagsStore((s) => s.tags)
+  const { data: storeTags } = useTags()
   const [open, setOpen] = useState(false)
   const [draftRole, setDraftRole] = useState<'none' | 'client' | null>(role)
   const [draftTags, setDraftTags] = useState<string[]>(tags)
@@ -1861,39 +1886,180 @@ function EmptyState({
   )
 }
 
+/**
+ * Conflict-check panel. Searches contacts + matters (incl. opposing parties)
+ * for name collisions, and lets the user record the run for the firm's audit
+ * history. Past runs render below the search box.
+ */
 function ConflictsPlaceholder() {
+  const router = useRouter()
+  const { run, matches, isLoading } = useConflictSearch()
+  const recordCheck = useRecordConflictCheck()
+  const { data: history } = useConflictChecks()
+  const [query, setQuery] = useState('')
+  const [searched, setSearched] = useState(false)
+
+  const doSearch = () => {
+    const q = query.trim()
+    if (!q) return
+    run(q)
+    setSearched(true)
+  }
+
+  const doRecord = async () => {
+    const q = query.trim()
+    if (!q) return
+    try {
+      await recordCheck.mutateAsync(q)
+      toast.success('Conflict check recorded.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not record check.')
+    }
+  }
+
+  const KIND_META: Record<string, { label: string; color: string }> = {
+    contact: { label: 'Contact', color: TYPE_BADGE_PEOPLE },
+    opposing_party: { label: 'Opposing party', color: '#C0392B' },
+    case: { label: 'Matter', color: '#8B5CF6' },
+  }
+
   return (
-    <div
-      className="mt-8 rounded-2xl border px-10 py-16 text-center"
-      style={{
-        background: 'var(--surface-card)',
-        borderColor: 'var(--border-soft)',
-        boxShadow: 'var(--shadow-xs)',
-      }}
-    >
+    <div className="mt-6 space-y-5 max-w-3xl">
+      {/* Search box */}
       <div
-        className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-        style={{ background: 'var(--surface-sunken)' }}
+        className="rounded-2xl border p-5"
+        style={{ background: 'var(--surface-card)', borderColor: 'var(--border-soft)', boxShadow: 'var(--shadow-xs)' }}
       >
-        <ShieldWarning
-          size={22}
-          strokeWidth={1.5}
-          style={{ color: 'var(--text-muted)' }}
-        />
+        <div className="flex items-center gap-2 mb-1.5">
+          <ShieldWarning size={16} strokeWidth={1.75} style={{ color: 'var(--gold-dark)' }} />
+          <h3 className="text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Run a conflict check
+          </h3>
+        </div>
+        <p className="text-[12.5px] mb-3" style={{ color: 'var(--text-muted)' }}>
+          Search existing contacts and matters (including opposing parties) before opening a new matter.
+        </p>
+        <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2 h-10 px-3 rounded-lg border flex-1"
+            style={{ borderColor: 'var(--border-default)', background: 'var(--surface-card)' }}
+          >
+            <MagnifyingGlass size={15} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  doSearch()
+                }
+              }}
+              placeholder="Name of person, company, or opposing party…"
+              className="flex-1 bg-transparent outline-none text-[13px]"
+              style={{ color: 'var(--text-primary)' }}
+            />
+          </div>
+          <Button onClick={doSearch} disabled={!query.trim() || isLoading}>
+            {isLoading ? 'Searching…' : 'Check'}
+          </Button>
+          {searched && (
+            <Button variant="outline" onClick={doRecord} disabled={recordCheck.isPending}>
+              {recordCheck.isPending ? 'Saving…' : 'Record'}
+            </Button>
+          )}
+        </div>
+
+        {/* Results */}
+        {searched && !isLoading && (
+          <div className="mt-4">
+            {matches.length === 0 ? (
+              <div
+                className="rounded-xl border px-4 py-4 flex items-center gap-2 text-[13px]"
+                style={{ borderColor: 'var(--border-soft)', background: 'rgba(34,197,94,0.06)', color: '#16A34A' }}
+              >
+                <Check size={15} strokeWidth={2} />
+                No conflicts found for “{query.trim()}”.
+              </div>
+            ) : (
+              <ul
+                className="rounded-xl border divide-y overflow-hidden"
+                style={{ borderColor: 'var(--border-soft)' }}
+              >
+                {matches.map((m, i) => {
+                  const meta = KIND_META[m.kind] ?? KIND_META.contact
+                  return (
+                    <li
+                      key={`${m.kind}-${m.ref_id}-${i}`}
+                      className="flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[var(--surface-overlay)]"
+                      style={{ borderColor: 'var(--border-soft)' }}
+                      onClick={() =>
+                        router.push(m.kind === 'case' ? `/cases/${m.ref_id}` : `/contacts/${m.ref_id}`)
+                      }
+                    >
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
+                        style={{ background: `${meta.color}1F`, color: meta.color }}
+                      >
+                        {meta.label}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[13px] font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                          {m.label}
+                        </div>
+                        {m.sublabel && (
+                          <div className="text-[11.5px] truncate" style={{ color: 'var(--text-muted)' }}>
+                            {m.sublabel}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[11px] shrink-0" style={{ color: 'var(--text-subtle)' }}>
+                        matched {m.match_field}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
-      <p
-        className="text-[15px] font-semibold"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        Conflict checks is coming next
-      </p>
-      <p
-        className="mt-1.5 text-[12.5px] max-w-md mx-auto"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        MagnifyingGlass past cases and contacts for potential conflicts before
-        opening a new matter.
-      </p>
+
+      {/* History */}
+      {history.length > 0 && (
+        <div>
+          <h4 className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+            Recent checks
+          </h4>
+          <ul
+            className="rounded-xl border divide-y overflow-hidden"
+            style={{ borderColor: 'var(--border-soft)', background: 'var(--surface-card)' }}
+          >
+            {history.map((h) => (
+              <li key={h.id} className="flex items-center justify-between gap-3 px-4 py-2.5" style={{ borderColor: 'var(--border-soft)' }}>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                    {h.query}
+                  </div>
+                  <div className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+                    {h.run_by_name ? `${h.run_by_name} · ` : ''}
+                    {new Date(h.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </div>
+                </div>
+                <span
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0"
+                  style={
+                    h.match_count > 0
+                      ? { background: 'rgba(192,57,43,0.10)', color: '#C0392B' }
+                      : { background: 'rgba(34,197,94,0.10)', color: '#16A34A' }
+                  }
+                >
+                  {h.match_count} {h.match_count === 1 ? 'match' : 'matches'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }
