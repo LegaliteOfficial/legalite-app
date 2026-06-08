@@ -101,6 +101,17 @@ export const FirmFieldsFragmentDoc = graphql(/* GraphQL */ `
  * Client row — list + detail + create + update all return the same
  * projection. Delete returns ID! so it doesn't need this.
  */
+export const TagFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment TagFields on Tag {
+    id
+    firm_id
+    name
+    color
+    created_at
+    updated_at
+  }
+`)
+
 export const ClientFieldsFragmentDoc = graphql(/* GraphQL */ `
   fragment ClientFields on Client {
     id
@@ -108,6 +119,14 @@ export const ClientFieldsFragmentDoc = graphql(/* GraphQL */ `
     user_id
     client_code
     full_name
+    contact_type
+    organization
+    job_title
+    website
+    roles
+    tags {
+      ...TagFields
+    }
     email
     phone
     ghana_card

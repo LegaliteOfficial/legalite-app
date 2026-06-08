@@ -162,11 +162,18 @@ export const clientSchema = z.object({
   // type their own. Optional so quick-create stays one field.
   client_code: z.string().optional().or(z.literal('')),
   full_name: z.string().min(1, 'Client name is required'),
+  // person | company — drives the People / Companies split.
+  contact_type: z.enum(['person', 'company']).optional(),
+  // A person's employer / extra company context.
+  organization: z.string().optional().or(z.literal('')),
+  job_title: z.string().optional().or(z.literal('')),
+  website: z.string().optional().or(z.literal('')),
+  // Contact roles: Client / Lead / Witness / Opposing counsel / Expert / …
+  roles: z.array(z.string()).optional(),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   ghana_card: z.string().optional().or(z.literal('')),
-  // ISO yyyy-mm-dd (HTML <input type="date"> output format). Backend
-  // column lands with the contact-detail screen migration.
+  // ISO yyyy-mm-dd (HTML <input type="date"> output format).
   date_of_birth: z.string().optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
   status: z.enum(['Active', 'Inactive']).default('Active'),
