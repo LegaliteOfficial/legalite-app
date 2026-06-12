@@ -1,10 +1,39 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { PaperPlaneTilt, Scales, BookOpen, MagnifyingGlass, Plus, ChatCircle, Trash, Clock, SidebarSimple, Sidebar } from '@phosphor-icons/react'
+// Phosphor icon set (project-wide standard). My recent sidebar
+// rebuild + auto-title work originally used lucide names; converted
+// to phosphor equivalents here after the merge:
+//   Send -> PaperPlaneTilt, Scale -> Scales, Search -> MagnifyingGlass,
+//   MessageSquare -> ChatCircle, MoreHorizontal -> DotsThree,
+//   Pencil -> PencilSimple, Pin -> PushPin, PinOff -> PushPinSlash,
+//   Trash2 -> Trash, PanelLeftClose -> SidebarSimple, PanelLeft -> Sidebar.
+import {
+  PaperPlaneTilt,
+  Scales,
+  BookOpen,
+  MagnifyingGlass,
+  Plus,
+  ChatCircle,
+  DotsThree,
+  PencilSimple,
+  PushPin,
+  PushPinSlash,
+  Trash,
+  SidebarSimple,
+  Sidebar,
+  X,
+} from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 
 import { ask, submitFeedback, AiServiceError } from '@/lib/ai/client'
@@ -15,7 +44,12 @@ import {
   appendAssistantTurn,
   dropLastAssistantTurn,
   deleteSession,
+  // Their addition: turn-level feedback storage.
   setTurnFeedback,
+  // My additions: sidebar rename + pin + smart auto-title refinement.
+  renameSession,
+  pinSession,
+  refineTitle,
   type SessionRecord,
   type Turn,
 } from '@/lib/ai/sessions'
@@ -82,6 +116,33 @@ export default function AiAssistantPage() {
     }
   }, [activeId, refreshSidebar])
 
+  // Rename — fired from the sidebar's overflow menu. Trims +
+  // truncates inside the storage layer; we just refresh the sidebar
+  // afterwards so the new title flows through immediately.
+  const handleRename = useCallback(
+    (id: string, title: string) => {
+      const next = renameSession(id, title)
+      if (next) refreshSidebar()
+    },
+    [refreshSidebar],
+  )
+
+  // Pin / unpin — flips the boolean in storage. Pinned sessions
+  // are exempt from the MAX_SESSIONS eviction cap and render in
+  // their own group at the top of the sidebar.
+  const handleTogglePin = useCallback(
+    (id: string) => {
+      const current = getSession(id)
+      if (!current) return
+      const next = pinSession(id, !current.pinned)
+      if (next) {
+        refreshSidebar()
+        toast.success(next.pinned ? 'Pinned to the top.' : 'Unpinned.')
+      }
+    },
+    [refreshSidebar],
+  )
+
   const handleSend = useCallback(async () => {
     const question = input.trim()
     if (!question || isLoading) return
@@ -121,6 +182,20 @@ export default function AiAssistantPage() {
       if (updated) {
         if (finalId !== id) setActiveId(finalId)
         setTurns(updated.turns)
+        // Refine the sidebar title now that we have the assistant
+        // response in hand. `refineTitle` only acts when the title
+        // isn't locked (i.e. the partner hasn't manually renamed)
+        // and produces a better noun-phrase than the initial
+        // question truncation — Claude-Desktop-style "title gets
+        // smarter once the answer lands". We only refine on the
+        // very first assistant turn — subsequent turns in the
+        // same thread shouldn't reset the title back to what the
+        // first question implied.
+        const isFirstAssistantTurn =
+          updated.turns.filter((t) => t.role === 'assistant').length === 1
+        if (isFirstAssistantTurn) {
+          refineTitle(finalId, question, response)
+        }
         refreshSidebar()
       } else {
         // Storage layer couldn't resolve any record — fall back to rendering
@@ -203,6 +278,8 @@ export default function AiAssistantPage() {
           activeId={activeId}
           onSelect={loadConversation}
           onDelete={handleDelete}
+          onRename={handleRename}
+          onTogglePin={handleTogglePin}
           onNew={startNewConversation}
         />
       )}
@@ -254,97 +331,440 @@ export default function AiAssistantPage() {
 
 // ── Sidebar ────────────────────────────────────────────────────────────────
 
+/**
+ * Conversation sidebar — mirrors Claude Desktop's left rail:
+ *
+ *   Top    : "New chat" button + a search input.
+ *   Middle : sessions grouped by recency:
+ *              Pinned · Today · Yesterday · Previous 7 days ·
+ *              Previous 30 days · Older
+ *            Pinned has its own group at the very top, exempt from
+ *            the eviction cap; everything else is grouped by the
+ *            `updated_at` timestamp relative to today.
+ *   Row    : single-line title; the overflow menu lives in the
+ *            top-right and surfaces on hover with Rename / Pin /
+ *            Delete. Inline rename uses an in-place input so the
+ *            partner doesn't have to leave the sidebar.
+ *   Footer : conversation count.
+ *
+ * The reuse of `formatRelative` for per-row hover tooltip + the
+ * group buckets means a session that just left the "Today" group
+ * doesn't disappear — it slides one row down into "Yesterday" on
+ * the next render. The chronology stays legible.
+ */
 function ConversationSidebar({
-  sessions, activeId, onSelect, onDelete, onNew,
+  sessions, activeId, onSelect, onDelete, onRename, onTogglePin, onNew,
 }: {
   sessions: SessionRecord[]
   activeId: string | null
   onSelect: (id: string) => void
   onDelete: (id: string) => void
+  onRename: (id: string, title: string) => void
+  onTogglePin: (id: string) => void
   onNew: () => void
 }) {
+  const [query, setQuery] = useState('')
+  // The row currently in rename mode; null when nothing's being
+  // edited. Storing the working title here keeps the input
+  // controlled without leaking state into the parent.
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
+
+  // Filter + group. Pinned bucket always renders first; everything
+  // else falls into a recency bucket based on `updated_at`.
+  const groups = useMemo(
+    () => groupSessions(sessions, query),
+    [sessions, query],
+  )
+  const visibleCount = groups.reduce((n, g) => n + g.items.length, 0)
+
+  const beginRename = (s: SessionRecord) => {
+    setEditingId(s.id)
+    setEditingTitle(s.title)
+  }
+  const commitRename = () => {
+    if (editingId && editingTitle.trim()) {
+      onRename(editingId, editingTitle.trim())
+    }
+    setEditingId(null)
+    setEditingTitle('')
+  }
+  const cancelRename = () => {
+    setEditingId(null)
+    setEditingTitle('')
+  }
+
   return (
     <div
-      className="w-64 shrink-0 border-r flex flex-col"
+      className="w-[260px] shrink-0 border-r flex flex-col"
       style={{
         borderColor: 'var(--border-soft)',
-        background: 'var(--surface-card)',
+        background: 'var(--surface-sunken)',
       }}
     >
-      <div className="p-3 border-b" style={{ borderColor: 'var(--border-soft)' }}>
-        <Button onClick={onNew} size="lg" className="w-full rounded-lg">
-          <Plus size={14} strokeWidth={2} />
-          New conversation
+      {/* ─── Top: New chat + search ─────────────────────────── */}
+      <div
+        className="px-3 pt-3 pb-2 border-b space-y-2"
+        style={{ borderColor: 'var(--border-soft)' }}
+      >
+        <Button
+          onClick={onNew}
+          size="sm"
+          className="w-full justify-start rounded-lg h-9 text-[13px] font-semibold"
+          style={{ background: 'var(--gold)', color: 'var(--navy)' }}
+        >
+          <Plus size={14} strokeWidth={2.25} />
+          New chat
         </Button>
+
+        <div className="relative">
+          <MagnifyingGlass
+            size={12}
+            strokeWidth={1.75}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-muted)' }}
+          />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search chats…"
+            className="h-8 pl-7 pr-7 text-[12.5px] rounded-md"
+            style={{ background: 'var(--surface-card)' }}
+          />
+          {query && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => setQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 inline-flex items-center justify-center rounded cursor-pointer"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <X size={10} strokeWidth={2} />
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+      {/* ─── Middle: grouped list ───────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         {sessions.length === 0 ? (
-          <div className="text-center p-4">
-            <ChatCircle
-              size={18}
-              strokeWidth={1.75}
-              className="mx-auto mb-2"
-              style={{ color: 'var(--text-subtle)' }}
-            />
-            <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
-              No conversations yet
-            </p>
-          </div>
+          <EmptySidebarState />
+        ) : visibleCount === 0 ? (
+          <NoMatchState query={query} />
         ) : (
-          sessions.map((s) => {
-            const isActive = activeId === s.id
-            return (
+          groups.map((g) => (
+            <div key={g.label} className="mb-3 last:mb-0">
               <div
-                key={s.id}
-                className="group flex items-start gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors"
-                style={{
-                  background: isActive ? 'var(--surface-sunken)' : 'transparent',
-                }}
-                onClick={() => onSelect(s.id)}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.background = 'var(--surface-overlay)'
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) e.currentTarget.style.background = 'transparent'
-                }}
+                className="px-2 pt-1 pb-1 text-[10.5px] font-semibold uppercase tracking-wider flex items-center gap-1.5"
+                style={{ color: 'var(--text-muted)' }}
               >
-                <ChatCircle
-                  size={13}
-                  strokeWidth={1.75}
-                  className="mt-0.5 shrink-0"
-                  style={{ color: isActive ? 'var(--gold)' : 'var(--text-muted)' }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="text-[12.5px] font-medium truncate"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {s.title}
-                  </p>
-                  <p
-                    className="text-[10.5px] flex items-center gap-1 tabular-nums"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    <Clock size={9} strokeWidth={1.75} />
-                    {formatRelative(s.updated_at)}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(s.id) }}
-                  className="opacity-0 group-hover:opacity-100 h-5 w-5 rounded flex items-center justify-center transition-all"
-                  style={{ color: 'var(--text-muted)' }}
-                  aria-label="Delete conversation"
-                >
-                  <Trash size={11} strokeWidth={1.75} />
-                </button>
+                {g.label === 'Pinned' && <PushPin size={9} strokeWidth={2} />}
+                {g.label}
               </div>
-            )
-          })
+              {g.items.map((s) => {
+                const isActive = activeId === s.id
+                const isEditing = editingId === s.id
+                return (
+                  <div
+                    key={s.id}
+                    className="group relative flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer transition-colors"
+                    style={{
+                      background: isActive
+                        ? 'rgba(201,151,43,0.10)'
+                        : 'transparent',
+                    }}
+                    onClick={() => !isEditing && onSelect(s.id)}
+                    onMouseEnter={(e) => {
+                      if (!isActive && !isEditing)
+                        e.currentTarget.style.background =
+                          'var(--surface-card)'
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive && !isEditing)
+                        e.currentTarget.style.background = 'transparent'
+                    }}
+                  >
+                    {/* Title — inline rename when in edit mode. */}
+                    {isEditing ? (
+                      <input
+                        autoFocus
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onBlur={commitRename}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            commitRename()
+                          } else if (e.key === 'Escape') {
+                            e.preventDefault()
+                            cancelRename()
+                          }
+                        }}
+                        className="flex-1 min-w-0 bg-transparent text-[12.5px] font-medium outline-none border-b"
+                        style={{
+                          color: 'var(--text-primary)',
+                          borderColor: 'var(--gold)',
+                        }}
+                      />
+                    ) : (
+                      <span
+                        className="flex-1 min-w-0 text-[12.5px] font-medium truncate"
+                        style={{
+                          color: isActive
+                            ? 'var(--text-primary)'
+                            : 'var(--text-secondary)',
+                        }}
+                        title={`${s.title} · ${formatRelative(s.updated_at)}`}
+                      >
+                        {s.title}
+                      </span>
+                    )}
+
+                    {/* Pin marker — surfaces even when not hovering
+                        so the partner can spot pinned threads at
+                        a glance. */}
+                    {s.pinned && !isEditing && (
+                      <PushPin
+                        size={10}
+                        strokeWidth={2}
+                        className="shrink-0"
+                        style={{ color: 'var(--gold)' }}
+                      />
+                    )}
+
+                    {/* Overflow menu — hidden until hover/active to
+                        keep the rail clean, matching the Desktop
+                        app's affordance pattern. */}
+                    {!isEditing && (
+                      <RowMenu
+                        session={s}
+                        visible={isActive}
+                        onRename={() => beginRename(s)}
+                        onTogglePin={() => onTogglePin(s.id)}
+                        onDelete={() => onDelete(s.id)}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ))
         )}
+      </div>
+
+      {/* ─── Footer: count ──────────────────────────────────── */}
+      <div
+        className="px-3 py-2 border-t text-[10.5px] tabular-nums"
+        style={{
+          borderColor: 'var(--border-soft)',
+          color: 'var(--text-muted)',
+        }}
+      >
+        {sessions.length === 0
+          ? 'No conversations yet'
+          : `${sessions.length} conversation${sessions.length === 1 ? '' : 's'}`}
       </div>
     </div>
   )
+}
+
+/**
+ * Per-row overflow menu. Always reserves space (via `opacity` rather
+ * than conditional rendering) so the row's title width doesn't
+ * shift when hovered — keeps the sidebar visually calm.
+ */
+function RowMenu({
+  session,
+  visible,
+  onRename,
+  onTogglePin,
+  onDelete,
+}: {
+  session: SessionRecord
+  visible: boolean
+  onRename: () => void
+  onTogglePin: () => void
+  onDelete: () => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            aria-label="Conversation actions"
+            onClick={(e) => e.stopPropagation()}
+            className="shrink-0 h-6 w-6 inline-flex items-center justify-center rounded cursor-pointer transition-opacity opacity-0 group-hover:opacity-100"
+            style={{
+              color: 'var(--text-muted)',
+              opacity: visible ? 1 : undefined,
+            }}
+          >
+            <DotsThree size={13} strokeWidth={1.75} />
+          </button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation()
+            onRename()
+          }}
+          className="text-[13px] cursor-pointer"
+        >
+          <PencilSimple size={12} strokeWidth={1.75} />
+          Rename
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation()
+            onTogglePin()
+          }}
+          className="text-[13px] cursor-pointer"
+        >
+          {session.pinned ? (
+            <>
+              <PushPinSlash size={12} strokeWidth={1.75} />
+              Unpin
+            </>
+          ) : (
+            <>
+              <PushPin size={12} strokeWidth={1.75} />
+              Pin to top
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation()
+            if (
+              window.confirm(
+                `Delete "${session.title}"? This can't be undone.`,
+              )
+            ) {
+              onDelete()
+            }
+          }}
+          className="text-[13px] cursor-pointer"
+          style={{ color: 'var(--accent-danger)' }}
+        >
+          <Trash size={12} strokeWidth={1.75} />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function EmptySidebarState() {
+  return (
+    <div className="text-center p-4 mt-6">
+      <ChatCircle
+        size={18}
+        strokeWidth={1.75}
+        className="mx-auto mb-2"
+        style={{ color: 'var(--text-subtle)' }}
+      />
+      <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+        No conversations yet
+      </p>
+      <p
+        className="text-[10.5px] mt-1"
+        style={{ color: 'var(--text-subtle)' }}
+      >
+        Ask a question to start one.
+      </p>
+    </div>
+  )
+}
+
+function NoMatchState({ query }: { query: string }) {
+  return (
+    <div className="text-center p-4 mt-6">
+      <MagnifyingGlass
+        size={16}
+        strokeWidth={1.75}
+        className="mx-auto mb-2"
+        style={{ color: 'var(--text-subtle)' }}
+      />
+      <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+        No matches for &ldquo;{query}&rdquo;
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Bucket sessions into Claude-Desktop-style recency groups. Pinned
+ * lives at the top regardless of timestamp; everything else falls
+ * into Today / Yesterday / Previous 7 / Previous 30 / Older based
+ * on `updated_at` distance from the start of today.
+ *
+ * The search filter (`query`) is applied *before* grouping so
+ * empty buckets are dropped automatically.
+ */
+interface SidebarGroup {
+  label: string
+  items: SessionRecord[]
+}
+
+function groupSessions(
+  sessions: SessionRecord[],
+  query: string,
+): SidebarGroup[] {
+  const q = query.trim().toLowerCase()
+  const filtered = q
+    ? sessions.filter((s) => s.title.toLowerCase().includes(q))
+    : sessions
+
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+  const DAY_MS = 24 * 60 * 60 * 1000
+
+  const pinned: SessionRecord[] = []
+  const today: SessionRecord[] = []
+  const yesterday: SessionRecord[] = []
+  const last7: SessionRecord[] = []
+  const last30: SessionRecord[] = []
+  const older: SessionRecord[] = []
+
+  for (const s of filtered) {
+    if (s.pinned) {
+      pinned.push(s)
+      continue
+    }
+    const ts = new Date(s.updated_at).getTime()
+    if (Number.isNaN(ts)) {
+      older.push(s)
+      continue
+    }
+    const ageMs = startOfToday.getTime() - ts
+    if (ts >= startOfToday.getTime()) today.push(s)
+    else if (ageMs < DAY_MS) yesterday.push(s)
+    else if (ageMs < 7 * DAY_MS) last7.push(s)
+    else if (ageMs < 30 * DAY_MS) last30.push(s)
+    else older.push(s)
+  }
+
+  // Each bucket sorted recency-first.
+  const byRecent = (a: SessionRecord, b: SessionRecord) =>
+    b.updated_at.localeCompare(a.updated_at)
+  pinned.sort(byRecent)
+  today.sort(byRecent)
+  yesterday.sort(byRecent)
+  last7.sort(byRecent)
+  last30.sort(byRecent)
+  older.sort(byRecent)
+
+  return [
+    { label: 'Pinned', items: pinned },
+    { label: 'Today', items: today },
+    { label: 'Yesterday', items: yesterday },
+    { label: 'Previous 7 days', items: last7 },
+    { label: 'Previous 30 days', items: last30 },
+    { label: 'Older', items: older },
+  ].filter((g) => g.items.length > 0)
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────
