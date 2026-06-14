@@ -9,7 +9,7 @@ import {
   SLOT_SNAP_MINUTES,
 } from '../_constants'
 import { formatMinutesAsClock } from '../_lib/date'
-import { EventBlock } from './EventBlock'
+import { EventPreviewPopover } from './EventPreviewPopover'
 import { NowLine } from './NowLine'
 
 /**
@@ -124,10 +124,13 @@ export function DayColumn({
       {/* Current-time line — drawn only on today. */}
       {isToday && <NowLine now={now} />}
 
-      {/* Event blocks. */}
+      {/* Event blocks. Each block opens a quick-look popover; the
+          full editor opens from inside the popover. The wrapping span
+          carries `data-event-block` so the parent slot-click handler
+          can detect (and ignore) clicks that landed on an event. */}
       {events.map((e) => (
         <span key={e.id} data-event-block>
-          <EventBlock deadline={e} onClick={() => onEventClick(e)} />
+          <EventPreviewPopover deadline={e} onEdit={onEventClick} />
         </span>
       ))}
     </div>
