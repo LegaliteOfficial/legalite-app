@@ -302,6 +302,7 @@ export const DocumentFieldsFragmentDoc = graphql(/* GraphQL */ `
     user_id
     case_id
     client_id
+    folder_id
     title
     template_type
     court
@@ -309,10 +310,47 @@ export const DocumentFieldsFragmentDoc = graphql(/* GraphQL */ `
     parties
     judge
     content
+    file_url
+    file_public_id
+    file_thumbnail_url
+    file_mime_type
+    file_size
+    author
+    received_date
+    deleted_at
     case_title
     client_name
+    uploaded_by_name
+    comment_count
     created_at
     updated_at
+  }
+`)
+
+/** Document folder row — list + create/rename return the same shape. */
+export const DocumentFolderFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment DocumentFolderFields on DocumentFolder {
+    id
+    firm_id
+    client_id
+    parent_id
+    user_id
+    name
+    document_count
+    created_at
+    updated_at
+  }
+`)
+
+/** A single comment on a document. */
+export const DocumentCommentFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment DocumentCommentFields on DocumentComment {
+    id
+    document_id
+    user_id
+    author_name
+    body
+    created_at
   }
 `)
 

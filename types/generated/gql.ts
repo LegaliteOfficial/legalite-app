@@ -28,7 +28,9 @@ type Documents = {
     "\n  fragment LibraryItemFields on LibraryItem {\n    id\n    user_id\n    category\n    title\n    author\n    description\n    tags\n    file_url\n    file_name\n    file_type\n    file_size\n    thumbnail_url\n    is_favorite\n    created_at\n    updated_at\n  }\n": typeof types.LibraryItemFieldsFragmentDoc,
     "\n  fragment DeadlineFields on Deadline {\n    id\n    user_id\n    case_id\n    title\n    description\n    due_date\n    priority\n    status\n    reminder_days\n    case_title\n    created_at\n    updated_at\n  }\n": typeof types.DeadlineFieldsFragmentDoc,
     "\n  fragment MessageFields on Message {\n    id\n    user_id\n    client_id\n    subject\n    body\n    channel\n    direction\n    status\n    client_name\n    created_at\n    updated_at\n  }\n": typeof types.MessageFieldsFragmentDoc,
-    "\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    case_title\n    client_name\n    created_at\n    updated_at\n  }\n": typeof types.DocumentFieldsFragmentDoc,
+    "\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    folder_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    file_url\n    file_public_id\n    file_thumbnail_url\n    file_mime_type\n    file_size\n    author\n    received_date\n    deleted_at\n    case_title\n    client_name\n    uploaded_by_name\n    comment_count\n    created_at\n    updated_at\n  }\n": typeof types.DocumentFieldsFragmentDoc,
+    "\n  fragment DocumentFolderFields on DocumentFolder {\n    id\n    firm_id\n    client_id\n    parent_id\n    user_id\n    name\n    document_count\n    created_at\n    updated_at\n  }\n": typeof types.DocumentFolderFieldsFragmentDoc,
+    "\n  fragment DocumentCommentFields on DocumentComment {\n    id\n    document_id\n    user_id\n    author_name\n    body\n    created_at\n  }\n": typeof types.DocumentCommentFieldsFragmentDoc,
     "\n  fragment CaseFields on Case {\n    id\n    firm_id\n    user_id\n    client_id\n    case_code\n    title\n    court\n    suit_number\n    opposing_party\n    case_type\n    case_stage\n    assigned_lawyer\n    originating_lawyer\n    status\n    date_opened\n    next_court_date\n    closed_at\n    pending_at\n    notification_count\n    description\n    details\n    notes\n    client_name\n    created_at\n    updated_at\n  }\n": typeof types.CaseFieldsFragmentDoc,
     "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n": typeof types.EventAttendeeFieldsFragmentDoc,
     "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": typeof types.EventReminderFieldsFragmentDoc,
@@ -80,11 +82,21 @@ type Documents = {
     "\n  mutation CreateDeadline($input: CreateDeadlineInput!) {\n    createDeadline(input: $input) {\n      ...DeadlineFields\n    }\n  }\n": typeof types.CreateDeadlineDocument,
     "\n  mutation UpdateDeadline($id: ID!, $input: UpdateDeadlineInput!) {\n    updateDeadline(id: $id, input: $input) {\n      ...DeadlineFields\n    }\n  }\n": typeof types.UpdateDeadlineDocument,
     "\n  mutation DeleteDeadline($id: ID!) {\n    deleteDeadline(id: $id)\n  }\n": typeof types.DeleteDeadlineDocument,
-    "\n  query Documents {\n    documents {\n      ...DocumentFields\n    }\n  }\n": typeof types.DocumentsDocument,
+    "\n  query Documents($includeDeleted: Boolean) {\n    documents(includeDeleted: $includeDeleted) {\n      ...DocumentFields\n    }\n  }\n": typeof types.DocumentsDocument,
     "\n  query Document($id: ID!) {\n    document(id: $id) {\n      ...DocumentFields\n    }\n  }\n": typeof types.DocumentDocument,
     "\n  mutation CreateDocument($input: CreateDocumentInput!) {\n    createDocument(input: $input) {\n      ...DocumentFields\n    }\n  }\n": typeof types.CreateDocumentDocument,
     "\n  mutation UpdateDocument($id: ID!, $input: UpdateDocumentInput!) {\n    updateDocument(id: $id, input: $input) {\n      ...DocumentFields\n    }\n  }\n": typeof types.UpdateDocumentDocument,
     "\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n": typeof types.DeleteDocumentDocument,
+    "\n  mutation RestoreDocument($id: ID!) {\n    restoreDocument(id: $id) {\n      ...DocumentFields\n    }\n  }\n": typeof types.RestoreDocumentDocument,
+    "\n  mutation DeleteDocumentPermanent($id: ID!) {\n    deleteDocumentPermanent(id: $id)\n  }\n": typeof types.DeleteDocumentPermanentDocument,
+    "\n  mutation SignDocumentUpload {\n    signDocumentUpload {\n      cloud_name\n      api_key\n      timestamp\n      signature\n      folder\n      resource_type\n    }\n  }\n": typeof types.SignDocumentUploadDocument,
+    "\n  query DocumentFolders($clientId: ID) {\n    documentFolders(clientId: $clientId) {\n      ...DocumentFolderFields\n    }\n  }\n": typeof types.DocumentFoldersDocument,
+    "\n  mutation CreateDocumentFolder($input: CreateDocumentFolderInput!) {\n    createDocumentFolder(input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n": typeof types.CreateDocumentFolderDocument,
+    "\n  mutation UpdateDocumentFolder($id: ID!, $input: UpdateDocumentFolderInput!) {\n    updateDocumentFolder(id: $id, input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n": typeof types.UpdateDocumentFolderDocument,
+    "\n  mutation DeleteDocumentFolder($id: ID!) {\n    deleteDocumentFolder(id: $id)\n  }\n": typeof types.DeleteDocumentFolderDocument,
+    "\n  query DocumentComments($documentId: ID!) {\n    documentComments(documentId: $documentId) {\n      ...DocumentCommentFields\n    }\n  }\n": typeof types.DocumentCommentsDocument,
+    "\n  mutation AddDocumentComment($input: CreateDocumentCommentInput!) {\n    addDocumentComment(input: $input) {\n      ...DocumentCommentFields\n    }\n  }\n": typeof types.AddDocumentCommentDocument,
+    "\n  mutation DeleteDocumentComment($id: ID!) {\n    deleteDocumentComment(id: $id)\n  }\n": typeof types.DeleteDocumentCommentDocument,
     "\n  query CurrentFirm {\n    currentFirm {\n      ...FirmFields\n    }\n  }\n": typeof types.CurrentFirmDocument,
     "\n  mutation UpdateFirm($input: UpdateFirmInput!) {\n    updateFirm(input: $input) {\n      ...FirmFields\n    }\n  }\n": typeof types.UpdateFirmDocument,
     "\n  query PendingInvitations {\n    pendingInvitations {\n      id\n      firm_id\n      email\n      firm_role\n      professional_title\n      invited_by\n      expires_at\n      created_at\n    }\n  }\n": typeof types.PendingInvitationsDocument,
@@ -152,7 +164,9 @@ const documents: Documents = {
     "\n  fragment LibraryItemFields on LibraryItem {\n    id\n    user_id\n    category\n    title\n    author\n    description\n    tags\n    file_url\n    file_name\n    file_type\n    file_size\n    thumbnail_url\n    is_favorite\n    created_at\n    updated_at\n  }\n": types.LibraryItemFieldsFragmentDoc,
     "\n  fragment DeadlineFields on Deadline {\n    id\n    user_id\n    case_id\n    title\n    description\n    due_date\n    priority\n    status\n    reminder_days\n    case_title\n    created_at\n    updated_at\n  }\n": types.DeadlineFieldsFragmentDoc,
     "\n  fragment MessageFields on Message {\n    id\n    user_id\n    client_id\n    subject\n    body\n    channel\n    direction\n    status\n    client_name\n    created_at\n    updated_at\n  }\n": types.MessageFieldsFragmentDoc,
-    "\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    case_title\n    client_name\n    created_at\n    updated_at\n  }\n": types.DocumentFieldsFragmentDoc,
+    "\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    folder_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    file_url\n    file_public_id\n    file_thumbnail_url\n    file_mime_type\n    file_size\n    author\n    received_date\n    deleted_at\n    case_title\n    client_name\n    uploaded_by_name\n    comment_count\n    created_at\n    updated_at\n  }\n": types.DocumentFieldsFragmentDoc,
+    "\n  fragment DocumentFolderFields on DocumentFolder {\n    id\n    firm_id\n    client_id\n    parent_id\n    user_id\n    name\n    document_count\n    created_at\n    updated_at\n  }\n": types.DocumentFolderFieldsFragmentDoc,
+    "\n  fragment DocumentCommentFields on DocumentComment {\n    id\n    document_id\n    user_id\n    author_name\n    body\n    created_at\n  }\n": types.DocumentCommentFieldsFragmentDoc,
     "\n  fragment CaseFields on Case {\n    id\n    firm_id\n    user_id\n    client_id\n    case_code\n    title\n    court\n    suit_number\n    opposing_party\n    case_type\n    case_stage\n    assigned_lawyer\n    originating_lawyer\n    status\n    date_opened\n    next_court_date\n    closed_at\n    pending_at\n    notification_count\n    description\n    details\n    notes\n    client_name\n    created_at\n    updated_at\n  }\n": types.CaseFieldsFragmentDoc,
     "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n": types.EventAttendeeFieldsFragmentDoc,
     "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": types.EventReminderFieldsFragmentDoc,
@@ -204,11 +218,21 @@ const documents: Documents = {
     "\n  mutation CreateDeadline($input: CreateDeadlineInput!) {\n    createDeadline(input: $input) {\n      ...DeadlineFields\n    }\n  }\n": types.CreateDeadlineDocument,
     "\n  mutation UpdateDeadline($id: ID!, $input: UpdateDeadlineInput!) {\n    updateDeadline(id: $id, input: $input) {\n      ...DeadlineFields\n    }\n  }\n": types.UpdateDeadlineDocument,
     "\n  mutation DeleteDeadline($id: ID!) {\n    deleteDeadline(id: $id)\n  }\n": types.DeleteDeadlineDocument,
-    "\n  query Documents {\n    documents {\n      ...DocumentFields\n    }\n  }\n": types.DocumentsDocument,
+    "\n  query Documents($includeDeleted: Boolean) {\n    documents(includeDeleted: $includeDeleted) {\n      ...DocumentFields\n    }\n  }\n": types.DocumentsDocument,
     "\n  query Document($id: ID!) {\n    document(id: $id) {\n      ...DocumentFields\n    }\n  }\n": types.DocumentDocument,
     "\n  mutation CreateDocument($input: CreateDocumentInput!) {\n    createDocument(input: $input) {\n      ...DocumentFields\n    }\n  }\n": types.CreateDocumentDocument,
     "\n  mutation UpdateDocument($id: ID!, $input: UpdateDocumentInput!) {\n    updateDocument(id: $id, input: $input) {\n      ...DocumentFields\n    }\n  }\n": types.UpdateDocumentDocument,
     "\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n": types.DeleteDocumentDocument,
+    "\n  mutation RestoreDocument($id: ID!) {\n    restoreDocument(id: $id) {\n      ...DocumentFields\n    }\n  }\n": types.RestoreDocumentDocument,
+    "\n  mutation DeleteDocumentPermanent($id: ID!) {\n    deleteDocumentPermanent(id: $id)\n  }\n": types.DeleteDocumentPermanentDocument,
+    "\n  mutation SignDocumentUpload {\n    signDocumentUpload {\n      cloud_name\n      api_key\n      timestamp\n      signature\n      folder\n      resource_type\n    }\n  }\n": types.SignDocumentUploadDocument,
+    "\n  query DocumentFolders($clientId: ID) {\n    documentFolders(clientId: $clientId) {\n      ...DocumentFolderFields\n    }\n  }\n": types.DocumentFoldersDocument,
+    "\n  mutation CreateDocumentFolder($input: CreateDocumentFolderInput!) {\n    createDocumentFolder(input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n": types.CreateDocumentFolderDocument,
+    "\n  mutation UpdateDocumentFolder($id: ID!, $input: UpdateDocumentFolderInput!) {\n    updateDocumentFolder(id: $id, input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n": types.UpdateDocumentFolderDocument,
+    "\n  mutation DeleteDocumentFolder($id: ID!) {\n    deleteDocumentFolder(id: $id)\n  }\n": types.DeleteDocumentFolderDocument,
+    "\n  query DocumentComments($documentId: ID!) {\n    documentComments(documentId: $documentId) {\n      ...DocumentCommentFields\n    }\n  }\n": types.DocumentCommentsDocument,
+    "\n  mutation AddDocumentComment($input: CreateDocumentCommentInput!) {\n    addDocumentComment(input: $input) {\n      ...DocumentCommentFields\n    }\n  }\n": types.AddDocumentCommentDocument,
+    "\n  mutation DeleteDocumentComment($id: ID!) {\n    deleteDocumentComment(id: $id)\n  }\n": types.DeleteDocumentCommentDocument,
     "\n  query CurrentFirm {\n    currentFirm {\n      ...FirmFields\n    }\n  }\n": types.CurrentFirmDocument,
     "\n  mutation UpdateFirm($input: UpdateFirmInput!) {\n    updateFirm(input: $input) {\n      ...FirmFields\n    }\n  }\n": types.UpdateFirmDocument,
     "\n  query PendingInvitations {\n    pendingInvitations {\n      id\n      firm_id\n      email\n      firm_role\n      professional_title\n      invited_by\n      expires_at\n      created_at\n    }\n  }\n": types.PendingInvitationsDocument,
@@ -335,7 +359,15 @@ export function graphql(source: "\n  fragment MessageFields on Message {\n    id
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    case_title\n    client_name\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    case_title\n    client_name\n    created_at\n    updated_at\n  }\n"];
+export function graphql(source: "\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    folder_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    file_url\n    file_public_id\n    file_thumbnail_url\n    file_mime_type\n    file_size\n    author\n    received_date\n    deleted_at\n    case_title\n    client_name\n    uploaded_by_name\n    comment_count\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment DocumentFields on Document {\n    id\n    firm_id\n    user_id\n    case_id\n    client_id\n    folder_id\n    title\n    template_type\n    court\n    suit_number\n    parties\n    judge\n    content\n    file_url\n    file_public_id\n    file_thumbnail_url\n    file_mime_type\n    file_size\n    author\n    received_date\n    deleted_at\n    case_title\n    client_name\n    uploaded_by_name\n    comment_count\n    created_at\n    updated_at\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment DocumentFolderFields on DocumentFolder {\n    id\n    firm_id\n    client_id\n    parent_id\n    user_id\n    name\n    document_count\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment DocumentFolderFields on DocumentFolder {\n    id\n    firm_id\n    client_id\n    parent_id\n    user_id\n    name\n    document_count\n    created_at\n    updated_at\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment DocumentCommentFields on DocumentComment {\n    id\n    document_id\n    user_id\n    author_name\n    body\n    created_at\n  }\n"): (typeof documents)["\n  fragment DocumentCommentFields on DocumentComment {\n    id\n    document_id\n    user_id\n    author_name\n    body\n    created_at\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -543,7 +575,7 @@ export function graphql(source: "\n  mutation DeleteDeadline($id: ID!) {\n    de
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query Documents {\n    documents {\n      ...DocumentFields\n    }\n  }\n"): (typeof documents)["\n  query Documents {\n    documents {\n      ...DocumentFields\n    }\n  }\n"];
+export function graphql(source: "\n  query Documents($includeDeleted: Boolean) {\n    documents(includeDeleted: $includeDeleted) {\n      ...DocumentFields\n    }\n  }\n"): (typeof documents)["\n  query Documents($includeDeleted: Boolean) {\n    documents(includeDeleted: $includeDeleted) {\n      ...DocumentFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -560,6 +592,46 @@ export function graphql(source: "\n  mutation UpdateDocument($id: ID!, $input: U
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RestoreDocument($id: ID!) {\n    restoreDocument(id: $id) {\n      ...DocumentFields\n    }\n  }\n"): (typeof documents)["\n  mutation RestoreDocument($id: ID!) {\n    restoreDocument(id: $id) {\n      ...DocumentFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteDocumentPermanent($id: ID!) {\n    deleteDocumentPermanent(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteDocumentPermanent($id: ID!) {\n    deleteDocumentPermanent(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SignDocumentUpload {\n    signDocumentUpload {\n      cloud_name\n      api_key\n      timestamp\n      signature\n      folder\n      resource_type\n    }\n  }\n"): (typeof documents)["\n  mutation SignDocumentUpload {\n    signDocumentUpload {\n      cloud_name\n      api_key\n      timestamp\n      signature\n      folder\n      resource_type\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query DocumentFolders($clientId: ID) {\n    documentFolders(clientId: $clientId) {\n      ...DocumentFolderFields\n    }\n  }\n"): (typeof documents)["\n  query DocumentFolders($clientId: ID) {\n    documentFolders(clientId: $clientId) {\n      ...DocumentFolderFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateDocumentFolder($input: CreateDocumentFolderInput!) {\n    createDocumentFolder(input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n"): (typeof documents)["\n  mutation CreateDocumentFolder($input: CreateDocumentFolderInput!) {\n    createDocumentFolder(input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateDocumentFolder($id: ID!, $input: UpdateDocumentFolderInput!) {\n    updateDocumentFolder(id: $id, input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateDocumentFolder($id: ID!, $input: UpdateDocumentFolderInput!) {\n    updateDocumentFolder(id: $id, input: $input) {\n      ...DocumentFolderFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteDocumentFolder($id: ID!) {\n    deleteDocumentFolder(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteDocumentFolder($id: ID!) {\n    deleteDocumentFolder(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query DocumentComments($documentId: ID!) {\n    documentComments(documentId: $documentId) {\n      ...DocumentCommentFields\n    }\n  }\n"): (typeof documents)["\n  query DocumentComments($documentId: ID!) {\n    documentComments(documentId: $documentId) {\n      ...DocumentCommentFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AddDocumentComment($input: CreateDocumentCommentInput!) {\n    addDocumentComment(input: $input) {\n      ...DocumentCommentFields\n    }\n  }\n"): (typeof documents)["\n  mutation AddDocumentComment($input: CreateDocumentCommentInput!) {\n    addDocumentComment(input: $input) {\n      ...DocumentCommentFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteDocumentComment($id: ID!) {\n    deleteDocumentComment(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteDocumentComment($id: ID!) {\n    deleteDocumentComment(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

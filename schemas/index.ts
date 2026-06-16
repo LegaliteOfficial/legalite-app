@@ -227,12 +227,31 @@ export const documentSchema = z.object({
   title: z.string().min(1, 'Document title is required'),
   case_id: z.string().optional().or(z.literal('')),
   client_id: z.string().optional().or(z.literal('')),
+  folder_id: z.string().optional().or(z.literal('')),
   template_type: z.string().optional().or(z.literal('')),
   court: z.string().optional().or(z.literal('')),
   suit_number: z.string().optional().or(z.literal('')),
   parties: z.string().optional().or(z.literal('')),
   judge: z.string().optional().or(z.literal('')),
   content: z.string().optional().or(z.literal('')),
+  file_url: z.string().optional().or(z.literal('')),
+  file_public_id: z.string().optional().or(z.literal('')),
+  file_thumbnail_url: z.string().optional().or(z.literal('')),
+  file_mime_type: z.string().optional().or(z.literal('')),
+  file_size: z.number().int().min(0).optional(),
+  author: z.string().optional().or(z.literal('')),
+  received_date: z.string().optional().or(z.literal('')),
+})
+
+export const documentFolderSchema = z.object({
+  name: z.string().min(1, 'Folder name is required'),
+  client_id: z.string().optional().or(z.literal('')),
+  parent_id: z.string().optional().or(z.literal('')),
+})
+
+export const documentCommentSchema = z.object({
+  document_id: z.string().min(1),
+  body: z.string().min(1, 'Comment cannot be empty'),
 })
 
 export const invoiceSchema = z.object({
@@ -257,4 +276,6 @@ export type ClientFormData = z.infer<typeof clientSchema>
 export type CaseFormData = z.infer<typeof caseSchema>
 export type TaskFormData = z.infer<typeof taskSchema>
 export type DocumentFormData = z.infer<typeof documentSchema>
+export type DocumentFolderFormData = z.infer<typeof documentFolderSchema>
+export type DocumentCommentFormData = z.infer<typeof documentCommentSchema>
 export type InvoiceFormData = z.infer<typeof invoiceSchema>

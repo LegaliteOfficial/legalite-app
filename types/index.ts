@@ -120,6 +120,7 @@ export interface Document {
   user_id: string
   case_id?: string | null
   client_id?: string | null
+  folder_id?: string | null
   title: string
   template_type?: string | null
   court?: string | null
@@ -127,10 +128,44 @@ export interface Document {
   parties?: string | null
   judge?: string | null
   content?: string | null
+  // Cloudinary asset (uploaded files). Null for editor-authored drafts.
+  file_url?: string | null
+  file_public_id?: string | null
+  file_thumbnail_url?: string | null
+  file_mime_type?: string | null
+  file_size?: number | null
+  author?: string | null
+  received_date?: string | null
+  // Set when the document is in the recycle bin; null while live.
+  deleted_at?: string | null
   case_title?: string | null
   client_name?: string | null
+  uploaded_by_name?: string | null
+  comment_count: number
   created_at: string
   updated_at: string
+}
+
+export interface DocumentFolder {
+  id: string
+  firm_id?: string | null
+  client_id?: string | null
+  // Parent folder id (null = top level).
+  parent_id?: string | null
+  user_id: string
+  name: string
+  document_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface DocumentComment {
+  id: string
+  document_id: string
+  user_id: string
+  author_name?: string | null
+  body: string
+  created_at: string
 }
 
 export interface Invoice {
