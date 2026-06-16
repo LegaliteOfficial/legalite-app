@@ -1,10 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, Crown, Buildings, Users, Sparkle, CaretDown, Lightning, Shield, FileText, ChatCircle, ChartBar, Clock, Palette, Code, Phone, Headphones, UserPlus } from '@phosphor-icons/react'
+import { Check, Crown, Buildings, Users, Sparkle, CaretDown, Lightning, Shield, FileText, ChatCircle, ChartBar, Clock, Palette, Code, Phone, Headphones, UserPlus, Envelope } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { PageHeader } from '@/components/shared/PageHeader'
+import {
+  useEffectiveFirmName,
+  useHasCustomFirmName,
+} from '@/hooks/use-firm-name'
+import { useAuthStore } from '@/stores/auth.store'
 
 const plans = [
   {
@@ -137,6 +143,46 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 }
 
 export default function BillingPage() {
+  // Firm + partner context for the subscription-request email.
+  const firmName = useEffectiveFirmName({ fallback: 'sentence' })!
+  const firmNameIsCustom = useHasCustomFirmName()
+  const partnerName = useAuthStore((s) => s.user?.name ?? null)
+  const partnerEmail = useAuthStore((s) => s.user?.email ?? null)
+
+  /**
+   * Upgrade CTA. There's no payment processor wired yet, so the
+   * button opens the partner's mail client with a subscription
+   * request addressed to the LegaLite billing desk — plan name,
+   * price, firm and contact details pre-filled. The sales team
+   * completes the upgrade out-of-band (Mobile Money / bank
+   * transfer per the FAQ) and flips the plan server-side.
+   * When the payment gateway ships, this handler swaps for a
+   * checkout redirect without touching the page layout.
+   */
+  const requestUpgrade = (plan: (typeof plans)[number]) => {
+    const subject = `Subscription request — ${plan.name} plan`
+    const firmLine = firmNameIsCustom ? `Firm:    ${firmName}\n` : ''
+    const body =
+      `Hello LegaLite team,\n\n` +
+      `I would like to subscribe to the ${plan.name} plan ` +
+      `(GHS ${plan.price}${plan.period}).\n\n` +
+      firmLine +
+      `Name:    ${partnerName ?? '—'}\n` +
+      `Email:   ${partnerEmail ?? '—'}\n\n` +
+      `Please send me the payment details and next steps.\n\n` +
+      `Thank you.`
+    const mailto =
+      `mailto:billing@legalite.app` +
+      `?subject=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`
+    if (typeof window !== 'undefined') {
+      window.open(mailto, '_self')
+    }
+    toast.success(
+      `Subscription request for ${plan.name} queued in your mail client.`,
+    )
+  }
+
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="px-6 py-5">
@@ -226,7 +272,9 @@ export default function BillingPage() {
                       className="w-full"
                       size="lg"
                       variant={plan.isPopular ? 'default' : 'secondary'}
+                      onClick={() => requestUpgrade(plan)}
                     >
+                      <Envelope size={14} strokeWidth={1.75} />
                       Upgrade to {plan.name}
                     </Button>
                   )}

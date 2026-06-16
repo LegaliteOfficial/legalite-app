@@ -1,13 +1,5 @@
 'use client'
 
-/**
- * Cases list view — composition root only.
- *
- * State + derived data lives in _hooks; rendering chunks live in
- * _components; pure helpers (columns, filters, export, storage) in
- * _lib; static types/constants in _types and _constants.
- */
-
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'

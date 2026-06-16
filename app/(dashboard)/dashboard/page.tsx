@@ -137,7 +137,11 @@ function OnboardingBanner({ onDismiss }: { onDismiss: () => void }) {
         </Link>
         ,{' '}
         <Link
-          href="/team"
+          // Routes to the firm-members admin surface; the
+          // `invite=open` query param tells the page to auto-open
+          // the InviteMemberDialog on mount. `/team` used to be a
+          // placeholder route that never shipped.
+          href="/settings/members?invite=open"
           className="font-medium hover:underline underline-offset-2"
           style={{ color: 'var(--gold)' }}
         >

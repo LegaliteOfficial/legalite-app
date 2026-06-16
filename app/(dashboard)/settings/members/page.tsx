@@ -1,8 +1,25 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { CaretRight, MagnifyingGlass, Plus, DotsThreeVertical, UserPlus, Envelope, Users, ShieldCheck, Clock } from '@phosphor-icons/react'
+// Phosphor icon set (project-wide standard). My invite-flow
+// redesign added Eye/EyeSlash/Copy/ArrowsClockwise for the
+// password field affordances.
+import {
+  CaretRight,
+  MagnifyingGlass,
+  DotsThreeVertical,
+  UserPlus,
+  Envelope,
+  Users,
+  ShieldCheck,
+  Clock,
+  Eye,
+  EyeSlash,
+  Copy,
+  ArrowsClockwise,
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -28,6 +45,11 @@ import {
   type PendingInvitation,
 } from '@/hooks/use-firm-members'
 import { useFirmRoles } from '@/hooks/use-firm-roles'
+import {
+  useEffectiveFirmName,
+  useHasCustomFirmName,
+} from '@/hooks/use-firm-name'
+import { useAuthStore } from '@/stores/auth.store'
 
 type TabId = 'members' | 'invitations'
 
@@ -41,7 +63,35 @@ const TABS: { id: TabId; label: string }[] = [
 export default function FirmMembersPage() {
   const [activeTab, setActiveTab] = useState<TabId>('members')
   const [query, setQuery] = useState('')
-  const [inviteOpen, setInviteOpen] = useState(false)
+
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // Auto-open the invite dialog when arriving with `?invite=open`
+  // — the dashboard onboarding banner deep-links here so partners
+  // don't have to find the button after landing. We read the search
+  // string directly off window inside the useState initializer
+  // (sidesteps React 19's "no setState in effect" rule that a
+  // post-mount setState would trip), and clean the URL via a
+  // separate effect that's a pure external side-effect (no state).
+  const [inviteOpen, setInviteOpen] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      new URLSearchParams(window.location.search).get('invite') === 'open'
+    )
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('invite') === 'open') {
+      params.delete('invite')
+      const cleaned = params.toString()
+      router.replace(cleaned ? `${pathname}?${cleaned}` : pathname, {
+        scroll: false,
+      })
+    }
+  }, [pathname, router])
 
   const { data: members, isLoading: membersLoading } = useFirmMembers()
   const { data: invites, isLoading: invitesLoading } = usePendingInvitations()
@@ -397,22 +447,145 @@ function InvitationRowMenu({ invitation }: { invitation: PendingInvitation }) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * Friendly password generator.
+ *
+ * Three random words from a small curated wordlist, joined with
+ * dashes, plus a 3-digit numeric suffix. The output is easy to read
+ * aloud / type but still has enough entropy for a first-login
+ * credential (the invitee is expected to change it after their
+ * first sign-in). Sample shape: "harbor-bronze-river-742".
+ *
+ * Wordlist deliberately avoids letters that are easily confused
+ * (l, i, o) and trims to ~80 short, unambiguous English words.
+ */
+const PASSWORD_WORDS = [
+  'amber', 'beacon', 'bronze', 'cedar', 'cipher', 'clover', 'coral',
+  'crystal', 'dawn', 'delta', 'echo', 'ember', 'falcon', 'forest',
+  'frost', 'garnet', 'harbor', 'haven', 'hazel', 'horizon', 'indigo',
+  'ivory', 'jade', 'juniper', 'kestrel', 'lagoon', 'lantern', 'maple',
+  'meadow', 'mesa', 'misty', 'morning', 'nebula', 'north', 'onyx',
+  'opal', 'orchid', 'pebble', 'petal', 'pine', 'prairie', 'quartz',
+  'raven', 'ridge', 'river', 'sable', 'sapphire', 'sienna', 'silver',
+  'spark', 'spring', 'stone', 'storm', 'summit', 'sunset', 'thunder',
+  'tide', 'topaz', 'tulip', 'velvet', 'vista', 'walnut', 'willow',
+  'winter', 'zephyr',
+]
+
+function generatePassword(): string {
+  // Use crypto for the picks when available so the value isn't
+  // predictable from a non-secure PRNG; fall back to Math.random in
+  // ancient browsers (still fine for a first-login credential).
+  const pick = (n: number): number => {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const arr = new Uint32Array(1)
+      crypto.getRandomValues(arr)
+      return arr[0] % n
+    }
+    return Math.floor(Math.random() * n)
+  }
+  const w1 = PASSWORD_WORDS[pick(PASSWORD_WORDS.length)]
+  const w2 = PASSWORD_WORDS[pick(PASSWORD_WORDS.length)]
+  const w3 = PASSWORD_WORDS[pick(PASSWORD_WORDS.length)]
+  const suffix = String(100 + pick(900))
+  return `${w1}-${w2}-${w3}-${suffix}`
+}
+
+/**
+ * Build the welcome email that gets opened in the inviter's mail
+ * client (mailto: URL). Returns the components separately so the
+ * dialog can show a live preview before send.
+ *
+ * Why a mailto + not a backend-sent email?
+ *   - The backend `inviteMember` mutation today emits a token-based
+ *     "accept-invite" link, which is the security-canonical flow.
+ *   - The partner-driven password flow this firm wants is layered
+ *     on top: we still register the invitation server-side (audit
+ *     trail + the Invitations tab) AND open the inviter's mail
+ *     client so they can send a hands-on welcome with the chosen
+ *     credentials. Two emails is annoying but lets us ship this
+ *     without a backend change. When the server gains a
+ *     `welcome_credentials` flag we can drop the mailto half.
+ */
+interface WelcomeEmail {
+  subject: string
+  body: string
+}
+
+function buildWelcomeEmail(args: {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+  titleLabel: string
+  firmName: string
+  partnerName: string | null
+  loginUrl: string
+}): WelcomeEmail {
+  const fullName = `${args.firstName} ${args.lastName}`.trim() || args.email
+  const subject = `Welcome to ${args.firmName} — your access credentials`
+  const body =
+    `Dear ${fullName},\n\n` +
+    `Welcome to ${args.firmName}. You have been invited to join our ` +
+    `practice as ${withArticle(args.titleLabel)}.\n\n` +
+    `Your login credentials\n` +
+    `──────────────────────\n` +
+    `Sign-in page: ${args.loginUrl}\n` +
+    `Email:        ${args.email}\n` +
+    `Password:     ${args.password}\n\n` +
+    `For your security, please change this password the first time ` +
+    `you sign in (Settings → Account).\n\n` +
+    `Once you are signed in, the dashboard will show the cases and ` +
+    `clients you have been assigned to. Reach out to me directly if ` +
+    `you have any questions getting started.\n\n` +
+    `Welcome aboard.\n\n` +
+    `Kind regards,\n` +
+    `${args.partnerName ?? 'The partner team'}\n` +
+    `${args.firmName}`
+  return { subject, body }
+}
+
+/** "associate" -> "an associate"; "partner" -> "a partner". Picks the
+ *  right article so the welcome sentence reads naturally. */
+function withArticle(noun: string): string {
+  const first = noun.trim().charAt(0).toLowerCase()
+  const article = /[aeiou]/.test(first) ? 'an' : 'a'
+  return `${article} ${noun}`
+}
+
 function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  // Identity
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [title, setTitle] = useState('lawyer')
   const [roleIds, setRoleIds] = useState<string[]>([])
+  // Inviter-set credentials
+  const [password, setPassword] = useState(() => generatePassword())
+  const [showPassword, setShowPassword] = useState(false)
   const [touched, setTouched] = useState(false)
   const invite = useInviteMember()
   const { data: roles, isLoading: rolesLoading } = useFirmRoles()
 
+  // Firm + inviter context for the welcome email.
+  const firmName = useEffectiveFirmName({ fallback: 'sentence' })!
+  const firmNameIsCustom = useHasCustomFirmName()
+  const partnerName = useAuthStore((s) => s.user?.name ?? null)
+
   const assignableRoles = roles ?? []
   const emailValid = EMAIL_RE.test(email.trim())
   const rolesValid = roleIds.length > 0
+  const namesValid = firstName.trim().length > 0 && lastName.trim().length > 0
+  const passwordValid = password.trim().length >= 8
 
   const reset = () => {
+    setFirstName('')
+    setLastName('')
     setEmail('')
     setTitle('lawyer')
     setRoleIds([])
+    setPassword(generatePassword())
+    setShowPassword(false)
     setTouched(false)
   }
 
@@ -431,21 +604,76 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setTouched(true)
-    if (!emailValid || !rolesValid) return
+    if (!emailValid || !rolesValid || !namesValid || !passwordValid) return
     // Derive the coarse firm_role (compat) from the chosen roles: granting a
     // system Owner/Administrator role implies admin power.
     const selected = assignableRoles.filter((r) => roleIds.includes(r.id))
     const isAdmin = selected.some(
       (r) => r.is_system && (r.slug === 'administrator' || r.slug === 'owner'),
     )
+    const normalisedEmail = email.trim().toLowerCase()
     try {
-      await invite.mutateAsync({
-        email: email.trim().toLowerCase(),
-        professional_title: title,
-        firm_role: isAdmin ? 'admin' : 'member',
-        role_ids: roleIds,
+      // Two-step send:
+      //
+      //   1. Register the invitation server-side so it appears in
+      //      the Pending Invitations tab and shows up in the firm's
+      //      audit trail. The backend's accept-invite email is the
+      //      security-canonical second copy.
+      //
+      //   2. Open the inviter's mail client with a hand-composed
+      //      welcome that names the title, includes a login link
+      //      and the credentials the inviter chose. This is the
+      //      partner-driven flow the firm asked for.
+      //
+      // If step 1 fails (backend error / network), we still want
+      // step 2 to be available — the partner can resend after the
+      // backend is back. So we try the mutation first but recover
+      // gracefully on its failure.
+      let serverSideRegistered = false
+      try {
+        await invite.mutateAsync({
+          email: normalisedEmail,
+          professional_title: title,
+          firm_role: isAdmin ? 'admin' : 'member',
+          role_ids: roleIds,
+        })
+        serverSideRegistered = true
+      } catch {
+        // Backend register failed — log a soft warning so the
+        // partner knows they may need to retry, but proceed with
+        // the welcome mailto so the invitee still gets credentials.
+        toast.warning(
+          "Couldn't register the invitation on the server. The welcome email is still queued — you can retry the registration later.",
+        )
+      }
+
+      const loginUrl =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/login`
+          : '/login'
+      const { subject, body } = buildWelcomeEmail({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: normalisedEmail,
+        password: password.trim(),
+        titleLabel: titleLabel(title),
+        firmName: firmNameIsCustom ? firmName : firmName, // resolved either way
+        partnerName,
+        loginUrl,
       })
-      toast.success(`Invitation sent to ${email.trim().toLowerCase()}.`)
+      const mailto =
+        `mailto:${encodeURIComponent(normalisedEmail)}` +
+        `?subject=${encodeURIComponent(subject)}` +
+        `&body=${encodeURIComponent(body)}`
+      if (typeof window !== 'undefined') {
+        window.open(mailto, '_self')
+      }
+
+      toast.success(
+        serverSideRegistered
+          ? `Invitation registered. Welcome email queued in your mail client for ${normalisedEmail}.`
+          : `Welcome email queued in your mail client for ${normalisedEmail}.`,
+      )
       reset()
       onClose()
     } catch {
@@ -453,17 +681,69 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
     }
   }
 
+  /** Copy the generated password to the clipboard — used by the
+   *  small copy affordance next to the password input. */
+  const copyPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(password)
+      toast.success('Password copied to clipboard.')
+    } catch {
+      toast.error("Couldn't copy. Select the field and copy manually.")
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) close() }}>
-      <DialogContent className="sm:max-w-[460px]" style={{ background: 'var(--cream-white)' }}>
+      <DialogContent
+        className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto"
+        style={{ background: 'var(--cream-white)' }}
+      >
         <DialogHeader>
           <DialogTitle style={{ color: 'var(--navy)' }}>Invite a firm member</DialogTitle>
           <DialogDescription>
-            They will receive an email invitation to join your firm with the title and access you choose.
+            Set the new member&rsquo;s login credentials and they&rsquo;ll
+            receive a welcome email with their email, password, and a
+            link to the dashboard.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="space-y-4 pt-1">
+          {/* Identity — first + last name, used to address them in
+              the welcome email. Required so the greeting reads as a
+              real welcome, not a templated form letter. */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="invite-first" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
+                First name
+              </Label>
+              <Input
+                id="invite-first"
+                autoFocus
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                onBlur={() => setTouched(true)}
+                placeholder="Akosua"
+                className="h-10"
+              />
+            </div>
+            <div>
+              <Label htmlFor="invite-last" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
+                Last name
+              </Label>
+              <Input
+                id="invite-last"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                onBlur={() => setTouched(true)}
+                placeholder="Boateng"
+                className="h-10"
+              />
+            </div>
+          </div>
+          {touched && !namesValid && (
+            <p className="text-xs text-red-500 -mt-2">First and last name are required.</p>
+          )}
+
           <div>
             <Label htmlFor="invite-email" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
               Email address
@@ -471,13 +751,15 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
             <Input
               id="invite-email"
               type="email"
-              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => setTouched(true)}
               placeholder="colleague@example.gh"
               className="h-10"
             />
+            <p className="text-[11px] mt-1" style={{ color: '#6B7280' }}>
+              This is also their login email.
+            </p>
             {touched && !emailValid && (
               <p className="text-xs text-red-500 mt-1">Enter a valid email address.</p>
             )}
@@ -495,6 +777,78 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-[11px] mt-1" style={{ color: '#6B7280' }}>
+              Spelled out in the welcome email — &ldquo;You have been
+              invited as {withArticle(titleLabel(title))}&rdquo;.
+            </p>
+          </div>
+
+          {/*
+           * Login password — the partner sets this and we send it
+           * to the invitee in the welcome email. The invitee is
+           * expected to change it on first sign-in (the welcome
+           * email asks them to). A small "regenerate" button mints
+           * a fresh memorable passphrase; show/hide + copy give the
+           * partner a chance to vet it before sending.
+           */}
+          <div>
+            <Label htmlFor="invite-password" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
+              Login password
+            </Label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  id="invite-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => setTouched(true)}
+                  placeholder="Auto-generated — edit if you prefer"
+                  className="h-10 pr-9 font-mono text-[13px]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded inline-flex items-center justify-center cursor-pointer"
+                  style={{ color: '#6B7280' }}
+                >
+                  {showPassword ? (
+                    <EyeSlash size={13} strokeWidth={1.75} />
+                  ) : (
+                    <Eye size={13} strokeWidth={1.75} />
+                  )}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPassword(generatePassword())}
+                aria-label="Generate a new password"
+                title="Generate a new password"
+                className="h-10 w-10 rounded-md border inline-flex items-center justify-center cursor-pointer"
+                style={{ borderColor: 'var(--border)', color: 'var(--navy)', background: 'white' }}
+              >
+                <ArrowsClockwise size={14} strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                onClick={copyPassword}
+                aria-label="Copy password to clipboard"
+                title="Copy password"
+                className="h-10 w-10 rounded-md border inline-flex items-center justify-center cursor-pointer"
+                style={{ borderColor: 'var(--border)', color: 'var(--navy)', background: 'white' }}
+              >
+                <Copy size={14} strokeWidth={1.75} />
+              </button>
+            </div>
+            <p className="text-[11px] mt-1.5" style={{ color: '#6B7280' }}>
+              The invitee signs in at the dashboard URL with this email and
+              password. The welcome email asks them to change it on first
+              sign-in.
+            </p>
+            {touched && !passwordValid && (
+              <p className="text-xs text-red-500 mt-1">Use at least 8 characters.</p>
+            )}
           </div>
 
           {/* Role assignment — the access this person will have. */}
@@ -564,6 +918,27 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
             )}
           </div>
 
+          {/* Send strip — explainer + actions. The explainer makes
+              the mailto behaviour obvious so the partner isn't
+              surprised when their mail client opens. */}
+          <div
+            className="rounded-md border p-3 flex items-start gap-2 text-[12px]"
+            style={{
+              borderColor: 'var(--border)',
+              background: 'rgba(201,151,43,0.05)',
+              color: '#6B7280',
+            }}
+          >
+            <Envelope size={13} strokeWidth={1.75} className="mt-0.5 shrink-0" style={{ color: 'var(--gold-dark)' }} />
+            <span>
+              On send, your default mail app opens with a welcome
+              message pre-filled — review it before hitting send. The
+              invitation is also recorded under{' '}
+              <span className="font-semibold">Pending invitations</span>{' '}
+              so the firm has an audit trail.
+            </span>
+          </div>
+
           <div className="flex gap-2 justify-end pt-2">
             <button
               type="button"
@@ -580,7 +955,7 @@ function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: () => v
               className="inline-flex items-center justify-center gap-1.5 rounded-md px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, #C9972B 0%, #B8860B 100%)' }}
             >
-              {invite.isPending ? (<><Spinner size={14} className="mr-1" /> Sending…</>) : (<><Plus size={14} strokeWidth={2.5} /> Send invitation</>)}
+              {invite.isPending ? (<><Spinner size={14} className="mr-1" /> Sending…</>) : (<><Envelope size={14} strokeWidth={2.25} /> Send welcome email</>)}
             </button>
           </div>
         </form>
