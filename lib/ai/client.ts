@@ -1,6 +1,7 @@
 import type {
   AskRequest,
   AskResponse,
+  DocumentView,
   FeedbackCreate,
   FeedbackResponse,
 } from './types'
@@ -160,4 +161,69 @@ export async function submitFeedback(
   }
 
   return (await res.json()) as FeedbackResponse
+}
+
+/**
+ * GET /documents/{id} — fetch the full text + signed PDF URL for a
+ * source document. Used by the citation preview drawer.
+ *
+ * - 404 means the document doesn't exist OR belongs to another tenant.
+ *   We surface that as a normal AiServiceError so the drawer can
+ *   render an "unavailable" state.
+ * - ``pdf_url`` in the response can be null even on a 200 — happens
+ *   when Supabase Storage wasn't configured at ingest time or the
+ *   upload failed. The drawer should degrade to text-only rendering
+ *   in that case (hide the "Open original PDF" button).
+ */
+export async function getDocument(
+  documentId: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<DocumentView> {
+  if (!AI_BASE_URL) {
+    throw new AiServiceError(
+      'AI service URL is not configured. Set NEXT_PUBLIC_LEGALITE_AI_URL.',
+      0,
+    )
+  }
+  if (!documentId) {
+    throw new AiServiceError('Missing document id; cannot fetch source.', 0)
+  }
+
+  let res: Response
+  try {
+    res = await fetch(
+      `${AI_BASE_URL}/documents/${encodeURIComponent(documentId)}`,
+      {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        signal: options.signal,
+      },
+    )
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err
+    throw new AiServiceError(
+      'Network error reaching the source. Please try again.',
+      0,
+      err instanceof Error ? err.message : undefined,
+    )
+  }
+
+  if (!res.ok) {
+    let detail: string | undefined
+    try {
+      const body = (await res.json()) as { detail?: string }
+      detail = body?.detail
+    } catch {
+      // body wasn't JSON
+    }
+    const message =
+      res.status === 404
+        ? 'That source is no longer available.'
+        : res.status >= 500
+          ? 'The AI service is having trouble right now. Please try again shortly.'
+          : detail ?? `Source request failed (${res.status}).`
+    throw new AiServiceError(message, res.status, detail)
+  }
+
+  return (await res.json()) as DocumentView
 }
