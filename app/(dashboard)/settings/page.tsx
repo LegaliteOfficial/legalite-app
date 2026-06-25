@@ -23,32 +23,23 @@ const SYSTEM_ITEMS: Item[] = [
   { label: 'Roles and permissions',    description: 'Configure firm roles and professional titles for your team.', badge: 'New',                                href: '/settings/roles' },
   { label: 'Custom fields',            description: 'Create custom fields for clients, cases, and matters.',                                                   href: '/settings/custom-fields' },
   { label: 'Recovery bin',             description: 'Recover recently deleted matters, clients, tasks, and documents.',                                        href: '/settings/recovery-bin' },
-  { label: 'Security and compliance',  description: 'Passwords, two-factor authentication, and active session management.',                                    href: '/settings/account?section=security' },
-  { label: 'Document templates',       description: 'Manage your firm-wide document templates and merge fields.',                                              href: '/settings/templates' },
 ]
 
 const PERSONAL_ITEMS: Item[] = [
   { label: 'Profile',                  description: 'Update your name, contact information, and professional details.', href: '/settings/account?section=profile' },
-  { label: 'Appearance',               description: 'Customize how LegaLite looks on this device.',                     href: '/settings/account?section=appearance' },
-  { label: 'Contact and calendar sync',description: 'Connect Google Workspace or Microsoft 365 for calendar sync.',     href: '/settings/account?section=integrations' },
-  { label: 'Connected apps',           description: 'Manage third-party applications connected to your account.',       href: '/settings/account?section=integrations' },
-  { label: 'Text snippets',            description: 'Manage your personal library of reusable text snippets.',          href: '/settings/snippets' },
   { label: 'Notifications',            description: 'Email and in-app notification preferences.',                       href: '/settings/account?section=notifications' },
 ]
 
 const FIRM_ITEMS: Item[] = [
   { label: 'Firm profile',           description: 'Firm name, address, branding, and default jurisdiction.',                                  href: '/firm/settings' },
-  { label: 'Billing and plan',       description: 'View invoices, change plan, and manage payment methods.',                          href: '/firm/billing' },
   { label: 'Practice areas',         description: 'Manage the practice areas and matter types your firm handles.',                    href: '/settings/practice-areas' },
   { label: 'AI settings',            description: 'Configure citation style, default mode, and firm knowledge base options.',         href: '/settings/ai' },
-  { label: 'Automated workflows',    description: 'Speed up the firm’s repetitive work with automation rules.',                       href: '/settings/workflows' },
-  { label: 'Client portal',          description: 'Branding and access controls for the client-facing portal.',                       href: '/settings/portal' },
 ]
 
 const COLUMNS: Column[] = [
   { title: 'System',           items: SYSTEM_ITEMS },
-  { title: 'Personal',         items: PERSONAL_ITEMS },
   { title: 'Firm preferences', items: FIRM_ITEMS },
+  { title: 'Personal',         items: PERSONAL_ITEMS },
 ]
 
 export default function SettingsHubPage() {

@@ -3,4 +3,3 @@ export type SectionId =
   | 'notifications'
   | 'security'
   | 'appearance'
-  | 'integrations'

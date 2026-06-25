@@ -16,14 +16,14 @@ export function RolesHeader() {
         <Link
           href="/settings"
           className="hover:opacity-70 transition-opacity"
-          style={{ color: '#6B7280' }}
+          style={{ color: 'var(--text-secondary)' }}
         >
           Settings
         </Link>
         <CaretRight
           size={14}
           strokeWidth={2.25}
-          style={{ color: '#9CA3AF' }}
+          style={{ color: 'var(--text-muted)' }}
         />
         <span className="font-bold">Roles and Permissions</span>
       </div>
@@ -32,7 +32,7 @@ export function RolesHeader() {
         <div className="max-w-2xl">
           <div
             className="text-[10px] font-bold tracking-[3px] uppercase mb-2"
-            style={{ color: '#9CA3AF' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             Permissions
           </div>
@@ -44,7 +44,7 @@ export function RolesHeader() {
           </h1>
           <p
             className="text-sm leading-relaxed"
-            style={{ color: '#6B7280' }}
+            style={{ color: 'var(--text-secondary)' }}
           >
             A user can be assigned multiple roles. When roles overlap, the
             highest level of access between them is applied.
@@ -53,9 +53,7 @@ export function RolesHeader() {
         <Link
           href="/settings/roles/new"
           className="inline-flex items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 shrink-0"
-          style={{
-            background: 'linear-gradient(135deg, #C9972B 0%, #B8860B 100%)',
-          }}
+          style={{ background: 'var(--gold)' }}
         >
           <Plus size={14} strokeWidth={2.5} /> New Role
         </Link>
