@@ -30,6 +30,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
 export const TABS = [
   { id: 'personal', label: 'Personal' },
   { id: 'firm', label: 'Firm' },
+  { id: 'performance', label: 'Performance' },
   { id: 'feed', label: 'Activity' },
 ] as const
 

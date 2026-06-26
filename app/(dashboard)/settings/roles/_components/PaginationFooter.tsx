@@ -51,7 +51,7 @@ export function PaginationFooter({
           style={{ color: 'var(--navy)' }}
         />
       </button>
-      <span className="text-sm" style={{ color: '#6B7280' }}>
+      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         {total === 0 ? 'No results found' : `${start}–${end} of ${total}`}
       </span>
     </div>

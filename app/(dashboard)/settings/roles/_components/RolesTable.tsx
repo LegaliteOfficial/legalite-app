@@ -14,7 +14,7 @@ export function RolesTable({ rows }: { rows: Role[] }) {
     <>
       <div
         className="grid grid-cols-[1fr_120px_64px] gap-4 px-5 py-3 border-b text-[11px] font-bold uppercase tracking-wider"
-        style={{ borderColor: 'var(--border)', color: '#6B7280' }}
+        style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
       >
         <span>Role Name</span>
         <span>Members</span>
@@ -44,7 +44,7 @@ export function RolesTable({ rows }: { rows: Role[] }) {
                     className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider"
                     style={{
                       background: 'rgba(13,27,42,0.06)',
-                      color: '#6B7280',
+                      color: 'var(--text-secondary)',
                     }}
                   >
                     System
@@ -53,14 +53,14 @@ export function RolesTable({ rows }: { rows: Role[] }) {
               </div>
               <p
                 className="text-[13px] mt-1 leading-snug"
-                style={{ color: '#6B7280' }}
+                style={{ color: 'var(--text-secondary)' }}
               >
                 {role.description}
               </p>
             </div>
             <span
               className="text-sm tabular-nums"
-              style={{ color: '#6B7280' }}
+              style={{ color: 'var(--text-secondary)' }}
             >
               {role.memberCount}{' '}
               {role.memberCount === 1 ? 'member' : 'members'}

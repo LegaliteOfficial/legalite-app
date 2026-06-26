@@ -21,14 +21,14 @@ export default function RolesPage() {
   return (
     <div
       className="flex-1 overflow-y-auto p-6"
-      style={{ background: 'var(--surface-card)' }}
+      style={{ background: 'var(--surface-page)' }}
     >
       <RolesHeader />
 
       <div
         className="rounded-2xl border overflow-hidden"
         style={{
-          background: 'var(--cream-white)',
+          background: 'var(--surface-card)',
           borderColor: 'var(--border)',
           boxShadow: '0 4px 24px rgba(13,27,42,0.05)',
         }}
@@ -43,7 +43,7 @@ export default function RolesPage() {
         {state.isLoading ? (
           <div
             className="flex items-center justify-center gap-2 py-16"
-            style={{ color: '#6B7280' }}
+            style={{ color: 'var(--text-secondary)' }}
           >
             <Spinner size={16} />{' '}
             <span className="text-sm">Loading roles…</span>

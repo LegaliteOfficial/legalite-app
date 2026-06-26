@@ -9,16 +9,28 @@
  *   - Upcoming events   — `useCalendarEvents`, ongoing + future events
  *     sorted by start time.
  *
+ * When both are empty the whole section collapses to a single calm line
+ * rather than render two empty cards — a light day shouldn't fill the
+ * dashboard with boxes of "nothing". Data is fetched here at the section
+ * level so that collapse decision can see both lists at once.
+ *
  * The task rows reuse the Linear-style status/priority glyphs from the
  * tasks route so the visual language stays consistent across the app.
  */
 
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowRight, CalendarBlank, ListChecks, MapPin, Plus } from '@phosphor-icons/react'
+import {
+  ArrowRight,
+  CalendarBlank,
+  CheckCircle,
+  ListChecks,
+  MapPin,
+  Plus,
+} from '@phosphor-icons/react'
 import { Card } from '@/components/ui/card'
-import { useTasks } from '@/hooks/use-tasks'
-import { useCalendarEvents, EVENT_TYPES } from '@/hooks/use-calendar'
+import { useTasks, type Task } from '@/hooks/use-tasks'
+import { useCalendarEvents, EVENT_TYPES, type CalendarEvent } from '@/hooks/use-calendar'
 import {
   AssigneeStack,
   PriorityIcon,
@@ -48,26 +60,9 @@ function startOfToday(): number {
 }
 
 export function AgendaSection() {
-  return (
-    <section>
-      <h2
-        className="font-heading text-lg font-semibold tracking-tight"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        Today’s agenda
-      </h2>
-      <div className="grid grid-cols-2 gap-4 mt-4 items-start">
-        <TasksDueTodayCard />
-        <UpcomingEventsCard />
-      </div>
-    </section>
-  )
-}
-
-// ── Tasks due today ────────────────────────────────────────────────────────
-
-function TasksDueTodayCard() {
-  const { data: tasks, isLoading } = useTasks()
+  const { data: tasks, isLoading: tasksLoading } = useTasks()
+  const fromIso = useMemo(() => new Date(startOfToday()).toISOString(), [])
+  const { data: events, isLoading: eventsLoading } = useCalendarEvents(fromIso)
 
   const { today, overdueCount } = useMemo(() => {
     const sot = startOfToday()
@@ -88,6 +83,102 @@ function TasksDueTodayCard() {
     return { today, overdueCount }
   }, [tasks])
 
+  const upcoming = useMemo(() => {
+    const now = Date.now()
+    return (events ?? [])
+      .filter((e) => {
+        const end = new Date(e.end_time || e.start_time).getTime()
+        return Number.isFinite(end) && end >= now
+      })
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+  }, [events])
+
+  const isLoading = tasksLoading || eventsLoading
+  const bothEmpty = !isLoading && today.length === 0 && upcoming.length === 0
+
+  return (
+    <section>
+      <h2
+        className="font-heading text-lg font-semibold tracking-tight"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        Today’s agenda
+      </h2>
+
+      {bothEmpty ? (
+        <AllClear overdueCount={overdueCount} />
+      ) : (
+        <div className="grid grid-cols-2 gap-4 mt-4 items-start">
+          <TasksDueTodayCard
+            today={today}
+            overdueCount={overdueCount}
+            isLoading={isLoading}
+          />
+          <UpcomingEventsCard upcoming={upcoming} isLoading={isLoading} />
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── Both-empty collapse ────────────────────────────────────────────────────
+
+function AllClear({ overdueCount }: { overdueCount: number }) {
+  const hasOverdue = overdueCount > 0
+  return (
+    <Card padding="none" className="overflow-hidden mt-4">
+      <div className="flex items-center gap-3 px-5 py-4">
+        <span
+          className="inline-flex items-center justify-center h-9 w-9 rounded-xl shrink-0"
+          style={{
+            background: hasOverdue
+              ? 'rgba(192,57,43,0.10)'
+              : 'var(--accent-today-tint)',
+          }}
+        >
+          <CheckCircle
+            size={18}
+            weight="fill"
+            style={{ color: hasOverdue ? '#C0392B' : 'var(--gold-dark)' }}
+          />
+        </span>
+        <div className="flex-1 min-w-0">
+          <p
+            className="text-[14px] font-semibold"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {hasOverdue ? 'Nothing scheduled today' : 'You’re all clear today'}
+          </p>
+          <p className="text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
+            No tasks due and no events scheduled.
+          </p>
+        </div>
+        {hasOverdue && (
+          <Link
+            href="/tasks"
+            className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2.5 py-1 rounded-full shrink-0"
+            style={{ background: 'rgba(192,57,43,0.10)', color: '#C0392B' }}
+          >
+            {overdueCount} overdue
+            <ArrowRight size={12} strokeWidth={2} />
+          </Link>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+// ── Tasks due today ────────────────────────────────────────────────────────
+
+function TasksDueTodayCard({
+  today,
+  overdueCount,
+  isLoading,
+}: {
+  today: Task[]
+  overdueCount: number
+  isLoading: boolean
+}) {
   const preview = today.slice(0, MAX_PREVIEW)
   const overflow = today.length - preview.length
 
@@ -165,20 +256,13 @@ function TasksDueTodayCard() {
 
 // ── Upcoming calendar events ───────────────────────────────────────────────
 
-function UpcomingEventsCard() {
-  const fromIso = useMemo(() => new Date(startOfToday()).toISOString(), [])
-  const { data: events, isLoading } = useCalendarEvents(fromIso)
-
-  const upcoming = useMemo(() => {
-    const now = Date.now()
-    return (events ?? [])
-      .filter((e) => {
-        const end = new Date(e.end_time || e.start_time).getTime()
-        return Number.isFinite(end) && end >= now
-      })
-      .sort((a, b) => a.start_time.localeCompare(b.start_time))
-  }, [events])
-
+function UpcomingEventsCard({
+  upcoming,
+  isLoading,
+}: {
+  upcoming: CalendarEvent[]
+  isLoading: boolean
+}) {
   const preview = upcoming.slice(0, MAX_PREVIEW)
   const overflow = upcoming.length - preview.length
 

@@ -36,7 +36,7 @@ export function RolesToolbar({
               className="rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
               style={{
                 background: active ? 'var(--navy)' : 'transparent',
-                color: active ? 'white' : '#6B7280',
+                color: active ? 'white' : 'var(--text-secondary)',
               }}
             >
               {t.label}
@@ -51,7 +51,7 @@ export function RolesToolbar({
             size={14}
             strokeWidth={2}
             className="absolute left-3 top-1/2 -translate-y-1/2"
-            style={{ color: '#9CA3AF' }}
+            style={{ color: 'var(--text-muted)' }}
           />
           <input
             type="search"

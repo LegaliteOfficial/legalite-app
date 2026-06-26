@@ -42,22 +42,18 @@ interface PrioritiesPanelProps {
   scope: 'user' | 'firm'
   /** When `scope='user'`, the current user's id. Ignored for firm. */
   userId?: string
-  /**
-   * Compact (top of card only) vs full (all three buckets). The
-   * personal-dashboard version uses 'full', firm uses 'full' too;
-   * keeping the prop here lets us drop into compact mode for, e.g.,
-   * a sidebar widget later.
-   */
-  variant?: 'full' | 'compact'
 }
 
 const LEVEL_ORDER: PriorityLevel[] = ['high', 'medium', 'low']
 
-export function PrioritiesPanel({
-  scope,
-  userId,
-  variant = 'full',
-}: PrioritiesPanelProps) {
+/** Compact labels for the header per-level summary. */
+const LEVEL_SHORT: Record<PriorityLevel, string> = {
+  high: 'High',
+  medium: 'Med',
+  low: 'Low',
+}
+
+export function PrioritiesPanel({ scope, userId }: PrioritiesPanelProps) {
   // Re-render hook: subscribe only to a stable primitive — the
   // store's `revision` counter, bumped on every setter call. The
   // actual records list is read fresh from the store inside the
@@ -92,10 +88,30 @@ export function PrioritiesPanel({
 
   const totalCount = grouped.high.length + grouped.medium.length + grouped.low.length
 
+  // Empty overall: collapse the whole card to a single slim line rather
+  // than render a tall empty box. Keeps a light day's dashboard quiet.
+  if (totalCount === 0) {
+    return (
+      <Card padding="none" className="overflow-hidden">
+        <div className="flex items-center gap-2.5 px-5 py-4">
+          <Star size={15} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+          <CardTitle className="text-base shrink-0">
+            {scope === 'user' ? 'Your priorities' : 'Firm-wide priorities'}
+          </CardTitle>
+          <span className="text-[12.5px] truncate" style={{ color: 'var(--text-muted)' }}>
+            {scope === 'user'
+              ? '— star a case or client to flag it.'
+              : '— nothing flagged across the firm yet.'}
+          </span>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card padding="none" className="overflow-hidden">
-      <div className="flex items-center justify-between px-6 pt-5 pb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-3 px-6 pt-5 pb-3">
+        <div className="flex items-center gap-2 min-w-0">
           <Star
             size={15}
             strokeWidth={1.75}
@@ -105,35 +121,50 @@ export function PrioritiesPanel({
             {scope === 'user' ? 'Your priorities' : 'Firm-wide priorities'}
           </CardTitle>
         </div>
-        {totalCount > 0 && (
-          <span
-            className="text-[12px] tabular-nums"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            {totalCount} flagged
-          </span>
-        )}
+        {/* Per-level summary so empty buckets are accounted for without
+            spending a full row on each one. */}
+        <div className="flex items-center gap-2 shrink-0">
+          {LEVEL_ORDER.map((level, i) => (
+            <span key={level} className="flex items-center gap-2">
+              {i > 0 && (
+                <span style={{ color: 'var(--border-strong)' }} aria-hidden>
+                  ·
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <span
+                  aria-hidden
+                  className="inline-block h-1.5 w-1.5 rounded-full"
+                  style={{ background: PRIORITY_STYLE[level].color }}
+                />
+                <span
+                  className="text-[11.5px] font-medium tabular-nums"
+                  style={{
+                    color:
+                      grouped[level].length > 0
+                        ? 'var(--text-secondary)'
+                        : 'var(--text-muted)',
+                  }}
+                >
+                  {LEVEL_SHORT[level]} {grouped[level].length}
+                </span>
+              </span>
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="px-3 pb-3">
-        {totalCount === 0 ? (
-          <EmptyState scope={scope} />
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {LEVEL_ORDER.map((level) => {
-              if (variant === 'compact' && grouped[level].length === 0) {
-                return null
-              }
-              return (
-                <LevelBucket
-                  key={level}
-                  level={level}
-                  records={grouped[level]}
-                />
-              )
-            })}
-          </ul>
-        )}
+        <ul className="flex flex-col gap-3">
+          {LEVEL_ORDER.map((level) => {
+            // Only render buckets that actually have records — empty
+            // levels are already reflected in the header summary.
+            if (grouped[level].length === 0) return null
+            return (
+              <LevelBucket key={level} level={level} records={grouped[level]} />
+            )
+          })}
+        </ul>
       </div>
     </Card>
   )
@@ -141,8 +172,8 @@ export function PrioritiesPanel({
 
 /**
  * One level group — small section label + a list of priority rows.
- * Empty buckets collapse to a single muted line so the visual
- * hierarchy of "high then medium then low" stays readable.
+ * Only rendered for levels that have at least one record; empty levels
+ * are summarised in the card header instead.
  */
 function LevelBucket({
   level,
@@ -166,29 +197,18 @@ function LevelBucket({
         >
           {style.label}
         </span>
-        {records.length > 0 && (
-          <span
-            className="text-[11px] tabular-nums"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            · {records.length}
-          </span>
-        )}
-      </div>
-      {records.length === 0 ? (
-        <p
-          className="px-3 py-1.5 text-[12.5px]"
+        <span
+          className="text-[11px] tabular-nums"
           style={{ color: 'var(--text-muted)' }}
         >
-          Nothing flagged {style.label.toLowerCase()}.
-        </p>
-      ) : (
-        <ul className="flex flex-col">
-          {records.map((r) => (
-            <PriorityRow key={`${r.entityType}:${r.entityId}`} record={r} />
-          ))}
-        </ul>
-      )}
+          · {records.length}
+        </span>
+      </div>
+      <ul className="flex flex-col">
+        {records.map((r) => (
+          <PriorityRow key={`${r.entityType}:${r.entityId}`} record={r} />
+        ))}
+      </ul>
     </li>
   )
 }
@@ -263,38 +283,4 @@ function formatDateHint(value: string | number | null | undefined): string {
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
   if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric'
   return d.toLocaleDateString('en-GB', opts)
-}
-
-/**
- * No priorities yet — explain how to set one rather than leaving
- * the card blank. Differentiates the copy slightly so the firm
- * view doesn't tell partners to "go set one yourself".
- */
-function EmptyState({ scope }: { scope: 'user' | 'firm' }) {
-  return (
-    <div
-      className="px-4 py-6 text-center rounded-lg border border-dashed"
-      style={{
-        borderColor: 'var(--border-soft)',
-        color: 'var(--text-muted)',
-      }}
-    >
-      <Star
-        size={18}
-        strokeWidth={1.5}
-        className="mx-auto mb-2"
-        style={{ color: 'var(--text-subtle)' }}
-      />
-      <p className="text-[13px]">
-        {scope === 'user'
-          ? 'Nothing flagged yet.'
-          : 'No firm priorities flagged yet.'}
-      </p>
-      <p className="text-[12px] mt-1">
-        {scope === 'user'
-          ? 'Tap the star on a case or client to flag what matters most.'
-          : "Anyone in the firm can flag a case or client; it'll surface here."}
-      </p>
-    </div>
-  )
 }
