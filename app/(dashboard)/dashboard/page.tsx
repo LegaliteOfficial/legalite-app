@@ -16,6 +16,7 @@ import { DashboardHeader } from './_components/DashboardHeader'
 import { FirmDashboard } from './_components/FirmDashboard'
 import { FirmFeed } from './_components/FirmFeed'
 import { OnboardingBanner } from './_components/OnboardingBanner'
+import { PerformanceTab } from './_components/PerformanceTab'
 import { PersonalDashboard } from './_components/PersonalDashboard'
 import { TabBar } from './_components/TabBar'
 
@@ -58,6 +59,7 @@ export default function DashboardPage() {
           {activeTab === 'firm' && (
             <FirmDashboard stats={stats} isLoading={isLoading} />
           )}
+          {activeTab === 'performance' && <PerformanceTab />}
           {activeTab === 'feed' && (
             <FirmFeed activity={stats?.recent_activity} isLoading={isLoading} />
           )}

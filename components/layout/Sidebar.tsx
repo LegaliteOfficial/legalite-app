@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { useFirmStore } from '@/stores/firm.store'
-import { SquaresFour, Users, Scales, CheckSquare, IdentificationCard, FileText, Calendar as CalendarIcon, Timer, Sparkle, ChatCircle, CreditCard, Gear, SignOut } from '@phosphor-icons/react'
+import { SquaresFour, Users, Scales, CheckSquare, IdentificationCard, FileText, Calendar as CalendarIcon, Timer, Sparkle, ChatCircle, CreditCard, ChartLineUp, Gear, SignOut } from '@phosphor-icons/react'
 const NAV_GROUPS = [
   {
     label: 'Workspace',
@@ -22,9 +22,10 @@ const NAV_GROUPS = [
   {
     label: 'Intelligence',
     items: [
-      { id: 'ai',      Icon: Sparkle,      label: 'AI assistant', href: '/ai' },
-      { id: 'comms',   Icon: ChatCircle, label: 'Client comms', href: '/comms' },
-      { id: 'billing', Icon: CreditCard,    label: 'Billing',      href: '/billing' },
+      { id: 'ai',          Icon: Sparkle,      label: 'AI assistant', href: '/ai' },
+      { id: 'comms',       Icon: ChatCircle,   label: 'Client comms', href: '/comms' },
+      { id: 'performance', Icon: ChartLineUp,  label: 'Performance',  href: '/performance' },
+      { id: 'billing',     Icon: CreditCard,   label: 'Billing',      href: '/billing' },
     ],
   },
   {

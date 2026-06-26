@@ -11,6 +11,10 @@ import type {
   StructuredCitation,
 } from '@/lib/ai/types'
 import type { TurnFeedback } from '@/lib/ai/sessions'
+import {
+  SourcePreviewDrawer,
+  type SourcePreviewAnchor,
+} from '@/components/ai/SourcePreviewDrawer'
 
 interface AnswerCardProps {
   response: AskResponse
@@ -42,6 +46,12 @@ const CONFIDENCE_META: Record<
 
 export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardProps) {
   const [copied, setCopied] = useState(false)
+  // Source preview drawer — one drawer per card. Clicking any
+  // citation row or source entry that carries a ``document_id`` sets
+  // the anchor; the drawer slides in, fetches GET /documents/{id},
+  // and scrolls to + highlights the cited chunk (when ``chunkId`` is
+  // also present).
+  const [previewAnchor, setPreviewAnchor] = useState<SourcePreviewAnchor | null>(null)
   const structured = response.structured_answer
   const directAnswer = structured?.direct_answer || response.answer
   const reasoning = structured?.legal_reasoning || response.reasoning_summary
@@ -151,6 +161,7 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
           Icon={Scales}
           items={structured.applicable_law}
           kind="law"
+          onPreview={setPreviewAnchor}
         />
       )}
 
@@ -161,6 +172,7 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
           Icon={Buildings}
           items={structured.relevant_public_cases}
           kind="case"
+          onPreview={setPreviewAnchor}
         />
       )}
 
@@ -172,12 +184,16 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
           items={structured.firm_similar_cases}
           kind="case"
           accent
+          onPreview={setPreviewAnchor}
         />
       )}
 
       {/* Raw citations (source provenance) */}
       {response.citations.length > 0 && (
-        <SourcesBlock citations={response.citations} />
+        <SourcesBlock
+          citations={response.citations}
+          onPreview={setPreviewAnchor}
+        />
       )}
 
       {/* Feedback bar — only renders when the backend gave us a
@@ -202,6 +218,14 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
       >
         {response.disclaimer}
       </p>
+
+      {/* Source preview drawer — mounted at the card level so each
+          answer's clicks open their own panel. Rendered conditionally
+          (anchor === null hides). */}
+      <SourcePreviewDrawer
+        anchor={previewAnchor}
+        onClose={() => setPreviewAnchor(null)}
+      />
     </div>
   )
 }
@@ -475,9 +499,16 @@ interface CitationGroupProps {
   items: StructuredCitation[]
   kind: 'law' | 'case'
   accent?: boolean
+  /**
+   * Click handler for "view source". When undefined (or the row's
+   * ``document_id`` is null), the row stays non-interactive — the
+   * pointer-cursor + hover background only appear when a click would
+   * actually do something, so users never click a dead row.
+   */
+  onPreview?: (anchor: SourcePreviewAnchor) => void
 }
 
-function CitationGroup({ title, Icon, items, kind, accent }: CitationGroupProps) {
+function CitationGroup({ title, Icon, items, kind, accent, onPreview }: CitationGroupProps) {
   const [expanded, setExpanded] = useState(items.length <= 3)
 
   return (
@@ -519,43 +550,102 @@ function CitationGroup({ title, Icon, items, kind, accent }: CitationGroupProps)
       </button>
       {expanded && (
         <ul className="px-5 pb-4 space-y-2.5">
-          {items.map((item) => (
-            <li
-              key={item.citation_id}
-              className="flex gap-3 text-[12.5px] leading-relaxed"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              <span
-                className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 rounded text-[10.5px] font-semibold tabular-nums shrink-0"
+          {items.map((item) => {
+            const heading =
+              kind === 'law' ? formatLawHeading(item) : formatCaseHeading(item)
+            const previewable = !!item.document_id && !!onPreview
+            const handleClick = previewable
+              ? () =>
+                  onPreview!({
+                    documentId: item.document_id!,
+                    chunkId: item.chunk_id ?? null,
+                    label: heading,
+                  })
+              : undefined
+            return (
+              <li
+                key={item.citation_id}
+                className="flex gap-3 text-[12.5px] leading-relaxed rounded-md transition-colors"
+                role={previewable ? 'button' : undefined}
+                tabIndex={previewable ? 0 : undefined}
+                aria-label={previewable ? `Preview source: ${heading}` : undefined}
+                onClick={handleClick}
+                onKeyDown={
+                  previewable
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleClick!()
+                        }
+                      }
+                    : undefined
+                }
+                onMouseEnter={(e) => {
+                  if (previewable)
+                    e.currentTarget.style.background = 'var(--surface-overlay)'
+                }}
+                onMouseLeave={(e) => {
+                  if (previewable)
+                    e.currentTarget.style.background = 'transparent'
+                }}
                 style={{
-                  background: accent ? 'rgba(201,151,43,0.14)' : 'var(--surface-sunken)',
-                  color: accent ? 'var(--gold-dark)' : 'var(--text-secondary)',
+                  color: 'var(--text-secondary)',
+                  cursor: previewable ? 'pointer' : 'default',
+                  padding: previewable ? '4px 6px' : 0,
+                  margin: previewable ? '-4px -6px' : 0,
                 }}
               >
-                {item.citation_id}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div
-                  className="font-medium"
-                  style={{ color: 'var(--text-primary)' }}
+                <span
+                  className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 rounded text-[10.5px] font-semibold tabular-nums shrink-0"
+                  style={{
+                    background: accent
+                      ? 'rgba(201,151,43,0.14)'
+                      : 'var(--surface-sunken)',
+                    color: accent ? 'var(--gold-dark)' : 'var(--text-secondary)',
+                  }}
                 >
-                  {kind === 'law' ? formatLawHeading(item) : formatCaseHeading(item)}
-                </div>
-                {item.summary && (
-                  <div className="mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                    {item.summary}
+                  {item.citation_id}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div
+                    className="font-medium flex items-center gap-1.5"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    <span className="truncate">{heading}</span>
+                    {previewable && (
+                      <ArrowSquareOut
+                        size={10}
+                        strokeWidth={1.75}
+                        style={{ color: 'var(--text-muted)' }}
+                        aria-hidden
+                      />
+                    )}
                   </div>
-                )}
-              </div>
-            </li>
-          ))}
+                  {item.summary && (
+                    <div
+                      className="mt-0.5"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      {item.summary}
+                    </div>
+                  )}
+                </div>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
   )
 }
 
-function SourcesBlock({ citations }: { citations: Citation[] }) {
+function SourcesBlock({
+  citations,
+  onPreview,
+}: {
+  citations: Citation[]
+  onPreview?: (anchor: SourcePreviewAnchor) => void
+}) {
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? citations : citations.slice(0, 3)
 
@@ -569,40 +659,108 @@ function SourcesBlock({ citations }: { citations: Citation[] }) {
           Sources ({citations.length})
         </p>
         <ul className="space-y-1.5">
-          {visible.map((c, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-2 text-[12px] leading-relaxed"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              <BookOpen
-                size={11}
-                strokeWidth={1.75}
-                className="mt-1 shrink-0"
-                style={{ color: c.source_scope === 'tenant_private' ? 'var(--gold)' : 'var(--text-muted)' }}
-              />
-              <span className="flex-1 min-w-0">
-                <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
-                  {formatCitationHeading(c)}
+          {visible.map((c, i) => {
+            const heading = formatCitationHeading(c)
+            const previewable = !!c.document_id && !!onPreview
+            const handleClick = previewable
+              ? () =>
+                  onPreview!({
+                    documentId: c.document_id!,
+                    chunkId: c.chunk_id ?? null,
+                    label: heading,
+                  })
+              : undefined
+            return (
+              <li
+                key={i}
+                className="flex items-start gap-2 text-[12px] leading-relaxed rounded-md transition-colors"
+                role={previewable ? 'button' : undefined}
+                tabIndex={previewable ? 0 : undefined}
+                aria-label={
+                  previewable ? `Preview source: ${heading}` : undefined
+                }
+                onClick={handleClick}
+                onKeyDown={
+                  previewable
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleClick!()
+                        }
+                      }
+                    : undefined
+                }
+                onMouseEnter={(e) => {
+                  if (previewable)
+                    e.currentTarget.style.background =
+                      'var(--surface-overlay)'
+                }}
+                onMouseLeave={(e) => {
+                  if (previewable)
+                    e.currentTarget.style.background = 'transparent'
+                }}
+                style={{
+                  color: 'var(--text-secondary)',
+                  cursor: previewable ? 'pointer' : 'default',
+                  padding: previewable ? '3px 6px' : 0,
+                  margin: previewable ? '-3px -6px' : 0,
+                }}
+              >
+                <BookOpen
+                  size={11}
+                  strokeWidth={1.75}
+                  className="mt-1 shrink-0"
+                  style={{
+                    color:
+                      c.source_scope === 'tenant_private'
+                        ? 'var(--gold)'
+                        : 'var(--text-muted)',
+                  }}
+                />
+                <span className="flex-1 min-w-0">
+                  <span
+                    className="font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {heading}
+                  </span>
+                  {c.page_number && (
+                    <span
+                      className="ml-1"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      · p.{c.page_number}
+                    </span>
+                  )}
+                  {c.relevance > 0 && (
+                    <span
+                      className="ml-1 tabular-nums"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      · {Math.round(c.relevance * 100)}% match
+                    </span>
+                  )}
+                  {c.source_scope === 'tenant_private' && (
+                    <span
+                      className="ml-1 text-[10.5px]"
+                      style={{ color: 'var(--gold-dark)' }}
+                    >
+                      · firm
+                    </span>
+                  )}
+                  {previewable && (
+                    <ArrowSquareOut
+                      size={9}
+                      strokeWidth={1.75}
+                      className="ml-1 inline-block align-baseline"
+                      style={{ color: 'var(--text-muted)' }}
+                      aria-hidden
+                    />
+                  )}
                 </span>
-                {c.page_number && (
-                  <span className="ml-1" style={{ color: 'var(--text-muted)' }}>
-                    · p.{c.page_number}
-                  </span>
-                )}
-                {c.relevance > 0 && (
-                  <span className="ml-1 tabular-nums" style={{ color: 'var(--text-muted)' }}>
-                    · {Math.round(c.relevance * 100)}% match
-                  </span>
-                )}
-                {c.source_scope === 'tenant_private' && (
-                  <span className="ml-1 text-[10.5px]" style={{ color: 'var(--gold-dark)' }}>
-                    · firm
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
         {citations.length > 3 && (
           <button

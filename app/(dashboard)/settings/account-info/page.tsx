@@ -1,94 +1,95 @@
 'use client'
 
 /**
- * Account & payment info — composition root.
+ * Account and payment info — composition root.
  *
- * Three tabs (Account Info / Payment Info / Account Administration) +
- * a destructive "Close Account" button parked to the right of the tab
- * strip. Each tab is its own component; the only state at this level
- * is the active tab.
+ * One scrollable page that brings the firm's subscription account and
+ * billing together: who owns the account, the current plan (with an
+ * inline change-plan picker), the payment method on file, billing
+ * history, and account governance. Branding/address live on the Firm
+ * profile page, not here.
+ *
+ * Data is the local subscription store (skipHydration), rehydrated once
+ * on mount.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CaretRight } from '@phosphor-icons/react'
-import { toast } from 'sonner'
-import { AccountAdministrationTab } from './_components/AccountAdministrationTab'
-import { AccountInfoForm } from './_components/AccountInfoForm'
-import { PaymentInfoTab } from './_components/PaymentInfoTab'
-import { TABS } from './_constants'
-import type { TabId } from './_types'
+import { Spinner } from '@/components/shared/Spinner'
+import { useSubscriptionStore } from '@/stores/subscription-local.store'
+import { AccountOverviewCard } from './_components/AccountOverviewCard'
+import { PlanSection } from './_components/PlanSection'
+import { PaymentMethodCard } from './_components/PaymentMethodCard'
+import { BillingHistoryCard } from './_components/BillingHistoryCard'
+import { AccountFooter } from './_components/AccountFooter'
 
 export default function AccountInfoPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('account')
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    void Promise.resolve(useSubscriptionStore.persist.rehydrate()).then(() =>
+      setHydrated(true),
+    )
+  }, [])
 
   return (
     <div
       className="flex-1 overflow-y-auto p-6"
-      style={{ background: 'var(--surface-card)' }}
+      style={{ background: 'var(--surface-page)' }}
     >
       <div
         className="flex items-center gap-2 text-sm mb-5"
-        style={{ color: 'var(--navy)' }}
+        style={{ color: 'var(--text-primary)' }}
       >
         <Link
           href="/settings"
           className="hover:opacity-70 transition-opacity"
-          style={{ color: '#6B7280' }}
+          style={{ color: 'var(--text-secondary)' }}
         >
           Settings
         </Link>
-        <CaretRight
-          size={14}
-          strokeWidth={2.25}
-          style={{ color: '#9CA3AF' }}
-        />
-        <span className="font-bold">Account and Payment Info</span>
+        <CaretRight size={14} strokeWidth={2.25} style={{ color: 'var(--text-muted)' }} />
+        <span className="font-bold">Account and payment info</span>
       </div>
 
-      <div
-        className="flex items-end justify-between border-b mb-8"
-        style={{ borderColor: 'var(--border)' }}
-      >
-        <div className="flex items-center gap-6">
-          {TABS.map((t) => {
-            const active = t.id === activeTab
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setActiveTab(t.id)}
-                className="relative pb-3 text-sm font-semibold transition-colors"
-                style={{ color: active ? 'var(--navy)' : '#6B7280' }}
-              >
-                {t.label}
-                {active && (
-                  <span
-                    className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full"
-                    style={{ background: 'var(--gold)' }}
-                  />
-                )}
-              </button>
-            )
-          })}
-        </div>
-        <button
-          type="button"
-          onClick={() =>
-            toast.error(
-              'Close Account is disabled in this build. Real implementation will require multi-step confirmation.',
-            )
-          }
-          className="mb-2 inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold border transition-colors hover:bg-red-50"
-          style={{ borderColor: '#FCA5A5', color: '#B91C1C' }}
+      <div className="max-w-4xl mb-8">
+        <div
+          className="text-[10px] font-bold tracking-[3px] uppercase mb-2"
+          style={{ color: 'var(--text-muted)' }}
         >
-          Close Account
-        </button>
+          System
+        </div>
+        <h1
+          className="font-heading text-3xl font-extrabold mb-3 leading-tight"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          Account and payment info
+        </h1>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          Manage your firm&rsquo;s LegaLite subscription — your plan, payment
+          method, and billing history, all in one place.
+        </p>
       </div>
 
-      {activeTab === 'account' && <AccountInfoForm />}
-      {activeTab === 'payment' && <PaymentInfoTab />}
-      {activeTab === 'admin' && <AccountAdministrationTab />}
+      {!hydrated ? (
+        <div
+          className="flex items-center justify-center gap-2 py-24"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          <Spinner size={16} /> <span className="text-sm">Loading account…</span>
+        </div>
+      ) : (
+        <div className="max-w-4xl space-y-6">
+          <AccountOverviewCard />
+          <PlanSection />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <PaymentMethodCard />
+            <AccountFooter />
+          </div>
+          <BillingHistoryCard />
+        </div>
+      )}
     </div>
   )
 }
