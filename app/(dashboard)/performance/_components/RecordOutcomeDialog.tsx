@@ -29,10 +29,13 @@ export function RecordOutcomeDialog({
   open,
   onOpenChange,
   workers,
+  lockedWorker,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   workers: Worker[]
+  /** When set, the outcome is locked to this worker (member view). */
+  lockedWorker?: Worker
 }) {
   const addOutcome = usePerformanceStore((s) => s.addOutcome)
 
@@ -42,15 +45,15 @@ export function RecordOutcomeDialog({
   const [label, setLabel] = useState('')
   const [note, setNote] = useState('')
 
-  // Reset on open; default to the first worker so the select isn't blank.
+  // Reset on open; default to the locked worker (member) or first worker.
   useEffect(() => {
     if (!open) return
-    setWorkerId(workers[0]?.id ?? '')
+    setWorkerId(lockedWorker?.id ?? workers[0]?.id ?? '')
     setType('case_won')
     setDate(todayInput())
     setLabel('')
     setNote('')
-  }, [open, workers])
+  }, [open, workers, lockedWorker])
 
   const subject = OUTCOME_META[type].subject
 
@@ -85,19 +88,28 @@ export function RecordOutcomeDialog({
         <div className="space-y-4 py-1">
           <div className="space-y-1.5">
             <Label htmlFor="oc-worker">Worker</Label>
-            <select
-              id="oc-worker"
-              value={workerId}
-              onChange={(e) => setWorkerId(e.target.value)}
-              className="h-10 w-full rounded-lg border bg-white px-3 text-sm focus:outline-none focus:border-yellow-600"
-              style={{ borderColor: 'var(--border)', color: 'var(--navy)' }}
-            >
-              {workers.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name} — {w.title}
-                </option>
-              ))}
-            </select>
+            {lockedWorker ? (
+              <div
+                className="h-10 w-full rounded-lg border px-3 flex items-center text-sm"
+                style={{ borderColor: 'var(--border)', background: 'var(--surface-overlay)', color: 'var(--text-secondary)' }}
+              >
+                {lockedWorker.name} — {lockedWorker.title}
+              </div>
+            ) : (
+              <select
+                id="oc-worker"
+                value={workerId}
+                onChange={(e) => setWorkerId(e.target.value)}
+                className="h-10 w-full rounded-lg border bg-white px-3 text-sm focus:outline-none focus:border-yellow-600"
+                style={{ borderColor: 'var(--border)', color: 'var(--navy)' }}
+              >
+                {workers.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name} — {w.title}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="space-y-1.5">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   listOutcomes,
   listWorkers,
@@ -40,10 +40,9 @@ function emptyTotals(): Totals {
   return { casesWon: 0, casesLost: 0, clientsGained: 0, clientsLost: 0, winRate: null }
 }
 
-function totalsFor(outcomes: OutcomeRecord[], range: Range): Totals {
+function totalsFromList(list: OutcomeRecord[]): Totals {
   const t = { casesWon: 0, casesLost: 0, clientsGained: 0, clientsLost: 0 }
-  for (const o of outcomes) {
-    if (!inRange(o.date, range)) continue
+  for (const o of list) {
     if (o.type === 'case_won') t.casesWon++
     else if (o.type === 'case_lost') t.casesLost++
     else if (o.type === 'client_acquired') t.clientsGained++
@@ -51,6 +50,17 @@ function totalsFor(outcomes: OutcomeRecord[], range: Range): Totals {
   }
   const closed = t.casesWon + t.casesLost
   return { ...t, winRate: closed === 0 ? null : t.casesWon / closed }
+}
+
+function totalsFor(outcomes: OutcomeRecord[], range: Range): Totals {
+  return totalsFromList(outcomes.filter((o) => inRange(o.date, range)))
+}
+
+/** A single worker's totals (current + prior period) and their in-range outcomes. */
+export interface PersonalPerformance {
+  totals: Totals
+  prevTotals: Totals
+  outcomes: OutcomeRecord[]
 }
 
 /**
@@ -74,6 +84,21 @@ export function usePerformance() {
 
   const range = useMemo(() => periodRange(periodId), [periodId])
   const prev = useMemo(() => previousRange(range), [range])
+
+  // One worker's view — drives the member / "Mine" experience.
+  const personalFor = useCallback(
+    (workerId: string): PersonalPerformance => {
+      const mine = listOutcomes().filter((o) => o.workerId === workerId)
+      const inCur = mine.filter((o) => inRange(o.date, range))
+      return {
+        totals: totalsFromList(inCur),
+        prevTotals: totalsFor(mine, prev),
+        outcomes: inCur.sort((a, b) => b.date.localeCompare(a.date)),
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [revision, range, prev, hydrated],
+  )
 
   const { rows, totals, prevTotals, workers } = useMemo(() => {
     const workers = listWorkers()
@@ -123,6 +148,7 @@ export function usePerformance() {
     totals: totals ?? emptyTotals(),
     prevTotals,
     workers,
+    personalFor,
     addOutcome,
     deleteOutcome,
   }
