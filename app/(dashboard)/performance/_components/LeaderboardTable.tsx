@@ -10,6 +10,7 @@ type SortKey =
   | 'casesWon'
   | 'casesLost'
   | 'winRate'
+  | 'keyTasks'
   | 'clientsGained'
   | 'clientsLost'
 
@@ -51,13 +52,14 @@ export function LeaderboardTable({ rows }: { rows: WorkerStats[] }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left">
+        <table className="w-full min-w-[860px] text-left">
           <thead>
             <tr className="border-b" style={{ borderColor: 'var(--border)' }}>
               <Th label="Worker" sortKey="name" sort={sort} onSort={toggle} align="left" />
               <Th label="Cases won" sortKey="casesWon" sort={sort} onSort={toggle} />
               <Th label="Cases lost" sortKey="casesLost" sort={sort} onSort={toggle} />
               <Th label="Win rate" sortKey="winRate" sort={sort} onSort={toggle} />
+              <Th label="Key tasks" sortKey="keyTasks" sort={sort} onSort={toggle} />
               <Th label="Clients +" sortKey="clientsGained" sort={sort} onSort={toggle} />
               <Th label="Clients −" sortKey="clientsLost" sort={sort} onSort={toggle} />
               <ThStub label="Revenue" />
@@ -95,6 +97,7 @@ export function LeaderboardTable({ rows }: { rows: WorkerStats[] }) {
                   <td className="px-4 py-3 text-[13px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
                     {winPct === null ? '—' : `${winPct}%`}
                   </td>
+                  <Num value={r.keyTasks} tone={r.keyTasks > 0 ? POSITIVE : undefined} />
                   <Num value={r.clientsGained} tone={r.clientsGained > 0 ? POSITIVE : undefined} prefix="+" />
                   <Num value={r.clientsLost} tone={r.clientsLost > 0 ? NEGATIVE : undefined} />
                   <td className="px-4 py-3 text-[13px]" style={{ color: 'var(--text-subtle)' }}>—</td>

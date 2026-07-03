@@ -23,7 +23,7 @@ export function SummaryStrip({
   const netClients = totals.clientsGained - totals.clientsLost
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
       <Tile
         label="Cases won"
         value={totals.casesWon}
@@ -42,6 +42,13 @@ export function SummaryStrip({
         label="Win rate"
         value={winPct === null ? '—' : `${winPct}%`}
         periodId={periodId}
+      />
+      <Tile
+        label="Key tasks"
+        value={totals.keyTasks}
+        delta={totals.keyTasks - prevTotals.keyTasks}
+        periodId={periodId}
+        good="up"
       />
       <Tile
         label="New clients"

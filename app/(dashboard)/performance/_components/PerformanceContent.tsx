@@ -111,6 +111,7 @@ export function PerformanceContent() {
         onOpenChange={setRecordOpen}
         workers={perf.workers}
         lockedWorker={lockedWorker}
+        canAddKeyTask={isAdmin}
       />
     </div>
   )

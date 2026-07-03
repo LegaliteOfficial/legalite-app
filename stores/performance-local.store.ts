@@ -25,6 +25,8 @@ export type OutcomeType =
   | 'case_lost'
   | 'client_acquired'
   | 'client_lost'
+  // An important task an admin chose to credit toward performance.
+  | 'key_task'
 
 /** A measurable worker — lawyer, associate, paralegal, etc. */
 export interface Worker {
@@ -39,8 +41,10 @@ export interface OutcomeRecord {
   type: OutcomeType
   /** ISO date the outcome occurred — drives the period filter. */
   date: string
-  /** The case or client the outcome relates to. */
+  /** The case, client, or task the outcome relates to. */
   label: string
+  /** For `key_task`, the source task id it was added from (if any). */
+  taskId?: string
   note: string
   created_at: string
 }
@@ -105,6 +109,9 @@ const OUTCOMES: Record<string, OutcomeRecord> = Object.fromEntries([
   seed('w-ama', 'case_won', '2026-06-02', 'Appiah injunction'),
   seed('w-kofi', 'client_lost', '2026-06-10', 'Standard Foods Ltd', 'Moved in-house'),
   seed('w-adwoa', 'client_acquired', '2026-06-15', 'Kotoka Logistics'),
+  // Admin-credited key tasks
+  seed('w-adwoa', 'key_task', '2026-05-16', 'File AccraTech disclosure schedule'),
+  seed('w-ama', 'key_task', '2026-06-04', 'Issue May invoices to all retainer clients'),
 ])
 
 export const usePerformanceStore = create<PerformanceStore>()(

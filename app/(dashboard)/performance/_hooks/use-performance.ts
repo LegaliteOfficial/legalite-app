@@ -24,6 +24,8 @@ export interface WorkerStats {
   winRate: number | null
   clientsGained: number
   clientsLost: number
+  /** Important tasks an admin credited to this worker. */
+  keyTasks: number
   /** Total recorded outcomes — default ranking signal. */
   activity: number
 }
@@ -33,20 +35,22 @@ export interface Totals {
   casesLost: number
   clientsGained: number
   clientsLost: number
+  keyTasks: number
   winRate: number | null
 }
 
 function emptyTotals(): Totals {
-  return { casesWon: 0, casesLost: 0, clientsGained: 0, clientsLost: 0, winRate: null }
+  return { casesWon: 0, casesLost: 0, clientsGained: 0, clientsLost: 0, keyTasks: 0, winRate: null }
 }
 
 function totalsFromList(list: OutcomeRecord[]): Totals {
-  const t = { casesWon: 0, casesLost: 0, clientsGained: 0, clientsLost: 0 }
+  const t = { casesWon: 0, casesLost: 0, clientsGained: 0, clientsLost: 0, keyTasks: 0 }
   for (const o of list) {
     if (o.type === 'case_won') t.casesWon++
     else if (o.type === 'case_lost') t.casesLost++
     else if (o.type === 'client_acquired') t.clientsGained++
     else if (o.type === 'client_lost') t.clientsLost++
+    else if (o.type === 'key_task') t.keyTasks++
   }
   const closed = t.casesWon + t.casesLost
   return { ...t, winRate: closed === 0 ? null : t.casesWon / closed }
@@ -113,6 +117,7 @@ export function usePerformance() {
         const casesLost = mine.filter((o) => o.type === 'case_lost').length
         const clientsGained = mine.filter((o) => o.type === 'client_acquired').length
         const clientsLost = mine.filter((o) => o.type === 'client_lost').length
+        const keyTasks = mine.filter((o) => o.type === 'key_task').length
         const closed = casesWon + casesLost
         return {
           worker,
@@ -121,6 +126,7 @@ export function usePerformance() {
           winRate: closed === 0 ? null : casesWon / closed,
           clientsGained,
           clientsLost,
+          keyTasks,
           activity: mine.length,
         }
       })
