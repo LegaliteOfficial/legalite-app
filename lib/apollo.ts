@@ -12,7 +12,7 @@ import { SetContextLink } from '@apollo/client/link/context'
 // GraphQL endpoint is at /graphql because the GraphQLModule opts out of
 // useGlobalPrefix; if you re-enable that flag, change this to /api/graphql.
 const GRAPHQL_URL =
-  process.env.NEXT_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4000/graphql'
+  process.env.NEXT_PUBLIC_GRAPHQL_URL ?? 'https://legalite-backend-production.up.railway.app/graphql'
 
 // Lifts the JWT off the persisted zustand store (key `ll:auth`, same shape
 // the old axios interceptor read) and attaches it as a bearer token. Reading
