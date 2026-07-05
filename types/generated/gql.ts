@@ -32,9 +32,10 @@ type Documents = {
     "\n  fragment DocumentFolderFields on DocumentFolder {\n    id\n    firm_id\n    client_id\n    parent_id\n    user_id\n    name\n    document_count\n    created_at\n    updated_at\n  }\n": typeof types.DocumentFolderFieldsFragmentDoc,
     "\n  fragment DocumentCommentFields on DocumentComment {\n    id\n    document_id\n    user_id\n    author_name\n    body\n    created_at\n  }\n": typeof types.DocumentCommentFieldsFragmentDoc,
     "\n  fragment CaseFields on Case {\n    id\n    firm_id\n    user_id\n    client_id\n    case_code\n    title\n    court\n    suit_number\n    opposing_party\n    case_type\n    case_stage\n    assigned_lawyer\n    originating_lawyer\n    status\n    date_opened\n    next_court_date\n    closed_at\n    pending_at\n    notification_count\n    description\n    details\n    notes\n    client_name\n    created_at\n    updated_at\n  }\n": typeof types.CaseFieldsFragmentDoc,
-    "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n": typeof types.EventAttendeeFieldsFragmentDoc,
+    "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n    due_response\n    due_acknowledged_at\n  }\n": typeof types.EventAttendeeFieldsFragmentDoc,
     "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": typeof types.EventReminderFieldsFragmentDoc,
-    "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n": typeof types.CalendarEventFieldsFragmentDoc,
+    "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    outcome_status\n    outcome_notes\n    outcome_recorded_by\n    outcome_recorded_at\n    cancellation_reason\n    original_start_time\n    created_at\n    updated_at\n  }\n": typeof types.CalendarEventFieldsFragmentDoc,
+    "\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n": typeof types.EventHistoryEntryFieldsFragmentDoc,
     "\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n": typeof types.AiConversationsDocument,
     "\n  query AiConversation($id: ID!) {\n    aiConversation(id: $id) {\n      id\n      title\n      created_at\n      updated_at\n      messages {\n        id\n        role\n        content\n        sources\n        created_at\n      }\n    }\n  }\n": typeof types.AiConversationDocument,
     "\n  mutation AiChat($input: AiChatInput!) {\n    aiChat(input: $input) {\n      response\n      conversation_id\n      sources {\n        id\n        title\n        content\n        similarity\n      }\n    }\n  }\n": typeof types.AiChatDocument,
@@ -60,6 +61,12 @@ type Documents = {
     "\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.UpdateCalendarEventDocument,
     "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n": typeof types.DeleteCalendarEventDocument,
     "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.RespondToEventDocument,
+    "\n  query PendingDueEvents($limit: Int) {\n    pendingDueEvents(limit: $limit) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.PendingDueEventsDocument,
+    "\n  query EventHistory($event_id: ID!) {\n    eventHistory(event_id: $event_id) {\n      ...EventHistoryEntryFields\n    }\n  }\n": typeof types.EventHistoryDocument,
+    "\n  mutation AcknowledgeEventDue($input: AcknowledgeEventDueInput!) {\n    acknowledgeEventDue(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.AcknowledgeEventDueDocument,
+    "\n  mutation CompleteEvent($input: CompleteEventInput!) {\n    completeEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CompleteEventDocument,
+    "\n  mutation RescheduleEvent($input: RescheduleEventInput!) {\n    rescheduleEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.RescheduleEventDocument,
+    "\n  mutation CancelEventOccurrence($input: CancelEventOccurrenceInput!) {\n    cancelEventOccurrence(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CancelEventOccurrenceDocument,
     "\n  query Cases {\n    cases {\n      ...CaseFields\n    }\n  }\n": typeof types.CasesDocument,
     "\n  query Case($id: ID!) {\n    case(id: $id) {\n      ...CaseFields\n    }\n  }\n": typeof types.CaseDocument,
     "\n  mutation CreateCase($input: CreateCaseInput!) {\n    createCase(input: $input) {\n      ...CaseFields\n    }\n  }\n": typeof types.CreateCaseDocument,
@@ -168,9 +175,10 @@ const documents: Documents = {
     "\n  fragment DocumentFolderFields on DocumentFolder {\n    id\n    firm_id\n    client_id\n    parent_id\n    user_id\n    name\n    document_count\n    created_at\n    updated_at\n  }\n": types.DocumentFolderFieldsFragmentDoc,
     "\n  fragment DocumentCommentFields on DocumentComment {\n    id\n    document_id\n    user_id\n    author_name\n    body\n    created_at\n  }\n": types.DocumentCommentFieldsFragmentDoc,
     "\n  fragment CaseFields on Case {\n    id\n    firm_id\n    user_id\n    client_id\n    case_code\n    title\n    court\n    suit_number\n    opposing_party\n    case_type\n    case_stage\n    assigned_lawyer\n    originating_lawyer\n    status\n    date_opened\n    next_court_date\n    closed_at\n    pending_at\n    notification_count\n    description\n    details\n    notes\n    client_name\n    created_at\n    updated_at\n  }\n": types.CaseFieldsFragmentDoc,
-    "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n": types.EventAttendeeFieldsFragmentDoc,
+    "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n    due_response\n    due_acknowledged_at\n  }\n": types.EventAttendeeFieldsFragmentDoc,
     "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": types.EventReminderFieldsFragmentDoc,
-    "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n": types.CalendarEventFieldsFragmentDoc,
+    "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    outcome_status\n    outcome_notes\n    outcome_recorded_by\n    outcome_recorded_at\n    cancellation_reason\n    original_start_time\n    created_at\n    updated_at\n  }\n": types.CalendarEventFieldsFragmentDoc,
+    "\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n": types.EventHistoryEntryFieldsFragmentDoc,
     "\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n": types.AiConversationsDocument,
     "\n  query AiConversation($id: ID!) {\n    aiConversation(id: $id) {\n      id\n      title\n      created_at\n      updated_at\n      messages {\n        id\n        role\n        content\n        sources\n        created_at\n      }\n    }\n  }\n": types.AiConversationDocument,
     "\n  mutation AiChat($input: AiChatInput!) {\n    aiChat(input: $input) {\n      response\n      conversation_id\n      sources {\n        id\n        title\n        content\n        similarity\n      }\n    }\n  }\n": types.AiChatDocument,
@@ -196,6 +204,12 @@ const documents: Documents = {
     "\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.UpdateCalendarEventDocument,
     "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n": types.DeleteCalendarEventDocument,
     "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.RespondToEventDocument,
+    "\n  query PendingDueEvents($limit: Int) {\n    pendingDueEvents(limit: $limit) {\n      ...CalendarEventFields\n    }\n  }\n": types.PendingDueEventsDocument,
+    "\n  query EventHistory($event_id: ID!) {\n    eventHistory(event_id: $event_id) {\n      ...EventHistoryEntryFields\n    }\n  }\n": types.EventHistoryDocument,
+    "\n  mutation AcknowledgeEventDue($input: AcknowledgeEventDueInput!) {\n    acknowledgeEventDue(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.AcknowledgeEventDueDocument,
+    "\n  mutation CompleteEvent($input: CompleteEventInput!) {\n    completeEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.CompleteEventDocument,
+    "\n  mutation RescheduleEvent($input: RescheduleEventInput!) {\n    rescheduleEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.RescheduleEventDocument,
+    "\n  mutation CancelEventOccurrence($input: CancelEventOccurrenceInput!) {\n    cancelEventOccurrence(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.CancelEventOccurrenceDocument,
     "\n  query Cases {\n    cases {\n      ...CaseFields\n    }\n  }\n": types.CasesDocument,
     "\n  query Case($id: ID!) {\n    case(id: $id) {\n      ...CaseFields\n    }\n  }\n": types.CaseDocument,
     "\n  mutation CreateCase($input: CreateCaseInput!) {\n    createCase(input: $input) {\n      ...CaseFields\n    }\n  }\n": types.CreateCaseDocument,
@@ -375,7 +389,7 @@ export function graphql(source: "\n  fragment CaseFields on Case {\n    id\n    
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n"): (typeof documents)["\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n  }\n"];
+export function graphql(source: "\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n    due_response\n    due_acknowledged_at\n  }\n"): (typeof documents)["\n  fragment EventAttendeeFields on EventAttendee {\n    id\n    event_id\n    kind\n    member_id\n    client_id\n    response\n    name\n    professional_title\n    avatar_url\n    due_response\n    due_acknowledged_at\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -383,7 +397,11 @@ export function graphql(source: "\n  fragment EventReminderFields on EventRemind
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    created_at\n    updated_at\n  }\n"];
+export function graphql(source: "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    outcome_status\n    outcome_notes\n    outcome_recorded_by\n    outcome_recorded_at\n    cancellation_reason\n    original_start_time\n    created_at\n    updated_at\n  }\n"): (typeof documents)["\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    outcome_status\n    outcome_notes\n    outcome_recorded_by\n    outcome_recorded_at\n    cancellation_reason\n    original_start_time\n    created_at\n    updated_at\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n"): (typeof documents)["\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -484,6 +502,30 @@ export function graphql(source: "\n  mutation DeleteCalendarEvent($id: ID!) {\n 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PendingDueEvents($limit: Int) {\n    pendingDueEvents(limit: $limit) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  query PendingDueEvents($limit: Int) {\n    pendingDueEvents(limit: $limit) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query EventHistory($event_id: ID!) {\n    eventHistory(event_id: $event_id) {\n      ...EventHistoryEntryFields\n    }\n  }\n"): (typeof documents)["\n  query EventHistory($event_id: ID!) {\n    eventHistory(event_id: $event_id) {\n      ...EventHistoryEntryFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AcknowledgeEventDue($input: AcknowledgeEventDueInput!) {\n    acknowledgeEventDue(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation AcknowledgeEventDue($input: AcknowledgeEventDueInput!) {\n    acknowledgeEventDue(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CompleteEvent($input: CompleteEventInput!) {\n    completeEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation CompleteEvent($input: CompleteEventInput!) {\n    completeEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RescheduleEvent($input: RescheduleEventInput!) {\n    rescheduleEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation RescheduleEvent($input: RescheduleEventInput!) {\n    rescheduleEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CancelEventOccurrence($input: CancelEventOccurrenceInput!) {\n    cancelEventOccurrence(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation CancelEventOccurrence($input: CancelEventOccurrenceInput!) {\n    cancelEventOccurrence(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -4,6 +4,7 @@ import { AuthGuard } from '@/components/shared/AuthGuard'
 import { PriorityRemindersBoot } from '@/components/shared/PriorityRemindersBoot'
 import { TimeTrackerBoot } from '@/components/shared/TimeTrackerBoot'
 import { EventNoticeBanner } from '@/components/shared/EventNoticeBanner'
+import { EventDuePrompt } from '@/components/shared/EventDuePrompt/EventDuePrompt'
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,11 @@ export default function DashboardLayout({
           floating active-timer widget. Lives at the layout level
           so a running timer follows the partner across pages. */}
       <TimeTrackerBoot />
+      {/* Global Event Due prompt — fetches pending events on mount +
+          on tab visibility (30 s cooldown, debounced), portaled to the
+          top-right so it floats over every route without blocking
+          navigation. Renders nothing when the queue is empty. */}
+      <EventDuePrompt />
       <div
         className="h-screen overflow-hidden p-3"
         style={{

@@ -401,6 +401,8 @@ export const EventAttendeeFieldsFragmentDoc = graphql(/* GraphQL */ `
     name
     professional_title
     avatar_url
+    due_response
+    due_acknowledged_at
   }
 `)
 
@@ -441,7 +443,33 @@ export const CalendarEventFieldsFragmentDoc = graphql(/* GraphQL */ `
     reminders {
       ...EventReminderFields
     }
+    outcome_status
+    outcome_notes
+    outcome_recorded_by
+    outcome_recorded_at
+    cancellation_reason
+    original_start_time
     created_at
     updated_at
+  }
+`)
+
+/**
+ * One audit entry against a calendar event — used by the "History"
+ * drawer on the event detail view. Kept as its own fragment because
+ * the event query doesn't request history by default (extra join).
+ */
+export const EventHistoryEntryFieldsFragmentDoc = graphql(/* GraphQL */ `
+  fragment EventHistoryEntryFields on EventHistoryEntry {
+    id
+    event_id
+    actor_id
+    actor_name
+    action
+    from_state
+    to_state
+    notes
+    metadata
+    created_at
   }
 `)
