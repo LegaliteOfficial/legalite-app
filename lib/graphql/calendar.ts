@@ -50,3 +50,71 @@ export const RespondToEventMutationDoc = graphql(/* GraphQL */ `
     }
   }
 `)
+
+// ── Event Due Workflow ────────────────────────────────────────────────────
+
+/**
+ * Past-due events awaiting the CALLER's answer to "did this take place?".
+ * Bounded server-side to a 30-day lookback and a small LIMIT — safe to
+ * call from an app-open hook. Fire manually via `useLazyQuery` — never on
+ * a timer.
+ */
+export const PendingDueEventsQueryDoc = graphql(/* GraphQL */ `
+  query PendingDueEvents($limit: Int) {
+    pendingDueEvents(limit: $limit) {
+      ...CalendarEventFields
+    }
+  }
+`)
+
+/** Full audit trail for one event — opened on demand from a detail view. */
+export const EventHistoryQueryDoc = graphql(/* GraphQL */ `
+  query EventHistory($event_id: ID!) {
+    eventHistory(event_id: $event_id) {
+      ...EventHistoryEntryFields
+    }
+  }
+`)
+
+/**
+ * The caller answers Yes / No / Dismiss — suppresses THIS user's prompt
+ * without touching event-level state. Every attendee can call this
+ * regardless of role.
+ */
+export const AcknowledgeEventDueMutationDoc = graphql(/* GraphQL */ `
+  mutation AcknowledgeEventDue($input: AcknowledgeEventDueInput!) {
+    acknowledgeEventDue(input: $input) {
+      ...CalendarEventFields
+    }
+  }
+`)
+
+/** Yes → record the completed outcome (organiser / firm admin only). */
+export const CompleteEventMutationDoc = graphql(/* GraphQL */ `
+  mutation CompleteEvent($input: CompleteEventInput!) {
+    completeEvent(input: $input) {
+      ...CalendarEventFields
+    }
+  }
+`)
+
+/** No → move the event to a new date/time (organiser / firm admin only). */
+export const RescheduleEventMutationDoc = graphql(/* GraphQL */ `
+  mutation RescheduleEvent($input: RescheduleEventInput!) {
+    rescheduleEvent(input: $input) {
+      ...CalendarEventFields
+    }
+  }
+`)
+
+/**
+ * No → cancel the event with a required reason. Distinct from the
+ * up-front cancel path (`updateCalendarEvent` with status='cancelled').
+ */
+export const CancelEventOccurrenceMutationDoc = graphql(/* GraphQL */ `
+  mutation CancelEventOccurrence($input: CancelEventOccurrenceInput!) {
+    cancelEventOccurrence(input: $input) {
+      ...CalendarEventFields
+    }
+  }
+`)
