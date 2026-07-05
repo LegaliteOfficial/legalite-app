@@ -1,4 +1,7 @@
 import { Sidebar } from '@/components/layout/Sidebar'
+import { APP_BACKGROUND } from '@/components/layout/app-background'
+import { MobileNav } from '@/components/layout/MobileNav'
+import { MobileTopBar } from '@/components/layout/MobileTopBar'
 import { NavigationProgress } from '@/components/shared/NavigationProgress'
 import { AuthGuard } from '@/components/shared/AuthGuard'
 import { PriorityRemindersBoot } from '@/components/shared/PriorityRemindersBoot'
@@ -21,19 +24,13 @@ export default function DashboardLayout({
           floating active-timer widget. Lives at the layout level
           so a running timer follows the partner across pages. */}
       <TimeTrackerBoot />
-      <div
-        className="h-screen overflow-hidden p-3"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(13,27,42,0.18), rgba(13,27,42,0.18)), url('/assets/images/law%20firm.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
+      <div className="h-screen overflow-hidden p-3" style={APP_BACKGROUND}>
         <div className="flex h-full overflow-hidden gap-3">
           <NavigationProgress />
-          <Sidebar />
+          {/* Desktop sidebar — hidden below lg, where the drawer takes over. */}
+          <div className="hidden lg:block h-full shrink-0">
+            <Sidebar />
+          </div>
           <main
             className="flex-1 flex flex-col overflow-hidden rounded-2xl"
             style={{
@@ -48,11 +45,17 @@ export default function DashboardLayout({
               zoom: 1.1,
             }}
           >
+            {/* Hamburger + wordmark, only below lg. */}
+            <MobileTopBar />
             {/* Global notice: prompts when a calendar event is now / imminent. */}
             <EventNoticeBanner />
             {children}
           </main>
         </div>
+
+        {/* Mobile nav drawer — mounted at the root, outside the zoomed
+            <main>, so its fixed positioning tracks the viewport. */}
+        <MobileNav />
       </div>
     </AuthGuard>
   )
