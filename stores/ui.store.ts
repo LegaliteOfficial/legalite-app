@@ -19,17 +19,22 @@ type Modal =
 interface UIStore {
   modal: Modal
   sidebarCollapsed: boolean
+  /** Mobile nav drawer open state (below the lg breakpoint). */
+  mobileNavOpen: boolean
   openModal: (modal: NonNullable<Modal>) => void
   closeModal: () => void
   toggleSidebar: () => void
+  setMobileNav: (open: boolean) => void
 }
 
 export const useUIStore = create<UIStore>((set) => ({
   modal: null,
   sidebarCollapsed: false,
+  mobileNavOpen: false,
 
   openModal: (modal) => set({ modal }),
   closeModal: () => set({ modal: null }),
   toggleSidebar: () =>
     set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+  setMobileNav: (mobileNavOpen) => set({ mobileNavOpen }),
 }))
