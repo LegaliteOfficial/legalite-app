@@ -3,5 +3,11 @@
   "framework": "nextjs",
   "installCommand": "npm install -g pnpm@10.22.0 && pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/keep-alive",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }
