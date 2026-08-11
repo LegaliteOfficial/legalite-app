@@ -369,7 +369,14 @@ export default function AiAssistantPage() {
               ))}
               {isLoading &&
                 (streamingText ? (
-                  <StreamingTurn text={streamingText} />
+                  <div className="flex justify-start">
+                    <div className="max-w-[92%] w-full">
+                      <AnswerCard
+                        response={buildStreamingResponse(streamingText)}
+                        streaming
+                      />
+                    </div>
+                  </div>
                 ) : (
                   <LoadingTurn phase={streamingPhase} />
                 ))}
@@ -1026,47 +1033,38 @@ function LoadingTurn({
   )
 }
 
-// ── Live-streaming answer bubble ─────────────────────────────────────────────
+// ── Live-streaming answer snapshot ───────────────────────────────────────────
 
 /**
- * Renders `direct_answer` text as it arrives via `answer_delta` SSE
- * events. Deliberately lightweight (no citations, no feedback bar) since
- * the text is provisional until the terminal `completed` / `refused`
- * event lands and the turn gets committed as a real AnswerCard — see
- * the "stream, then retract" contract in lib/ai/client.ts#askStream.
+ * Builds a provisional AskResponse from live `answer_delta` text so the
+ * in-progress turn can render through the same `<AnswerCard streaming />`
+ * used for the committed turn — one bubble that fills in, rather than a
+ * separate loading component swapped out from under the user once the
+ * stream finishes. See AnswerCard's `streaming` prop for which sections
+ * it hides while the rest of this shape is still unknown.
  */
-function StreamingTurn({ text }: { text: string }) {
-  return (
-    <div className="flex justify-start">
-      <div className="max-w-[92%] w-full">
-        <div
-          className="rounded-2xl border px-5 py-4 text-[14px] leading-relaxed whitespace-pre-wrap"
-          style={{
-            background: 'var(--surface-card)',
-            borderColor: 'var(--border-soft)',
-            boxShadow: 'var(--shadow-xs)',
-            color: 'var(--text-primary)',
-          }}
-        >
-          {text}
-          <span
-            className="inline-block w-0.5 h-[1em] ml-0.5 align-middle streaming-cursor"
-            aria-hidden
-            style={{ background: 'var(--text-muted)' }}
-          />
-        </div>
-        <style jsx>{`
-          @keyframes blink-cursor {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-          }
-          .streaming-cursor {
-            animation: blink-cursor 1s step-start infinite;
-          }
-        `}</style>
-      </div>
-    </div>
-  )
+function buildStreamingResponse(text: string): AskResponse {
+  return {
+    answer: text,
+    citations: [],
+    confidence: 'low',
+    disclaimer: '',
+    sources_used: [],
+    reasoning_summary: '',
+    session_id: null,
+    structured_answer: {
+      direct_answer: text,
+      applicable_law: [],
+      relevant_public_cases: [],
+      firm_similar_cases: [],
+      legal_reasoning: '',
+      confidence_assessment: '',
+      citations: [],
+    },
+    query_intent: null,
+    query_intent_confidence: null,
+    message_id: null,
+  }
 }
 
 // ── Composer ───────────────────────────────────────────────────────────────

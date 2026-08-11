@@ -33,6 +33,16 @@ interface AnswerCardProps {
     thumbs: FeedbackThumbs
     comment: string | null
   }) => Promise<void>
+  /**
+   * True while ``response`` is a provisional snapshot built from live
+   * `answer_delta` SSE text — confidence, reasoning, citations, sources,
+   * feedback, and the disclaimer aren't known yet, so those sections
+   * stay hidden and a typing cursor follows the answer text. The same
+   * card element is reused once the turn is committed (`streaming`
+   * turns false) so the message reads as one bubble filling in, not a
+   * loading placeholder swapped for a different component.
+   */
+  streaming?: boolean
 }
 
 const CONFIDENCE_META: Record<
@@ -44,7 +54,12 @@ const CONFIDENCE_META: Record<
   low:    { label: 'Low confidence',    color: '#C0392B', bg: 'rgba(192,57,43,0.10)' },
 }
 
-export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardProps) {
+export function AnswerCard({
+  response,
+  feedback,
+  onSubmitFeedback,
+  streaming,
+}: AnswerCardProps) {
   const [copied, setCopied] = useState(false)
   // Source preview drawer — one drawer per card. Clicking any
   // citation row or source entry that carries a ``document_id`` sets
@@ -83,17 +98,31 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
         style={{ borderColor: 'var(--border-soft)' }}
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
-            style={{ background: confidence.bg, color: confidence.color }}
-          >
+          {streaming ? (
             <span
-              aria-hidden
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: confidence.color }}
-            />
-            {confidence.label}
-          </span>
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
+              style={{ background: 'var(--surface-sunken)', color: 'var(--text-muted)' }}
+            >
+              <span
+                aria-hidden
+                className="w-1.5 h-1.5 rounded-full answering-dot"
+                style={{ background: 'var(--gold)' }}
+              />
+              Answering…
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
+              style={{ background: confidence.bg, color: confidence.color }}
+            >
+              <span
+                aria-hidden
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: confidence.color }}
+              />
+              {confidence.label}
+            </span>
+          )}
           {response.query_intent && (
             <span
               className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
@@ -104,19 +133,30 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={copyAll}
-          className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-1 rounded-md transition-colors"
-          style={{ color: copied ? '#2E7D4F' : 'var(--text-muted)' }}
-          onMouseEnter={(e) => {
-            if (!copied) e.currentTarget.style.background = 'var(--surface-overlay)'
-          }}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-        >
-          {copied ? <Check size={12} strokeWidth={1.75} /> : <Copy size={12} strokeWidth={1.75} />}
-          {copied ? 'Copied' : 'Copy'}
-        </button>
+        {!streaming && (
+          <button
+            type="button"
+            onClick={copyAll}
+            className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-1 rounded-md transition-colors"
+            style={{ color: copied ? '#2E7D4F' : 'var(--text-muted)' }}
+            onMouseEnter={(e) => {
+              if (!copied) e.currentTarget.style.background = 'var(--surface-overlay)'
+            }}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            {copied ? <Check size={12} strokeWidth={1.75} /> : <Copy size={12} strokeWidth={1.75} />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        )}
+        <style jsx>{`
+          @keyframes pulse-answering-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+          }
+          .answering-dot {
+            animation: pulse-answering-dot 1s ease-in-out infinite;
+          }
+        `}</style>
       </div>
 
       {/* Direct answer */}
@@ -132,11 +172,12 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
           style={{ color: 'var(--text-primary)' }}
         >
           <ReactMarkdown>{directAnswer}</ReactMarkdown>
+          {streaming && <TypingCursor />}
         </div>
       </div>
 
       {/* Legal reasoning */}
-      {reasoning && (
+      {!streaming && reasoning && (
         <div className="px-5 pb-4">
           <Section title="Legal reasoning">
             <div className="text-[13px] leading-relaxed ai-markdown" style={{ color: 'var(--text-secondary)' }}>
@@ -207,17 +248,19 @@ export function AnswerCard({ response, feedback, onSubmitFeedback }: AnswerCardP
         />
       )}
 
-      {/* Disclaimer */}
-      <p
-        className="text-[11px] px-5 py-3 border-t"
-        style={{
-          color: 'var(--text-muted)',
-          background: 'var(--surface-sunken)',
-          borderColor: 'var(--border-soft)',
-        }}
-      >
-        {response.disclaimer}
-      </p>
+      {/* Disclaimer — withheld while streaming; not final content yet. */}
+      {!streaming && (
+        <p
+          className="text-[11px] px-5 py-3 border-t"
+          style={{
+            color: 'var(--text-muted)',
+            background: 'var(--surface-sunken)',
+            borderColor: 'var(--border-soft)',
+          }}
+        >
+          {response.disclaimer}
+        </p>
+      )}
 
       {/* Source preview drawer — mounted at the card level so each
           answer's clicks open their own panel. Rendered conditionally
@@ -478,6 +521,27 @@ function ThumbButton({
 }
 
 // ── Pieces ───────────────────────────────────────────────────────────────
+
+function TypingCursor() {
+  return (
+    <>
+      <span
+        aria-hidden
+        className="inline-block w-0.5 h-[1em] ml-0.5 align-middle typing-cursor"
+        style={{ background: 'var(--text-muted)' }}
+      />
+      <style jsx>{`
+        @keyframes blink-cursor {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .typing-cursor {
+          animation: blink-cursor 1s step-start infinite;
+        }
+      `}</style>
+    </>
+  )
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
