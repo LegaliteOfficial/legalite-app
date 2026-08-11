@@ -163,6 +163,17 @@ export type AskStreamEvent =
       }
     }
   | { event: 'completed'; data: AskResponse }
+  | {
+      event: 'error'
+      /**
+       * Terminal — can arrive at any point after ``retrieval_started``.
+       * Once the SSE response has started, the server can't turn a
+       * mid-pipeline exception into a proper HTTP error status, so it
+       * sends this instead of just dropping the connection.
+       * ``message`` is safe to show to the user as-is.
+       */
+      data: { message: string }
+    }
 
 // ───────────────────────── Feedback ─────────────────────────
 

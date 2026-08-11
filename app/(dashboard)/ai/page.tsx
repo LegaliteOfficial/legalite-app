@@ -215,6 +215,11 @@ export default function AiAssistantPage() {
           case 'completed':
             response = evt.data
             break
+          case 'error':
+            // Once the SSE response has started, the server can't turn
+            // a mid-pipeline failure into a proper HTTP error status —
+            // it sends this instead of just dropping the connection.
+            throw new AiServiceError(evt.data.message, 0)
         }
       }
       if (!response) {
