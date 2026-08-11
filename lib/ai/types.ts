@@ -89,6 +89,16 @@ export interface AskRequest {
   session_id?: string | null
 }
 
+/**
+ * Mirrors ``AskResponse.disclaimer``'s Pydantic default in
+ * legalite-ai/app/schemas/qa.py. The non-streaming /ask response always
+ * carries this (the backend never overrides the default), but the
+ * streaming ``refused`` SSE event doesn't repeat it on the wire — use
+ * this constant when building an AskResponse client-side from that event.
+ */
+export const DEFAULT_DISCLAIMER =
+  'This information is for educational purposes and not legal advice.'
+
 export interface AskResponse {
   // v1
   answer: string
@@ -108,6 +118,51 @@ export interface AskResponse {
   // didn't persist a chat_messages row (e.g. early refusal paths).
   message_id: string | null
 }
+
+// ───────────────────────── Streaming (SSE) ─────────────────────────
+
+/**
+ * Wire shape of ``POST /ask?stream=true`` — see
+ * legalite-ai/app/api/routes/qa.py for the full event sequence
+ * contract. ``answer_delta`` carries live ``direct_answer`` text as the
+ * model generates it; every other event is one-shot.
+ *
+ * ``refused`` is a genuinely different terminal outcome from
+ * ``completed``, not just an AskResponse with confidence="low": it
+ * fires when the post-generation grounding check rejects an answer
+ * AFTER it already streamed cleanly via ``answer_delta``. Consumers
+ * must treat its payload as authoritative and discard whatever text
+ * they rendered from the deltas.
+ */
+export type AskStreamEvent =
+  | { event: 'retrieval_started'; data: { session_id: string; question_chars: number } }
+  | {
+      event: 'sources_found'
+      data: { count: number; scopes: { global: number; tenant_private: number } }
+    }
+  | { event: 'answer_delta'; data: { text: string } }
+  | { event: 'reasoning'; data: { summary: string } }
+  | {
+      event: 'citations'
+      data: {
+        applicable_law: StructuredCitation[]
+        relevant_public_cases: StructuredCitation[]
+        firm_similar_cases: StructuredCitation[]
+        citation_ids: number[]
+      }
+    }
+  | {
+      event: 'refused'
+      data: {
+        answer: string
+        confidence: Confidence
+        structured_answer: StructuredAnswer | null
+        session_id: string | null
+        query_intent: string | null
+        message_id: string | null
+      }
+    }
+  | { event: 'completed'; data: AskResponse }
 
 // ───────────────────────── Feedback ─────────────────────────
 

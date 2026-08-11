@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 
-import { ask, submitFeedback, AiServiceError } from '@/lib/ai/client'
+import { askStream, submitFeedback, AiServiceError } from '@/lib/ai/client'
 import {
   listSessions,
   getSession,
@@ -53,7 +53,7 @@ import {
   type SessionRecord,
   type Turn,
 } from '@/lib/ai/sessions'
-import type { FeedbackThumbs } from '@/lib/ai/types'
+import { DEFAULT_DISCLAIMER, type AskResponse, type FeedbackThumbs } from '@/lib/ai/types'
 import { AnswerCard } from '@/components/ai/AnswerCard'
 
 const SUGGESTIONS = [
@@ -69,6 +69,12 @@ export default function AiAssistantPage() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  // Live text from `answer_delta` SSE events. Cleared once the turn is
+  // committed to `turns` (either the `completed` or `refused` terminal
+  // event). Rendered in place of LoadingTurn once the model starts
+  // producing output.
+  const [streamingText, setStreamingText] = useState('')
+  const [streamingPhase, setStreamingPhase] = useState<'retrieving' | 'answering' | null>(null)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -162,13 +168,61 @@ export default function AiAssistantPage() {
     setTurns(record.turns)
     setInput('')
     setIsLoading(true)
+    setStreamingText('')
+    setStreamingPhase('retrieving')
     refreshSidebar()
 
     try {
-      const response = await ask(
+      let response: AskResponse | null = null
+      for await (const evt of askStream(
         { question, session_id: id },
         { signal: ctrl.signal },
-      )
+      )) {
+        switch (evt.event) {
+          case 'retrieval_started':
+            setStreamingPhase('retrieving')
+            break
+          case 'sources_found':
+            setStreamingPhase('answering')
+            break
+          case 'answer_delta':
+            setStreamingText((prev) => prev + evt.data.text)
+            break
+          case 'reasoning':
+          case 'citations':
+            // Not needed for the live bubble — the terminal event below
+            // carries the full structured payload the committed turn uses.
+            break
+          case 'refused':
+            // Post-generation grounding check rejected the answer AFTER
+            // it already streamed via answer_delta. This response is
+            // authoritative and replaces whatever the deltas showed —
+            // we never merge streamed text into the committed turn.
+            response = {
+              answer: evt.data.answer,
+              citations: [],
+              confidence: evt.data.confidence,
+              disclaimer: DEFAULT_DISCLAIMER,
+              sources_used: [],
+              reasoning_summary: '',
+              session_id: evt.data.session_id,
+              structured_answer: evt.data.structured_answer,
+              query_intent: evt.data.query_intent,
+              query_intent_confidence: null,
+              message_id: evt.data.message_id,
+            }
+            break
+          case 'completed':
+            response = evt.data
+            break
+        }
+      }
+      if (!response) {
+        throw new AiServiceError(
+          'The AI service ended the stream without a final answer.',
+          0,
+        )
+      }
       // The service may rotate the session_id (e.g. a new memory bucket).
       // Trust the server's id if it sends one back — pass our `id` as
       // previousId so the storage layer can migrate the record's key.
@@ -222,6 +276,8 @@ export default function AiAssistantPage() {
       if (abortRef.current === ctrl) {
         abortRef.current = null
         setIsLoading(false)
+        setStreamingText('')
+        setStreamingPhase(null)
       }
     }
   }, [input, isLoading, activeId, refreshSidebar])
@@ -311,7 +367,12 @@ export default function AiAssistantPage() {
                   }
                 />
               ))}
-              {isLoading && <LoadingTurn />}
+              {isLoading &&
+                (streamingText ? (
+                  <StreamingTurn text={streamingText} />
+                ) : (
+                  <LoadingTurn phase={streamingPhase} />
+                ))}
               <div ref={chatEndRef} />
             </div>
           )}
@@ -903,7 +964,16 @@ function TurnBubble({
 
 // ── Loading state with the gavel gif ───────────────────────────────────────
 
-function LoadingTurn() {
+const LOADING_PHASE_TEXT: Record<'retrieving' | 'answering', string> = {
+  retrieving: 'Searching Ghana legal corpus',
+  answering: 'Drafting an answer',
+}
+
+function LoadingTurn({
+  phase = 'retrieving',
+}: {
+  phase?: 'retrieving' | 'answering' | null
+}) {
   return (
     <div className="flex justify-start">
       <div
@@ -939,7 +1009,7 @@ function LoadingTurn() {
             className="text-[11.5px]"
             style={{ color: 'var(--text-muted)' }}
           >
-            Searching Ghana legal corpus and drafting an answer
+            {LOADING_PHASE_TEXT[phase ?? 'retrieving']}
           </span>
         </div>
         <style jsx>{`
@@ -949,6 +1019,49 @@ function LoadingTurn() {
           }
           .typing-dots {
             animation: pulse-dots 1.4s infinite;
+          }
+        `}</style>
+      </div>
+    </div>
+  )
+}
+
+// ── Live-streaming answer bubble ─────────────────────────────────────────────
+
+/**
+ * Renders `direct_answer` text as it arrives via `answer_delta` SSE
+ * events. Deliberately lightweight (no citations, no feedback bar) since
+ * the text is provisional until the terminal `completed` / `refused`
+ * event lands and the turn gets committed as a real AnswerCard — see
+ * the "stream, then retract" contract in lib/ai/client.ts#askStream.
+ */
+function StreamingTurn({ text }: { text: string }) {
+  return (
+    <div className="flex justify-start">
+      <div className="max-w-[92%] w-full">
+        <div
+          className="rounded-2xl border px-5 py-4 text-[14px] leading-relaxed whitespace-pre-wrap"
+          style={{
+            background: 'var(--surface-card)',
+            borderColor: 'var(--border-soft)',
+            boxShadow: 'var(--shadow-xs)',
+            color: 'var(--text-primary)',
+          }}
+        >
+          {text}
+          <span
+            className="inline-block w-0.5 h-[1em] ml-0.5 align-middle streaming-cursor"
+            aria-hidden
+            style={{ background: 'var(--text-muted)' }}
+          />
+        </div>
+        <style jsx>{`
+          @keyframes blink-cursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+          }
+          .streaming-cursor {
+            animation: blink-cursor 1s step-start infinite;
           }
         `}</style>
       </div>

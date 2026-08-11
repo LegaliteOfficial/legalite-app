@@ -1,6 +1,7 @@
 import type {
   AskRequest,
   AskResponse,
+  AskStreamEvent,
   DocumentView,
   FeedbackCreate,
   FeedbackResponse,
@@ -91,6 +92,113 @@ export async function ask(
   }
 
   return (await res.json()) as AskResponse
+}
+
+/**
+ * POST /ask?stream=true — same pipeline as {@link ask}, but consumed as
+ * Server-Sent Events so ``direct_answer`` text can be rendered as the
+ * model generates it instead of waiting for the full response.
+ *
+ * Yields events in order: ``retrieval_started``, ``sources_found``, zero
+ * or more ``answer_delta``, then either ``refused`` (terminal) or
+ * ``reasoning`` → ``citations`` → ``completed`` (terminal). See
+ * {@link AskStreamEvent} — the ``refused`` payload is authoritative and
+ * may not match what the ``answer_delta`` events already showed; the
+ * caller must replace, not merge.
+ */
+export async function* askStream(
+  payload: AskRequest,
+  options: { signal?: AbortSignal } = {},
+): AsyncGenerator<AskStreamEvent, void, void> {
+  if (!AI_BASE_URL) {
+    throw new AiServiceError(
+      'AI service URL is not configured. Set NEXT_PUBLIC_LEGALITE_AI_URL.',
+      0,
+    )
+  }
+
+  let res: Response
+  try {
+    res = await fetch(`${AI_BASE_URL}/ask?stream=true`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify(payload),
+      signal: options.signal,
+    })
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err
+    throw new AiServiceError(
+      'Network error reaching the AI service. Check your connection.',
+      0,
+      err instanceof Error ? err.message : undefined,
+    )
+  }
+
+  if (!res.ok) {
+    let detail: string | undefined
+    try {
+      const body = (await res.json()) as { detail?: string }
+      detail = body?.detail
+    } catch {
+      // body wasn't JSON
+    }
+    const message =
+      res.status === 429
+        ? 'You are sending questions too quickly. Please wait a moment and try again.'
+        : res.status >= 500
+          ? 'The AI service is having trouble right now. Please try again shortly.'
+          : detail ?? `Request failed (${res.status}).`
+    throw new AiServiceError(message, res.status, detail)
+  }
+  if (!res.body) {
+    throw new AiServiceError('The AI service returned an empty stream.', 0)
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      let sepIndex: number
+      // SSE frames are separated by a blank line. A frame's line
+      // endings may be "\r\n" depending on the proxy in front of the
+      // service, so parseSSEFrame strips trailing "\r" per line rather
+      // than assuming "\n\n" is the only separator variant.
+      while ((sepIndex = buffer.indexOf('\n\n')) !== -1) {
+        const rawFrame = buffer.slice(0, sepIndex)
+        buffer = buffer.slice(sepIndex + 2)
+        const parsed = parseSSEFrame(rawFrame)
+        if (parsed) yield parsed
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}
+
+function parseSSEFrame(rawFrame: string): AskStreamEvent | null {
+  let eventName: string | null = null
+  let dataLine: string | null = null
+  for (const line of rawFrame.split('\n')) {
+    const clean = line.endsWith('\r') ? line.slice(0, -1) : line
+    if (clean.startsWith('event:')) {
+      eventName = clean.slice('event:'.length).trim()
+    } else if (clean.startsWith('data:')) {
+      dataLine = clean.slice('data:'.length).trim()
+    }
+  }
+  if (!eventName || dataLine === null) return null
+  try {
+    return { event: eventName, data: JSON.parse(dataLine) } as AskStreamEvent
+  } catch {
+    // A frame split mid-byte-sequence by the decoder would corrupt the
+    // JSON; drop it rather than crash the whole stream over one frame.
+    return null
+  }
 }
 
 /**
