@@ -4,6 +4,8 @@ import {
   AcceptInviteMutationDoc,
   LoginMutationDoc,
   RegisterOwnerMutationDoc,
+  RequestPasswordResetMutationDoc,
+  ResetPasswordMutationDoc,
 } from '@/lib/graphql/auth'
 import { InvitationLookupQueryDoc } from '@/lib/graphql/invitations'
 import { useAuthStore } from '@/stores/auth.store'
@@ -14,6 +16,10 @@ import type {
   LoginMutationVariables,
   RegisterOwnerMutation,
   RegisterOwnerMutationVariables,
+  RequestPasswordResetMutation,
+  RequestPasswordResetMutationVariables,
+  ResetPasswordMutation,
+  ResetPasswordMutationVariables,
 } from '@/types/generated/graphql'
 import { useMutation, useQuery } from '@apollo/client/react'
 
@@ -110,4 +116,29 @@ export function useAcceptInvite() {
   })
 
   return { acceptInviteMutation, loading, error, reset }
+}
+
+// ── Password reset (public) ───────────────────────────────────────────────
+//
+// Both mutations are unauthenticated and don't touch the auth store — the
+// forgot-password page only needs loading/error state, and the reset page
+// sends the user to /login on success rather than signing them in directly.
+
+export function useRequestPasswordReset() {
+  const [requestPasswordResetMutation, { loading, error, reset }] =
+    useMutation<
+      RequestPasswordResetMutation,
+      RequestPasswordResetMutationVariables
+    >(RequestPasswordResetMutationDoc)
+
+  return { requestPasswordResetMutation, loading, error, reset }
+}
+
+export function useResetPassword() {
+  const [resetPasswordMutation, { loading, error, reset }] = useMutation<
+    ResetPasswordMutation,
+    ResetPasswordMutationVariables
+  >(ResetPasswordMutationDoc)
+
+  return { resetPasswordMutation, loading, error, reset }
 }

@@ -3,44 +3,46 @@
 /**
  * Forgot password — request a reset link.
  *
- * Passwords live in Supabase Auth (auth.users), so this uses the built-in
- * recovery flow: resetPasswordForEmail sends an email whose link lands on
- * /reset-password to set a new password.
+ * Passwords live in Supabase Auth (auth.users), but the reset flow is
+ * routed through the NestJS backend rather than Supabase's built-in email:
+ * requestPasswordReset resolves the email to a Supabase user server-side,
+ * issues its own hashed token (see legalite-backend/src/auth/auth.service.ts),
+ * and sends the link via Brevo — branded like every other LegaLite email
+ * instead of Supabase's default sender.
  *
- * For privacy we never reveal whether an email is registered — the success
- * state shows regardless, matching Supabase's own non-enumerating behaviour.
+ * For privacy we never reveal whether an email is registered — the backend
+ * returns the same generic message either way, and the success state here
+ * shows unconditionally.
  */
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createSupabaseClient } from '@/lib/supabase'
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { useRequestPasswordReset } from '@/hooks/use-auth'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const { requestPasswordResetMutation, loading } = useRequestPasswordReset()
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim()) return
     setError('')
-    setLoading(true)
     try {
-      const supabase = createSupabaseClient()
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
+      await requestPasswordResetMutation({
+        variables: { input: { email: email.trim() } },
       })
-      if (error) throw error
       setSent(true)
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Could not send the reset link. Please try again.',
-      )
-    } finally {
-      setLoading(false)
+      const message =
+        err instanceof CombinedGraphQLErrors
+          ? err.errors[0]?.message
+          : err instanceof Error
+            ? err.message
+            : null
+      setError(message ?? 'Could not send the reset link. Please try again.')
     }
   }
 

@@ -1,91 +1,45 @@
 'use client'
 
 /**
- * Reset password — the recovery link lands here.
+ * Reset password — the recovery link lands here as ?token=<raw-token>.
  *
- * Supabase's recovery email redirects to this page. Two link shapes are
- * supported so it works regardless of how the email template is configured:
- *   - PKCE:  ?code=...           -> exchangeCodeForSession (same-browser only,
- *                                   because the verifier lives in localStorage)
- *   - OTP:   ?token_hash=&type=  -> verifyOtp (works cross-device)
- *
- * Either establishes a short-lived Supabase recovery session; we then call
- * updateUser({ password }) to set the new password. The app's real auth is
- * the backend JWT, not this Supabase session, so we sign the recovery session
- * out afterwards and send the user to /login to sign in normally.
+ * The token comes from legalite-backend's requestPasswordReset mutation
+ * (see the forgot-password page): a random 32-byte value the backend hashes
+ * before storing, so this page never has anything to verify up front — it
+ * just submits the token + new password to resetPassword and lets the
+ * backend validate it (unused, unexpired) in one step. The backend sets the
+ * new password directly via the Supabase admin API, so there's no separate
+ * recovery session to establish or sign out of here.
  */
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeSlash } from '@phosphor-icons/react'
-import type { EmailOtpType } from '@supabase/supabase-js'
-import { createSupabaseClient } from '@/lib/supabase'
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { useResetPassword } from '@/hooks/use-auth'
 
-type Phase = 'verifying' | 'ready' | 'saving' | 'done' | 'invalid'
+type Phase = 'ready' | 'saving' | 'done' | 'invalid'
 
 function ResetInner() {
   const router = useRouter()
   const params = useSearchParams()
+  const token = params.get('token')
 
-  const [phase, setPhase] = useState<Phase>('verifying')
+  const [phase, setPhase] = useState<Phase>(token ? 'ready' : 'invalid')
   const [error, setError] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-
-  // Establish the recovery session from the link before showing the form.
-  useEffect(() => {
-    let cancelled = false
-    const run = async () => {
-      const supabase = createSupabaseClient()
-      const code = params.get('code')
-      const tokenHash = params.get('token_hash')
-      const type = params.get('type')
-      const errorDescription = params.get('error_description')
-
-      if (errorDescription) {
-        if (!cancelled) {
-          setError(errorDescription)
-          setPhase('invalid')
-        }
-        return
-      }
-
-      try {
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code)
-          if (error) throw error
-        } else if (tokenHash) {
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: (type as EmailOtpType) || 'recovery',
-          })
-          if (error) throw error
-        } else {
-          throw new Error('This reset link is invalid or has expired.')
-        }
-        if (!cancelled) setPhase('ready')
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : 'This reset link is invalid or has expired.',
-          )
-          setPhase('invalid')
-        }
-      }
-    }
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [params])
+  const { resetPasswordMutation } = useResetPassword()
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (!token) {
+      setPhase('invalid')
+      return
+    }
     if (password.length < 6) {
       setError('Password must be at least 6 characters.')
       return
@@ -96,21 +50,31 @@ function ResetInner() {
     }
     setPhase('saving')
     try {
-      const supabase = createSupabaseClient()
-      const { error } = await supabase.auth.updateUser({ password })
-      if (error) throw error
-      // The recovery session isn't the app session — clear it so the user
-      // signs in cleanly through the normal (backend JWT) login flow.
-      await supabase.auth.signOut()
+      await resetPasswordMutation({
+        variables: { input: { token, newPassword: password } },
+      })
       setPhase('done')
       setTimeout(() => router.replace('/login?reset=success'), 1600)
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Could not update your password. Request a new link and try again.',
-      )
-      setPhase('ready')
+      const message =
+        err instanceof CombinedGraphQLErrors
+          ? err.errors[0]?.message
+          : err instanceof Error
+            ? err.message
+            : null
+      // An invalid/expired token is a distinct outcome from "fix your
+      // input and retry" — send the user to request a fresh link instead
+      // of re-showing a form whose token will never validate.
+      const isTokenError = message?.toLowerCase().includes('invalid or has expired')
+      if (isTokenError) {
+        setError(message ?? '')
+        setPhase('invalid')
+      } else {
+        setError(
+          message ?? 'Could not update your password. Please try again.',
+        )
+        setPhase('ready')
+      }
     }
   }
 
@@ -137,12 +101,6 @@ function ResetInner() {
         </div>
       </div>
 
-      {phase === 'verifying' && (
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          Verifying your reset link…
-        </p>
-      )}
-
       {phase === 'invalid' && (
         <div>
           <h1 className="font-heading text-2xl font-bold text-white mb-2">
@@ -150,8 +108,7 @@ function ResetInner() {
           </h1>
           <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
             {error || 'This password reset link is no longer valid.'} Reset links
-            expire and can only be used once — and PKCE links must be opened on
-            the same device you requested them from.
+            expire 30 minutes after they&apos;re requested and can only be used once.
           </p>
           <Link
             href="/forgot-password"

@@ -55,6 +55,8 @@ type Documents = {
     "\n  mutation GoogleAuth($input: GoogleAuthInput!) {\n    googleAuth(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.GoogleAuthDocument,
     "\n  mutation SwitchFirm($input: SwitchFirmInput!) {\n    switchFirm(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.SwitchFirmDocument,
     "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n": typeof types.MeDocument,
+    "\n  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n    requestPasswordReset(input: $input) {\n      message\n    }\n  }\n": typeof types.RequestPasswordResetDocument,
+    "\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n": typeof types.ResetPasswordDocument,
     "\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CalendarEventsDocument,
     "\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CalendarEventDocument,
     "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CreateCalendarEventDocument,
@@ -198,6 +200,8 @@ const documents: Documents = {
     "\n  mutation GoogleAuth($input: GoogleAuthInput!) {\n    googleAuth(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.GoogleAuthDocument,
     "\n  mutation SwitchFirm($input: SwitchFirmInput!) {\n    switchFirm(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.SwitchFirmDocument,
     "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n": types.MeDocument,
+    "\n  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n    requestPasswordReset(input: $input) {\n      message\n    }\n  }\n": types.RequestPasswordResetDocument,
+    "\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n": types.ResetPasswordDocument,
     "\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n": types.CalendarEventsDocument,
     "\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n": types.CalendarEventDocument,
     "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.CreateCalendarEventDocument,
@@ -478,6 +482,14 @@ export function graphql(source: "\n  mutation SwitchFirm($input: SwitchFirmInput
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n"): (typeof documents)["\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n    requestPasswordReset(input: $input) {\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n    requestPasswordReset(input: $input) {\n      message\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

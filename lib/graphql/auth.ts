@@ -54,3 +54,19 @@ export const MeQueryDoc = graphql(/* GraphQL */ `
     }
   }
 `)
+
+export const RequestPasswordResetMutationDoc = graphql(/* GraphQL */ `
+  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+    requestPasswordReset(input: $input) {
+      message
+    }
+  }
+`)
+
+export const ResetPasswordMutationDoc = graphql(/* GraphQL */ `
+  mutation ResetPassword($input: ResetPasswordInput!) {
+    resetPassword(input: $input) {
+      message
+    }
+  }
+`)
