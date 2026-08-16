@@ -135,6 +135,13 @@ function LoginForm() {
           </p>
         </div>
 
+        {/* Password just reset */}
+        {searchParams?.get('reset') === 'success' && (
+          <div className="bg-emerald-900/30 border border-emerald-500/30 text-emerald-300 px-4 py-3 rounded-xl text-sm mb-6">
+            Your password has been updated. Sign in with your new password.
+          </div>
+        )}
+
         {/* Error */}
         {serverError && (
           <div className="bg-red-900/30 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl text-sm mb-6">
@@ -242,6 +249,15 @@ function LoginForm() {
             {errors.password && (
               <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>
             )}
+            <div className="text-right mt-2">
+              <Link
+                href="/forgot-password"
+                className="text-xs font-semibold underline underline-offset-2 transition-colors"
+                style={{ color: 'var(--gold-light)' }}
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button
