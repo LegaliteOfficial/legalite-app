@@ -61,7 +61,7 @@ export default function CaseManagementPage() {
                     href="/contact-us"
                     className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white bg-gradient-to-b from-[#9D7C32] to-[#88661D] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
                   >
-                    Request a demo
+                    Join waitlist
                   </Link>
                 </div>
               </div>
