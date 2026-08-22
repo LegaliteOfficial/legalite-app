@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { List, X } from '@phosphor-icons/react'
 const NAV_LINKS = [
   { href: '/product/case-management', label: 'Case management' },
-  { href: '/product/legal-research', label: 'Legal research' },
+  { href: '/product/legal-research', label: 'Legal intelligence' },
   { href: '/security-page', label: 'Security' },
 ]
 
