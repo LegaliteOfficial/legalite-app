@@ -1,15 +1,14 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { FAQAccordion } from '@/components/marketing/faq-accordion'
 
 export const metadata: Metadata = {
-  title: 'Security page',
+  title: 'Security',
 }
 
 const sectionClass = 'px-6 lg:px-12 py-32'
 const containerClass = 'mx-auto max-w-[1600px]'
-const eyebrowClass = 'text-[#03f7eb] text-[0.6rem] tracking-[5px] uppercase'
+const eyebrowClass = 'text-[#E8B84B] text-[0.6rem] tracking-[5px] uppercase'
 const dividerClass = 'h-px bg-white/10 mt-3 mb-6'
 const heading2Class =
   "text-3xl md:text-5xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-[1.05]"
@@ -20,24 +19,24 @@ const COMPLIANCE_ITEMS = [
     body: 'Built according to SOC 2 Trust Service Criteria',
   },
   {
-    title: 'ISO 27001 & 27002 compliant',
+    title: 'ISO 27001 & 27002 aligned',
     body: 'Aligned with ISO 27001 Annex A controls covering access control, encryption, development practices, incident response, and continuity.',
   },
   {
-    title: 'GDPR compliant',
+    title: 'GDPR aligned',
     body: 'Even though LegaLite does not primarily target the EU, we uphold GDPR principles for data subject rights and processing transparency.',
   },
   {
     title: 'Ghana data protection',
-    body: 'LegaLite is built around the 8 Data Protection Principles, incorporating purpose limitation, data minimization, support for user rights such as access, correction, and deletion, ongoing registration with the Data Protection Commission, and safeguards for cross-border data transfers.',
+    body: 'LegaLite is built around the 8 Data Protection Principles, incorporating purpose limitation, data minimization, support for user rights such as access, correction, and deletion, working toward registration with the Data Protection Commission, and safeguards for cross border data transfers.',
   },
 ]
 
 const ACCESS_CONTROL_ITEMS = [
   { title: 'Authentication', body: 'Secure login, hashed passwords, protected sessions' },
   {
-    title: 'Role-Based Access Control (RBAC)',
-    body: 'Workspace permissions and case-level access',
+    title: 'Role based access control (RBAC)',
+    body: 'Workspace permissions and case level access',
   },
   {
     title: 'Authorization Enforcement',
@@ -49,18 +48,18 @@ const ACCESS_CONTROL_ITEMS = [
   },
   {
     title: 'Session management',
-    body: 'Short-lived tokens and automatic revocation on logout',
+    body: 'Short lived tokens and automatic revocation on logout',
   },
 ]
 
 const DATA_PROTECTION_ITEMS = [
   {
-    title: 'End-to-End Encryption & Key Management',
-    body: 'TLS 1.2+ encryption in transit, AES-256 encryption at rest, secure document storage, and provider-managed encryption keys.',
+    title: 'End to end encryption and key management',
+    body: 'TLS 1.2+ encryption in transit, AES-256 encryption at rest, secure document storage, and provider managed encryption keys.',
   },
   {
     title: 'Strong Data Governance',
-    body: 'Secure secrets management, defined retention controls, and protected access-controlled file handling.',
+    body: 'Secure secrets management, defined retention controls, and protected access controlled file handling.',
   },
 ]
 
@@ -78,7 +77,7 @@ const FAQ_ITEMS = [
   {
     question: 'What happens to our data once we stop using LegaLite?',
     answer:
-      'Once your contract ends, all of your data — along with any dedicated storage resources associated with your account — is permanently deleted. Before this happens, you’ll have the opportunity to request a full export of your data to ensure you retain everything you need.',
+      'Once your contract ends, all of your data, along with any dedicated storage resources associated with your account, is permanently deleted. Before this happens, you’ll have the opportunity to request a full export of your data to ensure you retain everything you need.',
   },
 ]
 
@@ -101,7 +100,7 @@ const CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     heading: 'Data protection',
-    intro: 'We ensure that all legal information is protected end-to-end.',
+    intro: 'We ensure that all legal information is protected end to end.',
     items: DATA_PROTECTION_ITEMS,
   },
 ]
@@ -112,7 +111,15 @@ export default function SecurityPage() {
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,#1a2240_0%,#0A1622_50%)]"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #070A0F',
+          }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C9972B]/40 to-transparent"
           aria-hidden
         />
         <div className={sectionClass}>
@@ -120,34 +127,10 @@ export default function SecurityPage() {
             <div className="grid gap-16 lg:grid-cols-[1.4fr_1fr] items-end">
               <div>
                 <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-[-2px] leading-[0.95] text-white">
-                  <strong className="font-semibold">Security built-in. trust earned.</strong>
+                  Security built in. Trust earned.
                 </h1>
 
-                <div className="mt-10 flex items-center gap-6">
-                  <Image
-                    src="/marketing/security/badge-1.svg"
-                    alt=""
-                    width={80}
-                    height={80}
-                    className="h-16 w-auto"
-                  />
-                  <Image
-                    src="/marketing/security/badge-2.svg"
-                    alt=""
-                    width={80}
-                    height={80}
-                    className="h-16 w-auto"
-                  />
-                  <Image
-                    src="/marketing/hipaa-compliant.svg"
-                    alt=""
-                    width={80}
-                    height={80}
-                    className="h-16 w-auto"
-                  />
-                </div>
-
-                <p className="mt-8 text-sm text-white/50 max-w-xl">
+                <p className="mt-10 text-sm text-white/50 max-w-xl">
                   We follow security best practices today and are actively pursuing formal certifications. This page will be updated as we achieve them.
                 </p>
               </div>
@@ -223,7 +206,7 @@ export default function SecurityPage() {
           <div className="mt-10 max-w-4xl">
             <h3 className={heading2Class}>You own your data</h3>
             <p className="mt-8 text-base text-white/60 leading-relaxed max-w-3xl">
-              You can export all your data at any time, and you have the option to permanently delete your account whenever you choose. Beyond that, our enterprise-grade security controls give you full authority over where your data is stored, how long it&rsquo;s retained, how encryption keys are managed, and complete visibility into how your information is handled across the platform.
+              You can export all your data at any time, and you have the option to permanently delete your account whenever you choose. Beyond that, our enterprise grade security controls give you full authority over where your data is stored, how long it&rsquo;s retained, how encryption keys are managed, and complete visibility into how your information is handled across the platform.
             </p>
           </div>
         </div>
@@ -239,7 +222,7 @@ export default function SecurityPage() {
             <div>
               <h3 className={heading2Class}>FAQs</h3>
               <p className="mt-8 text-base text-white/60 leading-relaxed max-w-md">
-                You own your data. We do not use customer data for model training or secondary commercial purposes. You can request exports, see audit logs, and ask for deletions — we provide clear controls in the product and contractual guarantees for enterprise agreements.
+                You own your data. We do not use customer data for model training or secondary commercial purposes. You can request exports, see audit logs, and ask for deletions, we provide clear controls in the product and contractual guarantees for enterprise agreements.
               </p>
             </div>
             <FAQAccordion items={FAQ_ITEMS} />
