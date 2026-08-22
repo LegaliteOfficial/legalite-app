@@ -5,11 +5,11 @@ import { MarketingFooter } from '@/components/marketing/marketing-footer'
 export const metadata: Metadata = {
   title: 'LegaLite – Smart Legal Practice, Research & Case Management',
   description:
-    'LegaLite simplifies legal practice management with AI-driven case tracking, billing automation, document insights, and fast legal research—all in one platform.',
+    'LegaLite simplifies legal practice management with AI driven case tracking, billing automation, document insights, and fast legal research, all in one platform.',
   openGraph: {
     title: 'LegaLite – Smart Legal Practice, Research & Case Management',
     description:
-      'LegaLite simplifies legal practice management with AI-driven case tracking, billing automation, document insights, and fast legal research—all in one platform.',
+      'LegaLite simplifies legal practice management with AI driven case tracking, billing automation, document insights, and fast legal research, all in one platform.',
     type: 'website',
   },
 }

@@ -6,7 +6,7 @@ import Image from 'next/image'
 const TABS = [
   {
     id: 'tab-1',
-    name: 'Legal research',
+    name: 'Legal intelligence',
     title: 'AI-Powered Document Drafting',
     body: 'Draft legal documents faster with AI trained on Ghanaian law. From contracts to court filings, get accurate, context-aware drafts in seconds.',
   },
