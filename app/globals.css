@@ -241,3 +241,7 @@
 .document-editor s, .document-editor strike { text-decoration: line-through; }
 .document-editor a { color: var(--gold-dark); text-decoration: underline; }
 .document-editor hr { border: none; border-top: 1px solid #E5E7EB; margin: 1.25rem 0; }
+
+/* Marketing AI search bar: flowing border glow + typing caret */
+@keyframes ai-glow { to { background-position: 200% 50%; } }
+@keyframes ai-caret { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
