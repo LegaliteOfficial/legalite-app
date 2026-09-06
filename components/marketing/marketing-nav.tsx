@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { href: '/product/case-management', label: 'Case management' },
   { href: '/product/legal-research', label: 'Legal intelligence' },
   { href: '/security-page', label: 'Security' },
+  { href: '/news', label: 'News' },
 ]
 
 export function MarketingNav() {
@@ -19,22 +20,27 @@ export function MarketingNav() {
           <Link
             href="/"
             aria-label="home"
-            className="flex items-center gap-1 text-white"
+            className="flex items-center gap-2 text-white"
           >
-            <svg
-              aria-hidden
-              viewBox="0 0 32 32"
-              width="36"
-              height="36"
-            >
-              <path d="M16 2 L1 30 L31 30 Z" fill="#9D7C32" />
-              <path
-                d="M8 21 L24 21"
-                stroke="#0A1622"
-                strokeWidth="1.75"
+            <svg aria-hidden viewBox="0 0 96 96" width="34" height="34">
+              <rect width="96" height="96" rx="20" fill="#0D1B2A" />
+              <g
+                stroke="#C9972B"
+                strokeWidth="3"
                 strokeLinecap="round"
+                strokeLinejoin="round"
                 fill="none"
-              />
+              >
+                <path d="M48 9 L55 16 L48 23 L41 16 Z" />
+                <path d="M48 16 V68" />
+                <path d="M24 30 H72" />
+                <path d="M28 30 L20 48 M28 30 L36 48" />
+                <path d="M20 48 Q28 55 36 48" />
+                <path d="M68 30 L60 48 M68 30 L76 48" />
+                <path d="M60 48 Q68 55 76 48" />
+                <path d="M36 68 H60" />
+                <path d="M31 73 H65" />
+              </g>
             </svg>
             <span className="[font-family:Literata,'Times_New_Roman',serif] text-xl font-bold italic tracking-tight">
               LegaLite

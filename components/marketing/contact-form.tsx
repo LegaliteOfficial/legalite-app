@@ -20,7 +20,7 @@ const INITIAL: FormState = {
 }
 
 const fieldClass =
-  'w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#88661D]/40'
+  'w-full bg-white/5 border border-white/10 rounded-md px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#C9972B]/40'
 
 const labelClass = 'block text-sm text-white/70 mb-2 [font-family:Inter,Arial,sans-serif]'
 
@@ -52,7 +52,7 @@ export function ContactForm() {
           className="h-12 w-12"
         />
         <p className="mt-6 text-base text-white">
-          Thank you! Your submission has been received!
+          You are on the list. We will be in touch as access opens.
         </p>
       </div>
     )
@@ -131,7 +131,7 @@ export function ContactForm() {
             id="message"
             name="Message"
             type="text"
-            placeholder="Enter a message"
+            placeholder="Tell us about your practice (optional)"
             value={values.message}
             onChange={(e) => update('message', e.target.value)}
             className={fieldClass}
@@ -139,15 +139,15 @@ export function ContactForm() {
         </div>
 
         <p className="text-xs text-white/40 leading-relaxed">
-          We&rsquo;d reach out to you with the contact information you provide here.
+          We will use these details to reach out as access opens.
         </p>
 
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="mt-2 inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white bg-gradient-to-b from-[#9D7C32] to-[#88661D] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.18)_inset] disabled:opacity-50"
+          className="mt-2 inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white bg-gradient-to-b from-[#C9972B] to-[#8C6A1E] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.18)_inset] disabled:opacity-50"
         >
-          {status === 'submitting' ? 'Please wait...' : 'Submit'}
+          {status === 'submitting' ? 'Please wait...' : 'Join the waitlist'}
         </button>
 
         {status === 'error' && (
