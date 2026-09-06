@@ -64,7 +64,7 @@ export function AiSearchTyping() {
         }}
         aria-hidden
       />
-      <div className="relative flex items-center gap-3 rounded-full border border-white/10 bg-[#0B0F16] px-5 py-4">
+      <div className="relative flex items-center gap-3 rounded-full border border-white/10 bg-[#161D27] px-5 py-4">
         <div className="min-w-0 flex-1 truncate text-sm md:text-base">
           {empty ? (
             <span className="text-white/35">Ask LegaLite AI anything...</span>

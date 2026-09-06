@@ -30,7 +30,7 @@ export function MarketingFooter() {
   }
 
   return (
-    <footer className="bg-black">
+    <footer className="bg-[#161D27]">
       {/* Demo CTA band */}
       <section className="relative overflow-hidden border-t border-white/5">
         <div

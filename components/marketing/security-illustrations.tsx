@@ -16,7 +16,7 @@ export function IllusEncrypted() {
       />
       <rect
         x="70" y="30" width="80" height="70" rx="10"
-        fill="#0E1420" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5"
+        fill="#323E4E" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5"
       />
       <rect x="82" y="44" width="46" height="4" rx="2" fill="rgba(255,255,255,0.28)" />
       <rect x="82" y="54" width="56" height="4" rx="2" fill="rgba(255,255,255,0.15)" />
@@ -28,8 +28,8 @@ export function IllusEncrypted() {
         <circle cx="124" cy="70" r="2.6" />
       </g>
       <circle cx="150" cy="92" r="16" fill="url(#enc-grad)" />
-      <rect x="144" y="90" width="12" height="10" rx="2" fill="#0A0E14" />
-      <path d="M147 90v-2.5a3 3 0 0 1 6 0V90" stroke="#0A0E14" strokeWidth="1.6" fill="none" />
+      <rect x="144" y="90" width="12" height="10" rx="2" fill="#2A3544" />
+      <path d="M147 90v-2.5a3 3 0 0 1 6 0V90" stroke="#2A3544" strokeWidth="1.6" fill="none" />
       <defs>
         <linearGradient id="enc-grad" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#E8B84B" />
@@ -47,7 +47,7 @@ export function IllusPrivateAi() {
     <svg viewBox="0 0 220 130" fill="none" className={svgClass} aria-hidden>
       <rect
         x="26" y="46" width="46" height="40" rx="8"
-        fill="#0E1420" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5"
+        fill="#323E4E" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5"
       />
       <rect x="34" y="56" width="30" height="3.5" rx="1.75" fill="rgba(255,255,255,0.25)" />
       <rect x="34" y="64" width="22" height="3.5" rx="1.75" fill="rgba(255,255,255,0.15)" />
@@ -74,7 +74,7 @@ export function IllusNoTraining() {
     <svg viewBox="0 0 220 130" fill="none" className={svgClass} aria-hidden>
       <rect
         x="24" y="44" width="42" height="44" rx="8"
-        fill="#0E1420" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5"
+        fill="#323E4E" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5"
       />
       <rect x="32" y="54" width="26" height="3.5" rx="1.75" fill="rgba(255,255,255,0.22)" />
       <rect x="32" y="62" width="20" height="3.5" rx="1.75" fill="rgba(255,255,255,0.14)" />
@@ -88,11 +88,11 @@ export function IllusNoTraining() {
         <line x1="170" y1="82" x2="190" y2="66" />
         <line x1="170" y1="50" x2="170" y2="82" />
       </g>
-      <circle cx="170" cy="50" r="5" fill="#0E1420" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4" />
-      <circle cx="170" cy="82" r="5" fill="#0E1420" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4" />
+      <circle cx="170" cy="50" r="5" fill="#323E4E" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4" />
+      <circle cx="170" cy="82" r="5" fill="#323E4E" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4" />
       <circle cx="190" cy="66" r="6.5" fill="rgba(201,151,43,0.15)" stroke="#C9972B" strokeWidth="1.5" />
 
-      <circle cx="112" cy="66" r="15" fill="#0A0E14" stroke="#E8B84B" strokeWidth="2" />
+      <circle cx="112" cy="66" r="15" fill="#2A3544" stroke="#E8B84B" strokeWidth="2" />
       <line x1="102" y1="56" x2="122" y2="76" stroke="#E8B84B" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )

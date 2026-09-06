@@ -59,7 +59,7 @@ export function SecuritySection() {
 
         <div className="mt-20 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] md:grid-cols-3">
           {SECURITY_CARDS.map((card) => (
-            <div key={card.title} className="flex flex-col bg-[#0A0E14]">
+            <div key={card.title} className="flex flex-col bg-[#2A3544]">
               <div
                 className="flex h-[160px] items-center justify-center border-b border-white/5 px-6"
                 style={{

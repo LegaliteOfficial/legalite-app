@@ -37,7 +37,7 @@ function ImagePlaceholder({ className = '' }: { className?: string }) {
       className={className}
       style={{
         background:
-          'radial-gradient(120% 100% at 20% 0%, rgba(201,151,43,0.22), transparent 55%), radial-gradient(120% 120% at 90% 100%, rgba(20,38,60,0.6), transparent 55%), #0A0E14',
+          'radial-gradient(120% 100% at 20% 0%, rgba(201,151,43,0.22), transparent 55%), radial-gradient(120% 120% at 90% 100%, rgba(20,38,60,0.6), transparent 55%), #2A3544',
       }}
       aria-hidden
     />
@@ -136,7 +136,7 @@ export default async function NewsPage() {
             >
               <div className="relative aspect-[16/9]">
                 <ArticleImage src={featured.image} />
-                <span className="absolute left-4 top-4 rounded-full bg-[#C9972B] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#0A0E14]">
+                <span className="absolute left-4 top-4 rounded-full bg-[#C9972B] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A3544]">
                   {featured.region}
                 </span>
               </div>
@@ -200,7 +200,7 @@ export default async function NewsPage() {
                 <a
                   key={a.id}
                   {...articleProps(a)}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0A0E14] transition hover:border-[#C9972B]/30"
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#2A3544] transition hover:border-[#C9972B]/30"
                 >
                   <div className="relative aspect-[16/10]">
                     <ArticleImage src={a.image} />

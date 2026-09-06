@@ -14,7 +14,7 @@ export function MarketingNav() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 bg-[#070A0F]/80 backdrop-blur border-b border-white/5">
+    <header className="sticky top-0 z-50 bg-[#1F2937]/80 backdrop-blur border-b border-white/5">
       <div className="mx-auto max-w-[1600px] px-6 lg:px-12 flex items-center h-20">
         <div className="flex flex-1 items-center">
           <Link
@@ -80,7 +80,7 @@ export function MarketingNav() {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-white/5 bg-[#070A0F]">
+        <div className="md:hidden border-t border-white/5 bg-[#1F2937]">
           <div className="mx-auto max-w-[1600px] px-6 py-6 flex flex-col gap-5">
             {NAV_LINKS.map((link) => (
               <Link

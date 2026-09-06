@@ -114,7 +114,7 @@ export default function SecurityPage() {
           className="absolute inset-0 -z-10"
           style={{
             background:
-              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #070A0F',
+              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #1F2937',
           }}
           aria-hidden
         />

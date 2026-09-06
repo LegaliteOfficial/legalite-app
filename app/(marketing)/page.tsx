@@ -4,6 +4,7 @@ import { TextScramble } from '@/components/marketing/text-scramble'
 import { FeatureTabs } from '@/components/marketing/feature-tabs'
 import { SecuritySection } from '@/components/marketing/security-section'
 import { AiSearchTyping } from '@/components/marketing/ai-typing'
+import { Reveal } from '@/components/marketing/reveal'
 
 const sectionClass = 'px-6 lg:px-12 py-32'
 const containerClass = 'mx-auto max-w-[1600px]'
@@ -121,7 +122,7 @@ export default function MarketingHome() {
           className="absolute inset-0 -z-10"
           style={{
             background:
-              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #070A0F',
+              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #1F2937',
           }}
           aria-hidden
         />
@@ -130,14 +131,49 @@ export default function MarketingHome() {
           aria-hidden
         />
 
-        <div className="px-6 lg:px-12 pt-24 pb-28">
+        <div className="px-6 lg:px-12 pt-16 pb-28">
           <div className={containerClass}>
-            <div className="max-w-4xl">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-[-1.5px] leading-[1.02] text-white">
-                The intelligent platform that runs your entire legal practice.
-              </h1>
+            {/* MEDIA — swap this block for the hero video when it is ready. */}
+            <div className="relative mx-auto w-full max-w-[1200px]">
+              <div
+                className="absolute -inset-x-16 -top-16 bottom-0 -z-10"
+                aria-hidden
+                style={{
+                  background:
+                    'radial-gradient(55% 55% at 50% 0%, rgba(201,151,43,0.16), transparent 70%)',
+                }}
+              />
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5">
+                <video
+                  className="block w-full object-cover aspect-[16/12] md:aspect-[848/464]"
+                  src="/marketing/hero.mp4"
+                  poster="/marketing/hero-poster.jpg"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="LegaLite product film"
+                />
 
-              <p className="mt-8 text-white/55 text-lg leading-relaxed max-w-2xl">
+                {/* Scrim keeps the headline legible over moving footage */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-[#1F2937] via-[#1F2937]/55 to-transparent"
+                  aria-hidden
+                />
+
+                <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 lg:p-14">
+                  <Reveal from="up" delay={250}>
+                    <h1 className="max-w-3xl text-3xl md:text-5xl lg:text-6xl [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-[-1.5px] leading-[1.03] text-white drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
+                      The intelligent platform that runs your entire legal practice.
+                    </h1>
+                  </Reveal>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-14 max-w-4xl">
+              <p className="text-white/55 text-lg leading-relaxed max-w-2xl">
                 Cases, documents, billing, scheduling, and client communication in one
                 connected system. Spend your hours on the law, not the logistics.
               </p>
@@ -160,28 +196,6 @@ export default function MarketingHome() {
               <p className="mt-6 text-white/35 text-sm">
                 Grounded in Ghanaian law. Secured with bank grade encryption.
               </p>
-            </div>
-
-            <div className="mt-24 relative mx-auto w-full max-w-[1200px]">
-              <div
-                className="absolute -inset-x-16 -top-16 bottom-0 -z-10"
-                aria-hidden
-                style={{
-                  background:
-                    'radial-gradient(55% 55% at 50% 0%, rgba(201,151,43,0.16), transparent 70%)',
-                }}
-              />
-              <div className="rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5">
-                <Image
-                  src="/marketing/legalite-app-ui.png"
-                  alt="LegaLite dashboard preview"
-                  width={1728}
-                  height={972}
-                  sizes="(max-width: 1200px) 92vw, 1200px"
-                  priority
-                  className="w-full h-auto"
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -209,7 +223,7 @@ export default function MarketingHome() {
             {FEATURE_CARDS.map((card) => (
               <div
                 key={card.title}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-[#0A0E14] overflow-hidden transition hover:border-[#C9972B]/30"
+                className="group flex flex-col rounded-2xl border border-white/10 bg-[#2A3544] overflow-hidden transition hover:border-[#C9972B]/30"
               >
                 <div
                   className="relative aspect-[4/3] flex items-center justify-center p-8 border-b border-white/5"
@@ -275,7 +289,7 @@ export default function MarketingHome() {
 
           <div className="mt-24 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] md:grid-cols-3">
             {POSITIONING_PILLARS.map((pillar, i) => (
-              <div key={pillar.title} className="bg-[#0A0E14] p-8 lg:p-10">
+              <div key={pillar.title} className="bg-[#2A3544] p-8 lg:p-10">
                 <div className="[font-family:Literata,'Times_New_Roman',serif] text-2xl text-[#C9972B]">
                   {String(i + 1).padStart(2, '0')}
                 </div>
