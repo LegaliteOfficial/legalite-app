@@ -15,11 +15,6 @@ const heading2Class =
 
 const FAQ_ITEMS = [
   {
-    question: 'Do you have SOC 2 / ISO 27001 certification?',
-    answer:
-      'Not yet. We are actively working toward SOC 2 Type II and have ISO 27001 in our roadmap. We publish audit results and certificates here when available.',
-  },
-  {
     question: 'How does LegaLite keep your data secured?',
     answer:
       'At LegaLite, protecting your data is our top priority. All data is encrypted in transit using TLS 1.2 or higher, and at rest with AES-256 encryption. For customers who require additional control, we also offer the option to encrypt data with their own encryption keys. If this is of interest, please let us know.',
@@ -57,13 +52,13 @@ export default function SecurityPage() {
                 </h1>
 
                 <p className="mt-10 text-sm text-white/50 max-w-xl">
-                  We follow security best practices today and are actively pursuing formal certifications. This page will be updated as we achieve them.
+                  We follow established security practices today. This page will be updated as our security programme grows.
                 </p>
               </div>
 
               <div>
                 <p className="text-white/70 text-base leading-relaxed max-w-md">
-                  From encryption to access management, LegaLite enforces rigorous standards to ensure your data stays secure, private, and compliant.
+                  From encryption to access management, LegaLite enforces rigorous standards to keep your data secure, private, and under your control.
                 </p>
                 <div className="mt-8">
                   <Link
