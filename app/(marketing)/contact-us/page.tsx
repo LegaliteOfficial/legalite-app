@@ -5,14 +5,14 @@ import { ContactForm } from '@/components/marketing/contact-form'
 import { Reveal } from '@/components/marketing/reveal'
 
 export const metadata: Metadata = {
-  title: 'Join the waitlist',
+  title: 'Request a demo',
 }
 
 const eyebrowClass = 'text-[#E8B84B] text-[0.6rem] tracking-[5px] uppercase'
 
 export default function ContactUsPage() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative isolate overflow-hidden">
       <div
         className="absolute inset-0 -z-10"
         style={{
@@ -26,23 +26,38 @@ export default function ContactUsPage() {
         aria-hidden
       />
 
-      <div className="px-6 lg:px-12 py-32">
-        <div className="mx-auto max-w-[1600px]">
-          <div className="grid gap-16 lg:grid-cols-2 items-start">
+      {/* Centred background illustration. Sits behind the content at low
+          opacity so the page keeps its own slate colour and the form stays
+          readable over it. */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 hidden items-center justify-center overflow-hidden md:flex"
+        aria-hidden
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/marketing/demo-request.svg"
+          alt=""
+          className="w-[min(78vw,520px)] max-h-[80%] object-contain opacity-[0.35] md:-translate-x-[26%]"
+        />
+      </div>
+
+      <div className="px-6 lg:px-12 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1240px]">
+          <div className="grid gap-12 lg:gap-14 lg:grid-cols-[1fr_minmax(0,500px)] items-start">
             {/* Left — heading + contact */}
             <Reveal from="left">
-              <div className={eyebrowClass}>Join the waitlist</div>
+              <div className={eyebrowClass}>Request a demo</div>
 
-              <h1 className="mt-6 text-5xl md:text-7xl lg:text-[5.5rem] [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-[-2px] leading-[0.95] text-white">
-                Be among the first firms on LegaLite.
+              <h1 className="mt-6 text-4xl md:text-6xl lg:text-[4.25rem] [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-[-1.5px] leading-[1] text-white">
+                See LegaLite working in your practice.
               </h1>
 
-              <p className="mt-8 text-white/55 text-lg leading-relaxed max-w-md">
-                Add your details and we will reach out as access opens, with a walkthrough
-                of how LegaLite fits the way your practice already works.
+              <p className="mt-6 text-white/55 text-base leading-relaxed max-w-md">
+                Add your details and we will set up a walkthrough of how LegaLite fits
+                the way your practice already works.
               </p>
 
-              <div className="mt-14">
+              <div className="mt-8">
                 <div className="text-sm text-white/50">General inquiries</div>
                 <Link
                   href="mailto:contact@legalite.app"

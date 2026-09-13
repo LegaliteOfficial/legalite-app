@@ -279,3 +279,20 @@ export type DocumentFormData = z.infer<typeof documentSchema>
 export type DocumentFolderFormData = z.infer<typeof documentFolderSchema>
 export type DocumentCommentFormData = z.infer<typeof documentCommentSchema>
 export type InvoiceFormData = z.infer<typeof invoiceSchema>
+
+// ── Demo request (marketing) ─────────────────────────────────────────────
+// Backs the public "Request a demo" form. Deliberately looser than the
+// auth schemas: this is a first touch from a firm that does not have an
+// account yet, so only the details we need to reach them are required.
+// The same shape is validated again server side in the demo request API
+// route before any email is sent. See docs/TENANCY.md for where this
+// leads next (an invitation that creates the firm owner account).
+export const demoRequestSchema = z.object({
+  name: z.string().min(1, 'Full name is required').max(120),
+  email: z.string().email('Enter a valid email address').max(200),
+  company: z.string().min(1, 'Firm or practice name is required').max(160),
+  phone: z.string().min(1, 'Phone number is required').max(40),
+  message: z.string().max(2000).optional(),
+})
+
+export type DemoRequestFormData = z.infer<typeof demoRequestSchema>

@@ -65,7 +65,7 @@ export function MarketingNav() {
             href="/contact-us"
             className="hidden md:inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-b from-[#9D7C32] to-[#88661D] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
           >
-            Join waitlist
+            Request a demo
           </Link>
           <button
             type="button"
@@ -97,7 +97,7 @@ export function MarketingNav() {
               onClick={() => setOpen(false)}
               className="inline-flex w-fit items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-b from-[#9D7C32] to-[#88661D]"
             >
-              Join waitlist
+              Request a demo
             </Link>
           </div>
         </div>

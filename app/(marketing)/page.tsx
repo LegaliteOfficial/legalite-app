@@ -5,6 +5,7 @@ import { FeatureTabs } from '@/components/marketing/feature-tabs'
 import { SecuritySection } from '@/components/marketing/security-section'
 import { AiSearchTyping } from '@/components/marketing/ai-typing'
 import { Reveal } from '@/components/marketing/reveal'
+import { IllustrationSwap } from '@/components/marketing/illustration-swap'
 
 const sectionClass = 'px-6 lg:px-12 py-32'
 const containerClass = 'mx-auto max-w-[1600px]'
@@ -16,23 +17,25 @@ const paragraphClass = 'text-white/50 text-base leading-relaxed'
 
 const FEATURE_CARDS = [
   {
-    image: '/marketing/invoices-table.svg',
-    alt: 'Invoices table',
+    first: '/marketing/CASE1.svg',
+    second: '/marketing/CASE2.svg',
+    alt: 'Case management illustration',
     title: 'Case management',
     body: 'Create cases, assign work, track progress, and generate reports in one click. Your team always knows where every matter stands.',
     href: '/product/case-management',
   },
   {
-    image: '/marketing/ai-search.svg',
-    alt: "UI of LegaLite's AI prompt search",
+    first: '/marketing/AI1.svg',
+    second: '/marketing/AI2.svg',
+    alt: 'Legal intelligence illustration',
     title: 'Legal intelligence',
     body: 'Plain English document queries. Instant judgment summaries. Side by side precedent comparison. Built on AI trained for Ghanaian law.',
     href: '/product/legal-research',
   },
   {
-    image: null,
-    visual: 'practice',
-    alt: 'Firm performance snapshot',
+    first: '/marketing/PERFORMANCE1.svg',
+    second: '/marketing/PERFORMANCE2.svg',
+    alt: 'Practice management illustration',
     title: 'Practice management',
     body: 'Track billable hours, generate invoices, and see firm wide performance at a glance. Real time reports on finances, clients, cases, and team, without the spreadsheets.',
     href: null,
@@ -53,50 +56,6 @@ const PRACTICE_FEATURES = [
     body: 'Draft, store, and organize every matter’s documents in one place. Secure storage and fast retrieval, always tied to the case they belong to.',
   },
 ]
-
-const PERF_BARS = [34, 48, 40, 58, 46, 64, 52, 74, 60, 86]
-const PERF_STATS = [
-  { label: 'Billable hrs', value: '182' },
-  { label: 'Invoices', value: '24' },
-  { label: 'Collected', value: 'GHS 96k' },
-]
-
-function PracticePreview() {
-  return (
-    <div className="w-full max-w-sm rounded-xl border border-white/10 bg-white/[0.03] p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-white text-sm font-medium">Firm performance</span>
-        <span className="text-[11px] text-white/40">This month</span>
-      </div>
-      <div className="mt-5 grid grid-cols-3 gap-2.5">
-        {PERF_STATS.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-3"
-          >
-            <div className="text-[9px] uppercase tracking-wide text-white/40">{s.label}</div>
-            <div className="mt-1 text-white text-sm font-semibold">{s.value}</div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-5 flex h-16 items-end gap-1.5" aria-hidden>
-        {PERF_BARS.map((h, i) => (
-          <div
-            key={i}
-            className="flex-1 rounded-[3px]"
-            style={{
-              height: `${h}%`,
-              background:
-                i === PERF_BARS.length - 1
-                  ? 'linear-gradient(180deg,#E8B84B,#C9972B)'
-                  : 'linear-gradient(180deg,rgba(201,151,43,0.55),rgba(201,151,43,0.10))',
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
 
 const POSITIONING_PILLARS = [
   {
@@ -183,13 +142,7 @@ export default function MarketingHome() {
                   href="/contact-us"
                   className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white bg-gradient-to-b from-[#C9972B] to-[#8C6A1E] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.2)_inset]"
                 >
-                  Join waitlist
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white/90 border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 transition"
-                >
-                  Sign in
+                  Request a demo
                 </Link>
               </div>
 
@@ -219,55 +172,44 @@ export default function MarketingHome() {
             </h3>
           </div>
 
-          <div className="mt-24 grid gap-6 md:grid-cols-3">
-            {FEATURE_CARDS.map((card) => (
-              <div
-                key={card.title}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-[#2A3544] overflow-hidden transition hover:border-[#C9972B]/30"
-              >
-                <div
-                  className="relative aspect-[4/3] flex items-center justify-center p-8 border-b border-white/5"
-                  style={{
-                    background:
-                      'radial-gradient(120% 100% at 50% 0%, rgba(201,151,43,0.10), transparent 60%)',
-                  }}
-                >
-                  {card.visual === 'practice' ? (
-                    <PracticePreview />
-                  ) : (
-                    card.image && (
-                      <Image
-                        src={card.image}
-                        alt={card.alt}
-                        width={400}
-                        height={300}
-                        className="max-h-full w-full max-w-sm object-contain"
-                      />
-                    )
-                  )}
-                </div>
+          <div className="mt-20 grid gap-x-8 gap-y-14 md:grid-cols-3">
+            {FEATURE_CARDS.map((card, i) => (
+              <Reveal key={card.title} from="up" delay={i * 120}>
+                <div className="group flex h-full flex-col">
+                  <IllustrationSwap
+                    first={card.first}
+                    second={card.second}
+                    alt={card.alt}
+                  />
 
-                <div className="flex flex-1 flex-col p-8">
-                  <h5 className="text-white text-lg [font-family:Inter,Arial,sans-serif] font-medium">
-                    {card.title}
-                  </h5>
-                  <p className="mt-3 flex-1 text-sm text-white/50 leading-relaxed">
-                    {card.body}
-                  </p>
-
-                  {card.href && (
-                    <div className="mt-8">
-                      <Link
-                        href={card.href}
-                        className="inline-flex items-center gap-2 text-sm text-[#E8B84B] transition group-hover:gap-3"
-                      >
-                        Learn more
-                        <span aria-hidden>&rarr;</span>
-                      </Link>
+                  <div className="mt-7 flex flex-1 flex-col">
+                    <div className="flex items-baseline gap-3">
+                      <span className="[font-family:Literata,'Times_New_Roman',serif] text-sm text-[#C9972B]">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <h5 className="text-white text-xl [font-family:Literata,'Times_New_Roman',serif] font-semibold">
+                        {card.title}
+                      </h5>
                     </div>
-                  )}
+
+                    <p className="mt-3 flex-1 text-sm text-white/50 leading-relaxed">
+                      {card.body}
+                    </p>
+
+                    {card.href && (
+                      <div className="mt-6">
+                        <Link
+                          href={card.href}
+                          className="inline-flex items-center gap-2 text-sm text-[#E8B84B] transition group-hover:gap-3"
+                        >
+                          Learn more
+                          <span aria-hidden>&rarr;</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>

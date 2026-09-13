@@ -1,30 +1,20 @@
 import Link from 'next/link'
-import type { ComponentType } from 'react'
-import {
-  IllusEncrypted,
-  IllusPrivateAi,
-  IllusNoTraining,
-} from '@/components/marketing/security-illustrations'
 
-const SECURITY_CARDS: {
-  title: string
-  body: string
-  Illustration: ComponentType
-}[] = [
+const SECURITY_CARDS = [
   {
     title: 'Isolated and encrypted',
+    image: '/marketing/security-data.svg',
     body: 'Every firm’s data is walled off at the database level and encrypted in transit and at rest. Access is scoped by role, so each person sees only what their position allows.',
-    Illustration: IllusEncrypted,
   },
   {
     title: 'Private from the AI',
+    image: '/marketing/private-ai.svg',
     body: 'The assistant only ever works with what you explicitly ask it. Your wider case files and client records are never fed to the model behind the scenes or pooled across firms.',
-    Illustration: IllusPrivateAi,
   },
   {
     title: 'Never used to train our models',
+    image: '/marketing/model-training.svg',
     body: 'We do not use your documents, cases, or client data to train or improve our models without your explicit consent. Your work stays your work.',
-    Illustration: IllusNoTraining,
   },
 ]
 
@@ -61,13 +51,18 @@ export function SecuritySection() {
           {SECURITY_CARDS.map((card) => (
             <div key={card.title} className="flex flex-col bg-[#2A3544]">
               <div
-                className="flex h-[160px] items-center justify-center border-b border-white/5 px-6"
+                className="flex h-[230px] items-center justify-center border-b border-white/5 px-10 py-8"
                 style={{
                   background:
                     'radial-gradient(120% 100% at 50% 0%, rgba(201,151,43,0.10), transparent 60%)',
                 }}
               >
-                <card.Illustration />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="p-8">
                 <h4 className="text-xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold">
