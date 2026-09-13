@@ -20,7 +20,7 @@ export default function MarketingLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="bg-[#070A0F] text-white antialiased min-h-screen [font-family:Inter,Arial,sans-serif]">
+    <div className="bg-[#1F2937] text-white antialiased min-h-screen [font-family:Inter,Arial,sans-serif]">
       <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600;7..72,700&display=swap"
         rel="stylesheet"

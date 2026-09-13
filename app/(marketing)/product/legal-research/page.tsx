@@ -26,7 +26,7 @@ export default function LegalResearchPage() {
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div
-          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,#1a2240_0%,#0A1622_50%)]"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,#2A3544_0%,#1F2937_50%)]"
           aria-hidden
         />
         <div className={sectionClass}>
@@ -45,7 +45,7 @@ export default function LegalResearchPage() {
                     href="/contact-us"
                     className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white bg-gradient-to-b from-[#9D7C32] to-[#88661D] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
                   >
-                    Join waitlist
+                    Request a demo
                   </Link>
                 </div>
               </div>
@@ -76,7 +76,7 @@ export default function LegalResearchPage() {
                   aria-hidden
                   style={{
                     background:
-                      'linear-gradient(to top, rgba(7,10,15,0.6) 0%, rgba(7,10,15,0) 45%, rgba(7,10,15,0.2) 100%)',
+                      'linear-gradient(to top, rgba(31,41,55,0.6) 0%, rgba(31,41,55,0) 45%, rgba(31,41,55,0.2) 100%)',
                   }}
                 />
               </div>
@@ -100,7 +100,7 @@ export default function LegalResearchPage() {
 
           <div className="mt-16 grid gap-4 md:grid-cols-2">
             {/* Case analysis — wide */}
-            <div className="md:col-span-2 flex flex-col gap-8 rounded-2xl border border-white/10 bg-[#0A0E14] p-6 md:flex-row md:items-center md:p-8">
+            <div className="md:col-span-2 flex flex-col gap-8 rounded-2xl border border-white/10 bg-[#2A3544] p-6 md:flex-row md:items-center md:p-8">
               <div className="md:w-[42%]">
                 <h4 className="text-2xl md:text-3xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-tight">
                   It reads the case before you do
@@ -116,7 +116,7 @@ export default function LegalResearchPage() {
             </div>
 
             {/* Outcome — narrow */}
-            <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-[#0A0E14] p-6 md:p-8">
+            <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-[#2A3544] p-6 md:p-8">
               <div>
                 <h5 className="text-white text-lg [font-family:Inter,Arial,sans-serif] font-medium">
                   Set the outcome you want
@@ -132,7 +132,7 @@ export default function LegalResearchPage() {
             </div>
 
             {/* Precedent — narrow */}
-            <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-[#0A0E14] p-6 md:p-8">
+            <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-[#2A3544] p-6 md:p-8">
               <div>
                 <h5 className="text-white text-lg [font-family:Inter,Arial,sans-serif] font-medium">
                   The authorities that actually apply
@@ -148,7 +148,7 @@ export default function LegalResearchPage() {
             </div>
 
             {/* Reasoning — wide */}
-            <div className="md:col-span-2 flex flex-col gap-8 rounded-2xl border border-white/10 bg-[#0A0E14] p-6 md:flex-row-reverse md:items-center md:p-8">
+            <div className="md:col-span-2 flex flex-col gap-8 rounded-2xl border border-white/10 bg-[#2A3544] p-6 md:flex-row-reverse md:items-center md:p-8">
               <div className="md:w-[42%]">
                 <h4 className="text-2xl md:text-3xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-tight">
                   Reasoning you can follow
@@ -211,7 +211,7 @@ export default function LegalResearchPage() {
                   aria-hidden
                   style={{
                     background:
-                      'linear-gradient(to top, rgba(7,10,15,0.5) 0%, rgba(7,10,15,0) 50%)',
+                      'linear-gradient(to top, rgba(31,41,55,0.5) 0%, rgba(31,41,55,0) 50%)',
                   }}
                 />
               </div>

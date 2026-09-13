@@ -50,7 +50,7 @@ export default function CaseManagementPage() {
           className="absolute inset-0 -z-10"
           style={{
             background:
-              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #070A0F',
+              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #1F2937',
           }}
           aria-hidden
         />
@@ -74,7 +74,7 @@ export default function CaseManagementPage() {
                     href="/contact-us"
                     className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white bg-gradient-to-b from-[#C9972B] to-[#8C6A1E] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.2)_inset]"
                   >
-                    Join waitlist
+                    Request a demo
                   </Link>
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function CaseManagementPage() {
               aria-hidden
               style={{
                 background:
-                  'linear-gradient(to top, rgba(7,10,15,0.65) 0%, rgba(7,10,15,0) 40%, rgba(7,10,15,0.2) 100%)',
+                  'linear-gradient(to top, rgba(31,41,55,0.65) 0%, rgba(31,41,55,0) 40%, rgba(31,41,55,0.2) 100%)',
               }}
             />
           </div>
