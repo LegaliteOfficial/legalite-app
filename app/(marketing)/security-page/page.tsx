@@ -13,56 +13,6 @@ const dividerClass = 'h-px bg-white/10 mt-3 mb-6'
 const heading2Class =
   "text-3xl md:text-5xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-[1.05]"
 
-const COMPLIANCE_ITEMS = [
-  {
-    title: 'SOC 2 ready',
-    body: 'Built according to SOC 2 Trust Service Criteria',
-  },
-  {
-    title: 'ISO 27001 & 27002 aligned',
-    body: 'Aligned with ISO 27001 Annex A controls covering access control, encryption, development practices, incident response, and continuity.',
-  },
-  {
-    title: 'GDPR aligned',
-    body: 'Even though LegaLite does not primarily target the EU, we uphold GDPR principles for data subject rights and processing transparency.',
-  },
-  {
-    title: 'Ghana data protection',
-    body: 'LegaLite is built around the 8 Data Protection Principles, incorporating purpose limitation, data minimization, support for user rights such as access, correction, and deletion, working toward registration with the Data Protection Commission, and safeguards for cross border data transfers.',
-  },
-]
-
-const ACCESS_CONTROL_ITEMS = [
-  { title: 'Authentication', body: 'Secure login, hashed passwords, protected sessions' },
-  {
-    title: 'Role based access control (RBAC)',
-    body: 'Workspace permissions and case level access',
-  },
-  {
-    title: 'Authorization Enforcement',
-    body: 'Strict checks across all platform resources',
-  },
-  {
-    title: 'Audit logs',
-    body: 'Detailed history of activities, actions, and document events',
-  },
-  {
-    title: 'Session management',
-    body: 'Short lived tokens and automatic revocation on logout',
-  },
-]
-
-const DATA_PROTECTION_ITEMS = [
-  {
-    title: 'End to end encryption and key management',
-    body: 'TLS 1.2+ encryption in transit, AES-256 encryption at rest, secure document storage, and provider managed encryption keys.',
-  },
-  {
-    title: 'Strong Data Governance',
-    body: 'Secure secrets management, defined retention controls, and protected access controlled file handling.',
-  },
-]
-
 const FAQ_ITEMS = [
   {
     question: 'Do you have SOC 2 / ISO 27001 certification?',
@@ -78,30 +28,6 @@ const FAQ_ITEMS = [
     question: 'What happens to our data once we stop using LegaLite?',
     answer:
       'Once your contract ends, all of your data, along with any dedicated storage resources associated with your account, is permanently deleted. Before this happens, you’ll have the opportunity to request a full export of your data to ensure you retain everything you need.',
-  },
-]
-
-interface CategoryGroup {
-  heading: string
-  intro: string
-  items: { title: string; body: string }[]
-}
-
-const CATEGORY_GROUPS: CategoryGroup[] = [
-  {
-    heading: 'Compliance & certifications',
-    intro: 'LegaLite aligns with leading security and privacy frameworks.',
-    items: COMPLIANCE_ITEMS,
-  },
-  {
-    heading: 'Access controls',
-    intro: 'LegaLite provides robust, granular control over user and workspace permissions.',
-    items: ACCESS_CONTROL_ITEMS,
-  },
-  {
-    heading: 'Data protection',
-    intro: 'We ensure that all legal information is protected end to end.',
-    items: DATA_PROTECTION_ITEMS,
   },
 ]
 
@@ -154,7 +80,7 @@ export default function SecurityPage() {
       </section>
 
       {/* SECURITY PRINCIPLES */}
-      <section className={sectionClass}>
+      <section className="px-6 lg:px-12 pt-20 pb-16">
         <div className={containerClass}>
           <div className={eyebrowClass}>Security principles</div>
           <div className={dividerClass} />
@@ -165,40 +91,11 @@ export default function SecurityPage() {
             </h3>
           </div>
 
-          <div className="mt-24 flex flex-col gap-16">
-            {CATEGORY_GROUPS.map((group, i) => (
-              <div key={group.heading}>
-                <div className="grid gap-12 lg:grid-cols-[1fr_2fr] items-start">
-                  <div>
-                    <h4 className="text-2xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight">
-                      {group.heading}
-                    </h4>
-                    <p className="mt-4 text-base text-white/50 leading-relaxed max-w-sm">
-                      {group.intro}
-                    </p>
-                  </div>
-                  <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
-                    {group.items.map((item) => (
-                      <div key={item.title}>
-                        <h5 className="text-white text-lg [font-family:Inter,Arial,sans-serif] font-medium">
-                          {item.title}
-                        </h5>
-                        <p className="mt-3 text-sm text-white/50 leading-relaxed">{item.body}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {i < CATEGORY_GROUPS.length - 1 && (
-                  <div className="h-px bg-white/10 mt-16" />
-                )}
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* CUSTOMER CONTROLS */}
-      <section className={sectionClass}>
+      <section className="px-6 lg:px-12 py-16">
         <div className={containerClass}>
           <div className={eyebrowClass}>Customer controls</div>
           <div className={dividerClass} />
