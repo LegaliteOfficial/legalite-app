@@ -2,6 +2,8 @@ import type {
   AskRequest,
   AskResponse,
   AskStreamEvent,
+  BulkJobStatusResponse,
+  BulkUploadResponse,
   DocumentView,
   FeedbackCreate,
   FeedbackResponse,
@@ -334,4 +336,148 @@ export async function getDocument(
   }
 
   return (await res.json()) as DocumentView
+}
+
+/**
+ * Server-side cap on files per POST /upload-law/bulk request — mirrors
+ * ``settings.bulk_upload_max_files`` in legalite-ai/app/core/config.py.
+ * Batches larger than this are rejected outright (413) rather than
+ * partially processed, so the caller must chunk before sending.
+ */
+export const BULK_UPLOAD_MAX_FILES = 25
+
+/**
+ * Server-side cap on ids per GET /ingestion/jobs/bulk request — mirrors
+ * ``_BULK_STATUS_MAX_IDS`` in legalite-ai/app/api/routes/jobs.py.
+ */
+export const BULK_STATUS_MAX_IDS = 50
+
+/**
+ * POST /upload-law/bulk — enqueue up to {@link BULK_UPLOAD_MAX_FILES} PDFs
+ * in one request. Legacy contract: anonymous, GLOBAL visibility, one
+ * ``doc_type`` applied to the whole batch (see
+ * legalite-ai/app/api/routes/documents.py::upload_law_bulk).
+ *
+ * The endpoint returns 202 for any batch with at least one accepted file
+ * (even if others were rejected/skipped), 200 when nothing was accepted
+ * but some were skipped as duplicates, and 422 only when every file in
+ * the batch was a hard rejection — all three are "successful" responses
+ * from the caller's point of view and should be parsed the same way, so
+ * this function does not special-case the status code.
+ */
+export async function uploadLawsBulk(
+  files: File[],
+  docType: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<BulkUploadResponse> {
+  if (!AI_BASE_URL) {
+    throw new AiServiceError(
+      'AI service URL is not configured. Set NEXT_PUBLIC_LEGALITE_AI_URL.',
+      0,
+    )
+  }
+  if (files.length === 0) {
+    throw new AiServiceError('No files to upload.', 0)
+  }
+
+  const form = new FormData()
+  for (const file of files) form.append('files', file, file.name)
+  form.append('doc_type', docType)
+
+  let res: Response
+  try {
+    res = await fetch(`${AI_BASE_URL}/upload-law/bulk`, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: form,
+      signal: options.signal,
+    })
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err
+    throw new AiServiceError(
+      'Network error reaching the AI service. Check your connection.',
+      0,
+      err instanceof Error ? err.message : undefined,
+    )
+  }
+
+  // 422 with no accepted/skipped files is still a well-formed
+  // BulkUploadResponse body (every file was rejected) — only treat this
+  // as a hard error when the body isn't the expected shape at all.
+  let body: BulkUploadResponse | { detail?: string }
+  try {
+    body = await res.json()
+  } catch {
+    throw new AiServiceError(
+      res.ok
+        ? 'The AI service returned an unreadable response.'
+        : `Bulk upload failed (${res.status}).`,
+      res.status,
+    )
+  }
+
+  if (!res.ok && !('jobs' in body)) {
+    const detail = (body as { detail?: string })?.detail
+    const message =
+      res.status === 413
+        ? (detail ?? `Batch too large — split into groups of ${BULK_UPLOAD_MAX_FILES} or fewer.`)
+        : res.status >= 500
+          ? 'The AI service is having trouble right now. Please try again shortly.'
+          : (detail ?? `Bulk upload failed (${res.status}).`)
+    throw new AiServiceError(message, res.status, detail)
+  }
+
+  return body as BulkUploadResponse
+}
+
+/**
+ * GET /ingestion/jobs/bulk?ids=... — poll status for up to
+ * {@link BULK_STATUS_MAX_IDS} ingestion jobs in one round trip. Pass the
+ * ``job_id``s returned by {@link uploadLawsBulk}; unknown or
+ * not-visible ids come back in ``missing`` rather than as an error (see
+ * legalite-ai/app/api/routes/jobs.py::get_jobs_bulk).
+ */
+export async function getIngestionJobsBulk(
+  jobIds: string[],
+  options: { signal?: AbortSignal } = {},
+): Promise<BulkJobStatusResponse> {
+  if (!AI_BASE_URL) {
+    throw new AiServiceError(
+      'AI service URL is not configured. Set NEXT_PUBLIC_LEGALITE_AI_URL.',
+      0,
+    )
+  }
+  if (jobIds.length === 0) return { found: [], missing: [] }
+
+  let res: Response
+  try {
+    res = await fetch(
+      `${AI_BASE_URL}/ingestion/jobs/bulk?ids=${jobIds.map(encodeURIComponent).join(',')}`,
+      { method: 'GET', headers: { Accept: 'application/json' }, signal: options.signal },
+    )
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err
+    throw new AiServiceError(
+      'Network error while checking upload progress.',
+      0,
+      err instanceof Error ? err.message : undefined,
+    )
+  }
+
+  if (!res.ok) {
+    let detail: string | undefined
+    try {
+      const errBody = (await res.json()) as { detail?: string }
+      detail = errBody?.detail
+    } catch {
+      // body wasn't JSON
+    }
+    throw new AiServiceError(
+      detail ?? `Failed to check upload progress (${res.status}).`,
+      res.status,
+      detail,
+    )
+  }
+
+  return (await res.json()) as BulkJobStatusResponse
 }

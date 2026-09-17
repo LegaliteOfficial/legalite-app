@@ -244,3 +244,70 @@ export interface DocumentView {
   created_at: string
   updated_at: string
 }
+
+/**
+ * Mirrors legalite-ai/app/schemas/jobs.py — the bulk PDF ingestion
+ * pipeline behind POST /upload-law/bulk and GET /ingestion/jobs/bulk.
+ */
+export type JobStatus = 'queued' | 'processing' | 'completed' | 'failed'
+
+export interface JobStatusResponse {
+  id: string
+  status: JobStatus
+  progress: number
+  document_id: string | null
+  chunk_count: number
+  visibility_scope: string
+  document_origin: string | null
+  title: string
+  doc_type: string
+  source_filename: string
+  organization_id: string | null
+  user_id: string | null
+  error_message: string | null
+  retry_count: number
+  enqueued_at: string | null
+  started_at: string | null
+  finished_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface BulkUploadJobResult {
+  filename: string
+  title: string
+  job_id: string
+  status: JobStatus
+  document_id: string | null
+}
+
+export interface BulkUploadRejection {
+  filename: string
+  reason: string
+}
+
+export type BulkUploadSkipReason = 'already_ingested' | 'in_flight' | 'duplicate_in_batch'
+
+export interface BulkUploadSkipped {
+  filename: string
+  title: string
+  reason: BulkUploadSkipReason
+  existing_document_id: string | null
+  existing_job_id: string | null
+}
+
+export interface BulkUploadResponse {
+  accepted: number
+  rejected: number
+  skipped: number
+  max_files_per_request: number
+  jobs: BulkUploadJobResult[]
+  rejections: BulkUploadRejection[]
+  skipped_duplicates: BulkUploadSkipped[]
+  poll_endpoint: string
+}
+
+export interface BulkJobStatusResponse {
+  found: JobStatusResponse[]
+  missing: string[]
+}
