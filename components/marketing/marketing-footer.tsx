@@ -56,9 +56,9 @@ export function MarketingFooter() {
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/contact-us"
-                className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-medium text-white bg-gradient-to-b from-[#C9972B] to-[#8C6A1E] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.2)_inset]"
+                className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-semibold text-[#0D1B2A] bg-gradient-to-b from-[#E8B84B] to-[#C9972B] hover:brightness-105 transition shadow-[0_10px_30px_-10px_rgba(201,151,43,0.7),0_1px_0_rgba(255,255,255,0.35)_inset]"
               >
-                Request a demo
+                See it in action
               </Link>
             </div>
           </div>

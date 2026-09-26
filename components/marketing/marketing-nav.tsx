@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { href: '/product/case-management', label: 'Case management' },
   { href: '/product/legal-research', label: 'Legal intelligence' },
   { href: '/security-page', label: 'Security' },
+  { href: '/#pricing', label: 'Pricing' },
   { href: '/news', label: 'News' },
 ]
 
@@ -63,9 +64,9 @@ export function MarketingNav() {
         <div className="flex flex-1 items-center justify-end gap-4">
           <Link
             href="/contact-us"
-            className="hidden md:inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-b from-[#9D7C32] to-[#88661D] hover:opacity-90 transition shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
+            className="hidden md:inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-[#0D1B2A] bg-gradient-to-b from-[#E8B84B] to-[#C9972B] hover:brightness-105 transition shadow-[0_1px_0_rgba(255,255,255,0.35)_inset]"
           >
-            Request a demo
+            See it in action
           </Link>
           <button
             type="button"
@@ -95,9 +96,9 @@ export function MarketingNav() {
             <Link
               href="/contact-us"
               onClick={() => setOpen(false)}
-              className="inline-flex w-fit items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-b from-[#9D7C32] to-[#88661D]"
+              className="inline-flex w-fit items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-[#0D1B2A] bg-gradient-to-b from-[#E8B84B] to-[#C9972B]"
             >
-              Request a demo
+              See it in action
             </Link>
           </div>
         </div>

@@ -18,7 +18,12 @@ const SECURITY_CARDS = [
   },
 ]
 
-export function SecuritySection() {
+interface TrustFact {
+  value: string
+  label: string
+}
+
+export function SecuritySection({ facts }: { facts?: TrustFact[] }) {
   return (
     <section className="px-6 lg:px-12 py-32">
       <div className="mx-auto max-w-[1600px]">
@@ -47,7 +52,20 @@ export function SecuritySection() {
           </div>
         </div>
 
-        <div className="mt-20 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] md:grid-cols-3">
+        {facts && facts.length > 0 && (
+          <dl className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] lg:grid-cols-4">
+            {facts.map((fact) => (
+              <div key={fact.value} className="flex flex-col gap-1 bg-[#1F2937] px-6 py-6 lg:px-8">
+                <dt className="text-xs text-white/45 leading-relaxed">{fact.label}</dt>
+                <dd className="order-first text-xl md:text-2xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold">
+                  {fact.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        <div className={`${facts && facts.length > 0 ? 'mt-6' : 'mt-20'} grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] md:grid-cols-3`}>
           {SECURITY_CARDS.map((card) => (
             <div key={card.title} className="flex flex-col bg-[#2A3544]">
               <div
