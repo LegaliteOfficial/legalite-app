@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { TextScramble } from '@/components/marketing/text-scramble'
 import { FeatureTabs } from '@/components/marketing/feature-tabs'
 import { SecuritySection } from '@/components/marketing/security-section'
-import { AiSearchTyping } from '@/components/marketing/ai-typing'
+import { ResearchSlip } from '@/components/marketing/research-slip'
 import { Reveal } from '@/components/marketing/reveal'
 import { IllustrationSwap } from '@/components/marketing/illustration-swap'
 import { HeroProductDemo } from '@/components/marketing/hero-product-demo'
@@ -347,7 +347,7 @@ export default function MarketingHome() {
             </div>
 
             <div className="flex items-center rounded-2xl border border-white/5 bg-white/[0.02] p-6 md:p-12">
-              <AiSearchTyping />
+              <ResearchSlip />
             </div>
           </div>
         </div>
