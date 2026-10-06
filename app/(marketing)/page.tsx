@@ -14,7 +14,6 @@ import { SecuritySection } from '@/components/marketing/security-section'
 import { ResearchSlip } from '@/components/marketing/research-slip'
 import { Reveal } from '@/components/marketing/reveal'
 import { HeroProductDemo } from '@/components/marketing/hero-product-demo'
-import { ExpandingPanel } from '@/components/marketing/expanding-panel'
 import { PersonaTabs } from '@/components/marketing/persona-tabs'
 import { FAQAccordion } from '@/components/marketing/faq-accordion'
 import { PhotoCaption, SectionMark } from '@/components/marketing/section-mark'
@@ -219,24 +218,25 @@ export default function MarketingHome() {
         </div>
       </section>
 
-      {/* PRODUCT DEMO: a navy panel that opens out of the cream page on scroll */}
-      <ExpandingPanel
+      {/* PRODUCT DEMO: the cream warms through gold into navy at dusk, then
+          fades back to cream behind the lower half of the demo so the
+          product itself bridges the two colours. */}
+      <section
         id="product"
-        className="relative scroll-mt-20 overflow-hidden bg-[#0D1B2A] px-6 lg:px-12 py-20 lg:py-24 [--panel-progress:1] [--panel-scale:1]"
+        className="relative scroll-mt-20 px-6 lg:px-12 pt-[320px] pb-8"
+        style={{
+          background:
+            'linear-gradient(180deg, #F8F4EE 0px, #F5E9CC 50px, #EBCF8E 100px, #C99A48 150px, #6E5634 200px, #2B2D33 245px, #14202E 280px, #0D1B2A 310px, #0D1B2A 58%, #1A2638 66%, #4A4C52 74%, #9A9284 82%, #D8CCB6 91%, #F8F4EE 100%)',
+        }}
       >
         <div
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-x-0 top-[180px] h-[520px]"
           aria-hidden
           style={{
-            opacity: 'calc(0.35 + var(--panel-progress) * 0.65)',
-            background:
-              'radial-gradient(60% 45% at 50% 0%, rgba(242,198,90,0.28), transparent 70%), radial-gradient(40% 40% at 100% 100%, rgba(201,151,43,0.14), transparent 70%)',
+            background: 'radial-gradient(45% 40% at 50% 45%, rgba(242,198,90,0.18), transparent 100%)',
           }}
         />
-        <div
-          className={`${mk.container} relative origin-top`}
-          style={{ transform: 'scale(var(--panel-scale))' }}
-        >
+        <div className={`${mk.container} relative`}>
           <div className="mx-auto max-w-3xl text-center">
             <div className="flex justify-center">
               <SectionMark light>The workspace</SectionMark>
@@ -246,14 +246,13 @@ export default function MarketingHome() {
             </h2>
             <p className="mt-4 text-lg text-white/65">Click through matters, billing, and research.</p>
           </div>
-          <div
-            className="mt-12"
-            style={{ transform: 'translateY(calc((1 - var(--panel-progress)) * 80px))' }}
-          >
-            <HeroProductDemo />
-          </div>
+          <Reveal from="up" delay={120}>
+            <div className="mx-auto mt-12 max-w-[1200px]">
+              <HeroProductDemo />
+            </div>
+          </Reveal>
         </div>
-      </ExpandingPanel>
+      </section>
 
       {/* PRODUCTS */}
       <section className={mk.section}>
