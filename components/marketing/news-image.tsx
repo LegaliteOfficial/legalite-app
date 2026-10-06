@@ -7,35 +7,39 @@
  * browser's opaque response blocking cannot turn a card into a broken image
  * icon. If the proxy still cannot produce an image, this falls back to the
  * same gradient placeholder used for articles that have no image at all, so
- * a failure is indistinguishable from a story that simply had no photo.
+ * a failure is indistinguishable from a story that simply had no photo:
+ * both show a stand in photo from the marketing library.
  */
 
 import { useState } from 'react'
 
-export function NewsImagePlaceholder({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={className}
-      style={{
-        background:
-          'radial-gradient(120% 100% at 20% 0%, rgba(201,151,43,0.22), transparent 55%), radial-gradient(120% 120% at 90% 100%, rgba(20,38,60,0.6), transparent 55%), #2A3544',
-      }}
-      aria-hidden
-    />
-  )
+// Stand in photography for stories that arrive without an image, so a card
+// never shows an empty panel. Picked by a stable hash of the story id so the
+// same story always gets the same photo.
+const FALLBACK_PHOTOS = [
+  '/marketing/photos/law-library.jpg',
+  '/marketing/photos/independence-arch.jpg',
+  '/marketing/photos/signing-documents.jpg',
+  '/marketing/photos/accra-aerial.jpg',
+  '/marketing/photos/partner-meeting.jpg',
+  '/marketing/photos/lawyer-reviewing-file.jpg',
+]
+
+function fallbackFor(seed: string) {
+  let hash = 0
+  for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return FALLBACK_PHOTOS[hash % FALLBACK_PHOTOS.length]
 }
 
-export function NewsImage({ src }: { src: string | null }) {
+export function NewsImage({ src, seed }: { src: string | null; seed: string }) {
   const [failed, setFailed] = useState(false)
 
-  if (!src || failed) {
-    return <NewsImagePlaceholder className="absolute inset-0" />
-  }
+  const url = !src || failed ? fallbackFor(seed) : `/api/news-image?url=${encodeURIComponent(src)}`
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`/api/news-image?url=${encodeURIComponent(src)}`}
+      src={url}
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}

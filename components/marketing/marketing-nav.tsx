@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { List, X } from '@phosphor-icons/react'
 const NAV_LINKS = [
@@ -13,15 +14,16 @@ const NAV_LINKS = [
 
 export function MarketingNav() {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-50 bg-[#1F2937]/80 backdrop-blur border-b border-white/5">
+    <header className="sticky top-0 z-50 border-b border-[#0D1B2A]/[0.08] bg-white/95 backdrop-blur">
       <div className="mx-auto max-w-[1600px] px-6 lg:px-12 flex items-center h-20">
         <div className="flex flex-1 items-center">
           <Link
             href="/"
             aria-label="home"
-            className="flex items-center gap-2 text-white"
+            className={`flex items-center gap-2 text-[#0D1B2A]`}
           >
             <svg aria-hidden viewBox="0 0 96 96" width="34" height="34">
               <rect width="96" height="96" rx="20" fill="#0D1B2A" />
@@ -54,7 +56,8 @@ export function MarketingNav() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-white/80 hover:text-white transition"
+              className={`text-sm font-medium transition ${pathname === link.href ? 'text-[#0D1B2A]' : 'text-[#0D1B2A]/65 hover:text-[#0D1B2A]'}`}
+              aria-current={pathname === link.href ? 'page' : undefined}
             >
               {link.label}
             </Link>
@@ -64,7 +67,7 @@ export function MarketingNav() {
         <div className="flex flex-1 items-center justify-end gap-4">
           <Link
             href="/contact-us"
-            className="hidden md:inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-[#0D1B2A] bg-gradient-to-b from-[#E8B84B] to-[#C9972B] hover:brightness-105 transition shadow-[0_1px_0_rgba(255,255,255,0.35)_inset]"
+            className="hidden md:inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-[#0D1B2A] bg-gradient-to-b from-[#F2C65A] to-[#C9972B] hover:brightness-105 transition shadow-[0_1px_0_rgba(255,255,255,0.35)_inset]"
           >
             See it in action
           </Link>
@@ -72,7 +75,7 @@ export function MarketingNav() {
             type="button"
             aria-label="menu"
             aria-expanded={open}
-            className="md:hidden text-white p-2"
+            className={`md:hidden p-2 text-[#0D1B2A]`}
             onClick={() => setOpen((v) => !v)}
           >
             {open ? <X size={20} /> : <List size={20} />}
@@ -81,14 +84,14 @@ export function MarketingNav() {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-white/5 bg-[#1F2937]">
+        <div className={`md:hidden border-t border-[#0D1B2A]/[0.08] bg-white`}>
           <div className="mx-auto max-w-[1600px] px-6 py-6 flex flex-col gap-5">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="text-base text-white/80 hover:text-white"
+                className={`text-base text-[#0D1B2A]/80 hover:text-[#0D1B2A]`}
               >
                 {link.label}
               </Link>
@@ -96,7 +99,7 @@ export function MarketingNav() {
             <Link
               href="/contact-us"
               onClick={() => setOpen(false)}
-              className="inline-flex w-fit items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium text-[#0D1B2A] bg-gradient-to-b from-[#E8B84B] to-[#C9972B]"
+              className="inline-flex w-fit items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-[#0D1B2A] bg-gradient-to-b from-[#F2C65A] to-[#C9972B]"
             >
               See it in action
             </Link>

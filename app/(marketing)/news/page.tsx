@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { getLawNews, timeAgo, type NewsArticle } from '@/lib/news'
-import { NewsImage, NewsImagePlaceholder } from '@/components/marketing/news-image'
+import { NewsImage } from '@/components/marketing/news-image'
+import { SectionMark } from '@/components/marketing/section-mark'
+import { mk } from '@/lib/marketing-theme'
 
 export const metadata: Metadata = {
   title: 'News',
@@ -9,10 +11,6 @@ export const metadata: Metadata = {
 // Regenerate the page at most every 30 minutes to stay within the free quota.
 export const revalidate = 1800
 
-const sectionClass = 'px-6 lg:px-12'
-const containerClass = 'mx-auto max-w-[1600px]'
-const eyebrowClass = 'text-[#E8B84B] text-[0.6rem] tracking-[5px] uppercase'
-const dividerClass = 'h-px bg-white/10 mt-3 mb-6'
 
 const TABS = ['Top', 'Local', 'International', 'Courts', 'Legislation']
 
@@ -53,25 +51,20 @@ export default async function NewsPage() {
   const more = rest.slice(5, 11)
 
   return (
-    <section className={`${sectionClass} pt-24 pb-32 relative`}>
-      <div
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C9972B]/40 to-transparent"
-        aria-hidden
-      />
-      <div className={containerClass}>
+    <section className="px-6 lg:px-12 pt-12 pb-20 lg:pt-16 lg:pb-28">
+      <div className={mk.container}>
         {/* Header */}
-        <div className={eyebrowClass}>News</div>
-        <div className={dividerClass} />
+        <SectionMark>News</SectionMark>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
-          <h1 className="text-4xl md:text-6xl [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-[-1px] leading-[1.02] text-white max-w-3xl">
+        <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <h1 className={`${mk.h1} max-w-3xl lg:text-6xl`}>
             Law news, from Accra to the world
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             {['Ghana', 'English'].map((c) => (
               <span
                 key={c}
-                className="inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-1.5 text-xs text-white/70"
+                className="inline-flex items-center rounded-lg border border-[#0D1B2A]/10 bg-white px-3.5 py-1.5 text-xs font-medium text-[#0D1B2A]/70"
               >
                 {c}
               </span>
@@ -80,18 +73,18 @@ export default async function NewsPage() {
         </div>
 
         {isPreview && (
-          <p className="mt-6 text-xs text-white/35">
+          <p className="mt-6 text-xs text-[#0D1B2A]/45">
             Preview feed with sample stories. Live law news appears once the news API key is
             configured.
           </p>
         )}
 
         {/* Tabs */}
-        <div className="mt-8 flex flex-wrap gap-1 border-b border-white/10">
+        <div className="mt-8 flex flex-wrap gap-1 border-b border-[#0D1B2A]/10">
           {TABS.map((t, i) => (
             <span
               key={t}
-              className={`relative px-4 py-3 text-sm ${i === 0 ? 'text-white' : 'text-white/45'}`}
+              className={`relative px-4 py-3 text-sm ${i === 0 ? 'font-semibold text-[#0D1B2A]' : 'text-[#0D1B2A]/50'}`}
             >
               {t}
               {i === 0 && (
@@ -106,39 +99,39 @@ export default async function NewsPage() {
           <article>
             <a
               {...articleProps(featured)}
-              className="group block overflow-hidden rounded-2xl border border-white/10"
+              className="group block overflow-hidden rounded-2xl bg-[#E9E1D3] shadow-[0_30px_60px_-34px_rgba(13,27,42,0.45)]"
             >
               <div className="relative aspect-[16/9]">
-                <NewsImage src={featured.image} />
-                <span className="absolute left-4 top-4 rounded-full bg-[#C9972B] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A3544]">
+                <NewsImage src={featured.image} seed={featured.id} />
+                <span className="absolute left-4 top-4 rounded-full bg-[#C9972B] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#0D1B2A]">
                   {featured.region}
                 </span>
               </div>
             </a>
 
             <div className="mt-6 flex items-center gap-2 text-xs">
-              <span className="font-semibold uppercase tracking-wide text-[#E8B84B]">
+              <span className="font-semibold uppercase tracking-wide text-[#A67A1C]">
                 {featured.source}
               </span>
               {timeAgo(featured.pubDate) && (
-                <span className="text-white/30">· {timeAgo(featured.pubDate)}</span>
+                <span className="text-[#0D1B2A]/40">· {timeAgo(featured.pubDate)}</span>
               )}
             </div>
 
             <a {...articleProps(featured)} className="group block">
-              <h2 className="mt-3 text-2xl md:text-4xl [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-tight text-white transition group-hover:text-white/80">
+              <h2 className="mt-3 text-2xl md:text-4xl [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-tight text-[#0D1B2A] transition group-hover:text-[#A67A1C]">
                 {featured.title}
               </h2>
             </a>
             {featured.description && (
-              <p className="mt-4 text-base text-white/55 leading-relaxed max-w-2xl">
+              <p className="mt-4 text-base text-[#0D1B2A]/65 leading-relaxed max-w-2xl">
                 {featured.description}
               </p>
             )}
             {featured.link !== '#' && (
               <a
                 {...articleProps(featured)}
-                className="mt-6 inline-flex items-center gap-2 text-sm text-[#E8B84B]"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#A67A1C]"
               >
                 Read the full story at {featured.source}
                 <span aria-hidden>&rarr;</span>
@@ -148,15 +141,15 @@ export default async function NewsPage() {
 
           {/* Latest list */}
           <aside>
-            <div className="text-[10px] uppercase tracking-[3px] text-white/40">Latest</div>
-            <div className="mt-5 divide-y divide-white/10 border-t border-white/10">
+            <div className="text-xs font-semibold uppercase tracking-[2.5px] text-[#A67A1C]">Latest</div>
+            <div className="mt-5 divide-y divide-[#0D1B2A]/10 border-t border-[#0D1B2A]/10">
               {latest.map((a) => (
                 <a key={a.id} {...articleProps(a)} className="group block py-5">
                   <div className="flex items-center gap-2 text-[11px]">
-                    <span className="text-[#E8B84B]">{a.source}</span>
-                    {timeAgo(a.pubDate) && <span className="text-white/30">· {timeAgo(a.pubDate)}</span>}
+                    <span className="font-semibold text-[#A67A1C]">{a.source}</span>
+                    {timeAgo(a.pubDate) && <span className="text-[#0D1B2A]/40">· {timeAgo(a.pubDate)}</span>}
                   </div>
-                  <p className="mt-2 text-[15px] text-white/80 leading-snug transition group-hover:text-white">
+                  <p className="mt-2 text-[15px] font-medium text-[#0D1B2A]/85 leading-snug transition group-hover:text-[#A67A1C]">
                     {a.title}
                   </p>
                 </a>
@@ -168,26 +161,26 @@ export default async function NewsPage() {
         {/* More stories */}
         {more.length > 0 && (
           <div className="mt-20">
-            <div className="text-[10px] uppercase tracking-[3px] text-white/40">More stories</div>
+            <div className="text-xs font-semibold uppercase tracking-[2.5px] text-[#A67A1C]">More stories</div>
             <div className="mt-6 grid gap-6 md:grid-cols-3">
               {more.map((a) => (
                 <a
                   key={a.id}
                   {...articleProps(a)}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#2A3544] transition hover:border-[#C9972B]/30"
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-[#0D1B2A]/[0.08] bg-white transition hover:border-[#C9972B]/50 hover:shadow-[0_24px_50px_-30px_rgba(13,27,42,0.45)]"
                 >
                   <div className="relative aspect-[16/10]">
-                    <NewsImage src={a.image} />
+                    <NewsImage src={a.image} seed={a.id} />
                   </div>
                   <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-center gap-2 text-[11px]">
-                      <span className="rounded-full border border-[#C9972B]/25 bg-[#C9972B]/[0.08] px-2 py-0.5 text-[#E8B84B]">
+                      <span className="rounded-md bg-[#C9972B]/15 px-2 py-0.5 font-semibold text-[#A67A1C]">
                         {a.region}
                       </span>
-                      <span className="text-white/30">{a.source}</span>
-                      {timeAgo(a.pubDate) && <span className="text-white/25">· {timeAgo(a.pubDate)}</span>}
+                      <span className="text-[#0D1B2A]/55">{a.source}</span>
+                      {timeAgo(a.pubDate) && <span className="text-[#0D1B2A]/40">· {timeAgo(a.pubDate)}</span>}
                     </div>
-                    <p className="mt-3 text-base text-white/80 leading-snug transition group-hover:text-white">
+                    <p className="mt-3 text-base font-medium text-[#0D1B2A]/85 leading-snug transition group-hover:text-[#A67A1C]">
                       {a.title}
                     </p>
                   </div>

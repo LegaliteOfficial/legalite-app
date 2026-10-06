@@ -84,7 +84,7 @@ export function ResearchSlip() {
   const typingFinished = typed >= current.question.length
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#1A222E]">
+    <div className="w-full overflow-hidden rounded-2xl border border-[#0D1B2A] bg-[#0D1B2A] shadow-[0_30px_60px_-34px_rgba(13,27,42,0.6)]">
       {/* Slip header, in the register of a case file rather than an app chrome */}
       <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-3">
         <span className="text-[10px] uppercase tracking-[2.5px] text-white/35">

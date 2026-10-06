@@ -1,21 +1,32 @@
+import Image from 'next/image'
 import Link from 'next/link'
+import { ArrowRight, Database, LockKey, ShieldCheck } from '@phosphor-icons/react/dist/ssr'
+import { mk } from '@/lib/marketing-theme'
+import { SectionMark } from '@/components/marketing/section-mark'
 
-const SECURITY_CARDS = [
+const PRINCIPLES = [
   {
+    Icon: LockKey,
     title: 'Isolated and encrypted',
-    image: '/marketing/security-data.svg',
-    body: 'Every firm’s data is walled off at the database level and encrypted in transit and at rest. Access is scoped by role, so each person sees only what their position allows.',
+    body: 'Each firm is walled off at the database and encrypted in transit and at rest.',
   },
   {
+    Icon: ShieldCheck,
     title: 'Private from the AI',
-    image: '/marketing/private-ai.svg',
-    body: 'The assistant only ever works with what you explicitly ask it. Your wider case files and client records are never fed to the model behind the scenes or pooled across firms.',
+    body: 'The assistant only sees what you ask it. Records are never pooled across firms.',
   },
   {
-    title: 'Never used to train our models',
-    image: '/marketing/model-training.svg',
-    body: 'We do not use your documents, cases, or client data to train or improve our models without your explicit consent. Your work stays your work.',
+    Icon: Database,
+    title: 'Never used for training',
+    body: 'Your documents and client data do not train our models without your consent.',
   },
+]
+
+const DEFAULT_FACTS = [
+  { value: 'AES-256', label: 'Stored data' },
+  { value: 'TLS 1.2+', label: 'Data in transit' },
+  { value: 'Per firm', label: 'Data isolation' },
+  { value: 'Role based', label: 'Access control' },
 ]
 
 interface TrustFact {
@@ -23,73 +34,54 @@ interface TrustFact {
   label: string
 }
 
-export function SecuritySection({ facts }: { facts?: TrustFact[] }) {
+export function SecuritySection({ facts = DEFAULT_FACTS }: { facts?: TrustFact[] }) {
   return (
-    <section className="px-6 lg:px-12 py-32">
-      <div className="mx-auto max-w-[1600px]">
-        <div className="text-[#E8B84B] text-[0.6rem] tracking-[5px] uppercase">Security</div>
-        <div className="h-px bg-white/10 mt-3 mb-6" />
-
-        <div className="mt-12 grid gap-10 lg:grid-cols-2 items-start">
-          <h2 className="text-3xl md:text-5xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-[1.05]">
-            Built with the integrity the law demands
-          </h2>
-          <div>
-            <p className="text-white/60 text-base leading-relaxed max-w-md">
-              Your clients trust you with their most sensitive matters, and we hold to
-              the same standard. Your data stays isolated, encrypted, and never feeds our
-              models without your consent.
-            </p>
-            <div className="mt-6">
-              <Link
-                href="/security-page"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2 text-sm text-white transition hover:border-[#C9972B]/30 hover:bg-white/5"
-              >
-                Learn more
-                <span aria-hidden>&rarr;</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {facts && facts.length > 0 && (
-          <dl className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] lg:grid-cols-4">
+    <section className={`${mk.section} bg-white`}>
+      <div className={`${mk.container} grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-20`}>
+        <div className={`${mk.photo} ${mk.shadow} aspect-[4/5] sm:aspect-[4/3] lg:aspect-[4/5]`}>
+          <Image
+            src="/marketing/photos/signing-documents.jpg"
+            alt="A client signing documents across the desk from their lawyer"
+            fill
+            sizes="(min-width: 1024px) 45vw, 100vw"
+            className="object-cover"
+          />
+          <dl className="absolute inset-x-4 bottom-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-[#0D1B2A]/10 sm:inset-x-6 sm:bottom-6 lg:grid-cols-4">
             {facts.map((fact) => (
-              <div key={fact.value} className="flex flex-col gap-1 bg-[#1F2937] px-6 py-6 lg:px-8">
-                <dt className="text-xs text-white/45 leading-relaxed">{fact.label}</dt>
-                <dd className="order-first text-xl md:text-2xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold">
-                  {fact.value}
-                </dd>
+              <div key={fact.value} className="flex flex-col gap-0.5 bg-white/95 px-4 py-3 backdrop-blur">
+                <dt className="text-[11px] text-[#0D1B2A]/55">{fact.label}</dt>
+                <dd className="order-first text-base font-semibold text-[#0D1B2A]">{fact.value}</dd>
               </div>
             ))}
           </dl>
-        )}
+        </div>
 
-        <div className={`${facts && facts.length > 0 ? 'mt-6' : 'mt-20'} grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] md:grid-cols-3`}>
-          {SECURITY_CARDS.map((card) => (
-            <div key={card.title} className="flex flex-col bg-[#2A3544]">
-              <div
-                className="flex h-[230px] items-center justify-center border-b border-white/5 px-10 py-8"
-                style={{
-                  background:
-                    'radial-gradient(120% 100% at 50% 0%, rgba(201,151,43,0.10), transparent 60%)',
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <div className="p-8">
-                <h4 className="text-xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold">
-                  {card.title}
-                </h4>
-                <p className="mt-3 text-sm text-white/50 leading-relaxed">{card.body}</p>
-              </div>
-            </div>
-          ))}
+        <div>
+          <SectionMark>Security</SectionMark>
+          <h2 className={`mt-5 ${mk.h2}`}>Built with the integrity the law demands.</h2>
+          <p className={`mt-5 max-w-lg ${mk.lead}`}>
+            Your clients trust you with their most sensitive matters. We hold your data to
+            the same standard.
+          </p>
+
+          <ul className="mt-10 space-y-6">
+            {PRINCIPLES.map(({ Icon, title, body }) => (
+              <li key={title} className="flex gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#C9972B]/15 text-[#A67A1C]">
+                  <Icon size={22} weight="duotone" />
+                </span>
+                <div>
+                  <h3 className="font-semibold text-[#0D1B2A]">{title}</h3>
+                  <p className="mt-1 text-sm text-[#0D1B2A]/60 leading-relaxed">{body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <Link href="/security-page" className={`mt-10 ${mk.textLink}`}>
+            How we protect your data
+            <ArrowRight size={14} weight="bold" />
+          </Link>
         </div>
       </div>
     </section>
