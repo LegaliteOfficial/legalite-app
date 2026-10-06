@@ -425,9 +425,8 @@ export default function MarketingHome() {
             {PRICING_TIERS.map((tier) => (
               <div
                 key={tier.name}
-                className={`flex flex-col rounded-2xl p-7 ${
-                  tier.featured ? `bg-[#0D1B2A] text-white ${mk.shadow}` : mk.card
-                }`}
+                className={`flex flex-col rounded-2xl p-7 ${tier.featured ? `bg-[#0D1B2A] text-white ${mk.shadow}` : mk.card
+                  }`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className={`text-sm font-semibold ${tier.featured ? 'text-[#F2C65A]' : 'text-[#A67A1C]'}`}>
