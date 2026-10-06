@@ -1,116 +1,96 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import {
+  ArrowRight,
+  CalendarCheck,
+  CheckCircle,
+  FolderOpen,
+  Gavel,
+  Receipt,
+  Timer,
+} from '@phosphor-icons/react/dist/ssr'
 import { TextScramble } from '@/components/marketing/text-scramble'
-import { FeatureTabs } from '@/components/marketing/feature-tabs'
 import { SecuritySection } from '@/components/marketing/security-section'
 import { ResearchSlip } from '@/components/marketing/research-slip'
 import { Reveal } from '@/components/marketing/reveal'
-import { IllustrationSwap } from '@/components/marketing/illustration-swap'
 import { HeroProductDemo } from '@/components/marketing/hero-product-demo'
+import { ExpandingPanel } from '@/components/marketing/expanding-panel'
 import { PersonaTabs } from '@/components/marketing/persona-tabs'
 import { FAQAccordion } from '@/components/marketing/faq-accordion'
+import { PhotoCaption, SectionMark } from '@/components/marketing/section-mark'
+import { mk, serif } from '@/lib/marketing-theme'
 
-const sectionClass = 'px-6 lg:px-12 py-32'
-const containerClass = 'mx-auto max-w-[1600px]'
-const eyebrowClass = 'text-[#E8B84B] text-[0.6rem] tracking-[5px] uppercase'
-const dividerClass = 'h-px bg-white/10 mt-3 mb-6'
-const heading2Class =
-  "text-3xl md:text-5xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-[1.05]"
-const paragraphClass = 'text-white/50 text-base leading-relaxed'
-
-const FEATURE_CARDS = [
+const PRODUCTS = [
   {
-    first: '/marketing/CASE1.svg',
-    second: '/marketing/CASE2.svg',
-    alt: 'Case management illustration',
+    n: '01',
+    image: '/marketing/photos/lawyer-at-laptop.jpg',
+    alt: 'A lawyer working on a laptop in a bright office',
     label: 'Case management',
-    title: 'Know where every matter stands',
-    body: 'Create cases, assign work, track progress, and generate reports in one click. Your team always knows where every matter stands.',
+    title: 'Know where every matter stands.',
     href: '/product/case-management',
   },
   {
-    first: '/marketing/AI1.svg',
-    second: '/marketing/AI2.svg',
-    alt: 'Legal intelligence illustration',
+    n: '02',
+    image: '/marketing/photos/law-library.jpg',
+    alt: 'Shelves of bound law reports in a law library',
     label: 'Legal intelligence',
-    title: 'Answers from Ghanaian law in seconds',
-    body: 'Plain English document queries. Instant judgment summaries. Side by side precedent comparison. Built on AI trained for Ghanaian law.',
+    title: 'Answers from Ghanaian law in seconds.',
     href: '/product/legal-research',
   },
   {
-    first: '/marketing/PERFORMANCE1.svg',
-    second: '/marketing/PERFORMANCE2.svg',
-    alt: 'Practice management illustration',
+    n: '03',
+    image: '/marketing/legal-research/laptop.png',
+    alt: 'A laptop showing firm performance on a wooden desk',
     label: 'Practice management',
-    title: 'Capture every billable minute',
-    body: 'Track billable hours, generate invoices, and see firm wide performance at a glance. Real time reports on finances, clients, cases, and team, without the spreadsheets.',
-    href: null,
-  },
-]
-
-const PRACTICE_FEATURES = [
-  {
-    label: 'Billing',
-    title: 'Get paid for the work you did',
-    body: 'Generate invoices in one click, track payment status, and see who owes what at a glance, without ever opening a spreadsheet.',
-  },
-  {
-    label: 'Calendar',
-    title: 'Never miss a court date',
-    body: 'Court dates, filing deadlines, and hearings in one shared calendar. The deadline engine tracks every date so nothing slips through.',
-  },
-  {
-    label: 'Documents',
-    title: 'Find any case file in seconds',
-    body: 'Draft, store, and organize every matter’s documents in one place. Secure storage and fast retrieval, always tied to the case they belong to.',
+    title: 'Capture every billable minute.',
+    href: '#pricing',
   },
 ]
 
 const WORKFLOW_STEPS = [
   {
-    title: 'Start the clock on the matter',
-    body: 'Open a case and start a timer. It runs against that client at their agreed rate, and checks in every 30 minutes so a forgotten timer never inflates a bill.',
-    result: 'Time logged to the client and case',
+    Icon: Timer,
+    title: 'Start the clock',
+    body: 'A timer runs against the client at their agreed rate, and checks in every 30 minutes.',
   },
   {
-    title: 'Draft and file in the same place',
-    body: 'Draft from a template or upload the file, and it is saved against the case it belongs to. Court dates and filing deadlines sit on the shared firm calendar.',
-    result: 'Documents and dates linked to the case',
+    Icon: FolderOpen,
+    title: 'Draft and file',
+    body: 'Documents save to the case they belong to. Dates land on the firm calendar.',
   },
   {
-    title: 'Turn the hours into an invoice',
-    body: 'Stopped time collects under Unbilled Time for each client. Convert it into invoice lines in one step, with nothing retyped from a timesheet.',
-    result: 'Invoice raised from logged work',
+    Icon: Receipt,
+    title: 'Invoice the hours',
+    body: 'Unbilled time turns into invoice lines in one step. Nothing retyped.',
   },
 ]
 
-const TRUST_FACTS = [
-  { value: 'AES-256', label: 'Encryption for stored data' },
-  { value: 'TLS 1.2+', label: 'Encryption for data in transit' },
-  { value: 'Per firm', label: 'Data isolation enforced in the database' },
-  { value: 'Role based', label: 'Access scoped to each position' },
+const PRACTICE_FEATURES = [
+  { Icon: Receipt, title: 'Get paid for the work you did', body: 'One click invoices and payment tracking.' },
+  { Icon: CalendarCheck, title: 'Never miss a court date', body: 'Every hearing and filing on one calendar.' },
+  { Icon: FolderOpen, title: 'Find any case file in seconds', body: 'Every document stored against its case.' },
 ]
 
 const PRICING_TIERS = [
   {
     name: 'Solo practitioner',
     price: 'Free to start',
-    body: 'A free tier for individual lawyers, with room to move up when your caseload grows. No team seats to pay for.',
-    points: ['Clients, cases, and a personal dashboard', 'Daily AI research queries', 'Document templates'],
+    body: 'A free tier for individual lawyers. No team seats to pay for.',
+    points: ['Clients, cases, and a dashboard', 'Daily AI research queries', 'Document templates'],
     cta: 'Ask about the free tier',
   },
   {
     name: 'Growing practice',
     price: 'Flat monthly plan',
-    body: 'One predictable monthly price for unlimited clients and cases, with annual billing available at a discount.',
-    points: ['Unlimited clients and cases', 'Deadline engine and document library', 'Billing, invoicing, and time tracking'],
+    body: 'One predictable price, with a discount for annual billing.',
+    points: ['Unlimited clients and cases', 'Deadline engine and document library', 'Billing and time tracking'],
     cta: 'See it in action',
     featured: true,
   },
   {
     name: 'Firm',
     price: 'Custom to firm size',
-    body: 'Priced on the number of people in your firm, so you only pay for the seats you use. Quoted after a walkthrough.',
+    body: 'Priced on the people who use it. Quoted after a walkthrough.',
     points: ['Firm overview for partners', 'Team roles and permissions', 'Dedicated onboarding support'],
     cta: 'Get a quote',
   },
@@ -144,343 +124,332 @@ const HOME_FAQ = [
   },
 ]
 
-const primaryCtaClass =
-  'inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-semibold text-[#0D1B2A] bg-gradient-to-b from-[#E8B84B] to-[#C9972B] hover:brightness-105 transition shadow-[0_10px_30px_-10px_rgba(201,151,43,0.7),0_1px_0_rgba(255,255,255,0.35)_inset]'
-const secondaryCtaClass =
-  'inline-flex items-center justify-center gap-2 rounded-md border border-white/15 px-6 py-3.5 text-sm font-medium text-white transition hover:border-[#C9972B]/40 hover:bg-white/5'
-
 export default function MarketingHome() {
   return (
     <>
-      {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 -z-10"
-          style={{
-            background:
-              'radial-gradient(120% 80% at 50% -20%, rgba(201,151,43,0.13), transparent 55%), radial-gradient(90% 70% at 82% 8%, rgba(20,38,60,0.45), transparent 60%), #1F2937',
-          }}
-          aria-hidden
-        />
-        <div
-          className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C9972B]/40 to-transparent"
-          aria-hidden
-        />
-
-        <div className="px-6 lg:px-12 pt-16 md:pt-24 pb-28">
-          <div className={containerClass}>
-            <div className="mx-auto max-w-4xl text-center">
-              <Reveal from="up">
-                <div className={eyebrowClass}>Practice management for Ghanaian law firms</div>
-                <h1 className="mt-6 text-4xl md:text-6xl lg:text-7xl [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-[-1.5px] leading-[1.03] text-white">
-                  The intelligent platform that runs your entire legal practice.
-                </h1>
-              </Reveal>
-              <Reveal from="up" delay={120}>
-                <p className="mx-auto mt-7 max-w-2xl text-white/60 text-base md:text-lg leading-relaxed">
-                  Cases, documents, billing, scheduling, and research in one connected
-                  system. Spend your hours on the law, not the logistics.
-                </p>
-
-                <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-                  <Link href="/contact-us" className={primaryCtaClass}>
-                    See it in action
-                  </Link>
-                  <Link href="#pricing" className={secondaryCtaClass}>
-                    View pricing
-                  </Link>
-                </div>
-
-                <p className="mt-5 text-white/40 text-sm">
-                  A free, no obligation walkthrough with our team.
-                </p>
-              </Reveal>
-            </div>
-
-            <Reveal from="up" delay={240}>
-              <div id="product" className="relative mx-auto mt-16 md:mt-20 w-full max-w-[1200px] scroll-mt-28">
-                <div
-                  className="absolute -inset-x-16 -top-16 bottom-0 -z-10"
-                  aria-hidden
-                  style={{
-                    background:
-                      'radial-gradient(55% 55% at 50% 0%, rgba(201,151,43,0.18), transparent 70%)',
-                  }}
-                />
-                <HeroProductDemo />
-                <p className="mt-5 text-center text-white/35 text-xs">
-                  The LegaLite workspace. Sample matters shown.
-                </p>
+      {/* HERO: headline over a photo mosaic with a live docket tile */}
+      <section className="px-6 lg:px-12 pt-12 pb-20 lg:pt-16 lg:pb-24">
+        <div className={mk.container}>
+          <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-end">
+            <Reveal from="up">
+              <SectionMark>For Ghanaian law firms</SectionMark>
+              <h1 className={`mt-6 ${mk.h1}`}>
+                Run your entire practice from one{' '}
+                <span className="italic text-[#B8861F]">intelligent</span> platform.
+              </h1>
+            </Reveal>
+            <Reveal from="up" delay={120}>
+              <p className={mk.lead}>
+                Cases, documents, billing, and research, connected. Spend your hours on the
+                law, not the logistics.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Link href="/contact-us" className={mk.primaryCta}>
+                  See it in action
+                  <ArrowRight size={16} weight="bold" />
+                </Link>
+                <Link href="#pricing" className={mk.outlineCta}>
+                  View pricing
+                </Link>
               </div>
             </Reveal>
           </div>
+
+          <Reveal from="up" delay={200}>
+            <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 lg:mt-16 lg:h-[540px] lg:grid-cols-12 lg:grid-rows-2">
+              <div className={`${mk.photo} col-span-2 aspect-[16/10] lg:col-span-6 lg:row-span-2 lg:aspect-auto`}>
+                <Image
+                  src="/marketing/photos/team-meeting.jpg"
+                  alt="Lawyers meeting around a table in a bright office"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+
+              <div className={`${mk.photo} aspect-[3/4] lg:col-span-3 lg:row-span-2 lg:aspect-auto`}>
+                <Image
+                  src="/marketing/photos/lawyer-at-desk.jpg"
+                  alt="A lawyer at his desk"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 25vw, 50vw"
+                  className="object-cover object-top"
+                />
+              </div>
+
+              {/* Docket tile: what the product shows a lawyer each morning */}
+              <div className="flex aspect-[3/4] flex-col justify-between rounded-2xl bg-[#0D1B2A] p-5 text-white sm:p-6 lg:col-span-3 lg:aspect-auto">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-[2px] text-[#F2C65A]">
+                    Today&rsquo;s docket
+                  </span>
+                  <Gavel size={20} weight="fill" className="text-[#F2C65A]" />
+                </div>
+                <div>
+                  <div className={`text-xl leading-tight sm:text-2xl ${serif} font-semibold`}>
+                    Republic v. Osei
+                  </div>
+                  <div className="mt-1 text-sm text-white/65">Hearing, 9:00 &middot; High Court, Accra</div>
+                </div>
+                <div className="space-y-2 border-t border-white/10 pt-4 text-sm">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/65">Filing due</span>
+                    <span className="font-medium">Ansah Trust</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/65">Timer</span>
+                    <span className="font-mono font-medium tabular-nums text-[#F2C65A]">01:24:36</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`${mk.photo} col-span-2 aspect-[16/9] lg:col-span-3 lg:aspect-auto`}>
+                <Image
+                  src="/marketing/photos/independence-arch.jpg"
+                  alt="Independence Arch in Accra, inscribed Freedom and Justice"
+                  fill
+                  sizes="(min-width: 1024px) 25vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* DESIGN TO SCALE */}
-      <section className={sectionClass}>
-        <div className={containerClass}>
-          <div className={eyebrowClass}>Design to scale</div>
-          <div className={dividerClass} />
-
-          <div className="mt-10 grid gap-10 lg:grid-cols-2 items-end">
-            <p className="text-white/60 text-base md:text-lg leading-relaxed max-w-md">
-              Most legal software handles one thing well. LegaLite brings case
-              management, AI research, billing, and client communication into one place,
-              so your firm runs as a single connected system instead of a stack of
-              disconnected tools.
-            </p>
-            <h2 className={`${heading2Class} lg:text-right`}>
-              One platform. Every part of your practice.
+      {/* PRODUCT DEMO: a navy panel that opens out of the cream page on scroll */}
+      <ExpandingPanel
+        id="product"
+        className="relative scroll-mt-20 overflow-hidden bg-[#0D1B2A] px-6 lg:px-12 py-20 lg:py-24 [--panel-progress:1] [--panel-scale:1]"
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{
+            opacity: 'calc(0.35 + var(--panel-progress) * 0.65)',
+            background:
+              'radial-gradient(60% 45% at 50% 0%, rgba(242,198,90,0.28), transparent 70%), radial-gradient(40% 40% at 100% 100%, rgba(201,151,43,0.14), transparent 70%)',
+          }}
+        />
+        <div
+          className={`${mk.container} relative origin-top`}
+          style={{ transform: 'scale(var(--panel-scale))' }}
+        >
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="flex justify-center">
+              <SectionMark light>The workspace</SectionMark>
+            </div>
+            <h2 className={`mt-5 text-3xl sm:text-4xl lg:text-5xl text-white ${serif} font-semibold tracking-tight leading-[1.08]`}>
+              The whole firm, on one screen.
             </h2>
+            <p className="mt-4 text-lg text-white/65">Click through matters, billing, and research.</p>
           </div>
+          <div
+            className="mt-12"
+            style={{ transform: 'translateY(calc((1 - var(--panel-progress)) * 80px))' }}
+          >
+            <HeroProductDemo />
+          </div>
+        </div>
+      </ExpandingPanel>
 
-          <div className="mt-20 grid gap-x-8 gap-y-14 md:grid-cols-3">
-            {FEATURE_CARDS.map((card, i) => (
-              <Reveal key={card.title} from="up" delay={i * 120}>
-                <div className="group flex h-full flex-col">
-                  <IllustrationSwap
-                    first={card.first}
-                    second={card.second}
-                    alt={card.alt}
-                  />
+      {/* PRODUCTS */}
+      <section className={mk.section}>
+        <div className={mk.container}>
+          <SectionMark>One platform</SectionMark>
+          <h2 className={`mt-5 max-w-3xl ${mk.h2}`}>Every part of your practice, connected.</h2>
 
-                  <div className="mt-7 flex flex-1 flex-col">
-                    <div className="flex items-baseline gap-3 text-xs uppercase tracking-[2px] text-white/40">
-                      <span className="[font-family:Literata,'Times_New_Roman',serif] text-sm normal-case tracking-normal text-[#C9972B]">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      {card.label}
-                    </div>
-                    <h3 className="mt-3 text-white text-xl [font-family:Literata,'Times_New_Roman',serif] font-semibold">
-                      {card.title}
-                    </h3>
-
-                    <p className="mt-3 flex-1 text-sm text-white/50 leading-relaxed">
-                      {card.body}
-                    </p>
-
-                    {card.href && (
-                      <div className="mt-6">
-                        <Link
-                          href={card.href}
-                          className="inline-flex items-center gap-2 text-sm text-[#E8B84B] transition group-hover:gap-3"
-                        >
-                          Learn more
-                          <span aria-hidden>&rarr;</span>
-                        </Link>
-                      </div>
-                    )}
+          <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-6">
+            {PRODUCTS.map((p, i) => (
+              <Reveal key={p.n} from="up" delay={i * 120}>
+                <Link href={p.href} className="group block">
+                  <div className={`${mk.photo} aspect-[4/3]`}>
+                    <Image
+                      src={p.image}
+                      alt={p.alt}
+                      fill
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    />
                   </div>
-                </div>
+                  <div className="mt-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[2px] text-[#A67A1C]">
+                    <span className={`${serif} text-sm normal-case tracking-normal`}>&sect;&nbsp;{p.n}</span>
+                    {p.label}
+                  </div>
+                  <h3 className={`mt-2 ${mk.h3}`}>{p.title}</h3>
+                  <span className={`mt-3 ${mk.textLink}`}>
+                    Learn more <ArrowRight size={14} weight="bold" />
+                  </span>
+                </Link>
               </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CONNECTED WORKFLOW */}
-      <section className={sectionClass}>
-        <div className={containerClass}>
-          <div className={eyebrowClass}>How it connects</div>
-          <div className={dividerClass} />
-
-          <div className="max-w-4xl mt-10">
-            <h2 className={heading2Class}>
-              Do the work once. Every record updates itself.
+      {/* GHANAIAN LEGAL AI: full-bleed Accra photo */}
+      <section className="relative overflow-hidden px-6 lg:px-12 py-20 lg:py-28">
+        <Image
+          src="/marketing/photos/accra-aerial.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0D1B2A]/95 via-[#0D1B2A]/80 to-[#0D1B2A]/40" aria-hidden />
+        <div className={`${mk.container} relative grid gap-12 lg:grid-cols-2 lg:items-center`}>
+          <div className="text-white">
+            <SectionMark light>Ghanaian legal AI</SectionMark>
+            <h2 className={`mt-5 text-4xl sm:text-5xl lg:text-6xl ${serif} font-semibold tracking-tight leading-[1.02]`}>
+              Grounded in Ghanaian law.{' '}
+              <span className="text-[#F2C65A]">
+                <TextScramble text="Sharpened" />
+              </span>{' '}
+              to your case.
             </h2>
-            <p className={`${paragraphClass} mt-6 max-w-2xl`}>
-              The case, the time, the documents, and the invoice are one record in
-              LegaLite, not four tools you copy between. Here is a single afternoon on a
-              matter.
+            <p className="mt-6 max-w-md text-lg text-white/75 leading-relaxed">
+              Statutes, case law, and precedent from your jurisdiction, with every source
+              cited.
             </p>
+            <Link href="/product/legal-research" className={`mt-8 ${mk.primaryCta}`}>
+              Explore legal intelligence
+              <ArrowRight size={16} weight="bold" />
+            </Link>
           </div>
+          <Reveal from="right">
+            <ResearchSlip />
+          </Reveal>
+        </div>
+      </section>
 
-          <ol className="mt-20 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] md:grid-cols-3">
-            {WORKFLOW_STEPS.map((step, i) => (
-              <li key={step.title} className="relative flex flex-col bg-[#2A3544] p-8 lg:p-10">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#C9972B]/40 [font-family:Literata,'Times_New_Roman',serif] text-sm text-[#E8B84B]">
-                    {i + 1}
+      {/* HOW IT CONNECTS */}
+      <section className={`${mk.section} bg-white`}>
+        <div className={`${mk.container} grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:items-center lg:gap-20`}>
+          <div>
+            <div className={`${mk.photo} ${mk.shadow} aspect-[4/3]`}>
+              <Image
+                src="/marketing/photos/lawyer-on-sofa.jpg"
+                alt="A lawyer working on a laptop"
+                fill
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                className="object-cover object-[center_30%]"
+              />
+            </div>
+            <PhotoCaption label="One afternoon">A timer, a draft, and an invoice, all on the same matter.</PhotoCaption>
+          </div>
+          <div>
+            <SectionMark>How it connects</SectionMark>
+            <h2 className={`mt-5 ${mk.h2}`}>Do the work once. Every record updates itself.</h2>
+            <ol className="mt-10 space-y-4">
+              {WORKFLOW_STEPS.map(({ Icon, title, body }, i) => (
+                <li key={title} className={`${mk.card} flex gap-4 p-5`}>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0D1B2A] text-[#F2C65A]">
+                    <Icon size={20} weight="fill" />
                   </span>
-                  {i < WORKFLOW_STEPS.length - 1 && (
-                    <span className="hidden h-px flex-1 bg-gradient-to-r from-[#C9972B]/40 to-transparent md:block" aria-hidden />
-                  )}
-                </div>
-                <h3 className="mt-6 text-white text-lg [font-family:Inter,Arial,sans-serif] font-medium">
-                  {step.title}
-                </h3>
-                <p className="mt-3 flex-1 text-sm text-white/50 leading-relaxed">{step.body}</p>
-                <div className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-[#C9972B]/10 px-3 py-1.5 text-xs text-[#E8B84B]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#C9972B]" aria-hidden />
-                  {step.result}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* AI-POWERED LEGAL RESEARCH */}
-      <section className={sectionClass}>
-        <div className={containerClass}>
-          <div className={eyebrowClass}>Ghanaian legal AI</div>
-          <div className={dividerClass} />
-
-          <div className="mt-10 grid gap-12 lg:grid-cols-2 items-center">
-            <div>
-              <h2 className="text-3xl md:text-6xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-[1]">
-                Grounded in Ghanaian law.
-                <br />
-                <TextScramble text="Sharpened" /> to your case.
-              </h2>
-              <div className="mt-8 space-y-4">
-                <p className="text-white/60 text-base leading-relaxed max-w-md">
-                  Ask questions in plain English, summarize a judgment in seconds, and
-                  compare precedents side by side. Every answer draws on the statutes,
-                  case law, and judicial precedent that apply to your jurisdiction.
-                </p>
-                <p className="text-white/40 text-sm leading-relaxed max-w-md">
-                  Purpose built for Ghana, not a generic model adapted to fit.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center rounded-2xl border border-white/5 bg-white/[0.02] p-6 md:p-12">
-              <ResearchSlip />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURE TABS (hidden in source) */}
-      <section className="hidden">
-        <div className={sectionClass}>
-          <div className={containerClass}>
-            <FeatureTabs />
+                  <div>
+                    <h3 className="font-semibold">
+                      <span className={`mr-2 ${serif} text-[#A67A1C]`}>{i + 1}.</span>
+                      {title}
+                    </h3>
+                    <p className="mt-1 text-sm text-[#0D1B2A]/60 leading-relaxed">{body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
 
       {/* PERSONAS */}
-      <section className={sectionClass}>
-        <div className={containerClass}>
-          <div className={eyebrowClass}>Built for your role</div>
-          <div className={dividerClass} />
-
-          <div className="mt-10 mb-12 max-w-3xl">
-            <h2 className={heading2Class}>Whoever you are in the firm, it fits.</h2>
-          </div>
-
+      <section className={mk.section}>
+        <div className={mk.container}>
+          <SectionMark>Built for your role</SectionMark>
+          <h2 className={`mt-5 mb-10 max-w-3xl ${mk.h2}`}>Whoever you are in the firm, it fits.</h2>
           <PersonaTabs />
         </div>
       </section>
 
       {/* PRACTICE MANAGEMENT */}
-      <section className={sectionClass}>
-        <div className={containerClass}>
-          <div className={eyebrowClass}>Practice management</div>
-          <div className={dividerClass} />
-
-          <div className="mt-12 grid gap-16 lg:grid-cols-[1fr_1.4fr] items-start">
-            <div>
-              <h2 className={heading2Class}>Run the whole firm, not just the admin.</h2>
-              <p className={`${paragraphClass} mt-6 max-w-md`}>
-                Invoices generated. Deadlines tracked. Documents in order. LegaLite runs
-                the business side of your firm so you can focus on the practice.
-              </p>
-
-              <div className="mt-12">
-                {PRACTICE_FEATURES.map((feature, i) => (
-                  <div key={feature.title}>
-                    <div className="h-px bg-white/10" />
-                    <div className="py-6">
-                      <div className="flex items-center gap-3">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#C9972B]" />
-                        <h3 className="text-white text-base [font-family:Inter,Arial,sans-serif] font-medium">
-                          {feature.title}
-                        </h3>
-                        <span className="text-[0.65rem] uppercase tracking-[2px] text-white/35">
-                          {feature.label}
-                        </span>
-                      </div>
-                      <p className="mt-2 pl-[18px] text-sm text-white/50 leading-relaxed">
-                        {feature.body}
-                      </p>
-                    </div>
-                    {i === PRACTICE_FEATURES.length - 1 && <div className="h-px bg-white/10" />}
+      <section className={`${mk.section} bg-white`}>
+        <div className={`${mk.container} grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:items-center`}>
+          <div>
+            <SectionMark>Practice management</SectionMark>
+            <h2 className={`mt-5 ${mk.h2}`}>Run the whole firm, not just the admin.</h2>
+            <ul className="mt-10 space-y-5">
+              {PRACTICE_FEATURES.map(({ Icon, title, body }) => (
+                <li key={title} className="flex gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#C9972B]/15 text-[#A67A1C]">
+                    <Icon size={22} weight="duotone" />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold">{title}</h3>
+                    <p className="mt-0.5 text-sm text-[#0D1B2A]/60">{body}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <div
-                className="pointer-events-none absolute -inset-10 -z-10"
-                aria-hidden
-                style={{
-                  background:
-                    'radial-gradient(50% 50% at 60% 25%, rgba(201,151,43,0.12), transparent 70%)',
-                }}
-              />
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] p-2 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5">
-                <Image
-                  src="/marketing/clients.svg"
-                  alt="LegaLite clients list page"
-                  width={1200}
-                  height={800}
-                  className="w-full h-auto rounded-xl"
-                />
-              </div>
-            </div>
+                </li>
+              ))}
+            </ul>
           </div>
+          <Reveal from="right">
+            <div className={`overflow-hidden rounded-2xl border border-[#0D1B2A]/[0.08] bg-white ${mk.shadow}`}>
+              <Image
+                src="/marketing/clients.svg"
+                alt="LegaLite clients list page"
+                width={1200}
+                height={800}
+                className="h-auto w-full"
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      <SecuritySection facts={TRUST_FACTS} />
+      <SecuritySection />
 
       {/* PRICING */}
-      <section id="pricing" className={`${sectionClass} scroll-mt-20`}>
-        <div className={containerClass}>
-          <div className={eyebrowClass}>Pricing</div>
-          <div className={dividerClass} />
-
-          <div className="mt-10 grid gap-10 lg:grid-cols-2 items-end">
-            <h2 className={heading2Class}>Priced for the size of your firm.</h2>
-            <p className="text-white/60 text-base leading-relaxed max-w-md">
-              A one lawyer practice should not pay what a thirty lawyer firm pays. Plans
-              scale with the people who use LegaLite, and solo practitioners can start
-              for free.
+      <section id="pricing" className={`${mk.section} scroll-mt-20`}>
+        <div className={mk.container}>
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
+            <div>
+              <SectionMark>Pricing</SectionMark>
+              <h2 className={`mt-5 ${mk.h2}`}>Priced for the size of your firm.</h2>
+            </div>
+            <p className={`${mk.lead} lg:max-w-md lg:justify-self-end`}>
+              Plans scale with the people who use LegaLite. Solo practitioners can start for
+              free.
             </p>
           </div>
 
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
             {PRICING_TIERS.map((tier) => (
               <div
                 key={tier.name}
-                className={`flex flex-col rounded-2xl border p-8 ${
-                  tier.featured
-                    ? 'border-[#C9972B]/50 bg-[#C9972B]/[0.06]'
-                    : 'border-white/10 bg-white/[0.02]'
+                className={`flex flex-col rounded-2xl p-7 ${
+                  tier.featured ? `bg-[#0D1B2A] text-white ${mk.shadow}` : mk.card
                 }`}
               >
-                <div className="text-sm text-white/60">{tier.name}</div>
-                <div className="mt-3 text-2xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold">
-                  {tier.price}
+                <div className="flex items-center justify-between gap-3">
+                  <span className={`text-sm font-semibold ${tier.featured ? 'text-[#F2C65A]' : 'text-[#A67A1C]'}`}>
+                    {tier.name}
+                  </span>
+                  {tier.featured && (
+                    <span className="rounded-md bg-[#F2C65A] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0D1B2A]">
+                      Most popular
+                    </span>
+                  )}
                 </div>
-                <p className="mt-4 text-sm text-white/50 leading-relaxed">{tier.body}</p>
-                <ul className="mt-6 flex flex-1 flex-col gap-3">
+                <div className={`mt-3 text-3xl ${serif} font-semibold`}>{tier.price}</div>
+                <p className={`mt-3 text-sm ${tier.featured ? 'text-white/70' : 'text-[#0D1B2A]/60'}`}>{tier.body}</p>
+                <ul className="mt-6 flex flex-1 flex-col gap-2.5">
                   {tier.points.map((point) => (
-                    <li key={point} className="flex gap-3 text-sm text-white/70">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C9972B]" aria-hidden />
+                    <li key={point} className={`flex gap-2.5 text-sm ${tier.featured ? 'text-white/85' : 'text-[#0D1B2A]/75'}`}>
+                      <CheckCircle size={18} weight="fill" className="shrink-0 text-[#C9972B]" />
                       {point}
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/contact-us"
-                  className={`mt-8 ${tier.featured ? primaryCtaClass : secondaryCtaClass}`}
-                >
+                <Link href="/contact-us" className={`mt-8 w-full ${tier.featured ? mk.primaryCta : mk.darkCta}`}>
                   {tier.cta}
                 </Link>
               </div>
@@ -489,27 +458,20 @@ export default function MarketingHome() {
         </div>
       </section>
 
-      {/* FAQ + CONTACT */}
-      <section id="faq" className={`${sectionClass} scroll-mt-20`}>
-        <div className={containerClass}>
-          <div className={eyebrowClass}>Questions</div>
-          <div className={dividerClass} />
-
-          <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_1.4fr] items-start">
-            <div>
-              <h2 className={heading2Class}>Before you book a walkthrough</h2>
-              <p className="mt-6 text-base text-white/60 leading-relaxed max-w-md">
-                Have a question that is not answered here? Write to us and a member of the
-                team will reply directly. No demo booking needed.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Link href="mailto:contact@legalite.app" className={secondaryCtaClass}>
-                  contact@legalite.app
-                </Link>
-              </div>
-            </div>
-            <FAQAccordion items={HOME_FAQ} />
+      {/* FAQ */}
+      <section id="faq" className={`${mk.section} scroll-mt-20 bg-white`}>
+        <div className={`${mk.container} grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:items-start`}>
+          <div>
+            <SectionMark>Questions</SectionMark>
+            <h2 className={`mt-5 ${mk.h2}`}>Before you book a walkthrough</h2>
+            <p className={`mt-5 max-w-md ${mk.lead}`}>
+              Something else on your mind? Write to us. No demo booking needed.
+            </p>
+            <Link href="mailto:contact@legalite.app" className={`mt-7 ${mk.outlineCta}`}>
+              contact@legalite.app
+            </Link>
           </div>
+          <FAQAccordion items={HOME_FAQ} />
         </div>
       </section>
     </>

@@ -8,17 +8,17 @@ const card = 'rounded-xl border border-black/10 bg-white p-4 text-[#0D1B2A] shad
 const kicker = 'text-[10px] uppercase tracking-wide text-gray-400'
 
 // Lead feature: the AI reading a case and extracting structure.
-const glassKicker = 'text-[10px] uppercase tracking-wide text-white/35'
+const glassKicker = 'text-[10px] uppercase tracking-wide text-gray-400'
 
 export function CaseAnalysisMockup() {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] backdrop-blur-sm md:p-8">
+    <div className="rounded-2xl border border-black/10 bg-white p-7 text-[#0D1B2A] shadow-[0_30px_60px_-34px_rgba(13,27,42,0.45)] md:p-8">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-lg font-semibold text-white">Case analysis</div>
-          <div className="mt-0.5 text-sm text-white/40">Ansah v. Republic</div>
+          <div className="text-lg font-semibold text-[#0D1B2A]">Case analysis</div>
+          <div className="mt-0.5 text-sm text-gray-400">Ansah v. Republic</div>
         </div>
-        <span className="rounded-full border border-[#C9972B]/30 bg-[#C9972B]/10 px-3 py-1 text-[11px] font-medium text-[#E8B84B]">
+        <span className="rounded-full border border-[#C9972B]/30 bg-[#C9972B]/10 px-3 py-1 text-[11px] font-medium text-[#8C6A1E]">
           Analyzed
         </span>
       </div>
@@ -30,7 +30,7 @@ export function CaseAnalysisMockup() {
             {['Breach of contract', 'Wrongful termination'].map((t) => (
               <span
                 key={t}
-                className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white/70"
+                className="rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700"
               >
                 {t}
               </span>
@@ -39,18 +39,18 @@ export function CaseAnalysisMockup() {
         </div>
         <div>
           <div className={glassKicker}>Question of law</div>
-          <p className="mt-2 text-base text-white/70">
+          <p className="mt-2 text-base text-gray-700">
             Was notice validly served under section 12?
           </p>
         </div>
         <div>
           <div className={glassKicker}>Parties</div>
           <div className="mt-2.5 flex flex-wrap gap-x-8 gap-y-2 text-base">
-            <span className="text-white/70">
-              <span className="text-white/40">Plaintiff</span> Ansah
+            <span className="text-gray-700">
+              <span className="text-gray-400">Plaintiff</span> Ansah
             </span>
-            <span className="text-white/70">
-              <span className="text-white/40">Defendant</span> Republic
+            <span className="text-gray-700">
+              <span className="text-gray-400">Defendant</span> Republic
             </span>
           </div>
         </div>

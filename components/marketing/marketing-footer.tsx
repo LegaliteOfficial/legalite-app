@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -30,43 +31,50 @@ export function MarketingFooter() {
   }
 
   return (
-    <footer className="bg-[#161D27]">
+    <footer>
       {/* Demo CTA band */}
-      <section className="relative overflow-hidden border-t border-white/5">
-        <div
-          className="absolute inset-0 -z-10"
-          aria-hidden
-          style={{
-            background:
-              'radial-gradient(80% 130% at 50% 130%, rgba(201,151,43,0.14), transparent 60%)',
-          }}
-        />
-        <div className="px-6 lg:px-12 py-28">
-          <div className="mx-auto max-w-[1600px] text-center">
-            <div className="text-[#E8B84B] text-[0.6rem] tracking-[5px] uppercase">
-              Get a professional demo
+      <section className="bg-[#F8F4EE] px-6 lg:px-12 py-20 lg:py-24">
+        <div className="mx-auto grid max-w-[1400px] overflow-hidden rounded-3xl bg-white shadow-[0_30px_60px_-34px_rgba(13,27,42,0.45)] lg:grid-cols-[1.1fr_1fr]">
+          <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16">
+            <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[2.5px] text-[#A67A1C]">
+              <span className="h-px w-8 bg-[#C9972B]/60" aria-hidden />
+              Free walkthrough
             </div>
-            <h2 className="mx-auto mt-6 max-w-3xl text-3xl md:text-5xl lg:text-6xl text-white [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-[1.04]">
-              Ready to see LegaLite in action?
+            <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl text-[#0D1B2A] [font-family:Literata,'Times_New_Roman',serif] font-semibold tracking-tight leading-[1.08]">
+              See LegaLite in your practice.
             </h2>
-            <p className="mx-auto mt-6 max-w-xl text-white/55 text-base leading-relaxed">
-              See your documents, research, billing, scheduling, and client communication
-              working together in one secure platform. Book a walkthrough with our team.
+            <p className="mt-5 max-w-md text-lg text-[#0D1B2A]/65 leading-relaxed">
+              A walkthrough with our team, built around matters like yours.
             </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/contact-us"
-                className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-sm font-semibold text-[#0D1B2A] bg-gradient-to-b from-[#E8B84B] to-[#C9972B] hover:brightness-105 transition shadow-[0_10px_30px_-10px_rgba(201,151,43,0.7),0_1px_0_rgba(255,255,255,0.35)_inset]"
+                className="inline-flex items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold text-[#0D1B2A] bg-gradient-to-b from-[#F2C65A] to-[#C9972B] shadow-[0_12px_28px_-12px_rgba(201,151,43,0.9)] transition hover:brightness-105"
               >
                 See it in action
               </Link>
+              <Link
+                href="mailto:contact@legalite.app"
+                className="inline-flex items-center justify-center rounded-lg border border-[#0D1B2A]/15 px-6 py-3.5 text-sm font-semibold text-[#0D1B2A] transition hover:border-[#C9972B]"
+              >
+                contact@legalite.app
+              </Link>
             </div>
+          </div>
+          <div className="relative min-h-[280px] lg:min-h-[420px]">
+            <Image
+              src="/marketing/photos/firm-team.jpg"
+              alt="A legal team working together around a boardroom table"
+              fill
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="object-cover"
+            />
           </div>
         </div>
       </section>
 
       {/* Footer body */}
-      <section className="border-t border-white/5 px-6 lg:px-12 py-16">
+      <section className="bg-[#0D1B2A] text-white px-6 lg:px-12 py-16">
         <div className="mx-auto max-w-[1600px]">
           <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr_1fr_1.6fr]">
             {/* Brand */}
