@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getLawNews, timeAgo, type NewsArticle } from '@/lib/news'
+import { NewsImage, NewsImagePlaceholder } from '@/components/marketing/news-image'
 
 export const metadata: Metadata = {
   title: 'News',
@@ -31,33 +32,6 @@ const SAMPLE: NewsArticle[] = [
   { id: 's12', region: 'International', source: 'Sample', sourceUrl: null, link: '#', image: null, pubDate: null, title: 'Public consultation opens on reforms to the arbitration regime', description: null },
 ]
 
-function ImagePlaceholder({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={className}
-      style={{
-        background:
-          'radial-gradient(120% 100% at 20% 0%, rgba(201,151,43,0.22), transparent 55%), radial-gradient(120% 120% at 90% 100%, rgba(20,38,60,0.6), transparent 55%), #2A3544',
-      }}
-      aria-hidden
-    />
-  )
-}
-
-function ArticleImage({ src }: { src: string | null }) {
-  if (!src) return <ImagePlaceholder className="absolute inset-0" />
-  // Plain img for arbitrary external news domains (avoids next/image host allowlist).
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt=""
-      loading="lazy"
-      referrerPolicy="no-referrer"
-      className="absolute inset-0 h-full w-full object-cover"
-    />
-  )
-}
 
 function articleProps(a: NewsArticle) {
   const external = a.link !== '#'
@@ -135,7 +109,7 @@ export default async function NewsPage() {
               className="group block overflow-hidden rounded-2xl border border-white/10"
             >
               <div className="relative aspect-[16/9]">
-                <ArticleImage src={featured.image} />
+                <NewsImage src={featured.image} />
                 <span className="absolute left-4 top-4 rounded-full bg-[#C9972B] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A3544]">
                   {featured.region}
                 </span>
@@ -203,7 +177,7 @@ export default async function NewsPage() {
                   className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#2A3544] transition hover:border-[#C9972B]/30"
                 >
                   <div className="relative aspect-[16/10]">
-                    <ArticleImage src={a.image} />
+                    <NewsImage src={a.image} />
                   </div>
                   <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-center gap-2 text-[11px]">
