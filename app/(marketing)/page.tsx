@@ -425,10 +425,10 @@ export default function MarketingHome() {
               />
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] p-2 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/5">
                 <Image
-                  src="/marketing/clients.svg"
-                  alt="LegaLite clients list page"
-                  width={1200}
-                  height={800}
+                  src="/marketing/clients.jpeg"
+                  alt="A lawyer working on client matters at her desk"
+                  width={1800}
+                  height={1004}
                   className="w-full h-auto rounded-xl"
                 />
               </div>
