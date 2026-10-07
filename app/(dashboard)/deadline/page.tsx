@@ -1,423 +1,275 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import { Timer, Plus, Warning, CheckCircle, Clock, Trash, Pencil, Calendar, Bell, BellSlash } from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Card } from '@/components/ui/card'
-import { StatusBadge } from '@/components/shared/StatusBadge'
-import { Spinner } from '@/components/shared/Spinner'
-import { PageSkeleton } from '@/components/shared/PageSkeleton'
-import { PageHeader } from '@/components/shared/PageHeader'
-import { useDeadlines, useDeadlineStats, useCreateDeadline, useUpdateDeadline, useDeleteDeadline } from '@/hooks/use-deadlines'
-import { useCases } from '@/hooks/use-cases'
+/**
+ * Deadline engine
+ * ---------------
+ * One place for everything that needs the user's attention before a
+ * point in time: manual deadlines, tasks, calendar events, hearings,
+ * case court dates and unpaid invoices, plus past events still waiting
+ * on an outcome. Data comes from `useAttentionFeed`, which folds the
+ * existing backend queries into a single chronological feed.
+ */
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ClockCountdown, Plus, SealCheck, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { Spinner } from '@/components/shared/Spinner'
 import {
-  isNotificationSupported,
-  getNotificationPreference,
-  requestNotificationPermission,
-  disableNotifications,
+  startOfDay,
+  useAttentionFeed,
+  useCompleteAttentionItem,
+  useSnoozeAttentionItem,
+  useUnsnoozeAttentionItem,
+  type AttentionItem,
+  type AttentionKind,
+  type AttentionScope,
+} from '@/hooks/use-attention-feed'
+import { useDeleteDeadline, type Deadline } from '@/hooks/use-deadlines'
+import {
   checkAndNotifyDeadlines,
+  disableNotifications,
+  getNotificationPreference,
+  isNotificationSupported,
+  requestNotificationPermission,
 } from '@/lib/notifications'
-
-type StatusFilter = 'all' | 'Pending' | 'Done' | 'Missed'
-
-function isOverdue(dueDate: string): boolean {
-  return new Date(dueDate) < new Date()
-}
-
-function daysUntil(dueDate: string): string {
-  const now = new Date()
-  const due = new Date(dueDate)
-  const diff = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  if (diff < 0) return `${Math.abs(diff)}d overdue`
-  if (diff === 0) return 'Today'
-  if (diff === 1) return 'Tomorrow'
-  return `${diff} days`
-}
+import { PressureHero, PAST_COLUMN, type DayFocus } from './_components/PressureHero'
+import { AttentionTimeline } from './_components/AttentionTimeline'
+import { NotificationsCard, OutcomePanel, SourceBreakdown } from './_components/SidePanels'
+import { DeadlineFormDialog } from './_components/DeadlineFormDialog'
+import { KIND_META } from './_lib/attention-meta'
 
 export default function DeadlinePage() {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [showForm, setShowForm] = useState(false)
-  const [editId, setEditId] = useState<string | null>(null)
-  type DeadlinePriority = 'High' | 'Medium' | 'Low'
-  type DeadlineStatus = 'Pending' | 'Done' | 'Missed'
-  interface DeadlineForm {
-    title: string
-    description: string
-    due_date: string
-    priority: DeadlinePriority
-    status: DeadlineStatus
-    case_id: string
-    reminder_days: number
-  }
-  const [form, setForm] = useState<DeadlineForm>({
-    title: '',
-    description: '',
-    due_date: '',
-    priority: 'Medium',
-    status: 'Pending',
-    case_id: '',
-    reminder_days: 3,
+  const [scope, setScope] = useState<AttentionScope>('mine')
+  const [showSnoozed, setShowSnoozed] = useState(false)
+  const { items, awaitingOutcome, pendingDeadlines, summary, isLoading, now } = useAttentionFeed({
+    scope,
+    includeSnoozed: showSnoozed,
   })
+  // Snoozed rows are listed when asked for, but never count as pressure.
+  const activeItems = useMemo(() => items.filter((i) => !i.snoozedUntil), [items])
+  const snoozedCount = summary?.snoozed ?? 0
 
+  const [kindFilter, setKindFilter] = useState<AttentionKind | null>(null)
+  const [focusDay, setFocusDay] = useState<DayFocus>(null)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState<Deadline | null>(null)
+  const [formKey, setFormKey] = useState(0)
+  const [pendingDelete, setPendingDelete] = useState<AttentionItem | null>(null)
+  const [busyKey, setBusyKey] = useState<string | null>(null)
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => getNotificationPreference())
+
+  const deleteDeadline = useDeleteDeadline()
+  const completeItem = useCompleteAttentionItem()
+  const snoozeItem = useSnoozeAttentionItem()
+  const unsnoozeItem = useUnsnoozeAttentionItem()
+
+  useEffect(() => {
+    if (notificationsEnabled && pendingDeadlines.length) {
+      checkAndNotifyDeadlines(pendingDeadlines)
+    }
+  }, [pendingDeadlines, notificationsEnabled])
+
+  const visible = useMemo(
+    () =>
+      items.filter((i) => {
+        if (kindFilter && i.kind !== kindFilter) return false
+        if (focusDay === PAST_COLUMN) return i.bucket === 'overdue'
+        if (focusDay !== null) return i.bucket !== 'overdue' && startOfDay(i.dueAt) === focusDay
+        return true
+      }),
+    [items, kindFilter, focusDay],
+  )
 
   const handleToggleNotifications = useCallback(async () => {
     if (notificationsEnabled) {
       disableNotifications()
       setNotificationsEnabled(false)
       toast.success('Deadline notifications disabled.')
+      return
+    }
+    const granted = await requestNotificationPermission()
+    if (granted) {
+      setNotificationsEnabled(true)
+      toast.success('Deadline notifications enabled.')
     } else {
-      const granted = await requestNotificationPermission()
-      if (granted) {
-        setNotificationsEnabled(true)
-        toast.success('Deadline notifications enabled. You will be reminded before due dates.')
-      } else {
-        toast.error('Notification permission was denied. Please enable it in your browser settings.')
-      }
+      toast.error('Notification permission was denied. Enable it in your browser settings.')
     }
   }, [notificationsEnabled])
 
-  const { data: deadlines, isLoading } = useDeadlines(statusFilter === 'all' ? undefined : statusFilter)
-  const { data: stats } = useDeadlineStats()
-  const { data: cases } = useCases()
-  const createMutation = useCreateDeadline()
-  const updateMutation = useUpdateDeadline()
-  const deleteMutation = useDeleteDeadline()
-
-  const isPending = createMutation.isPending || updateMutation.isPending
-
-  useEffect(() => {
-    if (deadlines && notificationsEnabled) {
-      checkAndNotifyDeadlines(deadlines)
-    }
-  }, [deadlines, notificationsEnabled])
-
-  const resetForm = useCallback(() => {
-    setForm({ title: '', description: '', due_date: '', priority: 'Medium', status: 'Pending', case_id: '', reminder_days: 3 })
-    setEditId(null)
-    setShowForm(false)
-  }, [])
-
-  const handleEdit = useCallback((d: (typeof deadlines extends (infer T)[] | undefined ? T : never)) => {
-    if (!d) return
-    setForm({
-      title: d.title,
-      description: d.description ?? '',
-      due_date: d.due_date?.split('T')[0] ?? '',
-      priority: d.priority,
-      status: d.status,
-      case_id: d.case_id ?? '',
-      reminder_days: d.reminder_days ?? 3,
-    })
-    setEditId(d.id)
-    setShowForm(true)
-  }, [])
-
-  const handleSubmit = useCallback(async () => {
-    if (!form.title) { toast.error('Please enter a title.'); return }
-    if (!form.due_date) { toast.error('Please select a due date.'); return }
+  const handleComplete = useCallback(async (item: AttentionItem) => {
+    const label = KIND_META[item.kind].label
+    setBusyKey(item.key)
     try {
-      if (editId) {
-        await updateMutation.mutateAsync({ id: editId, data: form })
-        toast.success('Deadline updated successfully.')
-      } else {
-        await createMutation.mutateAsync(form)
-        toast.success('Deadline created successfully.')
-      }
-      resetForm()
+      await completeItem.mutateAsync({ kind: item.kind, id: item.id })
+      toast.success(item.kind === 'invoice' ? 'Invoice marked as paid.' : `${label} marked as done.`)
     } catch {
-      toast.error('Unable to save deadline. Please try again.')
+      toast.error(`Unable to update ${label.toLowerCase()}.`)
+    } finally {
+      setBusyKey(null)
     }
-  }, [form, editId, createMutation, updateMutation, resetForm])
+  }, [completeItem])
 
-  const handleDelete = useCallback(async (id: string) => {
+  const handleSnooze = useCallback(async (item: AttentionItem, until: Date) => {
+    setBusyKey(item.key)
     try {
-      await deleteMutation.mutateAsync(id)
+      await snoozeItem.mutateAsync({ kind: item.kind, id: item.id, until })
+      toast.success(`Snoozed until ${until.toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}.`)
+    } catch {
+      toast.error('Unable to snooze this item.')
+    } finally {
+      setBusyKey(null)
+    }
+  }, [snoozeItem])
+
+  const handleUnsnooze = useCallback(async (item: AttentionItem) => {
+    setBusyKey(item.key)
+    try {
+      await unsnoozeItem.mutateAsync({ kind: item.kind, id: item.id })
+      toast.success('Item is back in your feed.')
+    } catch {
+      toast.error('Unable to unsnooze this item.')
+    } finally {
+      setBusyKey(null)
+    }
+  }, [unsnoozeItem])
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!pendingDelete) return
+    setBusyKey(pendingDelete.key)
+    try {
+      await deleteDeadline.mutateAsync(pendingDelete.id)
       toast.success('Deadline removed.')
+      setPendingDelete(null)
     } catch {
       toast.error('Unable to delete deadline.')
+    } finally {
+      setBusyKey(null)
     }
-  }, [deleteMutation])
+  }, [deleteDeadline, pendingDelete])
 
-  const handleMarkDone = useCallback(async (id: string) => {
-    try {
-      await updateMutation.mutateAsync({ id, data: { status: 'Done' } })
-      toast.success('Deadline marked as done.')
-    } catch {
-      toast.error('Unable to update deadline.')
-    }
-  }, [updateMutation])
+  const openCreate = () => { setEditing(null); setFormKey((k) => k + 1); setFormOpen(true) }
+  const openEdit = (item: AttentionItem) => {
+    if (!item.deadline) return
+    setEditing(item.deadline)
+    setFormKey((k) => k + 1)
+    setFormOpen(true)
+  }
 
-  if (isLoading) return <PageSkeleton />
+  if (isLoading && items.length === 0) return <PageSkeleton />
 
-  const filters: { id: StatusFilter; label: string }[] = [
-    { id: 'all', label: 'All' },
-    { id: 'Pending', label: 'Pending' },
-    { id: 'Done', label: 'Completed' },
-    { id: 'Missed', label: 'Missed' },
-  ]
+  const overdue = activeItems.filter((i) => i.bucket === 'overdue').length
+  const filtered = kindFilter !== null || focusDay !== null
 
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="px-6 py-5">
         <PageHeader
-          title="Deadlines"
+          title="Deadline engine"
           description={
-            stats?.overdue_count
-              ? `${stats.overdue_count} overdue · ${stats?.upcoming_this_week?.length ?? 0} due this week`
-              : `${stats?.upcoming_this_week?.length ?? 0} due this week`
+            activeItems.length === 0
+              ? 'Everything that needs your attention, in one timeline.'
+              : `${activeItems.length} item${activeItems.length === 1 ? '' : 's'} need attention${overdue ? `, ${overdue} overdue` : ''}.`
           }
           actions={
             <>
-              {isNotificationSupported() && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleToggleNotifications}
-                  className="rounded-lg"
-                  style={{
-                    borderColor: notificationsEnabled ? 'var(--gold)' : 'var(--border-default)',
-                    color: notificationsEnabled ? 'var(--gold)' : 'var(--text-secondary)',
-                  }}
-                >
-                  {notificationsEnabled ? <Bell size={14} strokeWidth={1.75} /> : <BellSlash size={14} strokeWidth={1.75} />}
-                  {notificationsEnabled ? 'Notifications on' : 'Notifications off'}
-                </Button>
-              )}
-              <Button onClick={() => { resetForm(); setShowForm(true) }} size="lg" className="rounded-lg">
-                <Plus size={14} strokeWidth={2} />
+              <ScopeToggle value={scope} onChange={setScope} />
+              <Button onClick={openCreate} size="lg" className="rounded-lg">
+                <Plus size={14} weight="bold" />
                 Add deadline
               </Button>
             </>
           }
         />
 
-        <div className="mt-6 grid grid-cols-3 gap-4">
-          <DeadlineStat
-            Icon={Warning}
-            label="Overdue"
-            value={stats?.overdue_count ?? 0}
-            valueColor={stats?.overdue_count ? '#C0392B' : undefined}
-          />
-          <DeadlineStat Icon={Clock} label="This week" value={stats?.upcoming_this_week?.length ?? 0} />
-          <DeadlineStat Icon={CheckCircle} label="Total" value={deadlines?.length ?? 0} />
+        <div className="mt-6">
+          <PressureHero items={activeItems} now={now} focusDay={focusDay} onFocusDay={setFocusDay} />
         </div>
 
-        <div className="mt-6 flex items-center gap-1">
-          {filters.map((f) => {
-            const isActive = statusFilter === f.id
-            return (
-              <button
-                key={f.id}
-                onClick={() => setStatusFilter(f.id)}
-                className="inline-flex items-center px-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
-                style={{
-                  background: isActive ? 'var(--surface-sunken)' : 'transparent',
-                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.background = 'var(--surface-overlay)'
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) e.currentTarget.style.background = 'transparent'
-                }}
-              >
-                {f.label}
-              </button>
-            )
-          })}
-        </div>
-
-        <div className="mt-4">
-          {!deadlines?.length ? (
-            <div
-              className="rounded-2xl border px-6 py-16 text-center"
-              style={{
-                background: 'var(--surface-card)',
-                borderColor: 'var(--border-soft)',
-                boxShadow: 'var(--shadow-xs)',
-              }}
-            >
-              <div
-                className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full"
-                style={{ background: 'var(--surface-sunken)' }}
-              >
-                <Timer size={18} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0">
+            {(filtered || snoozedCount > 0) && (
+              <div className="mb-5 flex flex-wrap items-center gap-2">
+                {filtered && (
+                  <span className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+                    Showing {visible.length} of {items.length}
+                  </span>
+                )}
+                {kindFilter && (
+                  <FilterChip label={KIND_META[kindFilter].plural} onClear={() => setKindFilter(null)} />
+                )}
+                {focusDay !== null && (
+                  <FilterChip
+                    label={
+                      focusDay === PAST_COLUMN
+                        ? 'Overdue'
+                        : new Date(focusDay).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
+                    }
+                    onClear={() => setFocusDay(null)}
+                  />
+                )}
+                {snoozedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSnoozed((v) => !v)}
+                    aria-pressed={showSnoozed}
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-semibold transition-colors hover:bg-[var(--surface-overlay)]"
+                    style={{
+                      borderColor: showSnoozed ? 'var(--gold)' : 'var(--border-default)',
+                      color: showSnoozed ? 'var(--gold-dark)' : 'var(--text-secondary)',
+                    }}
+                  >
+                    <ClockCountdown size={12} weight="bold" />
+                    {showSnoozed ? 'Hide' : 'Show'} {snoozedCount} snoozed
+                  </button>
+                )}
               </div>
-              <p className="text-[13.5px] font-medium" style={{ color: 'var(--text-primary)' }}>
-                No deadlines found
-              </p>
-              <p className="mt-1 text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                Click &quot;Add deadline&quot; to create one.
-              </p>
-            </div>
-          ) : (
-            <div
-              className="rounded-2xl border overflow-hidden"
-              style={{
-                background: 'var(--surface-card)',
-                borderColor: 'var(--border-soft)',
-                boxShadow: 'var(--shadow-xs)',
-              }}
-            >
-              <ul className="divide-y" style={{ borderColor: 'var(--border-soft)' }}>
-                {deadlines.map((d) => {
-                  const overdue = d.status === 'Pending' && isOverdue(d.due_date)
-                  const dotColor = d.status === 'Done' ? '#2E7D4F' : overdue ? '#C0392B' : 'var(--gold)'
-                  const StatusIcon = d.status === 'Done' ? CheckCircle : overdue ? Warning : Calendar
-                  return (
-                    <li
-                      key={d.id}
-                      className="group flex items-center gap-4 px-5 py-3.5 transition-colors"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--surface-overlay)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                      }}
-                    >
-                      <div
-                        className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: 'var(--surface-sunken)' }}
-                      >
-                        <StatusIcon size={14} strokeWidth={1.75} style={{ color: dotColor }} />
-                      </div>
+            )}
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <h3
-                            className="text-[13.5px] font-medium truncate"
-                            style={{
-                              color: 'var(--text-primary)',
-                              textDecoration: d.status === 'Done' ? 'line-through' : 'none',
-                              opacity: d.status === 'Done' ? 0.6 : 1,
-                            }}
-                          >
-                            {d.title}
-                          </h3>
-                          <StatusBadge status={d.priority} />
-                        </div>
-                        <div className="flex items-center gap-2 text-[11.5px] flex-wrap" style={{ color: 'var(--text-muted)' }}>
-                          <span className="tabular-nums">
-                            {new Date(d.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
-                          {d.case_title && <><span>·</span><span>{d.case_title}</span></>}
-                          <span>·</span>
-                          <span
-                            className="font-medium"
-                            style={{
-                              color: overdue ? '#C0392B' : d.status === 'Done' ? '#2E7D4F' : 'var(--text-secondary)',
-                            }}
-                          >
-                            {d.status === 'Done' ? 'Completed' : daysUntil(d.due_date)}
-                          </span>
-                        </div>
-                      </div>
+            {visible.length > 0 ? (
+              <AttentionTimeline
+                items={visible}
+                now={now}
+                busyKey={busyKey}
+                onComplete={handleComplete}
+                onEdit={openEdit}
+                onDelete={setPendingDelete}
+                onSnooze={handleSnooze}
+                onUnsnooze={handleUnsnooze}
+              />
+            ) : (
+              <EmptyTimeline filtered={filtered} onAdd={openCreate} />
+            )}
+          </div>
 
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {d.status === 'Pending' && (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => handleMarkDone(d.id)}
-                            aria-label="Mark done"
-                          >
-                            <CheckCircle size={13} style={{ color: '#2E7D4F' }} />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleEdit(d)}
-                          aria-label="Edit"
-                        >
-                          <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleDelete(d.id)}
-                          aria-label="Delete"
-                        >
-                          <Trash size={13} style={{ color: 'var(--text-muted)' }} />
-                        </Button>
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
+          <aside className="space-y-4 lg:sticky lg:top-4">
+            <OutcomePanel events={awaitingOutcome} now={now} />
+            <SourceBreakdown items={activeItems} active={kindFilter} onToggle={setKindFilter} />
+            {isNotificationSupported() && (
+              <NotificationsCard enabled={notificationsEnabled} onToggle={handleToggleNotifications} />
+            )}
+          </aside>
         </div>
 
-        <Dialog open={showForm} onOpenChange={(open) => { if (!open) resetForm() }}>
-          <DialogContent className="sm:max-w-lg rounded-2xl">
+        <DeadlineFormDialog key={formKey} open={formOpen} deadline={editing} onClose={() => setFormOpen(false)} />
+
+        <Dialog open={pendingDelete !== null} onOpenChange={(o) => { if (!o) setPendingDelete(null) }}>
+          <DialogContent className="sm:max-w-sm rounded-2xl">
             <DialogHeader>
               <DialogTitle className="font-heading text-lg" style={{ color: 'var(--text-primary)' }}>
-                {editId ? 'Edit deadline' : 'New deadline'}
+                Delete deadline?
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-2">
-              <Field label="Title">
-                <Input
-                  value={form.title}
-                  onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                  placeholder="e.g. File Statement of Defence"
-                  className="h-10"
-                />
-              </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Due date">
-                  <Input
-                    type="date"
-                    value={form.due_date}
-                    onChange={(e) => setForm((p) => ({ ...p, due_date: e.target.value }))}
-                    className="h-10"
-                  />
-                </Field>
-                <Field label="Priority">
-                  <Select
-                    value={form.priority}
-                    onValueChange={(v) => setForm((p) => ({ ...p, priority: (v ?? 'Medium') as DeadlinePriority }))}
-                  >
-                    <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="High">High</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="Low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </div>
-              <Field label="Linked case">
-                <Select value={form.case_id} onValueChange={(v) => setForm((p) => ({ ...p, case_id: v ?? '' }))}>
-                  <SelectTrigger className="h-10"><SelectValue placeholder="Select case" /></SelectTrigger>
-                  <SelectContent>
-                    {(cases ?? []).map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="Description">
-                <Textarea
-                  value={form.description}
-                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="Optional notes…"
-                  rows={3}
-                />
-              </Field>
-            </div>
+            <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+              &ldquo;{pendingDelete?.title}&rdquo; will be removed permanently.
+            </p>
             <DialogFooter className="pt-3">
-              <Button variant="outline" onClick={resetForm}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={isPending}>
-                {isPending ? <><Spinner size={14} /> Saving…</> : editId ? 'Update' : 'Create'}
+              <Button variant="outline" onClick={() => setPendingDelete(null)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleteDeadline.isPending}>
+                {deleteDeadline.isPending ? <><Spinner size={14} /> Deleting</> : 'Delete'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -427,45 +279,87 @@ export default function DeadlinePage() {
   )
 }
 
-function DeadlineStat({
-  Icon, label, value, valueColor,
-}: {
-  Icon: typeof Warning
-  label: string
-  value: number
-  valueColor?: string
-}) {
+function ScopeToggle({ value, onChange }: { value: AttentionScope; onChange: (v: AttentionScope) => void }) {
+  const options: { id: AttentionScope; label: string }[] = [
+    { id: 'mine', label: 'Mine' },
+    { id: 'firm', label: 'Whole firm' },
+  ]
   return (
-    <Card padding="lg">
-      <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center mb-4"
-        style={{ background: 'var(--surface-sunken)' }}
-      >
-        <Icon size={16} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
-      </div>
-      <div
-        className="font-heading text-[28px] font-semibold leading-none tracking-tight"
-        style={{ color: valueColor ?? 'var(--text-primary)' }}
-      >
-        {value}
-      </div>
-      <div className="mt-2 text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>
-        {label}
-      </div>
-    </Card>
+    <div
+      role="radiogroup"
+      aria-label="Feed scope"
+      className="inline-flex h-10 items-center rounded-lg p-1"
+      style={{ background: 'var(--surface-sunken)' }}
+    >
+      {options.map((o) => {
+        const active = value === o.id
+        return (
+          <button
+            key={o.id}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(o.id)}
+            className="h-8 rounded-md px-3 text-[12.5px] font-semibold transition-colors"
+            style={{
+              background: active ? 'var(--surface-card)' : 'transparent',
+              color: active ? 'var(--text-primary)' : 'var(--text-muted)',
+              boxShadow: active ? 'var(--shadow-xs)' : 'none',
+            }}
+          >
+            {o.label}
+          </button>
+        )
+      })}
+    </div>
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
-    <div>
-      <Label
-        className="text-[11px] font-medium uppercase tracking-wider mb-1.5 block"
-        style={{ color: 'var(--text-muted)' }}
+    <span
+      className="inline-flex items-center gap-1 rounded-full py-1 pl-2.5 pr-1 text-[11.5px] font-semibold"
+      style={{ background: 'var(--gold-muted)', color: 'var(--gold-dark)' }}
+    >
+      {label}
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label={`Clear ${label} filter`}
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-[rgba(201,151,43,0.2)]"
       >
-        {label}
-      </Label>
-      {children}
+        <X size={10} weight="bold" />
+      </button>
+    </span>
+  )
+}
+
+function EmptyTimeline({ filtered, onAdd }: { filtered: boolean; onAdd: () => void }) {
+  return (
+    <div
+      className="rounded-2xl border border-dashed px-6 py-14 text-center"
+      style={{ borderColor: 'var(--border-default)' }}
+    >
+      <span
+        className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl"
+        style={{ background: 'var(--accent-today-tint)' }}
+      >
+        <SealCheck size={20} weight="fill" style={{ color: 'var(--gold-dark)' }} />
+      </span>
+      <p className="mt-3 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+        {filtered ? 'Nothing matches this view' : 'Your horizon is clear'}
+      </p>
+      <p className="mx-auto mt-1 max-w-sm text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
+        {filtered
+          ? 'Clear the filters to see everything that needs attention.'
+          : 'Tasks, hearings, court dates and invoices due in the next thirty days will appear here automatically.'}
+      </p>
+      {!filtered && (
+        <Button variant="outline" className="mt-4 rounded-lg" onClick={onAdd}>
+          <Plus size={13} weight="bold" />
+          Add a deadline
+        </Button>
+      )}
     </div>
   )
 }

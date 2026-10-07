@@ -133,10 +133,13 @@ export function useDueEventMutations(refetch: () => void) {
   const dismiss = useDueEventsStore((s) => s.dismiss)
   const restore = useDueEventsStore((s) => s.restore)
 
-  const [ackMutate] = useMutation(AcknowledgeEventDueMutationDoc)
-  const [completeMutate] = useMutation(CompleteEventMutationDoc)
-  const [rescheduleMutate] = useMutation(RescheduleEventMutationDoc)
-  const [cancelMutate] = useMutation(CancelEventOccurrenceMutationDoc)
+  // The Deadline engine lists events awaiting an outcome; refresh it
+  // (when mounted) after any answer so the panel does not go stale.
+  const refreshFeed = { refetchQueries: ['AttentionFeed'] }
+  const [ackMutate] = useMutation(AcknowledgeEventDueMutationDoc, refreshFeed)
+  const [completeMutate] = useMutation(CompleteEventMutationDoc, refreshFeed)
+  const [rescheduleMutate] = useMutation(RescheduleEventMutationDoc, refreshFeed)
+  const [cancelMutate] = useMutation(CancelEventOccurrenceMutationDoc, refreshFeed)
 
   /**
    * Wraps a mutation call with the optimistic-dismiss + restore-on-error
