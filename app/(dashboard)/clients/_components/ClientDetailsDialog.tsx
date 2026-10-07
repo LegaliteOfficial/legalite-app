@@ -1,6 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import {
+  ArrowUpRight,
   Briefcase,
   Envelope,
   Funnel,
@@ -9,7 +11,7 @@ import {
   User as UserIcon,
   Users,
 } from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -137,6 +139,12 @@ export function ClientDetailsDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
+          {client && (
+            <Link href={`/clients/${client.id}`} className={buttonVariants({ variant: 'outline' })}>
+              Open profile
+              <ArrowUpRight size={13} strokeWidth={1.75} />
+            </Link>
+          )}
           <Button
             onClick={onEdit}
             style={{

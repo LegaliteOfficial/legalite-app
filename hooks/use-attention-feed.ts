@@ -21,7 +21,7 @@
  * which is also the Suspense fallback, so the markup always matches.
  */
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { skipToken, useMutation, useSuspenseQuery } from '@apollo/client/react'
 import {
   AttentionFeedQueryDoc,
@@ -36,6 +36,7 @@ import { DEV_SAMPLE_DEADLINES } from '@/lib/calendar/dev-data'
 import type { AttentionFeedQuery } from '@/types/generated/graphql'
 import type { CalendarEvent } from '@/hooks/use-calendar'
 import { useDeadlineEngineStore } from '@/stores/deadline-engine.store'
+import { useHydrated } from '@/hooks/use-hydrated'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
@@ -111,12 +112,7 @@ function normPriority(p: string | null | undefined): AttentionPriority | null {
 
 // ── Clock + hydration ──────────────────────────────────────────────────────
 
-const noopSubscribe = () => () => {}
-
-/** False on the server and during hydration, true afterwards. */
-export function useHydrated(): boolean {
-  return useSyncExternalStore(noopSubscribe, () => true, () => false)
-}
+export { useHydrated }
 
 /**
  * Minute-resolution clock. Each section owns its own tick so the passage

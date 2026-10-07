@@ -86,6 +86,7 @@ type Documents = {
     "\n  query Messages($clientId: ID, $channel: String) {\n    messages(clientId: $clientId, channel: $channel) {\n      ...MessageFields\n    }\n  }\n": typeof types.MessagesDocument,
     "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      ...MessageFields\n    }\n  }\n": typeof types.CreateMessageDocument,
     "\n  mutation DeleteMessage($id: ID!) {\n    deleteMessage(id: $id)\n  }\n": typeof types.DeleteMessageDocument,
+    "\n  mutation SendClientMessage($input: SendClientMessageInput!) {\n    sendClientMessage(input: $input) {\n      whatsapp_url\n      message {\n        ...MessageFields\n      }\n    }\n  }\n": typeof types.SendClientMessageDocument,
     "\n  query ConflictCheck($query: String!) {\n    conflictCheck(query: $query) {\n      kind\n      ref_id\n      label\n      sublabel\n      match_field\n    }\n  }\n": typeof types.ConflictCheckDocument,
     "\n  query ConflictChecks {\n    conflictChecks {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": typeof types.ConflictChecksDocument,
     "\n  mutation RecordConflictCheck($input: RecordConflictCheckInput!) {\n    recordConflictCheck(input: $input) {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": typeof types.RecordConflictCheckDocument,
@@ -235,6 +236,7 @@ const documents: Documents = {
     "\n  query Messages($clientId: ID, $channel: String) {\n    messages(clientId: $clientId, channel: $channel) {\n      ...MessageFields\n    }\n  }\n": types.MessagesDocument,
     "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      ...MessageFields\n    }\n  }\n": types.CreateMessageDocument,
     "\n  mutation DeleteMessage($id: ID!) {\n    deleteMessage(id: $id)\n  }\n": types.DeleteMessageDocument,
+    "\n  mutation SendClientMessage($input: SendClientMessageInput!) {\n    sendClientMessage(input: $input) {\n      whatsapp_url\n      message {\n        ...MessageFields\n      }\n    }\n  }\n": types.SendClientMessageDocument,
     "\n  query ConflictCheck($query: String!) {\n    conflictCheck(query: $query) {\n      kind\n      ref_id\n      label\n      sublabel\n      match_field\n    }\n  }\n": types.ConflictCheckDocument,
     "\n  query ConflictChecks {\n    conflictChecks {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": types.ConflictChecksDocument,
     "\n  mutation RecordConflictCheck($input: RecordConflictCheckInput!) {\n    recordConflictCheck(input: $input) {\n      id\n      query\n      match_count\n      notes\n      run_by_name\n      created_at\n      matches {\n        kind\n        ref_id\n        label\n        sublabel\n        match_field\n      }\n    }\n  }\n": types.RecordConflictCheckDocument,
@@ -614,6 +616,10 @@ export function graphql(source: "\n  mutation CreateMessage($input: CreateMessag
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteMessage($id: ID!) {\n    deleteMessage(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteMessage($id: ID!) {\n    deleteMessage(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SendClientMessage($input: SendClientMessageInput!) {\n    sendClientMessage(input: $input) {\n      whatsapp_url\n      message {\n        ...MessageFields\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation SendClientMessage($input: SendClientMessageInput!) {\n    sendClientMessage(input: $input) {\n      whatsapp_url\n      message {\n        ...MessageFields\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

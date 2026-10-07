@@ -20,7 +20,7 @@ import type {
  * 1:1. The only residual translation is treating any legacy 'Active' status
  * (rows not yet normalised) as 'Open'.
  */
-interface WireCase {
+export interface WireCase {
   id: string
   firm_id?: string | null
   user_id: string
@@ -48,7 +48,7 @@ interface WireCase {
   client_name?: string
 }
 
-function toCase(row: WireCase): Case {
+export function toCase(row: WireCase): Case {
   return {
     ...row,
     status: (row.status === 'Active' ? 'Open' : row.status) as CaseStatus,
@@ -64,7 +64,7 @@ function toCase(row: WireCase): Case {
 // `DEV_SAMPLE_CLIENTS` ids in hooks/use-clients.ts so the client-case
 // link in the new-case form lights up correctly.
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
-const DEV_SAMPLE_CASES: Case[] = [
+export const DEV_SAMPLE_CASES: Case[] = [
   {
     id: 'dev-1',
     user_id: 'dev',

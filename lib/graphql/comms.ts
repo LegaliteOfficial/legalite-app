@@ -26,3 +26,18 @@ export const DeleteMessageMutationDoc = graphql(/* GraphQL */ `
     deleteMessage(id: $id)
   }
 `)
+
+/**
+ * Email or WhatsApp a client from their profile. Email is sent by the
+ * backend; WhatsApp returns a click-to-chat link for the app to open.
+ */
+export const SendClientMessageMutationDoc = graphql(/* GraphQL */ `
+  mutation SendClientMessage($input: SendClientMessageInput!) {
+    sendClientMessage(input: $input) {
+      whatsapp_url
+      message {
+        ...MessageFields
+      }
+    }
+  }
+`)

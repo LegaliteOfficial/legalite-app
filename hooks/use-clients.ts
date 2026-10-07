@@ -22,7 +22,7 @@ import type {
  * without a backend running.
  */
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
-const DEV_SAMPLE_CLIENTS: Client[] = [
+export const DEV_SAMPLE_CLIENTS: Client[] = [
   {
     id: 'dev-client-1',
     user_id: 'dev',
