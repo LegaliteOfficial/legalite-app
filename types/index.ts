@@ -128,6 +128,10 @@ export interface Document {
   parties?: string | null
   judge?: string | null
   content?: string | null
+  // Drafting-studio page design (lib/documents/design.ts). Null = default.
+  design?: Record<string, unknown> | null
+  // True when the firm saved this document as a reusable template.
+  is_template?: boolean
   // Cloudinary asset (uploaded files). Null for editor-authored drafts.
   file_url?: string | null
   file_public_id?: string | null

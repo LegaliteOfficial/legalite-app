@@ -1,14 +1,12 @@
 'use client'
 
-import { DownloadSimple, FileText, Printer } from '@phosphor-icons/react'
+import { BookmarkSimple, DownloadSimple, Eye, FileText, Palette } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/shared/Spinner'
 
 /**
- * Editor card header. Inline-editable title on the left, optional
- * court/suit-number meta in the middle, and Export / Print / Save
- * actions on the right. Save label and disabled state depend on
- * whether we're editing an existing draft.
+ * Studio header: inline-editable title and court meta on the left; the
+ * design toggle, PDF preview/download and save actions on the right.
  */
 export function EditorHeader({
   draftTitle,
@@ -17,8 +15,12 @@ export function EditorHeader({
   suitNumber,
   isEditing,
   isSaving,
-  onExport,
-  onPrint,
+  designOpen,
+  onToggleDesign,
+  pdfBusy,
+  onPreview,
+  onDownload,
+  onSaveAsTemplate,
   onSave,
 }: {
   draftTitle: string
@@ -27,70 +29,63 @@ export function EditorHeader({
   suitNumber: string
   isEditing: boolean
   isSaving: boolean
-  onExport: () => void
-  onPrint: () => void
+  designOpen: boolean
+  onToggleDesign: () => void
+  pdfBusy: 'preview' | 'download' | null
+  onPreview: () => void
+  onDownload: () => void
+  onSaveAsTemplate: () => void
   onSave: () => void
 }) {
   return (
-    <div
-      className="flex items-center justify-between gap-4 px-5 py-3 border-b shrink-0"
-      style={{ borderColor: 'var(--border-soft)' }}
-    >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <FileText
-          size={16}
-          strokeWidth={1.75}
-          style={{ color: 'var(--text-muted)' }}
-          className="shrink-0"
-        />
+    <div className="flex shrink-0 flex-wrap items-center gap-3 border-b px-5 py-3" style={{ borderColor: 'var(--border-soft)' }}>
+      <div className="flex min-w-[220px] flex-1 items-center gap-3">
+        <FileText size={16} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
         <input
           value={draftTitle}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="Untitled document"
-          className="flex-1 min-w-0 font-heading text-[15px] font-semibold bg-transparent outline-none border-b border-transparent focus:border-[var(--border-default)] transition-colors"
+          aria-label="Document title"
+          className="min-w-0 flex-1 border-b border-transparent bg-transparent font-heading text-[15px] font-semibold outline-none transition-colors focus:border-[var(--border-default)]"
           style={{ color: 'var(--text-primary)' }}
         />
-        {(court || suitNumber) && (
-          <div className="flex items-center gap-2 shrink-0">
-            {court && (
-              <span
-                className="text-[11.5px] px-2 py-0.5 rounded-md"
-                style={{
-                  background: 'var(--surface-sunken)',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                {court.split('(')[0].trim()}
-              </span>
-            )}
-            {suitNumber && (
-              <span
-                className="font-mono text-[11px] tracking-wide"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                {suitNumber}
-              </span>
-            )}
-          </div>
-        )}
+        {[court, suitNumber].filter(Boolean).map((meta) => (
+          <span
+            key={meta}
+            className="hidden shrink-0 rounded-md px-2 py-0.5 text-[11.5px] xl:inline"
+            style={{ background: 'var(--surface-sunken)', color: 'var(--text-secondary)' }}
+          >
+            {meta}
+          </span>
+        ))}
       </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <Button variant="outline" size="sm" onClick={onExport}>
-          <DownloadSimple size={13} strokeWidth={1.75} />
-          Export
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 rounded-lg"
+          aria-pressed={designOpen}
+          onClick={onToggleDesign}
+          style={designOpen ? { borderColor: 'var(--gold)', color: 'var(--gold-dark)' } : undefined}
+        >
+          <Palette size={14} />
+          Design
         </Button>
-        <Button variant="outline" size="sm" onClick={onPrint}>
-          <Printer size={13} strokeWidth={1.75} />
-          Print
+        <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={pdfBusy !== null} onClick={onPreview}>
+          {pdfBusy === 'preview' ? <Spinner size={13} /> : <Eye size={14} />}
+          Preview
         </Button>
-        <Button size="sm" onClick={onSave} disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Spinner size={13} /> Saving…
-            </>
-          ) : (
-            isEditing ? 'Save changes' : 'Save draft'
-          )}
+        <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={pdfBusy !== null} onClick={onDownload}>
+          {pdfBusy === 'download' ? <Spinner size={13} /> : <DownloadSimple size={14} />}
+          Download PDF
+        </Button>
+        <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={isSaving} onClick={onSaveAsTemplate}>
+          <BookmarkSimple size={14} />
+          Save as template
+        </Button>
+        <Button size="sm" className="h-8 rounded-lg" disabled={isSaving} onClick={onSave}>
+          {isSaving ? <><Spinner size={13} /> Saving</> : isEditing ? 'Save changes' : 'Save draft'}
         </Button>
       </div>
     </div>

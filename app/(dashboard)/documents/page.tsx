@@ -19,6 +19,7 @@ import { DraftsTab } from './_components/DraftsTab'
 import { EditorTab } from './_components/EditorTab'
 import { LibraryTab } from './_components/LibraryTab'
 import { TemplatesTab } from './_components/TemplatesTab'
+import { MyTemplates } from './_components/MyTemplates'
 import { useDocumentsPageState } from './_hooks/use-documents-page-state'
 
 export default function DocumentsPage() {
@@ -38,8 +39,17 @@ export default function DocumentsPage() {
         <DocumentsTabs
           active={state.activeTab}
           onChange={state.setActiveTab}
-          documentCount={state.documents?.length ?? 0}
+          documentCount={state.drafts?.length ?? 0}
         />
+
+        {state.activeTab === 'templates' && !state.showQuickSetup && (
+          <MyTemplates
+            templates={state.myTemplates}
+            onOpen={state.openMyTemplate}
+            onBlank={state.startBlankDocument}
+            onDelete={state.deleteDraft}
+          />
+        )}
 
         {state.activeTab === 'templates' && !state.showQuickSetup && (
           <TemplatesTab
@@ -68,7 +78,7 @@ export default function DocumentsPage() {
 
         {state.activeTab === 'drafts' && (
           <DraftsTab
-            documents={state.documents}
+            documents={state.drafts}
             documentCases={state.documentCases}
             search={state.draftSearch}
             onSearchChange={state.setDraftSearch}
@@ -97,19 +107,19 @@ export default function DocumentsPage() {
 
         {state.activeTab === 'editor' && (
           <EditorTab
+            key={state.contentVersion}
             draftTitle={state.draftTitle}
             onTitleChange={state.setDraftTitle}
             court={state.court}
             suitNumber={state.suitNumber}
             editingDocId={state.editingDocId}
             isSaving={state.isEditorSaving}
-            onExport={state.handleExport}
-            onPrint={state.handlePrint}
-            onSave={state.handleSave}
-            exec={state.execCommand}
-            editorRef={state.editorRef}
             initialHTML={state.editorHTML}
-            onEditorInput={state.setEditorHTML}
+            onContentChange={state.setEditorHTML}
+            design={state.design}
+            onDesignChange={state.setDesign}
+            onSave={state.handleSave}
+            onSaveAsTemplate={state.handleSaveAsTemplate}
           />
         )}
 
