@@ -1,10 +1,10 @@
 'use client'
 
 /**
- * Attention timeline — every item grouped into urgency bands (Overdue,
- * Today, Tomorrow, This week, On the horizon) along a vertical rail.
- * Each row leads with a date tile tinted by urgency, so the eye can scan
- * the left edge for red and amber without reading titles.
+ * Attention list — every item grouped into urgency sections (Past due,
+ * Today, Tomorrow, This week, Later this month), each set out like a
+ * ruled cause list: a diary date leaf, what the item is, the matter it
+ * belongs to, and when it falls due in plain words.
  */
 
 import Link from 'next/link'
@@ -26,9 +26,10 @@ import {
   BUCKET_META,
   BUCKET_ORDER,
   KIND_META,
+  duePhrase,
   formatDueTime,
-  relativeLabel,
 } from '../_lib/attention-meta'
+import { DateLeaf } from './DateLeaf'
 
 interface AttentionTimelineProps {
   items: AttentionItem[]
@@ -41,6 +42,8 @@ interface AttentionTimelineProps {
   onUnsnooze: (item: AttentionItem) => void
 }
 
+type RowActions = Omit<AttentionTimelineProps, 'items' | 'now'>
+
 export function AttentionTimeline({ items, now, ...actions }: AttentionTimelineProps) {
   const groups = BUCKET_ORDER.map((bucket) => ({
     bucket,
@@ -48,60 +51,42 @@ export function AttentionTimeline({ items, now, ...actions }: AttentionTimelineP
   })).filter((g) => g.rows.length > 0)
 
   return (
-    <div className="relative">
-      {/* The rail. */}
-      <div
-        aria-hidden
-        className="absolute left-[15px] top-3 bottom-3 w-px"
-        style={{ background: 'linear-gradient(to bottom, var(--border-strong), var(--border-soft))' }}
-      />
-      <div className="space-y-7">
-        {groups.map(({ bucket, rows }) => (
-          <BucketGroup key={bucket} bucket={bucket} rows={rows} now={now} {...actions} />
-        ))}
-      </div>
+    <div className="space-y-6">
+      {groups.map(({ bucket, rows }) => (
+        <BucketGroup key={bucket} bucket={bucket} rows={rows} now={now} {...actions} />
+      ))}
     </div>
   )
 }
 
 function BucketGroup({
   bucket, rows, now, ...actions
-}: { bucket: AttentionBucket; rows: AttentionItem[]; now: number } & Omit<AttentionTimelineProps, 'items' | 'now'>) {
+}: { bucket: AttentionBucket; rows: AttentionItem[]; now: number } & RowActions) {
   const meta = BUCKET_META[bucket]
   return (
     <section>
-      <header className="relative mb-3 flex items-center gap-3">
-        <span
-          className="relative z-10 flex h-[31px] w-[31px] items-center justify-center rounded-full"
-          style={{ background: 'var(--surface-page)' }}
-        >
-          <span
-            className="flex h-[19px] w-[19px] items-center justify-center rounded-full"
-            style={{ background: meta.tint, boxShadow: `0 0 0 3px var(--surface-page)` }}
-          >
-            <span
-              className={bucket === 'overdue' ? 'h-2 w-2 rounded-full animate-pulse' : 'h-2 w-2 rounded-full'}
-              style={{ background: meta.color }}
-            />
-          </span>
-        </span>
-        <h3 className="text-[13px] font-semibold tracking-tight" style={{ color: meta.color }}>
+      <header className="mb-2 flex items-baseline gap-2 px-1">
+        <h3 className="font-heading text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
           {meta.label}
         </h3>
-        <span
-          className="rounded-full px-2 py-0.5 text-[10.5px] font-semibold tabular-nums"
-          style={{ background: meta.tint, color: meta.color }}
-        >
+        <span className="text-[12.5px] font-medium tabular-nums" style={{ color: meta.color }}>
           {rows.length}
         </span>
-        <span className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+        <span className="ml-auto text-[12px]" style={{ color: 'var(--text-muted)' }}>
           {meta.hint}
         </span>
       </header>
 
-      <ul className="space-y-2 pl-11">
-        {rows.map((item) => (
-          <AttentionRow key={item.key} item={item} now={now} {...actions} />
+      <ul
+        className="overflow-hidden rounded-xl border"
+        style={{
+          background: 'var(--surface-card)',
+          borderColor: 'var(--border-default)',
+          borderLeft: `3px solid ${meta.color}`,
+        }}
+      >
+        {rows.map((item, i) => (
+          <AttentionRow key={item.key} item={item} now={now} first={i === 0} {...actions} />
         ))}
       </ul>
     </section>
@@ -109,168 +94,124 @@ function BucketGroup({
 }
 
 function AttentionRow({
-  item, now, busyKey, onComplete, onEdit, onDelete, onSnooze, onUnsnooze,
-}: { item: AttentionItem; now: number } & Omit<AttentionTimelineProps, 'items' | 'now'>) {
+  item, now, first, busyKey, onComplete, onEdit, onDelete, onSnooze, onUnsnooze,
+}: { item: AttentionItem; now: number; first: boolean } & RowActions) {
   const kind = KIND_META[item.kind]
   const urgency = BUCKET_META[item.bucket]
-  const d = new Date(item.dueAt)
   const busy = busyKey === item.key
   const snoozed = item.snoozedUntil !== null
   const completeLabel = item.kind === 'invoice' ? 'Mark paid' : 'Mark done'
 
   return (
     <li
-      className="group relative flex items-stretch overflow-hidden rounded-2xl border transition-all hover:-translate-y-px"
+      className="group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[var(--surface-card-hover)]"
       style={{
-        background: 'var(--surface-card)',
-        borderColor: item.bucket === 'overdue' && !snoozed ? 'rgba(192,57,43,0.22)' : 'var(--border-soft)',
-        borderStyle: snoozed ? 'dashed' : 'solid',
-        boxShadow: snoozed ? 'none' : 'var(--shadow-xs)',
-        opacity: busy ? 0.55 : snoozed ? 0.7 : 1,
+        borderTop: first ? 'none' : '1px solid var(--border-soft)',
+        opacity: busy ? 0.55 : snoozed ? 0.65 : 1,
       }}
     >
-      {/* Date tile */}
-      <div
-        className="flex w-[64px] shrink-0 flex-col items-center justify-center py-3"
-        style={{ background: urgency.tint }}
-      >
-        <span
-          className="text-[9.5px] font-bold uppercase tracking-[0.14em]"
-          style={{ color: urgency.color }}
-        >
-          {d.toLocaleDateString('en-GB', { month: 'short' })}
-        </span>
-        <span
-          className="font-heading text-[22px] font-semibold leading-none tabular-nums"
-          style={{ color: urgency.color }}
-        >
-          {d.getDate()}
-        </span>
-        <span className="mt-0.5 text-[10px] font-medium" style={{ color: urgency.color, opacity: 0.75 }}>
-          {d.toLocaleDateString('en-GB', { weekday: 'short' })}
-        </span>
+      <DateLeaf ts={item.dueAt} tone={snoozed ? 'var(--text-subtle)' : urgency.color} />
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 text-[12px] font-medium" style={{ color: kind.color }}>
+          <kind.Icon size={13} weight="duotone" />
+          <span>{item.kind === 'event' && item.detail ? item.detail : kind.label}</span>
+          {item.priority === 'High' && item.kind !== 'hearing' && item.kind !== 'court' && (
+            <span className="ml-1 text-[11px] font-semibold" style={{ color: '#C0392B' }}>
+              High priority
+            </span>
+          )}
+        </div>
+        <p className="mt-0.5 truncate text-[14px] font-medium" style={{ color: 'var(--text-primary)' }}>
+          {item.title}
+        </p>
+        {(item.context || (item.detail && item.kind !== 'event' && item.kind !== 'deadline')) && (
+          <p className="mt-0.5 truncate text-[12px]" style={{ color: 'var(--text-muted)' }}>
+            {[item.context, item.kind !== 'event' && item.kind !== 'deadline' ? item.detail : null]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        )}
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center gap-3.5 px-4 py-3">
-        <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-          style={{ background: kind.tint }}
-        >
-          <kind.Icon size={17} weight="duotone" style={{ color: kind.color }} />
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-[10px] font-bold uppercase tracking-[0.12em]"
-              style={{ color: kind.color }}
+      <div className="flex shrink-0 items-center gap-3">
+        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          {item.completable && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={busy}
+              onClick={() => onComplete(item)}
+              aria-label={completeLabel}
+              title={completeLabel}
             >
-              {item.kind === 'event' && item.detail ? item.detail : kind.label}
-            </span>
-            {item.priority === 'High' && (
-              <span
-                className="rounded px-1.5 py-px text-[9.5px] font-bold uppercase tracking-wider"
-                style={{ background: 'rgba(192,57,43,0.10)', color: '#C0392B' }}
-              >
-                High
-              </span>
-            )}
-          </div>
-          <p
-            className="mt-0.5 truncate text-[13.5px] font-medium"
-            style={{ color: 'var(--text-primary)' }}
+              <CheckCircle size={15} style={{ color: '#2E7D4F' }} />
+            </Button>
+          )}
+          {snoozed ? (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={busy}
+              onClick={() => onUnsnooze(item)}
+              aria-label="Remind me now"
+              title="Remind me now"
+            >
+              <BellRinging size={14} style={{ color: 'var(--gold-dark)' }} />
+            </Button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                disabled={busy}
+                render={
+                  <Button variant="ghost" size="icon-sm" aria-label="Remind me later" title="Remind me later">
+                    <ClockCountdown size={14} style={{ color: 'var(--text-muted)' }} />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="text-[11px]">Remind me later</DropdownMenuLabel>
+                {snoozePresets(now).map((p) => (
+                  <DropdownMenuItem
+                    key={p.label}
+                    onClick={() => onSnooze(item, p.until)}
+                    className="text-[12.5px] cursor-pointer"
+                  >
+                    {p.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {item.kind === 'deadline' && (
+            <>
+              <Button variant="ghost" size="icon-sm" disabled={busy} onClick={() => onEdit(item)} aria-label="Edit deadline" title="Edit">
+                <Pencil size={14} style={{ color: 'var(--text-muted)' }} />
+              </Button>
+              <Button variant="ghost" size="icon-sm" disabled={busy} onClick={() => onDelete(item)} aria-label="Delete deadline" title="Delete">
+                <Trash size={14} style={{ color: 'var(--text-muted)' }} />
+              </Button>
+            </>
+          )}
+          <Link
+            href={item.href}
+            aria-label="Open"
+            title="Open"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--surface-overlay)]"
           >
-            {item.title}
-          </p>
-          <p className="mt-0.5 truncate text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
-            {formatDueTime(item.dueAt, item.allDay)}
-            {item.context && <> · {item.context}</>}
-            {item.detail && item.kind !== 'event' && item.kind !== 'deadline' && <> · {item.detail}</>}
-          </p>
+            <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} />
+          </Link>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1">
-          <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-            {item.completable && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled={busy}
-                onClick={() => onComplete(item)}
-                aria-label={completeLabel}
-                title={completeLabel}
-              >
-                <CheckCircle size={15} style={{ color: '#2E7D4F' }} />
-              </Button>
-            )}
-            {snoozed ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled={busy}
-                onClick={() => onUnsnooze(item)}
-                aria-label="Unsnooze"
-                title="Unsnooze"
-              >
-                <BellRinging size={14} style={{ color: 'var(--gold-dark)' }} />
-              </Button>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  disabled={busy}
-                  render={
-                    <Button variant="ghost" size="icon-sm" aria-label="Snooze" title="Snooze">
-                      <ClockCountdown size={14} style={{ color: 'var(--text-muted)' }} />
-                    </Button>
-                  }
-                />
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuLabel className="text-[11px]">Remind me</DropdownMenuLabel>
-                  {snoozePresets(now).map((p) => (
-                    <DropdownMenuItem
-                      key={p.label}
-                      onClick={() => onSnooze(item, p.until)}
-                      className="text-[12.5px] cursor-pointer"
-                    >
-                      {p.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            {item.kind === 'deadline' && (
-              <>
-                <Button variant="ghost" size="icon-sm" disabled={busy} onClick={() => onEdit(item)} aria-label="Edit deadline">
-                  <Pencil size={14} style={{ color: 'var(--text-muted)' }} />
-                </Button>
-                <Button variant="ghost" size="icon-sm" disabled={busy} onClick={() => onDelete(item)} aria-label="Delete deadline">
-                  <Trash size={14} style={{ color: 'var(--text-muted)' }} />
-                </Button>
-              </>
-            )}
-            <Link
-              href={item.href}
-              aria-label="Open"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--surface-overlay)]"
-            >
-              <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} />
-            </Link>
-          </div>
+        <div className="w-[150px] text-right">
           {snoozed ? (
-            <span
-              className="min-w-[78px] rounded-full px-2.5 py-1 text-center text-[11px] font-semibold"
-              style={{ background: 'var(--surface-sunken)', color: 'var(--text-muted)' }}
-              title={`Snoozed until ${formatDueTime(new Date(item.snoozedUntil!).getTime(), false)}`}
-            >
-              Snoozed
-            </span>
+            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+              Reminder set for {formatDueTime(new Date(item.snoozedUntil!).getTime(), false)}
+            </p>
           ) : (
-            <span
-              className="min-w-[78px] rounded-full px-2.5 py-1 text-center text-[11px] font-semibold tabular-nums"
-              style={{ background: urgency.tint, color: urgency.color }}
-            >
-              {relativeLabel(item.dueAt, now)}
-            </span>
+            <p className="text-[12.5px] font-semibold leading-snug" style={{ color: urgency.color }}>
+              {duePhrase(item, now)}
+            </p>
           )}
         </div>
       </div>

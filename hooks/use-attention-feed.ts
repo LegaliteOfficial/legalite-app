@@ -9,12 +9,20 @@
  * waiting on an outcome. Scoping, de-duplication and snoozes are applied
  * server side.
  *
- * Buckets are recomputed here against a ticking clock so an item rolls
- * from "today" into "overdue" without waiting for the next fetch.
+ * Reads are suspense-based so each page section fetches for itself and
+ * suspends inside its own <Suspense> boundary: a scope change re-renders
+ * only the sections that read the feed, never the page shell. Sections
+ * calling the hook with the same variables share one request and one
+ * cache entry.
+ *
+ * The query is skipped until hydration: the Apollo client reads the auth
+ * token from localStorage, so a server-side run would be unauthenticated.
+ * The server and the hydration pass both render the section skeleton,
+ * which is also the Suspense fallback, so the markup always matches.
  */
 
-import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { skipToken, useMutation, useSuspenseQuery } from '@apollo/client/react'
 import {
   AttentionFeedQueryDoc,
   CompleteAttentionItemMutationDoc,
@@ -24,16 +32,16 @@ import {
 import { DeadlineStatsQueryDoc, DeadlinesQueryDoc } from '@/lib/graphql/deadlines'
 import { TasksQueryDoc } from '@/lib/graphql/tasks'
 import { InvoicesQueryDoc } from '@/lib/graphql/invoices'
-import { useDeadlines, type Deadline } from '@/hooks/use-deadlines'
+import { DEV_SAMPLE_DEADLINES } from '@/lib/calendar/dev-data'
+import type { AttentionFeedQuery } from '@/types/generated/graphql'
 import type { CalendarEvent } from '@/hooks/use-calendar'
+import { useDeadlineEngineStore } from '@/stores/deadline-engine.store'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
 export const HORIZON_DAYS = 30
 const DAY_MS = 86_400_000
-const REFRESH_MS = 60_000
-/** Server data is re-pulled on this cadence; buckets tick every minute. */
-const POLL_MS = 5 * 60_000
+const TICK_MS = 60_000
 
 export type AttentionKind = 'deadline' | 'task' | 'event' | 'hearing' | 'court' | 'invoice'
 
@@ -65,19 +73,9 @@ export interface AttentionItem {
   completable: boolean
   /** ISO timestamp the item is hidden until, when snoozed. */
   snoozedUntil: string | null
-  /** Deadline record for the edit dialog, when kind === 'deadline'. */
-  deadline?: Deadline
 }
 
-export interface AttentionSummary {
-  total: number
-  overdue: number
-  today: number
-  tomorrow: number
-  week: number
-  later: number
-  snoozed: number
-}
+type FeedData = AttentionFeedQuery['attentionFeed']
 
 export function startOfDay(ts: number): number {
   const d = new Date(ts)
@@ -111,117 +109,130 @@ function normPriority(p: string | null | undefined): AttentionPriority | null {
   return p === 'High' || p === 'Medium' || p === 'Low' ? p : null
 }
 
-export interface AttentionFeedOptions {
-  scope?: AttentionScope
-  includeSnoozed?: boolean
+// ── Clock + hydration ──────────────────────────────────────────────────────
+
+const noopSubscribe = () => () => {}
+
+/** False on the server and during hydration, true afterwards. */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false)
 }
 
-export interface AttentionFeed {
+/**
+ * Minute-resolution clock. Each section owns its own tick so the passage
+ * of time re-renders the rows whose wording depends on it, not the page.
+ */
+export function useNow(): number {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), TICK_MS)
+    return () => clearInterval(id)
+  }, [])
+  return now
+}
+
+// ── Reads ──────────────────────────────────────────────────────────────────
+
+/**
+ * Raw feed for the current scope / snooze view. Suspends while loading;
+ * `ready` is false until hydration (render the section skeleton then).
+ */
+export function useAttentionFeedQuery(): { feed: FeedData | undefined; ready: boolean } {
+  const scope = useDeadlineEngineStore((s) => s.scope)
+  const includeSnoozed = useDeadlineEngineStore((s) => s.showSnoozed)
+  const retryNonce = useDeadlineEngineStore((s) => s.retryNonce)
+  const hydrated = useHydrated()
+  const [tzOffset] = useState(() => new Date().getTimezoneOffset())
+
+  const { data } = useSuspenseQuery(
+    AttentionFeedQueryDoc,
+    hydrated && !DEV_BYPASS
+      ? {
+          variables: {
+            input: {
+              horizon_days: HORIZON_DAYS,
+              tz_offset_minutes: tzOffset,
+              scope,
+              include_snoozed: includeSnoozed,
+            },
+          },
+          queryKey: ['attention-feed', retryNonce],
+        }
+      : skipToken,
+  )
+  return { feed: data?.attentionFeed, ready: hydrated }
+}
+
+function mapFeedItems(feed: FeedData | undefined, now: number): AttentionItem[] {
+  if (DEV_BYPASS) {
+    // No backend in dev bypass: stand in with the shared sample deadlines.
+    return DEV_SAMPLE_DEADLINES.filter((d) => d.status === 'Pending')
+      .map((d): AttentionItem => {
+        const dueAt = new Date(d.due_date).getTime()
+        return {
+          key: `deadline:${d.id}`,
+          id: d.id,
+          kind: 'deadline',
+          title: d.title,
+          context: d.case_title,
+          detail: d.description,
+          dueAt,
+          allDay: true,
+          priority: normPriority(d.priority),
+          bucket: bucketFor(dueAt, now),
+          href: hrefFor('deadline', d.case_id),
+          completable: true,
+          snoozedUntil: null,
+        }
+      })
+      .filter((i) => Number.isFinite(i.dueAt))
+      .sort((a, b) => a.dueAt - b.dueAt)
+  }
+  return (feed?.items ?? []).map((i): AttentionItem => {
+    const kind = i.kind as AttentionKind
+    const dueAt = new Date(i.due_at).getTime()
+    return {
+      key: i.key,
+      id: i.id,
+      kind,
+      title: i.title,
+      context: i.context ?? null,
+      detail: i.detail ?? null,
+      dueAt,
+      allDay: i.all_day,
+      priority: normPriority(i.priority),
+      bucket: bucketFor(dueAt, now),
+      href: hrefFor(kind, i.case_id),
+      completable: i.completable,
+      snoozedUntil: i.snoozed_until ?? null,
+    }
+  })
+}
+
+export interface AttentionItems {
+  /** Everything returned, including snoozed rows when they are shown. */
   items: AttentionItem[]
-  /** Past events still waiting for an outcome to be recorded. */
-  awaitingOutcome: CalendarEvent[]
-  /** Pending deadlines, used for browser notifications. */
-  pendingDeadlines: Deadline[]
-  /** Server-side counts; `snoozed` includes items not returned. */
-  summary: AttentionSummary | null
-  isLoading: boolean
-  error: unknown
-  /** Reference "now" the buckets were computed against. */
+  /** Items that count as pressure — snoozed rows excluded. */
+  activeItems: AttentionItem[]
+  /** Active snoozes, including those hidden from `items`. */
+  snoozedCount: number
+  ready: boolean
   now: number
 }
 
-export function useAttentionFeed({
-  scope = 'mine',
-  includeSnoozed = false,
-}: AttentionFeedOptions = {}): AttentionFeed {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), REFRESH_MS)
-    return () => clearInterval(id)
-  }, [])
+/** Feed items bucketed against a ticking clock. Suspends while loading. */
+export function useAttentionItems(): AttentionItems {
+  const { feed, ready } = useAttentionFeedQuery()
+  const now = useNow()
+  const items = useMemo(() => mapFeedItems(feed, now), [feed, now])
+  const activeItems = useMemo(() => items.filter((i) => !i.snoozedUntil), [items])
+  return { items, activeItems, snoozedCount: feed?.summary.snoozed ?? 0, ready, now }
+}
 
-  const [tzOffset] = useState(() => new Date().getTimezoneOffset())
-
-  const { data, previousData, loading, error } = useQuery(AttentionFeedQueryDoc, {
-    variables: {
-      input: {
-        horizon_days: HORIZON_DAYS,
-        tz_offset_minutes: tzOffset,
-        scope,
-        include_snoozed: includeSnoozed,
-      },
-    },
-    pollInterval: POLL_MS,
-    skip: DEV_BYPASS,
-    errorPolicy: DEV_BYPASS ? 'all' : 'none',
-  })
-
-  // Full deadline records back the edit dialog and browser notifications.
-  // In dev bypass they also stand in for the feed, which has no backend.
-  const { data: deadlines } = useDeadlines('Pending')
-
-  // Keep the previous result on screen while a scope / snooze toggle refetches.
-  const feed = (data ?? previousData)?.attentionFeed
-
-  const items = useMemo<AttentionItem[]>(() => {
-    const byId = new Map((deadlines ?? []).map((d) => [d.id, d]))
-
-    if (DEV_BYPASS) {
-      return (deadlines ?? [])
-        .map((d): AttentionItem => {
-          const dueAt = new Date(d.due_date).getTime()
-          return {
-            key: `deadline:${d.id}`,
-            id: d.id,
-            kind: 'deadline',
-            title: d.title,
-            context: d.case_title,
-            detail: d.description,
-            dueAt,
-            allDay: true,
-            priority: d.priority,
-            bucket: bucketFor(dueAt, now),
-            href: hrefFor('deadline', d.case_id),
-            completable: true,
-            snoozedUntil: null,
-            deadline: d,
-          }
-        })
-        .filter((i) => Number.isFinite(i.dueAt))
-        .sort((a, b) => a.dueAt - b.dueAt)
-    }
-
-    return (feed?.items ?? []).map((i): AttentionItem => {
-      const kind = i.kind as AttentionKind
-      const dueAt = new Date(i.due_at).getTime()
-      return {
-        key: i.key,
-        id: i.id,
-        kind,
-        title: i.title,
-        context: i.context ?? null,
-        detail: i.detail ?? null,
-        dueAt,
-        allDay: i.all_day,
-        priority: normPriority(i.priority),
-        bucket: bucketFor(dueAt, now),
-        href: hrefFor(kind, i.case_id),
-        completable: i.completable,
-        snoozedUntil: i.snoozed_until ?? null,
-        deadline: kind === 'deadline' ? byId.get(i.id) : undefined,
-      }
-    })
-  }, [feed, deadlines, now])
-
-  return {
-    items,
-    awaitingOutcome: (feed?.awaiting_outcome ?? []) as CalendarEvent[],
-    pendingDeadlines: deadlines ?? [],
-    summary: feed?.summary ?? null,
-    isLoading: DEV_BYPASS ? false : loading,
-    error: DEV_BYPASS ? undefined : error,
-    now,
-  }
+/** Past events still waiting for an outcome. Suspends while loading. */
+export function useAwaitingOutcome(): { events: CalendarEvent[]; ready: boolean } {
+  const { feed, ready } = useAttentionFeedQuery()
+  return { events: (feed?.awaiting_outcome ?? []) as CalendarEvent[], ready }
 }
 
 // ── Mutations ──────────────────────────────────────────────────────────────
