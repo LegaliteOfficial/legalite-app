@@ -1,12 +1,29 @@
 'use client'
 
+/**
+ * Side panels for the Deadline engine. Each is self-contained: it reads
+ * its own query and store slice and sits in its own Suspense boundary,
+ * so a change to one never re-renders the others.
+ */
+
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { ClipboardText, Bell, BellSlash } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import type { CalendarEvent } from '@/hooks/use-calendar'
-import type { AttentionItem, AttentionKind } from '@/hooks/use-attention-feed'
+import { useAttentionItems, useAwaitingOutcome, useNow } from '@/hooks/use-attention-feed'
+import { useDeadlines } from '@/hooks/use-deadlines'
 import { useDueEventsStore } from '@/stores/due-events.store'
-import { KIND_META, KIND_ORDER, relativeLabel } from '../_lib/attention-meta'
+import { useDeadlineEngineStore } from '@/stores/deadline-engine.store'
+import {
+  checkAndNotifyDeadlines,
+  disableNotifications,
+  getNotificationPreference,
+  isNotificationSupported,
+  requestNotificationPermission,
+} from '@/lib/notifications'
+import { KIND_META, KIND_ORDER, agoLabel } from '../_lib/attention-meta'
+import { PanelSkeleton } from './skeletons'
 
 // ── Outcomes awaiting ────────────────────────────────────────────────────
 
@@ -15,8 +32,11 @@ import { KIND_META, KIND_ORDER, relativeLabel } from '../_lib/attention-meta'
  * the event back onto the global Event Due queue, which re-opens the
  * standard outcome prompt mounted in the dashboard layout.
  */
-export function OutcomePanel({ events, now }: { events: CalendarEvent[]; now: number }) {
+export function OutcomePanel() {
+  const { events, ready } = useAwaitingOutcome()
+  const now = useNow()
   const restore = useDueEventsStore((s) => s.restore)
+  if (!ready) return <PanelSkeleton rows={2} />
   if (events.length === 0) return null
 
   return (
@@ -54,7 +74,7 @@ export function OutcomePanel({ events, now }: { events: CalendarEvent[]; now: nu
                 {e.title}
               </p>
               <p className="truncate text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                Ended {relativeLabel(new Date(e.end_time).getTime(), now).replace(' overdue', ' ago')}
+                Ended {agoLabel(new Date(e.end_time).getTime(), now)}
                 {e.case_title && <> · {e.case_title}</>}
               </p>
             </div>
@@ -74,13 +94,12 @@ export function OutcomePanel({ events, now }: { events: CalendarEvent[]; now: nu
  * Proportional bar + legend showing where the pressure is coming from.
  * Each legend row doubles as a filter toggle for the timeline.
  */
-export function SourceBreakdown({
-  items, active, onToggle,
-}: {
-  items: AttentionItem[]
-  active: AttentionKind | null
-  onToggle: (kind: AttentionKind | null) => void
-}) {
+export function SourceBreakdown() {
+  const { activeItems: items, ready } = useAttentionItems()
+  const active = useDeadlineEngineStore((s) => s.kindFilter)
+  const onToggle = useDeadlineEngineStore((s) => s.setKindFilter)
+  if (!ready) return <PanelSkeleton rows={6} />
+
   const counts = KIND_ORDER.map((k) => ({
     kind: k,
     total: items.filter((i) => i.kind === k).length,
@@ -91,7 +110,7 @@ export function SourceBreakdown({
   return (
     <Card padding="md">
       <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-        Where it is coming from
+        By category
       </p>
       <div className="mt-3 flex h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--surface-sunken)' }}>
         {counts.map(({ kind, total: n }) =>
@@ -127,7 +146,7 @@ export function SourceBreakdown({
                 </span>
                 {overdue > 0 && (
                   <span className="text-[10.5px] font-semibold" style={{ color: '#C0392B' }}>
-                    {overdue} late
+                    {overdue} past due
                   </span>
                 )}
                 <span className="w-6 text-right text-[12.5px] font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>
@@ -144,7 +163,39 @@ export function SourceBreakdown({
 
 // ── Browser notifications ────────────────────────────────────────────────
 
-export function NotificationsCard({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+const noopSubscribe = () => () => {}
+
+/**
+ * Browser alerts for pending deadlines. Owns its `deadlines` query and
+ * the permission state; renders nothing until hydrated (the capability
+ * check needs `window`, and SSR markup must match the first client pass).
+ */
+export function NotificationsCard() {
+  const supported = useSyncExternalStore(noopSubscribe, isNotificationSupported, () => false)
+  const [enabled, setEnabled] = useState(() => getNotificationPreference())
+  const { data: deadlines } = useDeadlines('Pending')
+
+  useEffect(() => {
+    if (enabled && deadlines?.length) checkAndNotifyDeadlines(deadlines)
+  }, [deadlines, enabled])
+
+  const onToggle = useCallback(async () => {
+    if (enabled) {
+      disableNotifications()
+      setEnabled(false)
+      toast.success('Deadline notifications disabled.')
+      return
+    }
+    const granted = await requestNotificationPermission()
+    if (granted) {
+      setEnabled(true)
+      toast.success('Deadline notifications enabled.')
+    } else {
+      toast.error('Notification permission was denied. Enable it in your browser settings.')
+    }
+  }, [enabled])
+
+  if (!supported) return null
   return (
     <Card padding="md" className="flex items-center gap-3">
       <span

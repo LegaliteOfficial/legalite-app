@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PriorityButton } from '@/components/shared/PriorityButton'
 import type { Assignee } from '@/hooks/use-client-assignees'
@@ -60,12 +61,13 @@ export function ClientsTableRow({
       <td className="px-4 py-3">
         <div className="flex items-center gap-3 min-w-0">
           <Avatar name={client.full_name} />
-          <span
-            className="font-medium truncate"
+          <Link
+            href={`/clients/${client.id}`}
+            className="font-medium truncate underline-offset-2 hover:underline"
             style={{ color: 'var(--text-primary)' }}
           >
             {client.full_name}
-          </span>
+          </Link>
         </div>
       </td>
       {showColumn('phone') && (
