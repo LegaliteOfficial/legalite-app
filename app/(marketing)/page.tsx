@@ -218,25 +218,9 @@ export default function MarketingHome() {
         </div>
       </section>
 
-      {/* PRODUCT DEMO: the cream warms through gold into navy at dusk, then
-          fades back to cream behind the lower half of the demo so the
-          product itself bridges the two colours. */}
-      <section
-        id="product"
-        className="relative scroll-mt-20 px-6 lg:px-12 pt-[320px] pb-8"
-        style={{
-          background:
-            'linear-gradient(180deg, #F8F4EE 0px, #F5E9CC 50px, #EBCF8E 100px, #C99A48 150px, #6E5634 200px, #2B2D33 245px, #14202E 280px, #0D1B2A 310px, #0D1B2A 58%, #1A2638 66%, #4A4C52 74%, #9A9284 82%, #D8CCB6 91%, #F8F4EE 100%)',
-        }}
-      >
-        <div
-          className="pointer-events-none absolute inset-x-0 top-[180px] h-[520px]"
-          aria-hidden
-          style={{
-            background: 'radial-gradient(45% 40% at 50% 45%, rgba(242,198,90,0.18), transparent 100%)',
-          }}
-        />
-        <div className={`${mk.container} relative`}>
+      {/* PRODUCT DEMO: a navy card set inside the cream page */}
+      <section id="product" className="scroll-mt-20 px-4 sm:px-6 lg:px-12">
+        <div className={`${mk.container} rounded-3xl bg-[#0D1B2A] px-5 py-14 sm:px-10 lg:px-16 lg:py-20`}>
           <div className="mx-auto max-w-3xl text-center">
             <div className="flex justify-center">
               <SectionMark light>The workspace</SectionMark>
@@ -246,11 +230,9 @@ export default function MarketingHome() {
             </h2>
             <p className="mt-4 text-lg text-white/65">Click through matters, billing, and research.</p>
           </div>
-          <Reveal from="up" delay={120}>
-            <div className="mx-auto mt-12 max-w-[1200px]">
-              <HeroProductDemo />
-            </div>
-          </Reveal>
+          <div className="mx-auto mt-12 max-w-[1100px]">
+            <HeroProductDemo />
+          </div>
         </div>
       </section>
 
@@ -393,10 +375,10 @@ export default function MarketingHome() {
           <Reveal from="right">
             <div className={`overflow-hidden rounded-2xl border border-[#0D1B2A]/[0.08] bg-white ${mk.shadow}`}>
               <Image
-                src="/marketing/clients.svg"
-                alt="LegaLite clients list page"
-                width={1200}
-                height={800}
+                src="/marketing/clients.jpeg"
+                alt="A lawyer working on client matters at her desk"
+                width={1800}
+                height={1004}
                 className="h-auto w-full"
               />
             </div>
