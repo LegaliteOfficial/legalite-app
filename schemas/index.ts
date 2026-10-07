@@ -241,6 +241,9 @@ export const documentSchema = z.object({
   file_size: z.number().int().min(0).optional(),
   author: z.string().optional().or(z.literal('')),
   received_date: z.string().optional().or(z.literal('')),
+  // Drafting-studio page design; shape owned by lib/documents/design.ts.
+  design: z.record(z.string(), z.unknown()).optional(),
+  is_template: z.boolean().optional(),
 })
 
 export const documentFolderSchema = z.object({

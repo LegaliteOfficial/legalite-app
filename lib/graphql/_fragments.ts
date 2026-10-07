@@ -310,6 +310,8 @@ export const DocumentFieldsFragmentDoc = graphql(/* GraphQL */ `
     parties
     judge
     content
+    design
+    is_template
     file_url
     file_public_id
     file_thumbnail_url

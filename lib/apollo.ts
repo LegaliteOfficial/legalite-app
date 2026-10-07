@@ -18,7 +18,7 @@ const GRAPHQL_URL =
 // the old axios interceptor read) and attaches it as a bearer token. Reading
 // it per-request means token refresh / logout takes effect on the next call
 // without re-creating the client.
-function readToken(): string | null {
+export function readToken(): string | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = window.localStorage.getItem('ll:auth')

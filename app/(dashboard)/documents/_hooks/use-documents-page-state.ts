@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
   useCreateDocument,
@@ -23,6 +23,8 @@ import {
   generateDocumentContent,
   generateDocumentHTML,
 } from '@/lib/templates'
+import { DEFAULT_DESIGN, normaliseDesign, type DocumentDesign } from '@/lib/documents/design'
+import type { Document } from '@/types'
 import type { LibraryCategory, Tab } from '../_types'
 
 /**
@@ -46,23 +48,29 @@ export function useDocumentsPageState() {
   const [templateFields, setTemplateFields] = useState<Record<string, string>>({})
   const [previewContent, setPreviewContent] = useState('')
   const [editorHTML, setEditorHTML] = useState('')
+  const [design, setDesign] = useState<DocumentDesign>(DEFAULT_DESIGN)
+  /**
+   * Bumped whenever a different document is loaded into the studio. The
+   * editor is keyed on it, so it remounts with the new content.
+   */
+  const [contentVersion, setContentVersion] = useState(0)
   /** Set when editing an existing draft — Save updates it instead of duping. */
   const [editingDocId, setEditingDocId] = useState<string | null>(null)
-  const editorRef = useRef<HTMLDivElement>(null)
 
-  // Keep the contentEditable in sync when editorHTML changes externally
-  // (e.g. opening a draft from the Drafts tab).
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== editorHTML) {
-      editorRef.current.innerHTML = editorHTML
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, editorHTML])
-
-  const execCommand = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value)
-    editorRef.current?.focus()
-  }, [])
+  const loadIntoStudio = useCallback(
+    (doc: { html: string; design?: unknown; title: string; court?: string; suitNumber?: string; id?: string | null }) => {
+      setEditorHTML(doc.html)
+      setPreviewContent(doc.html)
+      setDesign(normaliseDesign(doc.design ?? null))
+      setDraftTitle(doc.title)
+      setCourt(doc.court ?? '')
+      setSuitNumber(doc.suitNumber ?? '')
+      setEditingDocId(doc.id ?? null)
+      setContentVersion((v) => v + 1)
+      setActiveTab('editor')
+    },
+    [],
+  )
 
   // ── Data hooks ────────────────────────────────────────────────────────
   const { data: documents, isLoading, error } = useDocuments()
@@ -71,6 +79,13 @@ export function useDocumentsPageState() {
   const updateMutation = useUpdateDocument()
   const deleteDocumentMutation = useDeleteDocument()
   const [draftSearch, setDraftSearch] = useState('')
+
+  // Firm-authored templates share the documents table; drafts exclude them.
+  const drafts = useMemo(() => documents?.filter((d) => !d.is_template), [documents])
+  const myTemplates = useMemo(
+    () => (documents ?? []).filter((d) => d.is_template && !d.file_url),
+    [documents],
+  )
 
   // ── Library state ─────────────────────────────────────────────────────
   const { user } = useAuthStore()
@@ -172,13 +187,22 @@ export function useDocumentsPageState() {
       placeholderFields[f.key] = f.placeholder ?? `[${f.label}]`
     }
     setTemplateFields(placeholderFields)
-    const preview = generateDocumentContent(id, 'High Court (General Division)', '', tmpl.name, placeholderFields)
     const html = generateDocumentHTML(id, 'High Court (General Division)', '', tmpl.name, placeholderFields)
-    setPreviewContent(preview)
-    setEditorHTML(html)
-    setEditingDocId(null)
-    setActiveTab('editor')
-  }, [])
+    loadIntoStudio({ html, title: tmpl.name })
+    setPreviewContent(generateDocumentContent(id, 'High Court (General Division)', '', tmpl.name, placeholderFields))
+  }, [loadIntoStudio])
+
+  /** Start a new document from one of the firm's own templates. */
+  const openMyTemplate = useCallback((doc: Document) => {
+    setSelectedTemplate('')
+    loadIntoStudio({ html: doc.content ?? '', design: doc.design, title: doc.title })
+  }, [loadIntoStudio])
+
+  /** Blank document with the default design. */
+  const startBlankDocument = useCallback(() => {
+    setSelectedTemplate('')
+    loadIntoStudio({ html: '', title: '' })
+  }, [loadIntoStudio])
 
   const handleOpenQuickSetup = useCallback((id: string) => {
     setSelectedTemplate(id)
@@ -195,15 +219,13 @@ export function useDocumentsPageState() {
       toast.error('Please enter a draft title.')
       return
     }
-    // Prefer the live DOM HTML — captures any execCommand edits since
-    // the last onInput event fired.
-    const content = editorRef.current?.innerHTML || editorHTML || previewContent
     const data = {
       title: draftTitle,
       template_type: template?.name ?? 'Custom',
       court,
       suit_number: suitNumber,
-      content,
+      content: editorHTML || previewContent,
+      design: design as unknown as Record<string, unknown>,
     }
     try {
       if (editingDocId) {
@@ -218,53 +240,40 @@ export function useDocumentsPageState() {
     } catch {
       toast.error('Unable to save document. Please try again.')
     }
-  }, [draftTitle, template, court, suitNumber, editorHTML, previewContent, editingDocId, createMutation, updateMutation])
+  }, [draftTitle, template, court, suitNumber, editorHTML, previewContent, design, editingDocId, createMutation, updateMutation])
 
-  const handleExport = useCallback(() => {
-    const content = editorRef.current?.innerText ?? previewContent
-    if (!content) {
-      toast.error('Nothing to export. Generate a document first.')
+  /** Saves the current content and design as a reusable firm template. */
+  const handleSaveAsTemplate = useCallback(async () => {
+    const title = draftTitle.trim()
+    if (!title) {
+      toast.error('Give the document a title to name the template.')
       return
     }
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${draftTitle || 'document'}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Document exported.')
-  }, [draftTitle, previewContent])
-
-  const handlePrint = useCallback(() => {
-    const html =
-      editorRef.current?.innerHTML ||
-      editorHTML ||
-      `<pre style="white-space: pre-wrap;">${previewContent}</pre>`
-    if (!html.trim()) {
-      toast.error('Nothing to print. Generate a document first.')
-      return
+    try {
+      await createMutation.mutateAsync({
+        title,
+        template_type: 'Firm template',
+        content: editorHTML,
+        design: design as unknown as Record<string, unknown>,
+        is_template: true,
+      })
+      toast.success(`"${title}" saved to Your templates.`)
+    } catch {
+      toast.error('Unable to save the template. Please try again.')
     }
-    const pw = window.open('', '_blank')
-    if (pw) {
-      pw.document.write(
-        `<html><head><title>${draftTitle || 'Legal Document'}</title><style>body{font-family:'Times New Roman',serif;font-size:14pt;line-height:1.8;padding:60px;max-width:800px;margin:0 auto;}</style></head><body>${html}</body></html>`,
-      )
-      pw.document.close()
-      pw.print()
-    }
-  }, [draftTitle, editorHTML, previewContent])
+  }, [draftTitle, editorHTML, design, createMutation])
 
   /** Open a saved draft in the editor (Drafts tab → pencil button). */
-  const openDraftInEditor = useCallback((doc: { id: string; content?: string | null; title?: string | null; court?: string | null; suit_number?: string | null }) => {
-    setEditorHTML(doc.content ?? '')
-    setPreviewContent(doc.content ?? '')
-    setDraftTitle(doc.title ?? '')
-    setCourt(doc.court ?? '')
-    setSuitNumber(doc.suit_number ?? '')
-    setEditingDocId(doc.id)
-    setActiveTab('editor')
-  }, [])
+  const openDraftInEditor = useCallback((doc: { id: string; content?: string | null; title?: string | null; court?: string | null; suit_number?: string | null; design?: unknown }) => {
+    loadIntoStudio({
+      id: doc.id,
+      html: doc.content ?? '',
+      design: doc.design,
+      title: doc.title ?? '',
+      court: doc.court ?? '',
+      suitNumber: doc.suit_number ?? '',
+    })
+  }, [loadIntoStudio])
 
   const deleteDraft = useCallback(async (id: string, title: string | null | undefined) => {
     if (!confirm(`Delete "${title || 'this draft'}"? This cannot be undone.`)) return
@@ -287,8 +296,11 @@ export function useDocumentsPageState() {
     showQuickSetup, setShowQuickSetup,
     handleSelectTemplate,
     handleOpenQuickSetup,
+    myTemplates,
+    openMyTemplate,
+    startBlankDocument,
     // drafts
-    documents, documentCases,
+    documents, drafts, documentCases,
     isLoading, error,
     draftSearch, setDraftSearch,
     openDraftInEditor,
@@ -309,14 +321,13 @@ export function useDocumentsPageState() {
     court, setCourt,
     suitNumber, setSuitNumber,
     editorHTML, setEditorHTML,
+    design, setDesign,
+    contentVersion,
     templateFields, setTemplateFields,
-    editorRef,
     editingDocId,
     isEditorSaving: createMutation.isPending || updateMutation.isPending,
-    execCommand,
     handleSave,
-    handleExport,
-    handlePrint,
+    handleSaveAsTemplate,
   }
 }
 
