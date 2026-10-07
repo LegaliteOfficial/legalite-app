@@ -49,6 +49,10 @@ type Documents = {
     "\n  mutation CreateAttachmentUploadUrl($input: CreateAttachmentUploadUrlInput!) {\n    createAttachmentUploadUrl(input: $input) {\n      path\n      token\n      signed_url\n    }\n  }\n": typeof types.CreateAttachmentUploadUrlDocument,
     "\n  mutation CreateAttachment($input: CreateAttachmentInput!) {\n    createAttachment(input: $input) {\n      ...AttachmentFields\n    }\n  }\n": typeof types.CreateAttachmentDocument,
     "\n  mutation DeleteAttachment($id: ID!) {\n    deleteAttachment(id: $id)\n  }\n": typeof types.DeleteAttachmentDocument,
+    "\n  query AttentionFeed($input: AttentionFeedInput) {\n    attentionFeed(input: $input) {\n      horizon_days\n      generated_at\n      items {\n        key\n        id\n        kind\n        title\n        context\n        detail\n        due_at\n        all_day\n        priority\n        bucket\n        status\n        case_id\n        client_id\n        event_type\n        amount_ghs\n        completable\n        snoozed_until\n      }\n      awaiting_outcome {\n        ...CalendarEventFields\n      }\n      summary {\n        total\n        overdue\n        today\n        tomorrow\n        week\n        later\n        snoozed\n        by_kind {\n          kind\n          total\n          overdue\n        }\n      }\n    }\n  }\n": typeof types.AttentionFeedDocument,
+    "\n  mutation CompleteAttentionItem($input: AttentionItemRefInput!) {\n    completeAttentionItem(input: $input)\n  }\n": typeof types.CompleteAttentionItemDocument,
+    "\n  mutation SnoozeAttentionItem($input: SnoozeAttentionItemInput!) {\n    snoozeAttentionItem(input: $input) {\n      kind\n      id\n      snoozed_until\n    }\n  }\n": typeof types.SnoozeAttentionItemDocument,
+    "\n  mutation UnsnoozeAttentionItem($input: AttentionItemRefInput!) {\n    unsnoozeAttentionItem(input: $input)\n  }\n": typeof types.UnsnoozeAttentionItemDocument,
     "\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.LoginDocument,
     "\n  mutation RegisterOwner($input: RegisterOwnerInput!) {\n    registerOwner(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.RegisterOwnerDocument,
     "\n  mutation AcceptInvite($input: AcceptInviteInput!) {\n    acceptInvite(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.AcceptInviteDocument,
@@ -194,6 +198,10 @@ const documents: Documents = {
     "\n  mutation CreateAttachmentUploadUrl($input: CreateAttachmentUploadUrlInput!) {\n    createAttachmentUploadUrl(input: $input) {\n      path\n      token\n      signed_url\n    }\n  }\n": types.CreateAttachmentUploadUrlDocument,
     "\n  mutation CreateAttachment($input: CreateAttachmentInput!) {\n    createAttachment(input: $input) {\n      ...AttachmentFields\n    }\n  }\n": types.CreateAttachmentDocument,
     "\n  mutation DeleteAttachment($id: ID!) {\n    deleteAttachment(id: $id)\n  }\n": types.DeleteAttachmentDocument,
+    "\n  query AttentionFeed($input: AttentionFeedInput) {\n    attentionFeed(input: $input) {\n      horizon_days\n      generated_at\n      items {\n        key\n        id\n        kind\n        title\n        context\n        detail\n        due_at\n        all_day\n        priority\n        bucket\n        status\n        case_id\n        client_id\n        event_type\n        amount_ghs\n        completable\n        snoozed_until\n      }\n      awaiting_outcome {\n        ...CalendarEventFields\n      }\n      summary {\n        total\n        overdue\n        today\n        tomorrow\n        week\n        later\n        snoozed\n        by_kind {\n          kind\n          total\n          overdue\n        }\n      }\n    }\n  }\n": types.AttentionFeedDocument,
+    "\n  mutation CompleteAttentionItem($input: AttentionItemRefInput!) {\n    completeAttentionItem(input: $input)\n  }\n": types.CompleteAttentionItemDocument,
+    "\n  mutation SnoozeAttentionItem($input: SnoozeAttentionItemInput!) {\n    snoozeAttentionItem(input: $input) {\n      kind\n      id\n      snoozed_until\n    }\n  }\n": types.SnoozeAttentionItemDocument,
+    "\n  mutation UnsnoozeAttentionItem($input: AttentionItemRefInput!) {\n    unsnoozeAttentionItem(input: $input)\n  }\n": types.UnsnoozeAttentionItemDocument,
     "\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.LoginDocument,
     "\n  mutation RegisterOwner($input: RegisterOwnerInput!) {\n    registerOwner(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.RegisterOwnerDocument,
     "\n  mutation AcceptInvite($input: AcceptInviteInput!) {\n    acceptInvite(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.AcceptInviteDocument,
@@ -458,6 +466,22 @@ export function graphql(source: "\n  mutation CreateAttachment($input: CreateAtt
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteAttachment($id: ID!) {\n    deleteAttachment(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteAttachment($id: ID!) {\n    deleteAttachment(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query AttentionFeed($input: AttentionFeedInput) {\n    attentionFeed(input: $input) {\n      horizon_days\n      generated_at\n      items {\n        key\n        id\n        kind\n        title\n        context\n        detail\n        due_at\n        all_day\n        priority\n        bucket\n        status\n        case_id\n        client_id\n        event_type\n        amount_ghs\n        completable\n        snoozed_until\n      }\n      awaiting_outcome {\n        ...CalendarEventFields\n      }\n      summary {\n        total\n        overdue\n        today\n        tomorrow\n        week\n        later\n        snoozed\n        by_kind {\n          kind\n          total\n          overdue\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query AttentionFeed($input: AttentionFeedInput) {\n    attentionFeed(input: $input) {\n      horizon_days\n      generated_at\n      items {\n        key\n        id\n        kind\n        title\n        context\n        detail\n        due_at\n        all_day\n        priority\n        bucket\n        status\n        case_id\n        client_id\n        event_type\n        amount_ghs\n        completable\n        snoozed_until\n      }\n      awaiting_outcome {\n        ...CalendarEventFields\n      }\n      summary {\n        total\n        overdue\n        today\n        tomorrow\n        week\n        later\n        snoozed\n        by_kind {\n          kind\n          total\n          overdue\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CompleteAttentionItem($input: AttentionItemRefInput!) {\n    completeAttentionItem(input: $input)\n  }\n"): (typeof documents)["\n  mutation CompleteAttentionItem($input: AttentionItemRefInput!) {\n    completeAttentionItem(input: $input)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SnoozeAttentionItem($input: SnoozeAttentionItemInput!) {\n    snoozeAttentionItem(input: $input) {\n      kind\n      id\n      snoozed_until\n    }\n  }\n"): (typeof documents)["\n  mutation SnoozeAttentionItem($input: SnoozeAttentionItemInput!) {\n    snoozeAttentionItem(input: $input) {\n      kind\n      id\n      snoozed_until\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UnsnoozeAttentionItem($input: AttentionItemRefInput!) {\n    unsnoozeAttentionItem(input: $input)\n  }\n"): (typeof documents)["\n  mutation UnsnoozeAttentionItem($input: AttentionItemRefInput!) {\n    unsnoozeAttentionItem(input: $input)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

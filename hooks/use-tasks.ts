@@ -66,7 +66,7 @@ export function useTask(id: string | undefined) {
 
 export function useCreateTask() {
   const [mutate, state] = useMutation(CreateTaskMutationDoc, {
-    refetchQueries: [TasksQueryDoc, 'DashboardStats'],
+    refetchQueries: [TasksQueryDoc, 'DashboardStats', 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
@@ -80,7 +80,7 @@ export function useCreateTask() {
 
 export function useUpdateTask() {
   const [mutate, state] = useMutation(UpdateTaskMutationDoc, {
-    refetchQueries: [TasksQueryDoc, 'DashboardStats'],
+    refetchQueries: [TasksQueryDoc, 'DashboardStats', 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
@@ -100,7 +100,7 @@ export function useUpdateTask() {
 
 export function useDeleteTask() {
   const [mutate, state] = useMutation(DeleteTaskMutationDoc, {
-    refetchQueries: [TasksQueryDoc, 'DashboardStats'],
+    refetchQueries: [TasksQueryDoc, 'DashboardStats', 'AttentionFeed'],
   })
   return {
     isPending: state.loading,

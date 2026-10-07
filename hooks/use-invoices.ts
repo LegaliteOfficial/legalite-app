@@ -41,7 +41,7 @@ export function useInvoice(id: string | undefined) {
 
 export function useCreateInvoice() {
   const [mutate, state] = useMutation(CreateInvoiceMutationDoc, {
-    refetchQueries: [InvoicesQueryDoc, 'DashboardStats'],
+    refetchQueries: [InvoicesQueryDoc, 'DashboardStats', 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
@@ -58,7 +58,7 @@ export function useCreateInvoice() {
 
 export function useUpdateInvoice() {
   const [mutate, state] = useMutation(UpdateInvoiceMutationDoc, {
-    refetchQueries: [InvoicesQueryDoc, 'DashboardStats'],
+    refetchQueries: [InvoicesQueryDoc, 'DashboardStats', 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
@@ -81,7 +81,7 @@ export function useUpdateInvoice() {
 
 export function useDeleteInvoice() {
   const [mutate, state] = useMutation(DeleteInvoiceMutationDoc, {
-    refetchQueries: [InvoicesQueryDoc, 'DashboardStats'],
+    refetchQueries: [InvoicesQueryDoc, 'DashboardStats', 'AttentionFeed'],
   })
   return {
     isPending: state.loading,

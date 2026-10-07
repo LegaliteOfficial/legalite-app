@@ -76,7 +76,7 @@ export function useDeadlineStats() {
 
 export function useCreateDeadline() {
   const [mutate, state] = useMutation(CreateDeadlineMutationDoc, {
-    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc],
+    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc, 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
@@ -112,7 +112,7 @@ export function useCreateDeadline() {
 
 export function useUpdateDeadline() {
   const [mutate, state] = useMutation(UpdateDeadlineMutationDoc, {
-    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc],
+    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc, 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
@@ -146,7 +146,7 @@ export function useUpdateDeadline() {
 
 export function useDeleteDeadline() {
   const [mutate, state] = useMutation(DeleteDeadlineMutationDoc, {
-    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc],
+    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc, 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
