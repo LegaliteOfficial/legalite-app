@@ -4,9 +4,9 @@ import { DOCUMENT_TEMPLATES } from '@/lib/templates'
 import { CATEGORIES } from '../_constants'
 
 /**
- * Horizontal scrollable row of category pills (All / Litigation /
- * Criminal / Family / Corporate / Conveyancing). Counts derived from
- * `DOCUMENT_TEMPLATES` so the badge stays accurate when templates ship.
+ * Horizontal scrollable row of category pills. Counts are derived from
+ * `DOCUMENT_TEMPLATES`, and a category with nothing in it is left out
+ * rather than offered as a filter that returns an empty page.
  */
 export function CategoryFilterRow({
   selectedCategory,
@@ -17,7 +17,10 @@ export function CategoryFilterRow({
 }) {
   return (
     <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-1">
-      {CATEGORIES.map((cat) => {
+      {CATEGORIES.filter((cat) => {
+        if (cat.id === 'all') return true
+        return DOCUMENT_TEMPLATES.some((t) => t.category === cat.id)
+      }).map((cat) => {
         const isActive = selectedCategory === cat.id
         const count =
           cat.id === 'all'
