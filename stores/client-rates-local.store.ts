@@ -143,6 +143,18 @@ interface ClientRatesStore {
    * shared `lib/format-currency` helper.
    */
   firm_default_currency: CurrencyCode
+  /**
+   * Firm-wide flat fee the BillComposer pre-fills for flat and mixed
+   * matters when the client has no flat fee of their own. `null` means
+   * the firm quotes flat work case by case.
+   */
+  firm_default_flat_fee: number | null
+  /**
+   * Firm-wide contingency share (0-100) applied when a matter is taken
+   * on contingency and the client record does not set its own. `null`
+   * means every contingency arrangement is negotiated individually.
+   */
+  firm_default_contingency_pct: number | null
   /** Bumps on every write — lets selector hooks rerender via a cheap scalar. */
   revision: number
 
@@ -162,6 +174,10 @@ interface ClientRatesStore {
   setFirmDefaultRate: (rate: number | null) => void
   /** Switch the firm's billing currency. */
   setFirmCurrency: (code: CurrencyCode) => void
+  /** Set the firm-wide flat fee fallback. `null` clears it. */
+  setFirmDefaultFlatFee: (fee: number | null) => void
+  /** Set the firm-wide contingency share. `null` clears it. */
+  setFirmDefaultContingencyPct: (pct: number | null) => void
 }
 
 // ── Dev seed ──────────────────────────────────────────────────────
@@ -212,6 +228,8 @@ export const useClientRatesStore = create<ClientRatesStore>()(
       client_rates: DEV_SEED_RATES,
       firm_default_hourly_rate: 600,
       firm_default_currency: 'GHS',
+      firm_default_flat_fee: null,
+      firm_default_contingency_pct: null,
       revision: 0,
 
       setClientRate: (clientId, patch) =>
@@ -257,6 +275,20 @@ export const useClientRatesStore = create<ClientRatesStore>()(
           firm_default_currency: code,
           revision: prev.revision + 1,
         })),
+
+      setFirmDefaultFlatFee: (fee) =>
+        set((prev) => ({
+          firm_default_flat_fee: fee === null || fee <= 0 ? null : fee,
+          revision: prev.revision + 1,
+        })),
+
+      setFirmDefaultContingencyPct: (pct) =>
+        set((prev) => ({
+          // A share outside 0-100 is a typo, not a policy.
+          firm_default_contingency_pct:
+            pct === null || pct <= 0 || pct > 100 ? null : pct,
+          revision: prev.revision + 1,
+        })),
     }),
     {
       name: 'll:client-rates',
@@ -265,6 +297,8 @@ export const useClientRatesStore = create<ClientRatesStore>()(
         client_rates: state.client_rates,
         firm_default_hourly_rate: state.firm_default_hourly_rate,
         firm_default_currency: state.firm_default_currency,
+        firm_default_flat_fee: state.firm_default_flat_fee,
+        firm_default_contingency_pct: state.firm_default_contingency_pct,
       }),
       // Skip hydration so SSR + first paint match; the bills page /
       // BillComposer manually rehydrate on mount (same pattern as
@@ -296,11 +330,42 @@ export interface ResolvedRate {
   rate: number | null
   source: 'client' | 'firm' | 'none'
   config: ClientBillingRate | null
+  /**
+   * Flat fee to pre-fill for flat and mixed matters: the client's own
+   * figure when set, otherwise the firm default. Null when neither is.
+   */
+  flatFee: number | null
+  /** Where `flatFee` came from, so the UI can label it honestly. */
+  flatFeeSource: 'client' | 'firm' | 'none'
+  /** Contingency share, resolved client first then firm. */
+  contingencyPct: number | null
+  /** Where `contingencyPct` came from. */
+  contingencySource: 'client' | 'firm' | 'none'
 }
 
 export function getResolvedRate(clientId: string): ResolvedRate {
   const state = useClientRatesStore.getState()
   const config = state.client_rates[clientId] ?? null
+
+  // Each kind resolves client first, then the firm default, then nothing.
+  // Resolved independently so a flat-fee client still reports the firm
+  // contingency share if the matter later turns into one.
+  const pick = (
+    own: number | null | undefined,
+    firm: number | null,
+  ): [number | null, 'client' | 'firm' | 'none'] => {
+    if (own != null && own > 0) return [own, 'client']
+    if (firm != null) return [firm, 'firm']
+    return [null, 'none']
+  }
+
+  const [flatFee, flatFeeSource] = pick(config?.flat_fee, state.firm_default_flat_fee)
+  const [contingencyPct, contingencySource] = pick(
+    config?.contingency_pct,
+    state.firm_default_contingency_pct,
+  )
+
+  const base = { config, flatFee, flatFeeSource, contingencyPct, contingencySource }
 
   // Hourly + Mixed: client's own hourly rate takes precedence.
   if (
@@ -309,14 +374,14 @@ export function getResolvedRate(clientId: string): ResolvedRate {
     config.default_hourly_rate != null &&
     config.default_hourly_rate > 0
   ) {
-    return { rate: config.default_hourly_rate, source: 'client', config }
+    return { ...base, rate: config.default_hourly_rate, source: 'client' }
   }
 
   // Flat / contingency / none / unset: no hourly rate to pre-fill,
   // but we still want the firm fallback so the line item isn't 0.
   if (state.firm_default_hourly_rate != null) {
-    return { rate: state.firm_default_hourly_rate, source: 'firm', config }
+    return { ...base, rate: state.firm_default_hourly_rate, source: 'firm' }
   }
 
-  return { rate: null, source: 'none', config }
+  return { ...base, rate: null, source: 'none' }
 }

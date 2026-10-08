@@ -27,7 +27,15 @@ import {
 } from '@/stores/client-rates-local.store'
 
 /** Empty-state placeholder when no clientId is selected yet. */
-const NONE: ResolvedRate = { rate: null, source: 'none', config: null }
+const NONE: ResolvedRate = {
+  rate: null,
+  source: 'none',
+  config: null,
+  flatFee: null,
+  flatFeeSource: 'none',
+  contingencyPct: null,
+  contingencySource: 'none',
+}
 
 export function useClientBillingRate(
   clientId: string | null | undefined,

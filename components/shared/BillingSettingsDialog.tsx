@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Check, Coins, CurrencyDollar } from '@phosphor-icons/react'
+import { Check, Coins, CurrencyDollar, Percent } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -91,12 +91,26 @@ function SettingsForm({
 }) {
   const currentCurrency = useClientRatesStore((s) => s.firm_default_currency)
   const currentRate = useClientRatesStore((s) => s.firm_default_hourly_rate)
+  const currentFlatFee = useClientRatesStore((s) => s.firm_default_flat_fee)
+  const currentContingency = useClientRatesStore(
+    (s) => s.firm_default_contingency_pct,
+  )
   const setFirmCurrency = useClientRatesStore((s) => s.setFirmCurrency)
   const setFirmDefaultRate = useClientRatesStore((s) => s.setFirmDefaultRate)
+  const setFirmDefaultFlatFee = useClientRatesStore((s) => s.setFirmDefaultFlatFee)
+  const setFirmDefaultContingencyPct = useClientRatesStore(
+    (s) => s.setFirmDefaultContingencyPct,
+  )
 
   const [currency, setCurrency] = useState<CurrencyCode>(currentCurrency)
   const [rateStr, setRateStr] = useState<string>(
     currentRate != null ? String(currentRate) : '',
+  )
+  const [flatFeeStr, setFlatFeeStr] = useState<string>(
+    currentFlatFee != null ? String(currentFlatFee) : '',
+  )
+  const [contingencyStr, setContingencyStr] = useState<string>(
+    currentContingency != null ? String(currentContingency) : '',
   )
 
   // Rehydrate the persisted store on first mount — the persist
@@ -119,12 +133,42 @@ function SettingsForm({
         return
       }
     }
+
+    const flatTrimmed = flatFeeStr.trim()
+    let parsedFlat: number | null = null
+    if (flatTrimmed) {
+      parsedFlat = Number(flatTrimmed)
+      if (!Number.isFinite(parsedFlat) || parsedFlat <= 0) {
+        toast.error('Enter a valid flat fee (positive number) or leave it blank.')
+        return
+      }
+    }
+
+    const pctTrimmed = contingencyStr.trim()
+    let parsedPct: number | null = null
+    if (pctTrimmed) {
+      parsedPct = Number(pctTrimmed)
+      if (!Number.isFinite(parsedPct) || parsedPct <= 0 || parsedPct > 100) {
+        toast.error('Enter a contingency share between 1 and 100, or leave it blank.')
+        return
+      }
+    }
+
     setFirmCurrency(currency)
     setFirmDefaultRate(parsedRate)
+    setFirmDefaultFlatFee(parsedFlat)
+    setFirmDefaultContingencyPct(parsedPct)
+
+    // Name only what is actually set, so the confirmation does not imply
+    // defaults the firm deliberately left blank.
+    const parts = [`Billing currency set to ${currency}`]
+    if (parsedRate != null) parts.push(`${currency} ${parsedRate.toLocaleString()} / hr`)
+    if (parsedFlat != null) parts.push(`${currency} ${parsedFlat.toLocaleString()} flat`)
+    if (parsedPct != null) parts.push(`${parsedPct}% contingency`)
     toast.success(
-      parsedRate != null
-        ? `Billing currency set to ${currency} · firm default ${currency} ${parsedRate.toLocaleString()} / hr.`
-        : `Billing currency set to ${currency} · firm default rate cleared.`,
+      parts.length > 1
+        ? `${parts[0]} · ${parts.slice(1).join(' · ')}.`
+        : `${parts[0]} · no firm default rates set.`,
     )
     onOpenChange(false)
   }
@@ -237,6 +281,94 @@ function SettingsForm({
                 value={rateStr}
                 onChange={(e) => setRateStr(e.target.value)}
                 placeholder="e.g. 600"
+                className="h-10 rounded-md text-[13px]"
+              />
+            </div>
+          </div>
+
+          {/* ── Firm default flat fee ───────────────────────── */}
+          <div
+            className="grid gap-2 border-t pt-4"
+            style={{ borderColor: 'var(--border-soft)' }}
+          >
+            <Label
+              htmlFor="bs-flat"
+              className="text-[13px] font-semibold inline-flex items-center gap-1.5"
+            >
+              <Coins size={12} strokeWidth={2} />
+              Firm default flat fee
+            </Label>
+            <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+              Pre-fills flat fee and mixed matters when the client has no
+              figure of their own. Typical for conveyancing, will drafting
+              and trademark filings, where the work is quoted per matter
+              rather than per hour. Leave blank to quote each one
+              individually.
+            </p>
+            <div className="grid grid-cols-[80px_1fr] gap-2 items-center mt-1">
+              <div
+                className="h-10 rounded-md border flex items-center justify-center text-[13px] font-semibold tabular-nums"
+                style={{
+                  borderColor: 'var(--border-soft)',
+                  background: 'var(--surface-sunken)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                {currency}
+              </div>
+              <Input
+                id="bs-flat"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step={100}
+                value={flatFeeStr}
+                onChange={(e) => setFlatFeeStr(e.target.value)}
+                placeholder="e.g. 8500"
+                className="h-10 rounded-md text-[13px]"
+              />
+            </div>
+          </div>
+
+          {/* ── Firm default contingency share ──────────────── */}
+          <div
+            className="grid gap-2 border-t pt-4"
+            style={{ borderColor: 'var(--border-soft)' }}
+          >
+            <Label
+              htmlFor="bs-contingency"
+              className="text-[13px] font-semibold inline-flex items-center gap-1.5"
+            >
+              <Percent size={12} strokeWidth={2} />
+              Firm default contingency share
+            </Label>
+            <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+              The share of recovery the firm takes when a matter is run on
+              contingency and the client record does not set its own.
+              Recorded for context on the bill: contingency realises at
+              settlement, so line items are still entered manually.
+            </p>
+            <div className="grid grid-cols-[80px_1fr] gap-2 items-center mt-1">
+              <div
+                className="h-10 rounded-md border flex items-center justify-center text-[13px] font-semibold tabular-nums"
+                style={{
+                  borderColor: 'var(--border-soft)',
+                  background: 'var(--surface-sunken)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                %
+              </div>
+              <Input
+                id="bs-contingency"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={100}
+                step={1}
+                value={contingencyStr}
+                onChange={(e) => setContingencyStr(e.target.value)}
+                placeholder="e.g. 25"
                 className="h-10 rounded-md text-[13px]"
               />
             </div>
