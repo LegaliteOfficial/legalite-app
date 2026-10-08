@@ -44,7 +44,9 @@ export const COLUMNS: ColumnDef[] = [
   {
     id: 'case_code',
     label: 'Case ID',
-    defaultVisible: false,
+    // Hidden by default while codes were typed by hand and usually blank.
+    // Now that every new case gets one, it is worth showing.
+    defaultVisible: true,
     minWidth: 120,
     sortable: true,
     sortValue: (row) => row.case_code ?? '',

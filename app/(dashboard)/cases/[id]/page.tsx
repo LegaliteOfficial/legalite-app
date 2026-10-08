@@ -24,6 +24,7 @@ import { useCalendarEvents } from '@/hooks/use-calendar'
 import { eventToDeadline } from '../../calendar/_lib/adapt'
 import { AttachmentsPanel } from '@/components/shared/AttachmentsPanel'
 import type { CaseStatus, Client } from '@/types'
+import { displayCaseCode } from '@/lib/case-code'
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -384,13 +385,15 @@ export default function CaseDetailPage({
               />
             </MetaRow>
             <MetaRow label="Case ID">
-              <InlineEditableText
-                value={kase.case_code ?? ''}
-                placeholder="Add a case ID"
-                onSave={(v) => patch({ case_code: v })}
-                className="text-[13px]"
-                showPencil
-              />
+              {/* Generated when the case is created, so it is shown rather
+                  than edited. Cases opened before codes were generated have
+                  none, and inventing one here would imply a stored value. */}
+              <span
+                className="font-mono text-[13px] tracking-wide"
+                style={{ color: kase.case_code ? 'var(--text-primary)' : 'var(--text-muted)' }}
+              >
+                {displayCaseCode(kase.case_code) ?? 'Not assigned'}
+              </span>
             </MetaRow>
             <MetaRow label="Court">
               <InlineEditableText

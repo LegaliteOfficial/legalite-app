@@ -12,6 +12,7 @@ import type {
   CreateCaseInput,
   UpdateCaseInput,
 } from '@/types/generated/graphql'
+import { nextCaseCode } from '@/lib/case-code'
 
 /**
  * Wire shape returned by the legalite-backend Cases query. The backend now
@@ -69,7 +70,7 @@ export const DEV_SAMPLE_CASES: Case[] = [
     id: 'dev-1',
     user_id: 'dev',
     client_id: 'dev-client-1',
-    case_code: 'LL-0001',
+    case_code: 'LL-2026-0001',
     title: 'Mensah v. Ghana Revenue Authority',
     court: 'High Court (Commercial Division)',
     suit_number: 'HC/COM/2026/0114',
@@ -94,7 +95,7 @@ export const DEV_SAMPLE_CASES: Case[] = [
     id: 'dev-2',
     user_id: 'dev',
     client_id: 'dev-client-2',
-    case_code: 'LL-0002',
+    case_code: 'LL-2026-0002',
     title: 'Estate of Owusu — Probate',
     court: 'High Court (General Division)',
     suit_number: 'HC/PROB/2026/0089',
@@ -119,7 +120,7 @@ export const DEV_SAMPLE_CASES: Case[] = [
     id: 'dev-3',
     user_id: 'dev',
     client_id: 'dev-client-3',
-    case_code: 'LL-0003',
+    case_code: 'LL-2026-0003',
     title: 'AccraTech Ltd v. Volta Cables',
     court: 'High Court (Commercial Division)',
     suit_number: 'HC/COM/2026/0212',
@@ -144,7 +145,7 @@ export const DEV_SAMPLE_CASES: Case[] = [
     id: 'dev-4',
     user_id: 'dev',
     client_id: 'dev-client-4',
-    case_code: 'LL-0004',
+    case_code: 'LL-2026-0004',
     title: 'Asante Land Title Registration',
     court: 'High Court (Land Division)',
     suit_number: 'HC/LAND/2025/0578',
@@ -224,15 +225,32 @@ export function useCreateCase() {
   const [mutate, state] = useMutation(CreateCaseMutationDoc, {
     refetchQueries: [CasesQueryDoc, 'DashboardStats'],
   })
+  // The case code is derived from the codes already in the cache, so the
+  // sequence continues rather than restarting. When the backend starts
+  // assigning codes this should stop sending one.
+  const { data: existing } = useQuery(CasesQueryDoc, {
+    fetchPolicy: 'cache-first',
+    errorPolicy: 'all',
+  })
+
+  const withCode = (data: CaseFormData) => {
+    const input = toCaseInput(data)
+    if (input.case_code) return input
+    return {
+      ...input,
+      case_code: nextCaseCode((existing?.cases ?? []).map((c) => c.case_code)),
+    }
+  }
+
   return {
     isPending: state.loading,
     error: state.error,
     mutateAsync: async (data: CaseFormData) => {
-      const res = await mutate({ variables: { input: toCaseInput(data) } })
+      const res = await mutate({ variables: { input: withCode(data) } })
       return res.data?.createCase
     },
     mutate: (data: CaseFormData) => {
-      void mutate({ variables: { input: toCaseInput(data) } })
+      void mutate({ variables: { input: withCode(data) } })
     },
   }
 }
