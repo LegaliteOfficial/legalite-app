@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from './providers'
@@ -24,6 +24,15 @@ export const metadata: Metadata = {
   title: 'LegaLite — Ghana Legal Practice Management',
   description:
     "The digital operating system for Ghana's legal profession. AI-powered practice management built for Ghanaian lawyers.",
+}
+
+// viewport-fit=cover lets the app draw under the notch / home indicator;
+// mobile chrome pads itself with env(safe-area-inset-*).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#F4F4F5',
 }
 
 export default function RootLayout({

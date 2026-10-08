@@ -18,7 +18,7 @@ export function ClientsTabNav({
 }) {
   return (
     <div
-      className="mt-5 flex items-center gap-1 border-b"
+      className="mt-4 flex items-center gap-1 overflow-x-auto border-b scrollbar-none sm:mt-5"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       {TABS.map((t) => {
@@ -28,7 +28,7 @@ export function ClientsTabNav({
             key={t}
             type="button"
             onClick={() => onChange(t)}
-            className="inline-flex items-center px-4 py-2.5 text-[13.5px] font-medium border-b-2 -mb-px cursor-pointer transition-colors"
+            className="inline-flex shrink-0 items-center whitespace-nowrap px-4 py-2.5 text-[13.5px] font-medium border-b-2 -mb-px cursor-pointer transition-colors"
             style={{
               color: isActive
                 ? 'var(--text-primary)'

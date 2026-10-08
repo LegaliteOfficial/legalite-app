@@ -25,7 +25,7 @@ export function EditorTopBar({
 }: Props) {
   return (
     <header
-      className="flex items-center justify-between px-6 py-3.5 border-b"
+      className="flex flex-col gap-2.5 px-4 py-3 border-b sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-3.5"
       style={{
         borderColor: 'var(--border-soft)',
         background: 'var(--surface-card)',
@@ -38,7 +38,7 @@ export function EditorTopBar({
         >
           {isEdit ? 'Edit case' : 'New case'}
         </h1>
-        <p className="text-[12.5px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <p className="mt-0.5 hidden text-[12.5px] sm:block" style={{ color: 'var(--text-muted)' }}>
           {isEdit
             ? 'Update the sections below. Changes save when you click Save.'
             : 'Fill in the sections below to open a new case. Save anytime.'}
@@ -75,7 +75,7 @@ function Actions({
   onSave,
 }: Props) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button variant="ghost" size="sm" onClick={onCancel}>
         Cancel
       </Button>
@@ -86,7 +86,8 @@ function Actions({
           onClick={() => onSave(true)}
           disabled={submitting}
         >
-          Save and run conflict check
+          <span className="sm:hidden">Save + conflict check</span>
+          <span className="hidden sm:inline">Save and run conflict check</span>
         </Button>
       )}
       <Button

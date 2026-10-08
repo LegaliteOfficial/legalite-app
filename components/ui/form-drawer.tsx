@@ -76,6 +76,9 @@ export function FormDrawer({
             'data-[closed]:animate-out data-[closed]:slide-out-to-right-4',
             'duration-300',
             SIZE_WIDTH[size],
+            // Phones: full-screen sheet, clear of the notch and home indicator.
+            'max-sm:inset-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0',
+            'max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)]',
             popupClassName,
           )}
           style={{
@@ -115,7 +118,7 @@ export function FormDrawerHeader({
 }: FormDrawerHeaderProps) {
   return (
     <div
-      className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b shrink-0"
+      className="flex items-start justify-between gap-4 px-4 pt-4 pb-3 sm:px-6 sm:pt-5 sm:pb-4 border-b shrink-0"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       <div className="min-w-0 flex-1">
@@ -173,7 +176,7 @@ export function FormDrawerBody({
   return (
     <div
       className={cn(
-        'flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-5',
+        'flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-5',
         className,
       )}
     >
@@ -244,7 +247,7 @@ export function FormDrawerFooter({ children, split }: FormDrawerFooterProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-2 px-6 py-3.5 border-t shrink-0',
+        'flex items-center gap-2 px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0',
         split ? 'justify-between' : 'justify-end',
       )}
       style={{

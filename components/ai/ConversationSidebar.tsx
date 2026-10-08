@@ -87,10 +87,7 @@ export function ConversationSidebar({
 
   return (
     <div
-      // On a phone the conversation list slides over the chat instead of
-      // taking 260px of a 390px screen, which left the conversation itself
-      // too narrow to read. From lg it sits inline as a normal column.
-      className="fixed inset-y-0 left-0 z-40 w-[82vw] max-w-[300px] shrink-0 border-r flex flex-col lg:static lg:z-auto lg:w-[260px] lg:max-w-none"
+      className="w-full sm:w-[260px] shrink-0 border-r flex flex-col"
       style={{
         borderColor: 'var(--border-soft)',
         background: 'var(--surface-sunken)',

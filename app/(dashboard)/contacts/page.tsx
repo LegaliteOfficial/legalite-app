@@ -12,6 +12,7 @@
 import { useRouter } from 'next/navigation'
 import { Plus, Tag } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { MobileListItem, InitialsMark } from '@/components/shared/MobileList'
 import { Button } from '@/components/ui/button'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { ClientForm } from '@/components/shared/ClientForm'
@@ -78,17 +79,18 @@ export default function ContactsPage() {
         ) : (
           <>
             {/* Page header */}
-            <div className="flex items-center justify-between mt-5">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 sm:mt-5">
               <h1
                 className="text-[20px] font-semibold"
                 style={{ color: 'var(--text-primary)' }}
               >
                 Contacts
               </h1>
-              <div className="flex max-w-full items-center gap-2 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="hidden sm:inline-flex"
                   onClick={() => state.setTagsDialogOpen(true)}
                 >
                   <Tag size={13} strokeWidth={1.75} />
@@ -153,6 +155,26 @@ export default function ContactsPage() {
                   onNewPerson={() => router.push('/contacts/new')}
                 />
               ) : (
+                <>
+                {/* Phones: tappable contact cards. */}
+                <ul className="flex-1 overflow-y-auto md:hidden">
+                  {state.pageRows.map((row) => (
+                    <MobileListItem
+                      key={row.id}
+                      href={`/contacts/${row.id}`}
+                      leading={<InitialsMark name={row.full_name} tone={row.contact_type === 'company' ? 'navy' : 'gold'} />}
+                      title={row.full_name}
+                      subtitle={row.email || row.phone || undefined}
+                      meta={[row.contact_type === 'company' ? 'Company' : row.job_title || 'Person', row.organization].filter(Boolean).join(' · ')}
+                      trailing={
+                        row.roles?.includes('Client') ? (
+                          <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: 'rgba(46,125,79,0.10)', color: '#2E7D4F' }}>Client</span>
+                        ) : undefined
+                      }
+                    />
+                  ))}
+                </ul>
+                <div className="hidden min-h-0 flex-1 flex-col md:flex">
                 <ContactsTable
                   rows={state.pageRows}
                   expanded={state.expandRows}
@@ -173,6 +195,8 @@ export default function ContactsPage() {
                     )
                   }
                 />
+                </div>
+                </>
               )}
 
               <PaginationFooter

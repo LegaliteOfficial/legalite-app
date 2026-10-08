@@ -22,10 +22,10 @@ export function CasesPageTabs({
 }) {
   return (
     <div
-      className="flex items-end justify-between gap-3 border-b overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]"
+      className="flex flex-col-reverse gap-2 border-b sm:flex-row sm:items-end sm:justify-between"
       style={{ borderColor: 'var(--border-soft)' }}
     >
-      <div className="flex shrink-0 gap-1">
+      <div className="flex gap-1">
         <TabButton
           active={activeTab === 'cases'}
           onClick={() => onTabChange('cases')}
@@ -42,7 +42,7 @@ export function CasesPageTabs({
           Stages
         </TabButton>
       </div>
-      <div className="flex shrink-0 items-center gap-2 pb-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none sm:pb-2">
         <Button variant="outline" size="sm" onClick={onManageTags}>
           <Tag size={13} strokeWidth={1.75} />
           Manage tags
@@ -50,12 +50,13 @@ export function CasesPageTabs({
         <Button
           variant="outline"
           size="sm"
+          className="hidden sm:inline-flex"
           onClick={() => toast.info('Case templates is coming next.')}
         >
           <FileText size={13} strokeWidth={1.75} />
           Case templates
         </Button>
-        <Button onClick={onNewCase} size="sm" className="rounded-lg">
+        <Button onClick={onNewCase} size="sm" className="ml-auto rounded-lg sm:ml-0">
           <Plus size={13} strokeWidth={2} />
           New case
         </Button>

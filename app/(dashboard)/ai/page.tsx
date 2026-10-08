@@ -27,6 +27,7 @@ import { EmptyState } from '@/components/ai/EmptyState'
 import { TurnBubble } from '@/components/ai/TurnBubble'
 import { LoadingTurn } from '@/components/ai/LoadingTurn'
 import { Composer } from '@/components/ai/Composer'
+import { useIsPhone } from '@/hooks/use-media-query'
 
 export default function AiAssistantPage() {
   const [sessions, setSessions] = useState<SessionRecord[]>([])
@@ -34,13 +35,11 @@ export default function AiAssistantPage() {
   const [turns, setTurns] = useState<Turn[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  // Open by default on a wide screen, closed on a phone where it would
-  // otherwise cover the conversation on arrival.
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-
-  useEffect(() => {
-    if (window.matchMedia('(max-width: 1023px)').matches) setSidebarOpen(false)
-  }, [])
+  // Conversation list: open beside the chat on wider screens; on phones
+  // it is an overlay drawer, closed until asked for.
+  const isPhone = useIsPhone()
+  const [sidebarPref, setSidebarOpen] = useState<boolean | null>(null)
+  const sidebarOpen = sidebarPref ?? !isPhone
   // Live text from `answer_delta` SSE events. Cleared once the turn is
   // committed to `turns` (either the `completed` or `refused` terminal
   // event). Rendered in place of LoadingTurn once the model starts
@@ -304,33 +303,42 @@ export default function AiAssistantPage() {
   }, [handleSend])
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {/* Backdrop for the overlay sidebar; tapping it closes the list. */}
-      {sidebarOpen && (
+    <div className="relative flex-1 flex overflow-hidden">
+      {sidebarOpen && isPhone && (
         <button
           type="button"
           aria-label="Close conversations"
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          className="absolute inset-0 z-20 bg-black/30"
         />
       )}
-
       {sidebarOpen && (
-        <ConversationSidebar
-          sessions={sessions}
-          activeId={activeId}
-          onSelect={loadConversation}
-          onDelete={handleDelete}
-          onRename={handleRename}
-          onTogglePin={handleTogglePin}
-          onNew={startNewConversation}
-        />
+        <div
+          className={isPhone ? 'absolute inset-y-0 left-0 z-30 flex w-[85%] max-w-[320px] shadow-xl' : 'flex'}
+          style={isPhone ? { background: 'var(--surface-page)' } : undefined}
+        >
+          <ConversationSidebar
+            sessions={sessions}
+            activeId={activeId}
+            onSelect={(id) => {
+              if (isPhone) setSidebarOpen(false)
+              void loadConversation(id)
+            }}
+            onDelete={handleDelete}
+            onRename={handleRename}
+            onTogglePin={handleTogglePin}
+            onNew={() => {
+              if (isPhone) setSidebarOpen(false)
+              startNewConversation()
+            }}
+          />
+        </div>
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'var(--surface-card)' }}>
         <ChatHeader
           sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">

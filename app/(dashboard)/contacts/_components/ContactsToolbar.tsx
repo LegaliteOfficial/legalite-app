@@ -45,7 +45,7 @@ export function ContactsToolbar({
   onDeleteSelected: () => void
 }) {
   return (
-    <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 sm:mt-5">
       {selectedCount > 0 ? (
         <BulkActionsBar
           count={selectedCount}
@@ -53,7 +53,7 @@ export function ContactsToolbar({
           onDelete={onDeleteSelected}
         />
       ) : (
-        <div className="flex min-w-0 max-w-full items-center gap-1 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]">
+        <div className="-mx-1 flex max-w-full items-center gap-1 overflow-x-auto px-1 scrollbar-none">
           {TYPE_FILTERS.map((t) => {
             const isActive = typeFilter === t.id
             const count = typeCounts[t.id]
@@ -110,7 +110,7 @@ export function ContactsToolbar({
       )}
 
       <div className="flex w-full items-center gap-2 sm:w-auto">
-        <div className="relative w-full sm:w-64">
+        <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
           <MagnifyingGlass
             size={13}
             strokeWidth={1.75}

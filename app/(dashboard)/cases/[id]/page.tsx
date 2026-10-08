@@ -183,7 +183,7 @@ export default function CaseDetailPage({
       <div className="mx-auto max-w-[920px] px-6 py-6">
         {/* Cases breadcrumb */}
         <div
-          className="text-[12.5px] font-medium mb-4"
+          className="mb-4 hidden text-[12.5px] font-medium lg:block"
           style={{ color: 'var(--text-muted)' }}
         >
           Cases
@@ -200,7 +200,7 @@ export default function CaseDetailPage({
           }}
         >
           {/* ─── Title row: back arrow / spacer / status pill / overflow ─── */}
-          <div className="px-7 pt-6 pb-2 flex items-start justify-between gap-4">
+          <div className="px-7 pt-6 pb-2 flex flex-wrap items-start justify-between gap-3 max-sm:pt-4">
             <button
               type="button"
               onClick={() => router.push('/cases')}
@@ -220,7 +220,7 @@ export default function CaseDetailPage({
             >
               <ArrowLeft size={16} strokeWidth={1.75} />
             </button>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2">
               {/*
                * Time working hours — opens the billable-hour timer
                * dialog for this case. Disabled until the client
@@ -258,7 +258,8 @@ export default function CaseDetailPage({
                 title="Start a billable-hour timer for this case"
               >
                 <Clock size={13} strokeWidth={1.75} />
-                Time working hours
+                <span className="sm:hidden">Log time</span>
+                <span className="hidden sm:inline">Time working hours</span>
               </button>
               <StatusPill
                 current={currentStatus}
@@ -489,7 +490,7 @@ export default function CaseDetailPage({
                 No documents attached to this case yet.
               </p>
             ) : docView === 'grid' ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {caseDocuments.map((d) => (
                   <DocumentCard
                     key={d.id}
@@ -672,11 +673,11 @@ function MetaRow({
 }) {
   return (
     <div
-      className="px-7 py-3.5 flex items-center gap-6 border-b"
+      className="px-7 py-3 sm:py-3.5 flex flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-6 border-b"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       <div
-        className="text-[12.5px] w-[170px] shrink-0"
+        className="text-[12px] sm:text-[12.5px] sm:w-[170px] shrink-0"
         style={{ color: 'var(--text-muted)' }}
       >
         {label}

@@ -47,7 +47,7 @@ export function CaseDetailsSection({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <FieldLabel>Responsible lawyer</FieldLabel>
           <NativeSelect
@@ -94,7 +94,7 @@ export function CaseDetailsSection({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <FieldLabel>Client reference number</FieldLabel>
           <Input
@@ -117,7 +117,7 @@ export function CaseDetailsSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <FieldLabel>Court</FieldLabel>
           <Input
@@ -140,7 +140,7 @@ export function CaseDetailsSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <FieldLabel>Opposing party</FieldLabel>
           <Input
@@ -163,7 +163,7 @@ export function CaseDetailsSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <FieldLabel>Practice area</FieldLabel>
           <NativeSelect
@@ -197,7 +197,7 @@ export function CaseDetailsSection({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <FieldLabel>Open date</FieldLabel>
           <Input

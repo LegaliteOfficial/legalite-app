@@ -17,11 +17,11 @@ export function CalendarHeader({
 }) {
   return (
     <header
-      className="flex items-center justify-between gap-4 px-4 py-3.5 border-b shrink-0 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch] sm:px-6"
+      className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-3.5 border-b shrink-0"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       <h1
-        className="shrink-0 text-[20px] font-semibold leading-tight tracking-tight inline-flex items-center gap-2.5"
+        className="text-[20px] font-semibold leading-tight tracking-tight inline-flex items-center gap-2.5"
         style={{
           color: 'var(--text-primary)',
           fontFamily: 'var(--font-heading, "Playfair Display", serif)',
@@ -43,7 +43,7 @@ export function CalendarHeader({
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={onOpenReminder}>
           <Bell size={13} strokeWidth={1.75} />
-          Set reminder
+          <span className="hidden sm:inline">Set reminder</span>
         </Button>
         <button
           type="button"
@@ -59,7 +59,8 @@ export function CalendarHeader({
           onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--gold)' }}
         >
           <Plus size={14} strokeWidth={2.25} />
-          New event
+          <span className="sm:hidden">New</span>
+          <span className="hidden sm:inline">New event</span>
         </button>
       </div>
     </header>

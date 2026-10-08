@@ -4,37 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { useFirmStore } from '@/stores/firm.store'
-import { SquaresFour, Users, Scales, CheckSquare, IdentificationCard, FileText, Calendar as CalendarIcon, Timer, Sparkle, ChatCircle, CreditCard, Gear, SignOut } from '@phosphor-icons/react'
-const NAV_GROUPS = [
-  {
-    label: 'Workspace',
-    items: [
-      { id: 'dashboard', Icon: SquaresFour, label: 'Dashboard',       href: '/dashboard' },
-      { id: 'clients',   Icon: Users,           label: 'Clients',         href: '/clients' },
-      { id: 'cases',     Icon: Scales,           label: 'Cases',           href: '/cases' },
-      { id: 'tasks',     Icon: CheckSquare,     label: 'Tasks',           href: '/tasks' },
-      { id: 'contacts',  Icon: IdentificationCard,         label: 'Contacts',        href: '/contacts' },
-      { id: 'documents', Icon: FileText,        label: 'Documents',       href: '/documents' },
-      { id: 'calendar',  Icon: CalendarIcon,    label: 'Calendar',        href: '/calendar' },
-      { id: 'deadline',  Icon: Timer,           label: 'Deadline engine', href: '/deadline' },
-    ],
-  },
-  {
-    label: 'Intelligence',
-    items: [
-      { id: 'ai',          Icon: Sparkle,      label: 'AI assistant', href: '/ai' },
-      { id: 'comms',       Icon: ChatCircle,   label: 'Client comms', href: '/comms' },
-      { id: 'billing',     Icon: CreditCard,   label: 'Billing',      href: '/billing' },
-    ],
-  },
-  {
-    label: 'Account',
-    items: [
-      { id: 'settings', Icon: Gear, label: 'Settings', href: '/settings' },
-    ],
-  },
-]
-
+import { SignOut } from '@phosphor-icons/react'
+import { NAV_GROUPS } from './nav'
 const TEXT_DIM = 'rgba(255,255,255,0.58)'
 const TEXT_MUTED = 'rgba(255,255,255,0.38)'
 const TEXT_LABEL = 'rgba(255,255,255,0.32)'

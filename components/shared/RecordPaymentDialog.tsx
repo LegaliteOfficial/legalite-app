@@ -282,7 +282,7 @@ export function RecordPaymentDialog({
 
         <div className="grid gap-4 py-2">
           {/* Client + source */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label
                 htmlFor="pay-client"
@@ -376,7 +376,7 @@ export function RecordPaymentDialog({
           </div>
 
           {/* Date + deposit account */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="pay-date" className="text-[13px]">
                 Payment date{' '}
@@ -411,7 +411,7 @@ export function RecordPaymentDialog({
           </div>
 
           {/* Ref + payer */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="pay-ref" className="text-[13px]">
                 Reference

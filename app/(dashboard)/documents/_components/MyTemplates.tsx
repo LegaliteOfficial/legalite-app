@@ -24,7 +24,7 @@ export function MyTemplates({
 }) {
   return (
     <section className="mb-8">
-      <div className="mb-3 flex items-baseline justify-between">
+      <div className="mb-3 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="font-heading text-[17px] font-semibold" style={{ color: 'var(--text-primary)' }}>
           Your templates
         </h2>

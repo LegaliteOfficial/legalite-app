@@ -35,7 +35,7 @@ export default async function ClientProfilePage({
       <div className="px-6 py-5">
         <Link
           href="/clients"
-          className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] font-medium hover:underline underline-offset-2"
+          className="mb-4 hidden items-center gap-1.5 text-[12.5px] font-medium hover:underline underline-offset-2 lg:inline-flex"
           style={{ color: 'var(--text-secondary)' }}
         >
           <ArrowLeft size={13} weight="bold" />

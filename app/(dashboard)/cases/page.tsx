@@ -7,6 +7,9 @@ import { CaseForm } from '@/components/shared/CaseForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { TagSettingsDialog } from '@/components/shared/TagSettingsDialog'
 import { useCases } from '@/hooks/use-cases'
+import { MobileListItem } from '@/components/shared/MobileList'
+import { StatusBadge } from '@/components/shared/StatusBadge'
+import { Scales } from '@phosphor-icons/react'
 import { useUIStore } from '@/stores/ui.store'
 
 import { CasesPageTabs } from './_components/CasesPageTabs'
@@ -84,6 +87,26 @@ export default function CasesPage() {
                   onClearFilters={state.clearFilters}
                 />
               ) : (
+                <>
+                {/* Phones: tappable case cards. */}
+                <ul className="flex-1 overflow-y-auto md:hidden">
+                  {pageRows.map((c) => (
+                    <MobileListItem
+                      key={c.id}
+                      href={`/cases/${c.id}`}
+                      leading={
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'var(--gold-muted)' }}>
+                          <Scales size={18} weight="duotone" style={{ color: 'var(--gold-dark)' }} />
+                        </span>
+                      }
+                      title={c.title}
+                      subtitle={c.client_name ?? undefined}
+                      meta={[c.case_type, c.case_stage, c.next_court_date ? `Court ${new Date(c.next_court_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : null].filter(Boolean).join(' · ') || undefined}
+                      trailing={<StatusBadge status={c.status} />}
+                    />
+                  ))}
+                </ul>
+                <div className="hidden min-h-0 flex-1 flex-col md:flex">
                 <CasesTable
                   rows={pageRows}
                   columns={state.orderedVisibleColumns}
@@ -102,6 +125,8 @@ export default function CasesPage() {
                     })
                   }
                 />
+                </div>
+                </>
               )}
               <PaginationFooter
                 page={safePage}

@@ -11,7 +11,7 @@
  * sheet, with forced page breaks drawn as labelled rules.
  */
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EditorContent, type Editor } from '@tiptap/react'
 import {
   DOCUMENT_FONTS,
@@ -44,6 +44,20 @@ export function StudioCanvas({
   const { width, height } = pageDimensions(design)
   const m = effectiveMargins(design)
 
+  // On screens narrower than the paper, shrink the whole sheet to fit
+  // rather than scroll sideways; the document itself stays true to size.
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const [available, setAvailable] = useState<number | null>(null)
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setAvailable(entry.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const sheetPx = (width * 96) / 25.4
+  const fit = available ? Math.min(1, available / sheetPx) : 1
+
   const css = useMemo(
     () => `${buildDocumentCss(design, ROOT)}
 ${ROOT} { outline: none; min-height: 60mm; }
@@ -64,7 +78,7 @@ ${ROOT} .selectedCell::after { content: ''; position: absolute; inset: 0; backgr
     design.footer.pageNumbers === 'page' ? '1' : design.footer.pageNumbers === 'pageOfTotal' ? 'Page 1 of 3' : ''
 
   return (
-    <div className="min-w-0 flex-1 overflow-auto px-6 py-8" style={{ background: 'var(--surface-sunken)' }}>
+    <div ref={scrollerRef} className="min-w-0 flex-1 overflow-auto px-3 py-4 sm:px-6 sm:py-8" style={{ background: 'var(--surface-sunken)' }}>
       <link rel="stylesheet" href={ALL_FONTS_HREF} precedence="default" />
       <style>{css}</style>
 
@@ -74,6 +88,7 @@ ${ROOT} .selectedCell::after { content: ''; position: absolute; inset: 0; backgr
           width: `${width}mm`,
           minHeight: `${height}mm`,
           padding: `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`,
+          zoom: fit < 1 ? fit : undefined,
           boxShadow: '0 2px 4px rgba(13,27,42,0.04), 0 12px 28px -8px rgba(13,27,42,0.12)',
         }}
       >

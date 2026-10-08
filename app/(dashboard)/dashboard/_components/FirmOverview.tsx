@@ -94,7 +94,7 @@ export function FirmOverview() {
 
       <Card padding="none" className="overflow-hidden">
         <div
-          className="flex items-center justify-between gap-3 px-4 py-3.5 border-b sm:px-6"
+          className="flex items-center justify-between px-6 py-3.5 border-b"
           style={{ borderColor: 'var(--border-soft)' }}
         >
           <button
@@ -145,9 +145,9 @@ export function FirmOverview() {
         </div>
 
         {expanded && (
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
             <div
-              className="p-4 border-b sm:p-6 lg:border-b-0 lg:border-r"
+              className="p-6 border-r"
               style={{ borderColor: 'var(--border-soft)' }}
             >
               <div className="flex items-center gap-1.5 mb-3">
@@ -206,7 +206,7 @@ export function FirmOverview() {
               </div>
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <span
                   className="text-[11px] font-medium uppercase tracking-wider"
@@ -238,8 +238,7 @@ export function FirmOverview() {
                 </div>
               </div>
 
-              <div className="-mx-1 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-                <div className="relative h-56 min-w-[560px] px-1">
+              <div className="relative h-56">
                 <div
                   className="absolute left-0 top-0 bottom-6 w-8 flex flex-col justify-between text-[10px] text-right pr-2"
                   style={{ color: 'var(--text-subtle)' }}
@@ -289,11 +288,10 @@ export function FirmOverview() {
                     </span>
                   ))}
                 </div>
-                </div>
               </div>
 
               <div
-                className="mt-5 grid grid-cols-2 gap-x-6 gap-y-1.5 text-[10px] uppercase tracking-wider sm:grid-cols-3"
+                className="mt-5 grid grid-cols-3 gap-x-6 gap-y-1.5 text-[10px] uppercase tracking-wider"
                 style={{ color: 'var(--text-muted)' }}
               >
                 <LegendSwatch

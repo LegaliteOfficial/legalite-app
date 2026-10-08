@@ -119,7 +119,7 @@ export function StudioToolbar({ editor }: { editor: Editor }) {
 
   return (
     <div
-      className="flex flex-wrap items-center gap-0.5 border-b px-3 py-1.5"
+      className="flex flex-nowrap items-center gap-0.5 overflow-x-auto border-b px-2 py-1.5 scrollbar-none sm:flex-wrap sm:px-3"
       style={{ borderColor: 'var(--border-soft)', background: 'var(--surface-card)' }}
       role="toolbar"
       aria-label="Formatting"
@@ -131,7 +131,7 @@ export function StudioToolbar({ editor }: { editor: Editor }) {
       <Divider />
 
       <Select items={BLOCK_ITEMS} value={state.block} onValueChange={setBlock}>
-        <SelectTrigger size="sm" className="w-[120px] text-[12.5px]" aria-label="Text style"><SelectValue /></SelectTrigger>
+        <SelectTrigger size="sm" className="w-[120px] shrink-0 text-[12.5px]" aria-label="Text style"><SelectValue /></SelectTrigger>
         <SelectContent>
           {Object.entries(BLOCK_ITEMS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
         </SelectContent>
@@ -145,7 +145,7 @@ export function StudioToolbar({ editor }: { editor: Editor }) {
           else chain().unsetFontFamily().run()
         }}
       >
-        <SelectTrigger size="sm" className="ml-1 w-[136px] text-[12.5px]" aria-label="Font"><SelectValue /></SelectTrigger>
+        <SelectTrigger size="sm" className="ml-1 w-[136px] shrink-0 text-[12.5px]" aria-label="Font"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value="default">Document font</SelectItem>
           {DOCUMENT_FONTS.map((f) => (
@@ -158,7 +158,7 @@ export function StudioToolbar({ editor }: { editor: Editor }) {
         value={state.size}
         onValueChange={(v) => (v && v !== 'default' ? chain().setFontSize(`${v}pt`).run() : chain().unsetFontSize().run())}
       >
-        <SelectTrigger size="sm" className="ml-1 w-[78px] text-[12.5px]" aria-label="Font size"><SelectValue /></SelectTrigger>
+        <SelectTrigger size="sm" className="ml-1 w-[78px] shrink-0 text-[12.5px]" aria-label="Font size"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value="default">Default</SelectItem>
           {FONT_SIZES_PT.map((s) => <SelectItem key={s} value={String(s)}>{s} pt</SelectItem>)}
@@ -273,7 +273,7 @@ function Btn({
       // Keep the editor selection: act on mousedown and cancel the focus change.
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-[var(--surface-sunken)] disabled:cursor-not-allowed disabled:opacity-35"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors sm:h-8 sm:w-8 hover:bg-[var(--surface-sunken)] disabled:cursor-not-allowed disabled:opacity-35"
       style={{
         background: active ? 'var(--gold-muted)' : undefined,
         color: active ? 'var(--gold-dark)' : 'var(--text-secondary)',
@@ -319,9 +319,9 @@ function SwatchMenu({
 }
 
 function Group({ children }: { children: ReactNode }) {
-  return <div className="flex items-center gap-0.5">{children}</div>
+  return <div className="flex shrink-0 items-center gap-0.5">{children}</div>
 }
 
 function Divider() {
-  return <div aria-hidden className="mx-1.5 h-5 w-px" style={{ background: 'var(--border-soft)' }} />
+  return <div aria-hidden className="mx-1.5 h-5 w-px shrink-0" style={{ background: 'var(--border-soft)' }} />
 }

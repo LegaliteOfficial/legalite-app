@@ -2,6 +2,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { APP_BACKGROUND } from '@/components/layout/app-background'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { MobileTopBar } from '@/components/layout/MobileTopBar'
+import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import { NavigationProgress } from '@/components/shared/NavigationProgress'
 import { AuthGuard } from '@/components/shared/AuthGuard'
 import { PriorityRemindersBoot } from '@/components/shared/PriorityRemindersBoot'
@@ -25,37 +26,32 @@ export default function DashboardLayout({
           floating active-timer widget. Lives at the layout level
           so a running timer follows the partner across pages. */}
       <TimeTrackerBoot />
-      <div className="h-screen overflow-hidden p-3" style={APP_BACKGROUND}>
+      {/* Phones and tablets: a solid light app surface edge to edge.
+          Desktop (lg+): the law-firm photo frames the floating panels. */}
+      <div className="relative h-dvh overflow-hidden bg-[var(--surface-page)] lg:bg-transparent lg:p-3">
+      <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block" style={APP_BACKGROUND} />
       {/* Global Event Due prompt — fetches pending events on mount +
           on tab visibility (30 s cooldown, debounced), portaled to the
           top-right so it floats over every route without blocking
           navigation. Renders nothing when the queue is empty. */}
       <EventDuePrompt />
-        <div className="flex h-full overflow-hidden gap-3">
+        <div className="relative flex h-full overflow-hidden lg:gap-3">
           <NavigationProgress />
           {/* Desktop sidebar — hidden below lg, where the drawer takes over. */}
           <div className="hidden lg:block h-full shrink-0">
             <Sidebar />
           </div>
-          <main
-            className="flex-1 flex flex-col overflow-hidden rounded-2xl"
-            style={{
-              background: 'rgba(244, 244, 245, 0.86)',
-              backdropFilter: 'blur(6px)',
-              // Bump the dashboard's pixel-baked design tokens (text-[11px],
-              // text-[13px], icons, padding) by 10% in one place. Sidebar
-              // isn't affected because it's a sibling, not a child.
-              // `zoom` scales text + icons + spacing together so the
-              // result stays balanced — `font-size: 110%` would only
-              // affect rem-based text, which this codebase doesn't use.
-              zoom: 1.1,
-            }}
-          >
-            {/* Hamburger + wordmark, only below lg. */}
+          {/* Styling lives in .app-main (globals.css): solid on phones,
+              frosted + 110% zoom on desktop, where the pixel-baked design
+              tokens read small. */}
+          <main className="app-main flex min-w-0 flex-1 flex-col overflow-hidden lg:rounded-2xl">
+            {/* App header (firm / back), only below lg. */}
             <MobileTopBar />
             {/* Global notice: prompts when a calendar event is now / imminent. */}
             <EventNoticeBanner />
             {children}
+            {/* Bottom tabs, only below lg. */}
+            <MobileTabBar />
           </main>
         </div>
 

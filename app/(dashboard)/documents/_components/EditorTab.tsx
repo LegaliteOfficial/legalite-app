@@ -13,6 +13,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useEditor } from '@tiptap/react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useIsPhone } from '@/hooks/use-media-query'
 import type { DocumentDesign } from '@/lib/documents/design'
 import { PdfExportError, pdfFilename, renderDocumentPdf, saveBlob } from '@/lib/documents/pdf'
 import { useLetterheadFirm } from '../_hooks/use-letterhead-firm'
@@ -51,7 +53,9 @@ export function EditorTab({
   onSaveAsTemplate: () => void
 }) {
   const firm = useLetterheadFirm()
-  const [designOpen, setDesignOpen] = useState(true)
+  const isPhone = useIsPhone()
+  const [designPref, setDesignOpen] = useState<boolean | null>(null)
+  const designOpen = designPref ?? !isPhone
   const [pdfBusy, setPdfBusy] = useState<'preview' | 'download' | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null)
@@ -104,7 +108,7 @@ export function EditorTab({
   return (
     <div
       className="flex flex-col overflow-hidden rounded-2xl border"
-      style={{ background: 'var(--surface-card)', borderColor: 'var(--border-soft)', boxShadow: 'var(--shadow-xs)', height: 'calc(100vh - 220px)', minHeight: 560 }}
+      style={{ background: 'var(--surface-card)', borderColor: 'var(--border-soft)', boxShadow: 'var(--shadow-xs)', height: isPhone ? 'calc(100dvh - 250px)' : 'calc(100vh - 220px)', minHeight: isPhone ? 420 : 560 }}
     >
       <EditorHeader
         draftTitle={draftTitle}
@@ -114,7 +118,7 @@ export function EditorTab({
         isEditing={!!editingDocId}
         isSaving={isSaving}
         designOpen={designOpen}
-        onToggleDesign={() => setDesignOpen((o) => !o)}
+        onToggleDesign={() => setDesignOpen(!designOpen)}
         pdfBusy={pdfBusy}
         onPreview={() => void renderPdf('preview')}
         onDownload={() => void renderPdf('download')}
@@ -127,7 +131,9 @@ export function EditorTab({
           <StudioToolbar editor={editor} />
           <div className="flex min-h-0 flex-1">
             <StudioCanvas editor={editor} design={design} firm={firm} />
-            {designOpen && <DesignPanel design={design} onChange={onDesignChange} firmName={firm?.name ?? null} />}
+            {designOpen && !isPhone && (
+              <DesignPanel design={design} onChange={onDesignChange} firmName={firm?.name ?? null} />
+            )}
           </div>
         </>
       ) : (
@@ -135,6 +141,22 @@ export function EditorTab({
           <Skeleton className="h-8 w-full" />
           <Skeleton className="mx-auto h-[60vh] w-[210mm] max-w-full" />
         </div>
+      )}
+
+      {isPhone && (
+        <Dialog open={designOpen} onOpenChange={(o) => setDesignOpen(o)}>
+          <DialogContent className="gap-0 p-0">
+            <DialogHeader className="border-b px-4 py-3" style={{ borderColor: 'var(--border-soft)' }}>
+              <DialogTitle className="font-heading text-[16px]">Design</DialogTitle>
+            </DialogHeader>
+            <DesignPanel
+              design={design}
+              onChange={onDesignChange}
+              firmName={firm?.name ?? null}
+              className="w-full"
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       <PdfPreviewDialog

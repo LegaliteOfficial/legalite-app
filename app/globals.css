@@ -245,11 +245,64 @@
 /* Marketing AI search bar: flowing border glow + typing caret */
 @keyframes caret-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
 
-/* Hide the scrollbar on horizontally scrollable strips (dashboard tab bars,
-   charts) while keeping them scrollable by touch and wheel. */
+/* ── App shell ─────────────────────────────────────────────────────────────
+   The dashboard's content column. Phones and tablets get a solid light
+   surface edge to edge (the photo would only eat space); desktop keeps the
+   frosted panel over the photo and the 110% zoom the pixel-based design
+   tokens were tuned for. */
+.app-main {
+  background: var(--surface-page);
+}
+@media (min-width: 1024px) {
+  .app-main {
+    background: rgba(244, 244, 245, 0.86);
+    backdrop-filter: blur(6px);
+    zoom: 1.1;
+  }
+}
+
+/* Phones and tablets: native-feeling touch behaviour inside the app. */
+@media (max-width: 1023.98px) {
+  .app-main {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+  }
+  /* Prevent iOS zooming into focused fields (it zooms below 16px).
+     Scoped to the app (dialogs are portaled to <body>, hence :has). */
+  body:has(.app-main) input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  body:has(.app-main) select,
+  body:has(.app-main) textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Phones: compress desktop gutters (24-32px) to a 16px app gutter. These
+   rules are unlayered, so they out-rank the utility layer — but only for
+   the bare classes; anything already responsive (sm:px-6 …) is untouched. */
+@media (max-width: 639.98px) {
+  .app-main .px-6,
+  .app-main .px-7,
+  .app-main .px-8 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .app-main .p-6,
+  .app-main .p-8 {
+    padding: 1rem;
+  }
+}
+
+/* Touch screens have no hover: controls that only appear on row hover
+   (edit, delete, open …) are shown permanently instead. */
+@media (hover: none) {
+  body:has(.app-main) .opacity-0.group-hover\:opacity-100 {
+    opacity: 1;
+  }
+}
+
+/* Horizontal scrollers on phones (tabs, chips, toolbars): no scrollbar. */
 .scrollbar-none {
   scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;

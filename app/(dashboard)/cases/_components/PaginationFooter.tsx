@@ -43,10 +43,10 @@ export function PaginationFooter({
 
   return (
     <div
-      className="flex items-center justify-between gap-3 px-3 py-2.5 border-t overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]"
+      className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 border-t"
       style={{ borderColor: 'var(--border-soft)' }}
     >
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex items-center gap-1">
         <IconNav onClick={() => onPageChange(0)} disabled={atFirst} aria-label="First page">
           <CaretDoubleLeft size={14} strokeWidth={1.75} />
         </IconNav>
@@ -79,9 +79,9 @@ export function PaginationFooter({
         </span>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex items-center gap-3">
         <PageSizeDropdown value={pageSize} onChange={onPageSizeChange} />
-        <ExpandRowsToggle expanded={expandRows} onChange={onExpandRowsChange} />
+        <span className="hidden md:inline-flex"><ExpandRowsToggle expanded={expandRows} onChange={onExpandRowsChange} /></span>
         <Button variant="outline" size="sm" disabled={!canExport} onClick={onExport}>
           <DownloadSimple size={13} strokeWidth={1.75} />
           Export

@@ -146,13 +146,13 @@ export default function CalendarFeedsPage() {
           gets a gold underline + bold heading colour; the others
           are muted and either link to the working route or toast. */}
       <div
-        className="flex items-center gap-1 px-6 pt-6 border-b shrink-0"
+        className="flex items-center gap-1 overflow-x-auto px-6 pt-4 sm:pt-6 border-b shrink-0 scrollbar-none"
         style={{ borderColor: 'var(--border-soft)' }}
       >
         {CALENDAR_TABS.map((tab) => {
           const isActive = tab.key === activeTab
           const baseClasses =
-            'inline-flex items-center px-3 pb-3 pt-1 text-[14px] font-medium cursor-pointer transition-colors border-b-2 -mb-px'
+            'inline-flex shrink-0 items-center whitespace-nowrap px-3 pb-3 pt-1 text-[14px] font-medium cursor-pointer transition-colors border-b-2 -mb-px'
           const style: React.CSSProperties = {
             color: isActive
               ? 'var(--text-primary)'
