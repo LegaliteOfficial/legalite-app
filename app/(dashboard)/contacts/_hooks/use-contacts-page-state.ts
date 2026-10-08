@@ -21,7 +21,7 @@ import type {
   TypeFilter,
 } from '../_types'
 
-export type ContactsTab = 'contacts' | 'conflicts'
+export type ContactsTab = 'contacts' | 'conflicts' | 'comms'
 
 export function useContactsPageState() {
   const { data: clients, isLoading, error } = useClients()

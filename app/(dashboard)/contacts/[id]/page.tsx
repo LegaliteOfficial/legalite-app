@@ -115,7 +115,12 @@ export default function ContactDetailPage({
           {tab === 'Bills' && <BillsTab contactId={contact.id} />}
           {tab === 'Transactions' && <TransactionsTab contactId={contact.id} />}
           {tab === 'Communications' && (
-            <CommunicationsTab contactId={contact.id} />
+            <CommunicationsTab
+                contactId={contact.id}
+                contactName={contact.full_name}
+                contactEmail={contact.email}
+                contactPhone={contact.phone}
+              />
           )}
           {tab === 'Notes' && <NotesTab contact={contact} />}
         </div>

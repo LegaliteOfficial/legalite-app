@@ -38,9 +38,11 @@ export interface CommLogRow {
 /** Toolbar pill to the channels it covers. */
 const TYPE_TO_CHANNELS: Record<string, CommChannel[] | null> = {
   All: null,
-  Phone: ['sms', 'call'],
+  Call: ['call'],
+  SMS: ['sms'],
   Email: ['email'],
   WhatsApp: ['whatsapp'],
+  'In-app': ['in_app'],
 }
 
 function startOfDay(d: Date): number {
@@ -70,6 +72,26 @@ function presetFloor(preset: string, now = new Date()): number | null {
 }
 
 const DEV_SAMPLE: CommLogRow[] = [
+  {
+    id: 'dev-msg-4',
+    channel: 'sms',
+    direction: 'outbound',
+    status: 'delivered',
+    subject: null,
+    body: 'Reminder: hearing on 14 Oct at 9am, High Court Accra.',
+    createdAt: new Date(Date.now() - 20 * 3_600_000).toISOString(),
+    clientName: null,
+  },
+  {
+    id: 'dev-msg-5',
+    channel: 'in_app',
+    direction: 'inbound',
+    status: 'read',
+    subject: 'Question about the lease',
+    body: 'Could you confirm the renewal terms before Friday?',
+    createdAt: new Date(Date.now() - 3 * 3_600_000).toISOString(),
+    clientName: null,
+  },
   {
     id: 'dev-msg-1',
     channel: 'email',

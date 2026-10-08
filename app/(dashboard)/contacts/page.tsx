@@ -19,6 +19,7 @@ import { ClientForm } from '@/components/shared/ClientForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { TagSettingsDialog } from '@/components/shared/TagSettingsDialog'
 import { useUIStore } from '@/stores/ui.store'
+import { ClientCommsPanel } from './_components/ClientCommsPanel'
 import { ConflictsPanel } from './_components/ConflictsPanel'
 import { ContactsTable } from './_components/ContactsTable'
 import { ContactsToolbar } from './_components/ContactsToolbar'
@@ -71,11 +72,19 @@ export default function ContactsPage() {
             >
               Conflict checks
             </TabButton>
+            <TabButton
+              active={state.activeTab === 'comms'}
+              onClick={() => state.setActiveTab('comms')}
+            >
+              Client comms
+            </TabButton>
           </div>
         </div>
 
         {state.activeTab === 'conflicts' ? (
           <ConflictsPanel />
+        ) : state.activeTab === 'comms' ? (
+          <ClientCommsPanel />
         ) : (
           <>
             {/* Page header */}

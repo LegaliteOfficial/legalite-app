@@ -13,6 +13,8 @@ import {
   Envelope,
   Funnel,
   Phone,
+  ChatCircle,
+  PaperPlaneTilt,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -25,11 +27,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { PagerBtn } from '../PagerBtn'
 import { useContactMessages, type CommLogRow } from './use-contact-messages'
+import { NewMessageDialog, type MessageChannel } from '@/components/shared/NewMessageDialog'
 
 const COMM_SUB_TABS = ['Logs', 'Secure messages', 'Client portals'] as const
 type CommSubTab = (typeof COMM_SUB_TABS)[number]
 
-const COMM_TYPE_FILTERS = ['All', 'Phone', 'Email', 'WhatsApp'] as const
+const COMM_TYPE_FILTERS = ['All', 'Call', 'SMS', 'Email', 'WhatsApp', 'In-app'] as const
 type CommTypeFilter = (typeof COMM_TYPE_FILTERS)[number]
 
 const COMM_DATE_PRESETS = [
@@ -84,7 +87,17 @@ const COMM_COLUMNS: CommColumn[] = [
  * filters client side. Secure messages and Client portals remain
  * previews until those backends exist.
  */
-export function CommunicationsTab({ contactId }: { contactId: string }) {
+export function CommunicationsTab({
+  contactId,
+  contactName,
+  contactEmail,
+  contactPhone,
+}: {
+  contactId: string
+  contactName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+}) {
   const [subTab, setSubTab] = useState<CommSubTab>('Logs')
   const [typeFilter, setTypeFilter] = useState<CommTypeFilter>('All')
   const [dateFrom, setDateFrom] = useState('')
@@ -96,6 +109,8 @@ export function CommunicationsTab({ contactId }: { contactId: string }) {
       new Set(COMM_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id)),
   )
   const [expandRows, setExpandRows] = useState(false)
+  const [composeOpen, setComposeOpen] = useState(false)
+  const [composeChannel, setComposeChannel] = useState<MessageChannel>('email')
 
   const { rows, loading } = useContactMessages({
     contactId,
@@ -148,7 +163,12 @@ export function CommunicationsTab({ contactId }: { contactId: string }) {
             <Bell size={13} strokeWidth={1.75} />
             Notification settings
           </button>
-          <CommNewDropdown />
+          <CommNewDropdown
+            onCompose={(ch) => {
+              setComposeChannel(ch)
+              setComposeOpen(true)
+            }}
+          />
         </div>
       </div>
 
@@ -349,6 +369,17 @@ export function CommunicationsTab({ contactId }: { contactId: string }) {
           </Button>
         </div>
       </div>
+      <NewMessageDialog
+        open={composeOpen}
+        onOpenChange={setComposeOpen}
+        recipient={{
+          id: contactId,
+          name: contactName ?? 'this contact',
+          email: contactEmail,
+          phone: contactPhone,
+        }}
+        defaultChannel={composeChannel}
+      />
     </section>
   )
 }
@@ -384,7 +415,7 @@ function CommSubTabButton({
   )
 }
 
-function CommNewDropdown() {
+function CommNewDropdown({ onCompose }: { onCompose: (c: MessageChannel) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -412,16 +443,28 @@ function CommNewDropdown() {
       />
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem
-          onClick={() => toast.info('Phone log form is coming next.')}
+          onClick={() => onCompose('email')}
           className="text-[12.5px] cursor-pointer"
         >
-          <Phone size={12} strokeWidth={1.75} /> New phone log
+          <Envelope size={12} strokeWidth={1.75} /> New email
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => toast.info('Email log form is coming next.')}
+          onClick={() => onCompose('sms')}
           className="text-[12.5px] cursor-pointer"
         >
-          <Envelope size={12} strokeWidth={1.75} /> New email log
+          <Phone size={12} strokeWidth={1.75} /> New SMS
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => onCompose('whatsapp')}
+          className="text-[12.5px] cursor-pointer"
+        >
+          <ChatCircle size={12} strokeWidth={1.75} /> New WhatsApp
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => onCompose('in_app')}
+          className="text-[12.5px] cursor-pointer"
+        >
+          <PaperPlaneTilt size={12} strokeWidth={1.75} /> New in-app message
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

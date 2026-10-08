@@ -8,7 +8,6 @@ import {
   Calendar as CalendarIcon,
   Timer,
   Sparkle,
-  ChatCircle,
   CreditCard,
   Gear,
   type Icon,
@@ -44,7 +43,6 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: 'Intelligence',
     items: [
       { id: 'ai', Icon: Sparkle, label: 'AI assistant', href: '/ai' },
-      { id: 'comms', Icon: ChatCircle, label: 'Client comms', href: '/comms' },
       { id: 'billing', Icon: CreditCard, label: 'Billing', href: '/billing' },
     ],
   },
