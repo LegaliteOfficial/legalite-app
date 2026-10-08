@@ -53,7 +53,7 @@ export function ContactsToolbar({
           onDelete={onDeleteSelected}
         />
       ) : (
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 max-w-full items-center gap-1 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]">
           {TYPE_FILTERS.map((t) => {
             const isActive = typeFilter === t.id
             const count = typeCounts[t.id]
@@ -109,8 +109,8 @@ export function ContactsToolbar({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <div className="relative w-64">
+      <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="relative w-full sm:w-64">
           <MagnifyingGlass
             size={13}
             strokeWidth={1.75}

@@ -18,7 +18,7 @@ export function DayHeaderRow({
     <div
       className="grid border-b shrink-0"
       style={{
-        gridTemplateColumns: `64px repeat(${visibleDays.length}, 1fr)`,
+        gridTemplateColumns: `64px repeat(${visibleDays.length}, minmax(110px, 1fr))`,
         borderColor: 'var(--border-soft)',
       }}
     >

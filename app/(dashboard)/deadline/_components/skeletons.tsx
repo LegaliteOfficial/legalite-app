@@ -24,7 +24,7 @@ export function DocketBriefSkeleton() {
       aria-busy
       aria-label="Loading your docket"
     >
-      <div className="px-7 py-6">
+      <div className="px-4 py-5 sm:px-7 sm:py-6">
         <Skeleton className="h-3 w-40" />
         <Skeleton className="mt-3 h-6 w-48" />
         <Skeleton className="mt-3 h-4 w-80 max-w-full" />
@@ -38,7 +38,7 @@ export function DocketBriefSkeleton() {
           </div>
         </div>
       </div>
-      <div className="border-t px-7 py-6 lg:border-l lg:border-t-0" style={{ borderColor: 'var(--border-soft)' }}>
+      <div className="border-t px-4 py-5 sm:px-7 sm:py-6 lg:border-l lg:border-t-0" style={{ borderColor: 'var(--border-soft)' }}>
         <Skeleton className="h-4 w-40" />
         <div className="mt-6 grid grid-cols-7 gap-1">
           {Array.from({ length: 14 }, (_, i) => (

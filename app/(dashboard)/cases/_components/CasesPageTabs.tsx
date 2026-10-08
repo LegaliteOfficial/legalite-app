@@ -22,10 +22,10 @@ export function CasesPageTabs({
 }) {
   return (
     <div
-      className="flex items-end justify-between border-b"
+      className="flex items-end justify-between gap-3 border-b overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]"
       style={{ borderColor: 'var(--border-soft)' }}
     >
-      <div className="flex gap-1">
+      <div className="flex shrink-0 gap-1">
         <TabButton
           active={activeTab === 'cases'}
           onClick={() => onTabChange('cases')}
@@ -42,7 +42,7 @@ export function CasesPageTabs({
           Stages
         </TabButton>
       </div>
-      <div className="flex items-center gap-2 pb-2">
+      <div className="flex shrink-0 items-center gap-2 pb-2">
         <Button variant="outline" size="sm" onClick={onManageTags}>
           <Tag size={13} strokeWidth={1.75} />
           Manage tags

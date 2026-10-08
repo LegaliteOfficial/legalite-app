@@ -27,7 +27,7 @@ export const TimeGridBody = forwardRef<HTMLDivElement, {
     <div className="flex-1 overflow-y-auto" ref={ref}>
       <div
         className="grid relative"
-        style={{ gridTemplateColumns: `64px repeat(${visibleDays.length}, 1fr)` }}
+        style={{ gridTemplateColumns: `64px repeat(${visibleDays.length}, minmax(110px, 1fr))` }}
       >
         {/* Hour-label column — left rail. */}
         <div className="relative" style={{ height: HOUR_HEIGHT * 24 }}>

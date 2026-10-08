@@ -17,11 +17,11 @@ export function CalendarHeader({
 }) {
   return (
     <header
-      className="flex items-center justify-between gap-4 px-6 py-3.5 border-b shrink-0"
+      className="flex items-center justify-between gap-4 px-4 py-3.5 border-b shrink-0 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch] sm:px-6"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       <h1
-        className="text-[20px] font-semibold leading-tight tracking-tight inline-flex items-center gap-2.5"
+        className="shrink-0 text-[20px] font-semibold leading-tight tracking-tight inline-flex items-center gap-2.5"
         style={{
           color: 'var(--text-primary)',
           fontFamily: 'var(--font-heading, "Playfair Display", serif)',

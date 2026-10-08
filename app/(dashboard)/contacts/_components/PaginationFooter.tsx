@@ -56,10 +56,10 @@ export function PaginationFooter({
   const atEnd = page >= totalPages - 1
   return (
     <div
-      className="flex items-center justify-between px-3 py-2.5 border-t"
+      className="flex items-center justify-between gap-3 px-3 py-2.5 border-t overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]"
       style={{ borderColor: 'var(--border-soft)' }}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
         <IconNav onClick={onFirst} disabled={atStart} aria-label="First page">
           <CaretDoubleLeft size={14} strokeWidth={1.75} />
         </IconNav>
@@ -80,7 +80,7 @@ export function PaginationFooter({
         </span>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <PageSizeDropdown value={pageSize} onChange={onPageSize} />
         <ExpandRowsToggle expanded={expanded} onChange={onExpanded} />
         <Button

@@ -72,7 +72,7 @@ function DocketBriefView({ items, now, focusDay, onFocusDay, busyKey, onComplete
       }}
     >
       <div className="grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <div className="px-7 py-6">
+        <div className="px-4 py-5 sm:px-7 sm:py-6">
           <p className="text-[12px] font-medium" style={{ color: 'var(--gold-dark)' }}>
             {new Date(now).toLocaleDateString('en-GB', {
               weekday: 'long',
@@ -110,7 +110,7 @@ function DocketBriefView({ items, now, focusDay, onFocusDay, busyKey, onComplete
         </div>
 
         <div
-          className="border-t px-7 py-6 lg:border-l lg:border-t-0"
+          className="border-t px-4 py-5 sm:px-7 sm:py-6 lg:border-l lg:border-t-0"
           style={{ borderColor: 'var(--border-soft)', background: 'var(--surface-card)' }}
         >
           <Diary items={items} now={now} focusDay={focusDay} onFocusDay={onFocusDay} />

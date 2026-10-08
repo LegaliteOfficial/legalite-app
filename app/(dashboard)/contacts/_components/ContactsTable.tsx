@@ -37,7 +37,7 @@ export function ContactsTable({
 }) {
   return (
     <div className="overflow-auto flex-1 min-h-0">
-      <table className="w-full" style={{ tableLayout: 'fixed' }}>
+      <table className="w-full min-w-[760px]" style={{ tableLayout: 'fixed' }}>
         <thead
           className="sticky top-0 z-10"
           style={{ background: 'var(--surface-sunken)' }}

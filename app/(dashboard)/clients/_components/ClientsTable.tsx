@@ -89,7 +89,11 @@ export function ClientsTable({
         background: 'var(--surface-card)',
       }}
     >
-      <table className="w-full text-left text-[13px]">
+      {/* The table carries more columns than a phone can show, so let it
+          scroll sideways inside the card rather than being clipped by the
+          rounded container's overflow-hidden. */}
+      <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        <table className="w-full min-w-[640px] text-left text-[13px]">
         <thead>
           <tr
             className="border-b"
@@ -173,6 +177,7 @@ export function ClientsTable({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

@@ -55,7 +55,7 @@ export default function CalendarPage() {
       />
 
       {state.view !== 'Month' && (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col overflow-x-auto [-webkit-overflow-scrolling:touch]">
           <DayHeaderRow visibleDays={state.visibleDays} now={state.now} />
           <TimeGridBody
             ref={state.scrollerRef}
@@ -67,7 +67,7 @@ export default function CalendarPage() {
             }
             onEventClick={state.openEditDialog}
           />
-        </>
+        </div>
       )}
 
       {state.view === 'Month' && (

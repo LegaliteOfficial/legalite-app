@@ -85,7 +85,7 @@ export default function ContactsPage() {
               >
                 Contacts
               </h1>
-              <div className="flex items-center gap-2">
+              <div className="flex max-w-full items-center gap-2 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]">
                 <Button
                   variant="outline"
                   size="sm"

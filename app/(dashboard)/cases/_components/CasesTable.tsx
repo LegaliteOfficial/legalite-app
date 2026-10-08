@@ -37,7 +37,7 @@ export function CasesTable({
     // sticky thead and sticky action column to actually clip inside the
     // card. min-h-0 cascades from every flex-column ancestor.
     <div className="overflow-auto flex-1 min-h-0">
-      <table className="w-full" style={{ tableLayout: 'fixed' }}>
+      <table className="w-full min-w-[820px]" style={{ tableLayout: 'fixed' }}>
         <thead className="sticky top-0 z-10" style={{ background: 'var(--surface-sunken)' }}>
           <tr>
             {columns.map((col) => (

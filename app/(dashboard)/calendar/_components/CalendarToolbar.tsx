@@ -45,13 +45,13 @@ export function CalendarToolbar({
 }) {
   return (
     <div
-      className="flex items-center justify-between gap-3 px-6 py-3 border-b shrink-0"
+      className="flex items-center justify-between gap-3 px-4 py-3 border-b shrink-0 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch] sm:px-6"
       style={{
         borderColor: 'var(--border-soft)',
         background: 'var(--surface-card)',
       }}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <Button variant="outline" size="sm" onClick={onToday}>
           <CalendarIcon size={13} strokeWidth={1.75} />
           Today
@@ -71,7 +71,7 @@ export function CalendarToolbar({
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <span className="text-[12px] mr-1" style={{ color: 'var(--text-muted)' }}>
           Synced
         </span>

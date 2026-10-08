@@ -34,7 +34,13 @@ export default function AiAssistantPage() {
   const [turns, setTurns] = useState<Turn[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  // Open by default on a wide screen, closed on a phone where it would
+  // otherwise cover the conversation on arrival.
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 1023px)').matches) setSidebarOpen(false)
+  }, [])
   // Live text from `answer_delta` SSE events. Cleared once the turn is
   // committed to `turns` (either the `completed` or `refused` terminal
   // event). Rendered in place of LoadingTurn once the model starts
@@ -299,6 +305,16 @@ export default function AiAssistantPage() {
 
   return (
     <div className="flex-1 flex overflow-hidden">
+      {/* Backdrop for the overlay sidebar; tapping it closes the list. */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close conversations"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+        />
+      )}
+
       {sidebarOpen && (
         <ConversationSidebar
           sessions={sessions}
@@ -317,7 +333,7 @@ export default function AiAssistantPage() {
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
         />
 
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
           {turns.length === 0 && !isLoading ? (
             <EmptyState onPick={(text) => setInput(text)} />
           ) : (
