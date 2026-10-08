@@ -24,11 +24,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { PagerBtn } from '../PagerBtn'
+import { useContactMessages, type CommLogRow } from './use-contact-messages'
 
 const COMM_SUB_TABS = ['Logs', 'Secure messages', 'Client portals'] as const
 type CommSubTab = (typeof COMM_SUB_TABS)[number]
 
-const COMM_TYPE_FILTERS = ['All', 'Phone', 'Email'] as const
+const COMM_TYPE_FILTERS = ['All', 'Phone', 'Email', 'WhatsApp'] as const
 type CommTypeFilter = (typeof COMM_TYPE_FILTERS)[number]
 
 const COMM_DATE_PRESETS = [
@@ -78,13 +79,12 @@ const COMM_COLUMNS: CommColumn[] = [
  * pills, date range, preset dropdown, keyword search, columns popover,
  * filters popover; empty state + paginated footer.
  *
- * The phone/email log table doesn't exist on the backend yet, so the
- * body permanently lands on the empty state. All controls are wired to
- * local state so the surface previews correctly.
+ * Logs reads the contact's messages (the same records the firm-wide
+ * Messages view shows) and applies the toolbar's type, date and keyword
+ * filters client side. Secure messages and Client portals remain
+ * previews until those backends exist.
  */
 export function CommunicationsTab({ contactId }: { contactId: string }) {
-  void contactId // wired through for future log queries
-
   const [subTab, setSubTab] = useState<CommSubTab>('Logs')
   const [typeFilter, setTypeFilter] = useState<CommTypeFilter>('All')
   const [dateFrom, setDateFrom] = useState('')
@@ -96,7 +96,15 @@ export function CommunicationsTab({ contactId }: { contactId: string }) {
       new Set(COMM_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id)),
   )
   const [expandRows, setExpandRows] = useState(false)
-  void expandRows // reserved for the row-density toggle once logs render
+
+  const { rows, loading } = useContactMessages({
+    contactId,
+    typeFilter,
+    search,
+    dateFrom,
+    dateTo,
+    datePreset,
+  })
 
   return (
     <section
@@ -260,7 +268,13 @@ export function CommunicationsTab({ contactId }: { contactId: string }) {
         </Button>
       </div>
 
-      <NoLogsEmptyState />
+      {loading ? (
+        <LogsLoading />
+      ) : rows.length === 0 ? (
+        <NoLogsEmptyState />
+      ) : (
+        <LogsTable rows={rows} visibleCols={visibleCols} expanded={expandRows} />
+      )}
 
       <div
         className="flex items-center justify-between px-3 py-2.5 border-t"
@@ -283,7 +297,9 @@ export function CommunicationsTab({ contactId }: { contactId: string }) {
             className="ml-2 text-[12px] tabular-nums"
             style={{ color: 'var(--text-muted)' }}
           >
-            No results found
+            {rows.length === 0
+              ? 'No results found'
+              : `1–${rows.length} of ${rows.length}`}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -568,6 +584,155 @@ function CommColumnsPopover({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+const CHANNEL_META: Record<string, { label: string; tint: string }> = {
+  email: { label: 'Email', tint: '#2563EB' },
+  whatsapp: { label: 'WhatsApp', tint: '#25D366' },
+  sms: { label: 'SMS', tint: '#7C3AED' },
+  call: { label: 'Call', tint: '#2E7D4F' },
+  in_app: { label: 'In-app', tint: '#C9972B' },
+}
+
+function formatWhen(iso: string): string {
+  const d = new Date(iso)
+  if (!Number.isFinite(d.getTime())) return '—'
+  return d.toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+/**
+ * Log table. Columns follow the picker's visibility set, and the table
+ * carries a minimum width so it scrolls on a phone rather than crushing
+ * eight columns into 390px.
+ */
+function LogsTable({
+  rows,
+  visibleCols,
+  expanded,
+}: {
+  rows: CommLogRow[]
+  visibleCols: Set<CommColumnId>
+  expanded: boolean
+}) {
+  const cols = COMM_COLUMNS.filter((c) => visibleCols.has(c.id))
+
+  return (
+    <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+      <table className="w-full min-w-[720px] text-left text-[13px]">
+        <thead>
+          <tr
+            className="border-b"
+            style={{
+              background: 'var(--surface-sunken)',
+              borderColor: 'var(--border-soft)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {cols.map((c) => (
+              <th
+                key={c.id}
+                className="px-4 py-2.5 text-[11.5px] font-semibold whitespace-nowrap"
+              >
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            const meta = CHANNEL_META[r.channel] ?? {
+              label: r.channel,
+              tint: 'var(--text-muted)',
+            }
+            return (
+              <tr
+                key={r.id}
+                className="border-b last:border-b-0"
+                style={{ borderColor: 'var(--border-soft)' }}
+              >
+                {cols.map((c) => (
+                  <td
+                    key={c.id}
+                    className={`px-4 align-top ${expanded ? 'py-3.5' : 'py-2.5'}`}
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {c.id === 'type' ? (
+                      <span
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap"
+                        style={{ background: `${meta.tint}1A`, color: meta.tint }}
+                      >
+                        {meta.label}
+                      </span>
+                    ) : c.id === 'recorded_time' || c.id === 'date_time' ? (
+                      <span className="whitespace-nowrap tabular-nums">
+                        {formatWhen(r.createdAt)}
+                      </span>
+                    ) : c.id === 'subject_body_attachment' ? (
+                      <div className="min-w-[200px]">
+                        {r.subject && (
+                          <div className="font-medium">{r.subject}</div>
+                        )}
+                        {r.body && (
+                          <div
+                            className={expanded ? '' : 'truncate'}
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            {r.body}
+                          </div>
+                        )}
+                      </div>
+                    ) : c.id === 'from' ? (
+                      <span style={{ color: 'var(--text-muted)' }}>
+                        {r.direction === 'inbound'
+                          ? (r.clientName ?? 'Client')
+                          : 'Your firm'}
+                      </span>
+                    ) : c.id === 'to' ? (
+                      <span style={{ color: 'var(--text-muted)' }}>
+                        {r.direction === 'inbound'
+                          ? 'Your firm'
+                          : (r.clientName ?? 'Client')}
+                      </span>
+                    ) : c.id === 'notifications' ? (
+                      <span
+                        className="text-[11.5px] capitalize"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        {r.status ?? '—'}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)' }}>—</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function LogsLoading() {
+  return (
+    <div className="px-6 py-10">
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-10 w-full animate-pulse rounded-md"
+            style={{ background: 'var(--surface-sunken)' }}
+          />
+        ))}
+      </div>
     </div>
   )
 }
