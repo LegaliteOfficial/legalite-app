@@ -307,3 +307,57 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Document assistant ───────────────────────────────────────────────────
+   The floating "Ask" control on the documents page. The shine is a conic
+   gradient rotating inside a clipping box; the panel sits on top of it and
+   is inset by 1.5px, so the gradient is only visible as a highlight
+   travelling around the border.
+
+   Deliberately avoids negative z-index: a -1 pseudo-element and the base
+   ring ended up in the same paint layer, so whichever was declared last
+   covered the other. Positioning the content above the gradient instead is
+   unambiguous. */
+@keyframes ai-shine-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.ai-shine {
+  position: relative;
+  /* Calm base ring so the edge is never bare between shine passes. */
+  background: rgba(96, 165, 250, 0.3);
+  overflow: hidden;
+}
+
+.ai-shine::before {
+  content: '';
+  position: absolute;
+  /* Oversized so the rotating square always covers the rounded box. */
+  inset: -140%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(96, 165, 250, 0) 30deg,
+    rgba(59, 130, 246, 0.9) 60deg,
+    rgba(186, 230, 253, 1) 78deg,
+    rgba(59, 130, 246, 0.9) 96deg,
+    rgba(96, 165, 250, 0) 130deg,
+    transparent 360deg
+  );
+  animation: ai-shine-spin 4.5s linear infinite;
+}
+
+/* The panel surface rides above the gradient; the 1.5px padding on the
+   parent is the only place the gradient shows through. */
+.ai-shine > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-shine::before {
+    animation: none;
+  }
+}

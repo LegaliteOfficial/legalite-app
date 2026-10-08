@@ -20,6 +20,7 @@ import { EditorTab } from './_components/EditorTab'
 import { LibraryTab } from './_components/LibraryTab'
 import { TemplatesTab } from './_components/TemplatesTab'
 import { MyTemplates } from './_components/MyTemplates'
+import { DocumentAssistant } from '@/components/ai/DocumentAssistant'
 import { useDocumentsPageState } from './_hooks/use-documents-page-state'
 
 export default function DocumentsPage() {
@@ -125,6 +126,34 @@ export default function DocumentsPage() {
 
         <DeleteDialog />
       </div>
+
+      <DocumentAssistant
+        context={{
+          tab: TAB_LABELS[state.activeTab] ?? state.activeTab,
+          // Only the editor tab has a document open; elsewhere the
+          // assistant answers about what is listed instead.
+          documentTitle:
+            state.activeTab === 'editor' ? state.draftTitle : null,
+          documentHTML:
+            state.activeTab === 'editor' ? state.editorHTML : null,
+          visibleDocuments:
+            state.activeTab === 'drafts'
+              ? (state.drafts ?? []).map((d) => d.title)
+              : state.activeTab === 'library'
+                ? state.filteredLibrary.map((d) => d.title)
+                : state.activeTab === 'templates'
+                  ? state.filteredTemplates.map((t) => t.name)
+                  : [],
+        }}
+      />
     </div>
   )
+}
+
+/** Tab ids are terse; the assistant should say what the user sees. */
+const TAB_LABELS: Record<string, string> = {
+  templates: 'Templates',
+  drafts: 'Drafts',
+  library: 'Library',
+  editor: 'Editor',
 }
