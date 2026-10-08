@@ -24,7 +24,7 @@ export function FirmDashboard({
     <div className="space-y-6">
       <FirmOverview />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card padding="none" className="col-span-2 overflow-hidden">
           <div className="flex items-center justify-between px-6 pt-5 pb-3">
             <div className="flex items-center gap-2">

@@ -104,7 +104,7 @@ function AttentionRow({
 
   return (
     <li
-      className="group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[var(--surface-card-hover)]"
+      className="group flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 transition-colors hover:bg-[var(--surface-card-hover)] sm:flex-nowrap"
       style={{
         borderTop: first ? 'none' : '1px solid var(--border-soft)',
         opacity: busy ? 0.55 : snoozed ? 0.65 : 1,
@@ -132,9 +132,13 @@ function AttentionRow({
               .join(' · ')}
           </p>
         )}
+        {/* Phones: timing sits under the title instead of in a column. */}
+        <p className="mt-1 text-[12.5px] font-semibold sm:hidden" style={{ color: snoozed ? 'var(--text-muted)' : urgency.color }}>
+          {snoozed ? 'Reminder set' : duePhrase(item, now)}
+        </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex w-full shrink-0 items-center justify-end gap-3 sm:w-auto">
         <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           {item.completable && (
             <Button
@@ -203,7 +207,7 @@ function AttentionRow({
           </Link>
         </div>
 
-        <div className="w-[150px] text-right">
+        <div className="hidden w-[150px] text-right sm:block">
           {snoozed ? (
             <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
               Reminder set for {formatDueTime(new Date(item.snoozedUntil!).getTime(), false)}

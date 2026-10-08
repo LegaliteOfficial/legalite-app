@@ -326,7 +326,7 @@ export default function CommsPage() {
                 )
               })()}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Channel">
                   <Select value={form.channel} onValueChange={(v) => setForm((p) => ({ ...p, channel: v ?? '' }))}>
                     <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>

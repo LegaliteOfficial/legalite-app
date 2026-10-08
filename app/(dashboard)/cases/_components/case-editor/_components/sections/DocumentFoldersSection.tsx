@@ -44,7 +44,7 @@ export function DocumentFoldersSection({
         {form.document_folders.map((folder, idx) => (
           <div
             key={folder.id}
-            className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end"
+            className="grid grid-cols-1 gap-3 items-end sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
           >
             <div>
               {idx === 0 && <FieldLabel>Folder name</FieldLabel>}

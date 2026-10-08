@@ -145,7 +145,7 @@ export function FirmOverview() {
         </div>
 
         {expanded && (
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
             <div
               className="p-6 border-r"
               style={{ borderColor: 'var(--border-soft)' }}

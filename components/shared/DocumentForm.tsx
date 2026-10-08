@@ -108,7 +108,7 @@ export function DocumentForm() {
             )}
           </div>
           <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="client_id" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Client</Label>
                 <Select value={form.watch('client_id')} onValueChange={(v) => v && form.setValue('client_id', v)}>
@@ -133,7 +133,7 @@ export function DocumentForm() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="template_type" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Template Type</Label>
               <Input id="template_type" placeholder="e.g. Motion, Brief" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('template_type')} />
@@ -143,7 +143,7 @@ export function DocumentForm() {
               <Input id="court" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('court')} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="suit_number" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Suit Number</Label>
               <Input id="suit_number" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('suit_number')} />

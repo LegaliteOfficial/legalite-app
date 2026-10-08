@@ -32,7 +32,8 @@ export function BillingHistoryCard() {
           No invoices yet.
         </p>
       ) : (
-        <>
+        <div className="overflow-x-auto scrollbar-none">
+        <div className="min-w-[560px]">
           <div
             className="grid grid-cols-[110px_1fr_110px_90px_44px] gap-3 px-5 py-2.5 border-b text-[11px] font-bold uppercase tracking-wider"
             style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
@@ -87,7 +88,8 @@ export function BillingHistoryCard() {
               </li>
             ))}
           </ul>
-        </>
+        </div>
+        </div>
       )}
     </section>
   )

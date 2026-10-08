@@ -95,7 +95,7 @@ export function BillingSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <FieldLabel required>Currency</FieldLabel>
           <NativeSelect
@@ -122,7 +122,7 @@ export function BillingSection({
           {form.custom_billing_rates.map((rate, idx) => (
             <div
               key={rate.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,200px)_auto] gap-2 items-end"
+              className="grid grid-cols-1 gap-2 items-end sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,200px)_auto]"
             >
               <div>
                 {idx === 0 && (

@@ -782,7 +782,7 @@ function NewNoteDialog({
           </div>
 
           {/* File note to + IdentificationCard picker — split row. */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label
                 className="text-[12px] font-semibold mb-1.5 block"

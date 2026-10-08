@@ -654,7 +654,7 @@ function Header({
   const saveDisabled = submitting || !canSave
   return (
     <header
-      className="flex items-center justify-between gap-6 px-6 py-3.5 border-b shrink-0"
+      className="flex flex-col gap-2.5 px-4 py-3 border-b shrink-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 sm:py-3.5"
       style={{
         borderColor: 'var(--border-soft)',
         background: 'var(--surface-card)',
@@ -670,7 +670,7 @@ function Header({
       >
         {title}
       </h1>
-      <div className="flex items-center gap-2.5 shrink-0">
+      <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:gap-2.5">
         {/* Cancel — quietest of the three. Text link with X icon so
             users can scan it as "exit" rather than competing with the
             save actions. */}
@@ -694,7 +694,7 @@ function Header({
         {/* Visual divider between Cancel and the action cluster. */}
         <span
           aria-hidden
-          className="h-6 w-px"
+          className="hidden h-6 w-px sm:block"
           style={{ background: 'var(--border-soft)' }}
         />
 
@@ -718,7 +718,8 @@ function Header({
             e.currentTarget.style.background = 'var(--surface-card)'
           }}
         >
-          Save and create new case
+          <span className="sm:hidden">Save + new case</span>
+          <span className="hidden sm:inline">Save and create new case</span>
         </button>
 
         {/* Save contact — primary action. Gold fill, navy text for the
@@ -981,7 +982,7 @@ function ContactInfoSection({
       >
         {form.contact_type === 'person' ? (
           <>
-            <div className="grid grid-cols-[100px_1fr_1fr_1fr] gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-[100px_1fr_1fr_1fr] sm:gap-4">
               <div>
                 <FieldLabel>Prefix</FieldLabel>
                 <Input
@@ -1021,7 +1022,7 @@ function ContactInfoSection({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 gap-3 mt-4 sm:grid-cols-3 sm:gap-4">
               <div>
                 <FieldLabel>Company</FieldLabel>
                 <Input
@@ -1190,7 +1191,7 @@ function ChannelRow({
   typeOptions,
 }: ChannelRowProps) {
   return (
-    <div className="grid grid-cols-[2fr_140px_auto_auto] gap-3 items-end">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-end sm:grid-cols-[2fr_140px_auto_auto]">
       {children}
       <div>
         <FieldLabel>Type</FieldLabel>
@@ -1530,7 +1531,7 @@ function AddressSection({
                 : undefined
             }
           >
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
               <div>
                 <FieldLabel>Street</FieldLabel>
                 <Textarea
@@ -1560,7 +1561,7 @@ function AddressSection({
                 />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4 mt-3">
+            <div className="grid grid-cols-1 gap-3 mt-3 sm:grid-cols-3 sm:gap-4">
               <div>
                 <FieldLabel>Post code</FieldLabel>
                 <Input
@@ -1702,7 +1703,7 @@ function BillingPreferencesContent({
           {form.hourly_rates.map((rate) => (
             <div
               key={rate.id}
-              className="grid grid-cols-[2fr_180px_auto] gap-3 items-end"
+              className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-end sm:grid-cols-[2fr_180px_auto]"
             >
               <div>
                 <FieldLabel>Description</FieldLabel>
@@ -1753,7 +1754,7 @@ function BillingPreferencesContent({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <div>
           <FieldLabel>
             LEDES client ID{' '}

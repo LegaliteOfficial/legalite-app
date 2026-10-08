@@ -222,7 +222,7 @@ export function ClientForm() {
           </div>
 
           {/* Metadata: firm-defined ID + Active/Inactive status. */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="client_code" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Client ID</Label>
               <Input id="client_code" placeholder="e.g. LL-0001" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('client_code')} />
@@ -246,7 +246,7 @@ export function ClientForm() {
 
           {/* Contact: how to reach them. */}
           <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="email" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Email</Label>
                 <Input id="email" type="email" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('email')} />
@@ -259,7 +259,7 @@ export function ClientForm() {
           </div>
 
           {/* Personal: Ghana Card + Date of Birth. */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="ghana_card" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Ghana Card</Label>
               <Input id="ghana_card" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('ghana_card')} />
@@ -299,7 +299,7 @@ export function ClientForm() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="rate-kind" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
                   Rate type

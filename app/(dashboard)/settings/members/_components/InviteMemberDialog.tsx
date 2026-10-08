@@ -246,7 +246,7 @@ export function InviteMemberDialog({ open, onClose }: { open: boolean; onClose: 
           {/* Identity — first + last name, used to address them in
               the welcome email. Required so the greeting reads as a
               real welcome, not a templated form letter. */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label htmlFor="invite-first" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>
                 First name

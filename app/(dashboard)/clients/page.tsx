@@ -10,6 +10,8 @@ import { StartTimerDialog } from '@/components/shared/StartTimerDialog'
 import { useUIStore } from '@/stores/ui.store'
 
 import { ClientDetailsDialog } from './_components/ClientDetailsDialog'
+import { InitialsMark, MobileList, MobileListItem } from '@/components/shared/MobileList'
+import { StatusBadge } from '@/components/shared/StatusBadge'
 import { ClientsFilterBar } from './_components/ClientsFilterBar'
 import { ClientsTabNav } from './_components/ClientsTabNav'
 import { ClientsTable } from './_components/ClientsTable'
@@ -45,7 +47,7 @@ export default function ClientsPage() {
         {/* Title + primary action */}
         <div className="flex items-center justify-between">
           <h1
-            className="text-[26px] font-semibold leading-tight tracking-tight"
+            className="text-[22px] font-semibold leading-tight tracking-tight sm:text-[26px]"
             style={{
               color: 'var(--text-primary)',
               fontFamily: 'var(--font-heading, "Playfair Display", serif)',
@@ -60,7 +62,8 @@ export default function ClientsPage() {
             style={{ background: 'var(--gold)', color: 'var(--navy)' }}
           >
             <Plus size={14} strokeWidth={2.25} />
-            Add a client
+            <span className="sm:hidden">Add</span>
+            <span className="hidden sm:inline">Add a client</span>
           </Button>
         </div>
 
@@ -84,6 +87,27 @@ export default function ClientsPage() {
           toggleColumn={state.toggleColumn}
         />
 
+        {/* Phones: tappable client cards opening the profile. */}
+        {state.filteredAndSorted.length > 0 && (
+          <MobileList className="mt-4 md:hidden">
+            {state.filteredAndSorted.map((c) => {
+              const primary = state.primaryCaseByClient.get(c.id)
+              return (
+                <MobileListItem
+                  key={c.id}
+                  href={`/clients/${c.id}`}
+                  leading={<InitialsMark name={c.full_name} tone={c.contact_type === 'company' ? 'navy' : 'gold'} />}
+                  title={c.full_name}
+                  subtitle={c.phone || c.email || undefined}
+                  meta={primary ? primary.title : 'No matters yet'}
+                  trailing={<StatusBadge status={c.status} />}
+                />
+              )
+            })}
+          </MobileList>
+        )}
+
+        <div className={state.filteredAndSorted.length > 0 ? 'hidden md:block' : undefined}>
         <ClientsTable
           rows={state.filteredAndSorted}
           primaryCaseByClient={state.primaryCaseByClient}
@@ -119,6 +143,7 @@ export default function ClientsPage() {
           statusFilterCount={state.statusFilter.size}
           createdOnFilter={state.createdOnFilter}
         />
+        </div>
 
         <ClientForm />
         <DeleteDialog />

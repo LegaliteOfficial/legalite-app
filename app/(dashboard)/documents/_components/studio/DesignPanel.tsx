@@ -36,10 +36,12 @@ export function DesignPanel({
   design,
   onChange,
   firmName,
+  className,
 }: {
   design: DocumentDesign
   onChange: (next: DocumentDesign) => void
   firmName: string | null
+  className?: string
 }) {
   const set = <K extends keyof DocumentDesign>(key: K, value: DocumentDesign[K]) =>
     onChange({ ...design, [key]: value })
@@ -57,7 +59,7 @@ export function DesignPanel({
 
   return (
     <aside
-      className="w-[300px] shrink-0 overflow-y-auto border-l"
+      className={className ?? 'w-[300px] shrink-0 overflow-y-auto border-l'}
       style={{ borderColor: 'var(--border-soft)', background: 'var(--surface-card)' }}
       aria-label="Document design"
     >

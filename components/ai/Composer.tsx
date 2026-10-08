@@ -15,7 +15,7 @@ export function Composer({
 }) {
   return (
     <div
-      className="px-6 py-4 border-t"
+      className="px-3 py-3 sm:px-6 sm:py-4 border-t"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       <div className="max-w-3xl mx-auto flex items-end gap-2">

@@ -335,7 +335,7 @@ export default function BillingPage() {
               Issue bills, record payments, and track outstanding balances.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-2 overflow-x-auto px-4 scrollbar-none sm:mx-0 sm:w-auto sm:px-0">
             {/*
              * Catalog + Gear — firm-wide billing controls. Live
              * inline with Record payment / New bill because partners
@@ -429,7 +429,7 @@ export default function BillingPage() {
 
         {/* ─── Sub-nav ────────────────────────────────────────── */}
         <div
-          className="mt-5 flex items-center gap-1 border-b"
+          className="mt-5 flex items-center gap-1 overflow-x-auto border-b scrollbar-none"
           style={{ borderColor: 'var(--border-soft)' }}
         >
           {SUB_NAV.map((n) => {
@@ -439,7 +439,7 @@ export default function BillingPage() {
                 key={n.key}
                 type="button"
                 onClick={() => setSubNav(n.key)}
-                className="inline-flex items-center px-4 py-2.5 text-[13.5px] font-medium border-b-2 -mb-px cursor-pointer transition-colors"
+                className="inline-flex shrink-0 items-center whitespace-nowrap px-4 py-2.5 text-[13.5px] font-medium border-b-2 -mb-px cursor-pointer transition-colors"
                 style={{
                   color: active
                     ? 'var(--text-primary)'
@@ -583,7 +583,7 @@ function BillsSubView({
       {/* Status filter pills + columns / filters / search */}
       <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
         <div
-          className="inline-flex items-center gap-1 rounded-lg p-0.5"
+          className="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-lg p-0.5 scrollbar-none"
           style={{ background: 'var(--surface-sunken)' }}
         >
           {STATUS_TABS.map((t) => {
@@ -747,13 +747,13 @@ function BillsSubView({
 
       {/* Table */}
       <div
-        className="mt-4 rounded-xl border overflow-hidden"
+        className="mt-4 rounded-xl border overflow-x-auto"
         style={{
           borderColor: 'var(--border-soft)',
           background: 'var(--surface-card)',
         }}
       >
-        <table className="w-full text-left text-[13px]">
+        <table className="w-full min-w-[720px] text-left text-[13px] md:min-w-0">
           <thead>
             <tr
               className="border-b"
@@ -1296,14 +1296,14 @@ function OutstandingBalances({
       </div>
 
       <div
-        className="mt-3 rounded-xl border overflow-hidden"
+        className="mt-3 rounded-xl border overflow-x-auto"
         style={{
           borderColor: 'var(--border-soft)',
           background: 'var(--surface-card)',
         }}
       >
         {view === 'summary' ? (
-          <table className="w-full text-left text-[13px]">
+          <table className="w-full min-w-[720px] text-left text-[13px] md:min-w-0">
             <thead>
               <tr
                 className="border-b"
@@ -1371,7 +1371,7 @@ function OutstandingBalances({
             </tbody>
           </table>
         ) : (
-          <table className="w-full text-left text-[13px]">
+          <table className="w-full min-w-[720px] text-left text-[13px] md:min-w-0">
             <thead>
               <tr
                 className="border-b"
@@ -1598,7 +1598,7 @@ function ClientFundsView({
   return (
     <>
       <div
-        className="mt-4 grid grid-cols-2 gap-4"
+        className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"
       >
         <FundsSummaryCard
           label="Total trust holdings"
@@ -1615,13 +1615,13 @@ function ClientFundsView({
       </div>
 
       <div
-        className="mt-4 rounded-xl border overflow-hidden"
+        className="mt-4 rounded-xl border overflow-x-auto"
         style={{
           borderColor: 'var(--border-soft)',
           background: 'var(--surface-card)',
         }}
       >
-        <table className="w-full text-left text-[13px]">
+        <table className="w-full min-w-[720px] text-left text-[13px] md:min-w-0">
           <thead>
             <tr
               className="border-b"
@@ -1994,7 +1994,7 @@ function UnbilledTimeView({
           here, that's GHS X if you bill it today". The single
           biggest revenue leak in firms that don't time-track is
           unbilled work; this number is the wake-up call. */}
-      <div className="mt-4 grid grid-cols-3 gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
         <SummaryStat
           label="Unbilled entries"
           value={String(totals.entryCount)}
@@ -2017,13 +2017,13 @@ function UnbilledTimeView({
           individual entries underneath (always-on for now; can
           collapse later if rows grow). */}
       <div
-        className="mt-4 rounded-xl border overflow-hidden"
+        className="mt-4 rounded-xl border overflow-x-auto"
         style={{
           borderColor: 'var(--border-soft)',
           background: 'var(--surface-card)',
         }}
       >
-        <table className="w-full text-left text-[13px]">
+        <table className="w-full min-w-[720px] text-left text-[13px] md:min-w-0">
           <thead>
             <tr
               className="border-b"
@@ -2231,7 +2231,7 @@ function JobStatusView({ bills }: { bills: Bill[] }) {
   }, [bills])
 
   return (
-    <div className="mt-6 grid grid-cols-4 gap-4">
+    <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
       <JobStatusCard label="Draft" hint="Queued for editing" count={counts.Draft} dotColor="var(--text-secondary)" />
       <JobStatusCard label="Awaiting approval" hint="Waiting on partner sign-off" count={counts.PendingApproval} dotColor="var(--accent-today)" />
       <JobStatusCard label="Issued" hint="Sent to client, awaiting payment" count={counts.Sent} dotColor="#2563EB" />

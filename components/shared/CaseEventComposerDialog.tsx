@@ -202,7 +202,7 @@ export function CaseEventComposerDialog({
           </div>
 
           {/* Date + time */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="case-event-date" className="text-[13px]">
                 Date{' '}

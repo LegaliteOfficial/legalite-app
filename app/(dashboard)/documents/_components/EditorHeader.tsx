@@ -38,8 +38,8 @@ export function EditorHeader({
   onSave: () => void
 }) {
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-3 border-b px-5 py-3" style={{ borderColor: 'var(--border-soft)' }}>
-      <div className="flex min-w-[220px] flex-1 items-center gap-3">
+    <div className="flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3" style={{ borderColor: 'var(--border-soft)' }}>
+      <div className="flex min-w-0 basis-full items-center gap-3 sm:min-w-[220px] sm:basis-auto sm:flex-1">
         <FileText size={16} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
         <input
           value={draftTitle}
@@ -70,19 +70,19 @@ export function EditorHeader({
           style={designOpen ? { borderColor: 'var(--gold)', color: 'var(--gold-dark)' } : undefined}
         >
           <Palette size={14} />
-          Design
+          <span className="hidden sm:inline">Design</span>
         </Button>
         <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={pdfBusy !== null} onClick={onPreview}>
           {pdfBusy === 'preview' ? <Spinner size={13} /> : <Eye size={14} />}
-          Preview
+          <span className="hidden sm:inline">Preview</span>
         </Button>
         <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={pdfBusy !== null} onClick={onDownload}>
           {pdfBusy === 'download' ? <Spinner size={13} /> : <DownloadSimple size={14} />}
-          Download PDF
+          <span className="hidden sm:inline">Download PDF</span>
         </Button>
         <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={isSaving} onClick={onSaveAsTemplate}>
           <BookmarkSimple size={14} />
-          Save as template
+          <span className="hidden sm:inline">Save as template</span>
         </Button>
         <Button size="sm" className="h-8 rounded-lg" disabled={isSaving} onClick={onSave}>
           {isSaving ? <><Spinner size={13} /> Saving</> : isEditing ? 'Save changes' : 'Save draft'}

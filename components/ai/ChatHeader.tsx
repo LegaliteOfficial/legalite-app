@@ -11,7 +11,7 @@ export function ChatHeader({
 }) {
   return (
     <div
-      className="px-6 py-4 border-b"
+      className="px-4 py-3 sm:px-6 sm:py-4 border-b"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       <div className="flex items-center gap-3">
@@ -35,7 +35,7 @@ export function ChatHeader({
           LegaLite AI
         </h1>
         <span
-          className="text-[11px] font-medium px-2 py-0.5 rounded"
+          className="hidden text-[11px] font-medium px-2 py-0.5 rounded sm:inline"
           style={{ background: 'var(--surface-sunken)', color: 'var(--text-muted)' }}
         >
           Ghana legal Q&amp;A

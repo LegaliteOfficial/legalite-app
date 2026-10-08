@@ -25,7 +25,9 @@ export function RecoveryBinTable({
   onPurge: (item: DeletedItem) => void
 }) {
   return (
-    <>
+    // Phones: scroll sideways rather than crush the columns.
+    <div className="overflow-x-auto scrollbar-none">
+    <div className="min-w-[720px]">
       <div
         className="grid grid-cols-[1fr_110px_140px_110px_150px] gap-4 px-5 py-3 border-b text-[11px] font-bold uppercase tracking-wider"
         style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
@@ -120,6 +122,7 @@ export function RecoveryBinTable({
           )
         })}
       </ul>
-    </>
+    </div>
+    </div>
   )
 }

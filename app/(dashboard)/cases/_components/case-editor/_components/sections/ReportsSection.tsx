@@ -24,7 +24,7 @@ export function ReportsSection({
     return String(Math.min(100, Math.max(0, n)))
   }
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
       <AllocationField
         label="Originating lawyer allocation"
         value={form.originating_allocation}
