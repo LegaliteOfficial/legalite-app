@@ -7,6 +7,7 @@ import { useClient } from '@/hooks/use-clients'
 import { useUIStore } from '@/stores/ui.store'
 import { TYPE_BADGE_COMPANIES, TYPE_BADGE_PEOPLE } from '../_constants'
 import { HeaderBtn } from './HeaderBtn'
+import { ContactChannelActions } from '@/components/shared/ContactChannelActions'
 
 /**
  * Sticky page header: avatar + name on the left, Bill / Funds request
@@ -63,6 +64,12 @@ export function ContactPageHeader({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
+        <ContactChannelActions contact={contact} />
+        <span
+          className="mx-1 hidden h-5 w-px sm:block"
+          style={{ background: 'var(--border-soft)' }}
+          aria-hidden
+        />
         <HeaderBtn
           onClick={() =>
             toast.info(
