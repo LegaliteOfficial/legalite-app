@@ -93,12 +93,12 @@ export function PrioritiesPanel({ scope, userId }: PrioritiesPanelProps) {
   if (totalCount === 0) {
     return (
       <Card padding="none" className="overflow-hidden">
-        <div className="flex items-center gap-2.5 px-5 py-4">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-5 py-4">
           <Star size={15} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
           <CardTitle className="text-base shrink-0">
             {scope === 'user' ? 'Your priorities' : 'Firm-wide priorities'}
           </CardTitle>
-          <span className="text-[12.5px] truncate" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[12.5px] basis-full sm:basis-auto sm:truncate" style={{ color: 'var(--text-muted)' }}>
             {scope === 'user'
               ? '— star a case or client to flag it.'
               : '— nothing flagged across the firm yet.'}
@@ -238,7 +238,7 @@ function PriorityRow({ record }: { record: PriorityRecord }) {
       >
         <div className="min-w-0">
           <div
-            className="text-[13.5px] font-medium truncate"
+            className="text-[13.5px] font-medium line-clamp-2 sm:truncate"
             style={{ color: 'var(--text-primary)' }}
           >
             {record.label}

@@ -24,9 +24,9 @@ export function FirmDashboard({
     <div className="space-y-6">
       <FirmOverview />
 
-      <div className="grid grid-cols-3 gap-4">
-        <Card padding="none" className="col-span-2 overflow-hidden">
-          <div className="flex items-center justify-between px-6 pt-5 pb-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card padding="none" className="overflow-hidden lg:col-span-2">
+          <div className="flex items-center justify-between px-4 pt-5 pb-3 sm:px-6">
             <div className="flex items-center gap-2">
               <CalendarDots
                 size={15}
@@ -62,17 +62,17 @@ export function FirmDashboard({
                 {stats.upcoming_dates.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 transition-colors hover:bg-[var(--surface-overlay)]"
+                    className="flex items-start justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[var(--surface-overlay)] sm:items-center sm:gap-4"
                   >
                     <div className="min-w-0">
                       <div
-                        className="text-[13.5px] font-medium truncate"
+                        className="text-[13.5px] font-medium line-clamp-2 sm:truncate"
                         style={{ color: 'var(--text-primary)' }}
                       >
                         {item.title}
                       </div>
                       <div
-                        className="text-[12px] truncate"
+                        className="text-[12px] line-clamp-2 sm:truncate"
                         style={{ color: 'var(--text-muted)' }}
                       >
                         {item.client_name} · {item.court ?? 'No court'}

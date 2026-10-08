@@ -244,3 +244,13 @@
 
 /* Marketing AI search bar: flowing border glow + typing caret */
 @keyframes caret-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+/* Hide the scrollbar on horizontally scrollable strips (dashboard tab bars,
+   charts) while keeping them scrollable by touch and wheel. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

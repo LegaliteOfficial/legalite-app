@@ -12,7 +12,7 @@ export function TabBar({
 }) {
   return (
     <div
-      className="flex items-center gap-7 border-b"
+      className="flex items-center gap-7 border-b overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       {TABS.map((t) => {
@@ -22,7 +22,7 @@ export function TabBar({
             key={t.id}
             type="button"
             onClick={() => onChange(t.id)}
-            className="relative px-0.5 pb-3 text-[13.5px] font-medium transition-colors"
+            className="relative shrink-0 whitespace-nowrap px-0.5 pb-3 text-[13.5px] font-medium transition-colors"
             style={{
               color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
             }}
