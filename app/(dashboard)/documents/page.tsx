@@ -26,8 +26,11 @@ import { useDocumentsPageState } from './_hooks/use-documents-page-state'
 export default function DocumentsPage() {
   const state = useDocumentsPageState()
 
+  // Only the drafts and library tabs need the server. Templates are static
+  // and the editor is local, so a failed documents query must not blank the
+  // whole page — that is what made this look completely broken in
+  // production while it worked locally, where DEV_BYPASS hides the error.
   if (state.isLoading) return <PageSkeleton />
-  if (state.error) return <DocumentsErrorPanel />
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -77,7 +80,11 @@ export default function DocumentsPage() {
             />
           )}
 
-        {state.activeTab === 'drafts' && (
+        {state.activeTab === 'drafts' && state.error && (
+          <DocumentsErrorPanel what="drafts" />
+        )}
+
+        {state.activeTab === 'drafts' && !state.error && (
           <DraftsTab
             documents={state.drafts}
             documentCases={state.documentCases}
