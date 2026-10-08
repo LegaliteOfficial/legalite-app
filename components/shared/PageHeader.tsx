@@ -9,10 +9,10 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, actions, children }: PageHeaderProps) {
   return (
-    <div className="flex items-end justify-between gap-6 flex-wrap">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
       <div className="min-w-0">
         <h1
-          className="font-heading text-[28px] font-semibold leading-tight tracking-tight"
+          className="font-heading text-[22px] sm:text-[28px] font-semibold leading-tight tracking-tight"
           style={{ color: 'var(--text-primary)' }}
         >
           {title}
@@ -24,7 +24,7 @@ export function PageHeader({ title, description, actions, children }: PageHeader
         )}
         {children}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 sm:shrink-0">{actions}</div>}
     </div>
   )
 }

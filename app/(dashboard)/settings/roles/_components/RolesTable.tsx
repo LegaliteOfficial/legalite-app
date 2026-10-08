@@ -11,7 +11,9 @@ import { RowMenu } from './RowMenu'
  */
 export function RolesTable({ rows }: { rows: Role[] }) {
   return (
-    <>
+    // Phones: scroll sideways rather than crush the columns.
+    <div className="overflow-x-auto scrollbar-none">
+    <div className="min-w-[440px]">
       <div
         className="grid grid-cols-[1fr_120px_64px] gap-4 px-5 py-3 border-b text-[11px] font-bold uppercase tracking-wider"
         style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
@@ -71,6 +73,7 @@ export function RolesTable({ rows }: { rows: Role[] }) {
           </li>
         ))}
       </ul>
-    </>
+    </div>
+    </div>
   )
 }

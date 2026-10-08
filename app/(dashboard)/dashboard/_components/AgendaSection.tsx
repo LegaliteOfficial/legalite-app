@@ -108,7 +108,7 @@ export function AgendaSection() {
       {bothEmpty ? (
         <AllClear overdueCount={overdueCount} />
       ) : (
-        <div className="grid grid-cols-2 gap-4 mt-4 items-start">
+        <div className="grid grid-cols-1 gap-4 mt-4 items-start md:grid-cols-2">
           <TasksDueTodayCard
             today={today}
             overdueCount={overdueCount}

@@ -162,7 +162,7 @@ function DateTimeRow({
   onEndChange: (v: string) => void
 }) {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <NativeInput type="date" label="Date" value={date} onChange={onDateChange} />
       <NativeInput type="time" label="Start" value={startTime} onChange={onStartChange} />
       <NativeInput type="time" label="End" value={endTime} onChange={onEndChange} />

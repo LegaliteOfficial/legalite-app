@@ -40,7 +40,7 @@ export function TaskBoardView({
   }))
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-none md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0 [&>*]:w-[82%] [&>*]:shrink-0 [&>*]:snap-start md:[&>*]:w-auto">
       {lanes.map(({ status, tasks: laneTasks }) => {
         const meta = STATUS_META[status]
         return (

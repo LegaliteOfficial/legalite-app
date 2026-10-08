@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useIsPhone } from '@/hooks/use-media-query'
 import type { Deadline } from '@/hooks/use-deadlines'
 import {
   EVENT_TYPE_OPTIONS,
@@ -34,7 +35,11 @@ interface EventDialogState {
 export function useCalendarPageState(deadlines: Deadline[] | undefined) {
   // Anchor date — the focus is on the week that contains this date.
   const [anchor, setAnchor] = useState<Date>(() => new Date())
-  const [view, setView] = useState<ViewMode>('Week')
+  // Phones default to Day (a week of columns cannot fit); an explicit
+  // choice from the view menu always wins.
+  const isPhone = useIsPhone()
+  const [chosenView, setView] = useState<ViewMode | null>(null)
+  const view: ViewMode = chosenView ?? (isPhone ? 'Day' : 'Week')
 
   // Dialog handles both create AND edit. `editing` carries the existing
   // Deadline when we're editing it; `prefill` carries the day + times

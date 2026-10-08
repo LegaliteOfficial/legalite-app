@@ -56,7 +56,7 @@ export function PaginationFooter({
   const atEnd = page >= totalPages - 1
   return (
     <div
-      className="flex items-center justify-between px-3 py-2.5 border-t"
+      className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 border-t"
       style={{ borderColor: 'var(--border-soft)' }}
     >
       <div className="flex items-center gap-1">
@@ -82,7 +82,7 @@ export function PaginationFooter({
 
       <div className="flex items-center gap-3">
         <PageSizeDropdown value={pageSize} onChange={onPageSize} />
-        <ExpandRowsToggle expanded={expanded} onChange={onExpanded} />
+        <span className="hidden md:inline-flex"><ExpandRowsToggle expanded={expanded} onChange={onExpanded} /></span>
         <Button
           variant="outline"
           size="sm"

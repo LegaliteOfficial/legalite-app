@@ -87,7 +87,7 @@ export function ConversationSidebar({
 
   return (
     <div
-      className="w-[260px] shrink-0 border-r flex flex-col"
+      className="w-full sm:w-[260px] shrink-0 border-r flex flex-col"
       style={{
         borderColor: 'var(--border-soft)',
         background: 'var(--surface-sunken)',

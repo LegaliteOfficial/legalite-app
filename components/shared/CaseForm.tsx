@@ -123,7 +123,7 @@ export function CaseForm() {
               <Input id="title" className={inputCls} {...form.register('title')} />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field id="client_id" label="Client *" error={form.formState.errors.client_id?.message}>
                 <Select value={form.watch('client_id')} onValueChange={(v) => v && form.setValue('client_id', v)}>
                   <SelectTrigger className={inputCls}>
@@ -150,7 +150,7 @@ export function CaseForm() {
           </FormDrawerSection>
 
           <FormDrawerSection title="Court details">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field id="court" label="Court">
                 <Input id="court" className={inputCls} {...form.register('court')} />
               </Field>
@@ -158,7 +158,7 @@ export function CaseForm() {
                 <Input id="suit_number" className={inputCls} {...form.register('suit_number')} />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field id="opposing_party" label="Opposing party">
                 <Input id="opposing_party" className={inputCls} {...form.register('opposing_party')} />
               </Field>
@@ -169,7 +169,7 @@ export function CaseForm() {
           </FormDrawerSection>
 
           <FormDrawerSection title="Practice details">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field id="case_type" label="Practice area">
                 <Select
                   value={form.watch('case_type') ?? ''}
@@ -201,7 +201,7 @@ export function CaseForm() {
                 </Select>
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field id="assigned_lawyer" label="Responsible lawyer">
                 <Input id="assigned_lawyer" className={inputCls} {...form.register('assigned_lawyer')} />
               </Field>

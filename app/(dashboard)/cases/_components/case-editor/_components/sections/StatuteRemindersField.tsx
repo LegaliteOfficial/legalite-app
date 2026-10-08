@@ -53,7 +53,7 @@ export function StatuteRemindersField({
         {value.map((row) => (
           <div
             key={row.id}
-            className="grid grid-cols-[minmax(0,1fr)_70px_110px_auto_auto] gap-2 items-center"
+            className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 items-center sm:grid-cols-[minmax(0,1fr)_70px_110px_auto_auto]"
           >
             <NativeSelect
               value={row.recipient}

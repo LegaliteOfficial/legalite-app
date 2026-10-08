@@ -41,7 +41,13 @@ export function MobileNav() {
         className={`fixed inset-y-0 left-0 z-50 flex transition-transform duration-200 ease-out ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
-        style={{ ...APP_BACKGROUND, backgroundPosition: 'left center' }}
+        style={{
+          ...APP_BACKGROUND,
+          backgroundPosition: 'left center',
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          maxWidth: '86vw',
+        }}
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
@@ -51,7 +57,7 @@ export function MobileNav() {
           type="button"
           onClick={() => setMobileNav(false)}
           aria-label="Close navigation menu"
-          className="absolute top-4 right-3 inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors"
+          className="absolute top-[calc(env(safe-area-inset-top)+1rem)] right-3 inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors"
           style={{ color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.06)' }}
         >
           <X size={16} weight="bold" />

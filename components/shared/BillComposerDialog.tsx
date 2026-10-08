@@ -345,7 +345,7 @@ export function BillComposerDialog({
 
         <div className="grid gap-4 py-2">
           {/* Client + case */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="bill-client" className="text-[13px]">
                 Client{' '}
@@ -396,7 +396,7 @@ export function BillComposerDialog({
           </div>
 
           {/* Issue + due + terms */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="bill-issue" className="text-[13px]">
                 Issue date
@@ -577,7 +577,7 @@ export function BillComposerDialog({
           </div>
 
           {/* Tax + summary */}
-          <div className="grid grid-cols-2 gap-3 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
             <div className="grid gap-1.5">
               <Label htmlFor="bill-tax" className="text-[13px]">
                 Tax rate (%)

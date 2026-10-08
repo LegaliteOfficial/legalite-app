@@ -105,7 +105,7 @@ export function InvoiceForm() {
             )}
           </div>
           <div className="border-t pt-4" style={{ borderColor: 'rgba(13,27,42,0.06)' }}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="amount_ghs" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Amount (GHS) *</Label>
                 <Input id="amount_ghs" type="number" step="0.01" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('amount_ghs', { valueAsNumber: true })} />

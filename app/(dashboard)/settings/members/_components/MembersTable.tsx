@@ -42,7 +42,9 @@ export function MembersTable({
   }
 
   return (
-    <>
+    // Phones: scroll sideways rather than crush the columns.
+    <div className="overflow-x-auto scrollbar-none">
+    <div className="min-w-[640px]">
       <div className="grid grid-cols-[1.6fr_1fr_0.9fr_0.7fr_48px] gap-4 px-5 py-3 border-b text-[11px] font-bold uppercase tracking-wider" style={{ borderColor: 'var(--border)', color: '#6B7280' }}>
         <span>Member</span>
         <span>Title</span>
@@ -79,7 +81,8 @@ export function MembersTable({
         ))}
       </ul>
       <TableFooter count={members.length} noun="member" />
-    </>
+    </div>
+    </div>
   )
 }
 

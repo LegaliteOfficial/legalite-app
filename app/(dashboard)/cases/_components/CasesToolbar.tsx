@@ -33,8 +33,8 @@ export function CasesToolbar({
   onOpenFilters: () => void
 }) {
   return (
-    <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
-      <div className="flex items-center gap-1">
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 sm:mt-5">
+      <div className="-mx-1 flex max-w-full items-center gap-1 overflow-x-auto px-1 scrollbar-none">
         {STATUS_FILTERS.map((s) => {
           const isActive = statusFilter === s
           return (
@@ -71,8 +71,8 @@ export function CasesToolbar({
         })}
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="relative w-64">
+      <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
           <MagnifyingGlass
             size={13}
             strokeWidth={1.75}
@@ -91,7 +91,9 @@ export function CasesToolbar({
           />
         </div>
 
-        <ColumnsPicker visible={visibleColumns} onChange={onColumnsChange} />
+        <div className="hidden md:block">
+          <ColumnsPicker visible={visibleColumns} onChange={onColumnsChange} />
+        </div>
 
         <Button variant="outline" size="sm" onClick={onOpenFilters}>
           <Funnel size={13} strokeWidth={1.75} />

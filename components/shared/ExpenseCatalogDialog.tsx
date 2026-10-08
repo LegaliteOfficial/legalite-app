@@ -367,7 +367,7 @@ export function ExpenseCatalogDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
                   <Label htmlFor="ec-cat" className="text-[12.5px] font-semibold">
                     Category

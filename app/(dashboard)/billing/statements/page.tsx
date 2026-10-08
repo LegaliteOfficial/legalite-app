@@ -251,7 +251,7 @@ export default function StatementsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-[360px_1fr] gap-4 px-6 pb-12">
+      <div className="grid grid-cols-1 gap-4 px-6 pb-12 lg:grid-cols-[360px_1fr]">
         {/* ── Funnel column ───────────────────────────────────── */}
         <div
           className="rounded-xl border p-4 statements-chrome"

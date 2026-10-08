@@ -52,7 +52,7 @@ export function RelatedContactsSection({
           className="rounded-xl border p-4 space-y-3"
           style={{ borderColor: 'var(--border-soft)' }}
         >
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
+          <div className="grid grid-cols-1 gap-3 items-end sm:grid-cols-[1fr_1fr_auto]">
             <div>
               <FieldLabel>Contact</FieldLabel>
               <ContactCombobox

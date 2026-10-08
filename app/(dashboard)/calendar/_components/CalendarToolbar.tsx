@@ -45,7 +45,7 @@ export function CalendarToolbar({
 }) {
   return (
     <div
-      className="flex items-center justify-between gap-3 px-6 py-3 border-b shrink-0"
+      className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 sm:gap-3 sm:px-6 sm:py-3 border-b shrink-0"
       style={{
         borderColor: 'var(--border-soft)',
         background: 'var(--surface-card)',
@@ -72,7 +72,7 @@ export function CalendarToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-[12px] mr-1" style={{ color: 'var(--text-muted)' }}>
+        <span className="mr-1 hidden text-[12px] sm:inline" style={{ color: 'var(--text-muted)' }}>
           Synced
         </span>
 
