@@ -19,9 +19,9 @@ import {
   CalendarCheck,
 } from '@phosphor-icons/react'
 import { ROLE_LABEL, useClientAssignees } from '@/hooks/use-client-assignees'
-import { ManageAssigneesDialog } from '../../_components/ManageAssigneesDialog'
+import { ManageAssigneesDialog } from '@/app/(dashboard)/clients/_components/ManageAssigneesDialog'
 import { useHydrated } from '@/hooks/use-hydrated'
-import { initialsOf } from '../../_lib/initials'
+import { initialsOf } from '@/app/(dashboard)/clients/_lib/initials'
 import { useClientRecord } from '../_hooks/use-client-profile'
 import { SideCardSkeleton } from './skeletons'
 

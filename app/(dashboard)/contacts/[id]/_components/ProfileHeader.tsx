@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useUIStore } from '@/stores/ui.store'
 import { useClientProfileStore } from '@/stores/client-profile.store'
-import { initialsOf } from '../../_lib/initials'
+import { initialsOf } from '@/app/(dashboard)/clients/_lib/initials'
 import { useClientRecord } from '../_hooks/use-client-profile'
 import { NotFoundPanel } from './NotFoundPanel'
 import { ProfileHeaderSkeleton } from './skeletons'
@@ -57,7 +57,7 @@ export function ProfileHeader({ clientId }: { clientId: string }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium" style={{ color: 'var(--gold-dark)' }}>
-              {isCompany ? 'Corporate client' : 'Individual client'}
+              {`${isCompany ? 'Company' : 'Person'}${client.roles?.includes('Client') ? ' · Client' : ''}`}
             </span>
             <StatusBadge status={client.status} />
           </div>
