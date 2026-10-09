@@ -141,7 +141,7 @@ export function ClientDetailsDialog({
           </Button>
           {client && (
             <Link href={`/clients/${client.id}`} className={buttonVariants({ variant: 'outline' })}>
-              Open profile
+              Open client
               <ArrowUpRight size={13} strokeWidth={1.75} />
             </Link>
           )}

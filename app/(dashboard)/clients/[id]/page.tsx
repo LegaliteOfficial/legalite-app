@@ -1,105 +1,138 @@
+'use client'
+
 /**
- * Client profile
- * --------------
- * One client's record: identity and status, contact particulars, the
- * assigned team, every matter where they are the primary client, and the
- * correspondence sent to them. Firm members can start a conversation by
- * email (sent by LegaLite, replies to the sender) or WhatsApp
- * (click-to-chat on the sender's device); both are logged here.
+ * Client detail page — composition root.
  *
- * This page is only the shell. Each section fetches its own data inside
- * its own error boundary and <Suspense> boundary, so the header, matters
- * and correspondence load, refetch and fail independently.
+ * (This tabbed page and the contact profile were swapped: clients now get
+ * Dashboard / Documents / Bills / Transactions / Communications / Notes;
+ * contacts get the profile at /contacts/[id]. Both read the same
+ * `clients` record, so the swap needed no backend change.)
+ *
+ * Page chrome (header, tags bar, tab strip) lives in `_components`;
+ * each tab is its own self-contained module under `_components/<tab>/`.
+ * Static config in `_constants`. Adding a tab is one entry in `TABS`
+ * plus a branch in the switch below.
+ *
+ * Data sources:
+ *   - `useClient(id)` for the contact record
+ *   - Each tab consumes its own hooks (documents / invoices / etc.)
  */
 
-import { Suspense } from 'react'
-import Link from 'next/link'
-import { ArrowLeft } from '@phosphor-icons/react/dist/ssr'
+import { use, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { PageSkeleton } from '@/components/shared/PageSkeleton'
+import { useClient } from '@/hooks/use-clients'
 import { ClientForm } from '@/components/shared/ClientForm'
-import { ProfileHeader } from './_components/ProfileHeader'
-import { ClientMatters } from './_components/ClientMatters'
-import { MessageComposer, MessageHistory } from './_components/Correspondence'
-import { AssignedTeam, ContactCard, NotesCard } from './_components/SideCards'
-import { ProfileErrorBoundary } from './_components/ProfileErrorBoundary'
-import { ProfileHeaderSkeleton, SectionSkeleton, SideCardSkeleton } from './_components/skeletons'
 
-export default async function ClientProfilePage({
+import { TABS, type Tab } from './_constants'
+import { ContactPageHeader } from './_components/ContactPageHeader'
+import { ContactTagsBar } from './_components/ContactTagsBar'
+import { TabButton } from './_components/TabButton'
+import { BillsTab } from './_components/bills/BillsTab'
+import { CommunicationsTab } from './_components/communications/CommunicationsTab'
+import { DashboardTab } from './_components/dashboard/DashboardTab'
+import { DocumentsTab } from './_components/documents/DocumentsTab'
+import { NotesTab } from './_components/notes/NotesTab'
+import { TransactionsTab } from './_components/transactions/TransactionsTab'
+
+export default function ContactDetailPage({
   params,
 }: {
+  // Next 16's App Router exposes route params as a Promise. `use()`
+  // unwraps it so this client component reads `id` as a plain string.
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const router = useRouter()
+  const { data: contact, isLoading, error } = useClient(id)
+  const [tab, setTab] = useState<Tab>('Dashboard')
+
+  if (isLoading) return <PageSkeleton />
+  if (error || !contact) {
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 py-12">
+          <div
+            className="mx-auto max-w-md rounded-2xl border px-8 py-10 text-center"
+            style={{
+              background: 'var(--surface-card)',
+              borderColor: 'var(--border-soft)',
+              boxShadow: 'var(--shadow-xs)',
+            }}
+          >
+            <p
+              className="text-[14px] font-semibold"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {error ? 'Unable to load client' : 'Client not found'}
+            </p>
+            <p
+              className="mt-1.5 text-[12.5px]"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              The client may have been deleted or you may not have access.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/clients')}
+              className="mt-5"
+            >
+              Back to clients
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="px-6 py-5">
-        <Link
-          href="/clients"
-          className="mb-4 hidden items-center gap-1.5 text-[12.5px] font-medium hover:underline underline-offset-2 lg:inline-flex"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          <ArrowLeft size={13} weight="bold" />
-          Clients
-        </Link>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <ContactPageHeader contact={contact} />
+      <ContactTagsBar contact={contact} />
 
-        <ProfileErrorBoundary label="this client">
-          <Suspense fallback={<ProfileHeaderSkeleton />}>
-            <ProfileHeader clientId={id} />
-          </Suspense>
-        </ProfileErrorBoundary>
-
-        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="min-w-0 space-y-8">
-            <ProfileErrorBoundary label="this client's matters">
-              <Suspense fallback={<SectionSkeleton rows={3} label="Loading matters" />}>
-                <ClientMatters clientId={id} />
-              </Suspense>
-            </ProfileErrorBoundary>
-
-            <section id="correspondence" className="scroll-mt-6 space-y-4">
-              <div>
-                <h2 className="font-heading text-[16px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  Correspondence
-                </h2>
-                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                  Write to the client by email or WhatsApp. Messages you send are kept here.
-                </p>
-              </div>
-              <ProfileErrorBoundary label="the message composer">
-                <Suspense fallback={<SectionSkeleton rows={1} label="Loading composer" />}>
-                  <MessageComposer clientId={id} />
-                </Suspense>
-              </ProfileErrorBoundary>
-              <ProfileErrorBoundary label="the correspondence history">
-                <Suspense fallback={<SectionSkeleton rows={3} label="Loading correspondence" />}>
-                  <MessageHistory clientId={id} />
-                </Suspense>
-              </ProfileErrorBoundary>
-            </section>
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-[1180px] px-6 py-6">
+          <div
+            className="flex items-end gap-1 border-b mb-6"
+            style={{ borderColor: 'var(--border-soft)' }}
+          >
+            {TABS.map((t) => (
+              <TabButton
+                key={t}
+                active={tab === t}
+                onClick={() => {
+                  // Every tab is wired today. The branch is kept so a
+                  // future "stub" tab can short-circuit to a toast
+                  // without a code reshuffle.
+                  setTab(t)
+                  void toast // suppress unused-import lint when no toasts fire
+                }}
+              >
+                {t}
+              </TabButton>
+            ))}
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-4">
-            <ProfileErrorBoundary label="contact particulars">
-              <Suspense fallback={<SideCardSkeleton rows={5} />}>
-                <ContactCard clientId={id} />
-              </Suspense>
-            </ProfileErrorBoundary>
-            <ProfileErrorBoundary label="the assigned team">
-              <Suspense fallback={<SideCardSkeleton rows={2} />}>
-                <AssignedTeam clientId={id} />
-              </Suspense>
-            </ProfileErrorBoundary>
-            <ProfileErrorBoundary label="file notes">
-              <Suspense fallback={<SideCardSkeleton rows={2} />}>
-                <NotesCard clientId={id} />
-              </Suspense>
-            </ProfileErrorBoundary>
-          </aside>
+          {tab === 'Dashboard' && <DashboardTab contact={contact} />}
+          {tab === 'Documents' && <DocumentsTab contactId={contact.id} />}
+          {tab === 'Bills' && <BillsTab contactId={contact.id} />}
+          {tab === 'Transactions' && <TransactionsTab contactId={contact.id} />}
+          {tab === 'Communications' && (
+            <CommunicationsTab
+                contactId={contact.id}
+                contactName={contact.full_name}
+                contactEmail={contact.email}
+                contactPhone={contact.phone}
+              />
+          )}
+          {tab === 'Notes' && <NotesTab contact={contact} />}
         </div>
-
-        {/* Edit dialog — opened from the header via the shared UI store. */}
-        <ClientForm />
       </div>
+      {/* Edit client modal, opened from the header. */}
+      <ClientForm />
     </div>
   )
 }

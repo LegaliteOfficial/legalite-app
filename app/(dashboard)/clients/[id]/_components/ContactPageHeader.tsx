@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Buildings } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useClient } from '@/hooks/use-clients'
@@ -8,16 +9,20 @@ import { useUIStore } from '@/stores/ui.store'
 import { TYPE_BADGE_COMPANIES, TYPE_BADGE_PEOPLE } from '../_constants'
 import { HeaderBtn } from './HeaderBtn'
 import { ContactChannelActions } from '@/components/shared/ContactChannelActions'
+import { BillComposerDialog } from '@/components/shared/BillComposerDialog'
 
 /**
  * Sticky page header: avatar + name on the left, Bill / Funds request
- * / Edit-contact on the right. Edit is the primary gold pill.
+ * / Edit client on the right. Edit is the primary gold pill. Bill opens
+ * the bill composer drawer with this client pre-selected.
  */
 export function ContactPageHeader({
   contact,
 }: {
   contact: NonNullable<ReturnType<typeof useClient>['data']>
 }) {
+  const router = useRouter()
+  const [billOpen, setBillOpen] = useState(false)
   const { openModal } = useUIStore()
   const isCompany = contact.contact_type === 'company'
   const tint = isCompany ? TYPE_BADGE_COMPANIES : TYPE_BADGE_PEOPLE
@@ -59,7 +64,7 @@ export function ContactPageHeader({
             fontFamily: 'var(--font-heading, "Playfair Display", serif)',
           }}
         >
-          {contact.full_name || 'Untitled contact'}
+          {contact.full_name || 'Untitled client'}
         </h1>
       </div>
 
@@ -70,15 +75,7 @@ export function ContactPageHeader({
           style={{ background: 'var(--border-soft)' }}
           aria-hidden
         />
-        <HeaderBtn
-          onClick={() =>
-            toast.info(
-              `Bill for ${contact.full_name} — opens once the billing screen ships.`,
-            )
-          }
-        >
-          Bill
-        </HeaderBtn>
+        <HeaderBtn onClick={() => setBillOpen(true)}>Bill</HeaderBtn>
         <HeaderBtn
           onClick={() =>
             toast.info('Client funds requests ship with the trust module.')
@@ -103,9 +100,20 @@ export function ContactPageHeader({
             e.currentTarget.style.background = 'var(--gold)'
           }}
         >
-          Edit contact
+          Edit client
         </button>
       </div>
+
+      <BillComposerDialog
+        open={billOpen}
+        onOpenChange={setBillOpen}
+        defaultClientId={contact.id}
+        onCreated={(bill) =>
+          toast(`${bill.bill_number} is ready in Billing.`, {
+            action: { label: 'View draft', onClick: () => router.push('/billing?tab=Draft') },
+          })
+        }
+      />
     </header>
   )
 }
