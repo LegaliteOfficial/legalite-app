@@ -74,15 +74,6 @@ export function EditorShell({
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[820px] px-8 py-8 space-y-6">
             <Section
-              id="template"
-              label="Template information"
-              registerRef={registerSectionRef('template')}
-              description="Apply a saved template to prefill repetitive fields. Templates land with the Case templates screen."
-            >
-              <PendingSectionStub message="Template chooser coming next." />
-            </Section>
-
-            <Section
               id="clients"
               label="Clients"
               registerRef={registerSectionRef('clients')}
@@ -218,6 +209,15 @@ export function EditorShell({
               description="Run a conflict search across past cases and contacts before opening."
             >
               <ConflictChecksSection form={form} setField={setField} />
+            </Section>
+
+            <Section
+              id="template"
+              label="Template information"
+              registerRef={registerSectionRef('template')}
+              description="Apply a saved template to prefill repetitive fields. Templates land with the Case templates screen."
+            >
+              <PendingSectionStub message="Template chooser coming next." />
             </Section>
 
             <EditorFooterActions

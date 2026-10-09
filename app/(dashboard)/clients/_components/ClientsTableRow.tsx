@@ -8,21 +8,18 @@ import type { Case, Client } from '@/types'
 import type { ColumnKey } from '../_types'
 import { AssignedAvatars } from './AssignedAvatars'
 import { Avatar } from './Avatar'
-import { RowCheckbox } from './RowCheckbox'
 import { RowMenu } from './RowMenu'
 
 /**
  * One <tr> in the clients table. Visible columns are gated by the
- * `showColumn` predicate; the Client column + checkbox + actions are
- * always rendered.
+ * `showColumn` predicate; the Client column + actions are always
+ * rendered.
  */
 export function ClientsTableRow({
   client,
   primaryCase,
   assignees,
-  selected,
   showColumn,
-  onToggleSelected,
   onManageAssignees,
   onView,
   onEdit,
@@ -33,9 +30,7 @@ export function ClientsTableRow({
   client: Client
   primaryCase: Case | undefined
   assignees: Assignee[]
-  selected: boolean
   showColumn: (key: ColumnKey) => boolean
-  onToggleSelected: () => void
   onManageAssignees: () => void
   onView: () => void
   onEdit: () => void
@@ -55,9 +50,6 @@ export function ClientsTableRow({
         e.currentTarget.style.background = 'transparent'
       }}
     >
-      <td className="px-4 py-3">
-        <RowCheckbox checked={selected} onChange={onToggleSelected} />
-      </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-3 min-w-0">
           <Avatar name={client.full_name} />

@@ -28,7 +28,6 @@ import type { NewCaseForm, ReminderUnit, SectionDef } from './_types'
 // component in `EditorShell.tsx`.
 
 export const SECTIONS: SectionDef[] = [
-  { id: 'template', label: 'Template information', Icon: ClipboardText },
   { id: 'clients', label: 'Clients', Icon: Users },
   { id: 'case-details', label: 'Case details', Icon: Briefcase },
   { id: 'permissions', label: 'Case permissions', Icon: ShieldCheck },
@@ -41,6 +40,7 @@ export const SECTIONS: SectionDef[] = [
   { id: 'documents', label: 'Document folders', Icon: TreeStructure },
   { id: 'reports', label: 'Reports', Icon: FileText },
   { id: 'conflicts', label: 'Conflict checks', Icon: Buildings },
+  { id: 'template', label: 'Template information', Icon: ClipboardText },
 ]
 
 // ── Initial form ───────────────────────────────────────────────────────────

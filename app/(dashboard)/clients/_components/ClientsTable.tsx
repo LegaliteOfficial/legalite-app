@@ -11,7 +11,6 @@ import type {
   TabKey,
 } from '../_types'
 import { ClientsTableRow } from './ClientsTableRow'
-import { SelectAllCheckbox } from './SelectAllCheckbox'
 import { SortHeader } from './SortHeader'
 
 /**
@@ -22,15 +21,10 @@ export function ClientsTable({
   rows,
   primaryCaseByClient,
   assigneesByClient,
-  selected,
-  allSelected,
-  someSelected,
   showColumn,
   visibleColumns,
   sort,
   toggleSort,
-  toggleAll,
-  toggleOne,
   onManageRow,
   onViewRow,
   onEditRow,
@@ -47,15 +41,10 @@ export function ClientsTable({
   rows: Client[]
   primaryCaseByClient: Map<string, Case>
   assigneesByClient: Map<string, Assignee[]>
-  selected: Set<string>
-  allSelected: boolean
-  someSelected: boolean
   showColumn: (key: ColumnKey) => boolean
   visibleColumns: Set<ColumnKey>
   sort: SortState
   toggleSort: (key: SortKey) => void
-  toggleAll: () => void
-  toggleOne: (id: string) => void
   onManageRow: (client: Client) => void
   onViewRow: (client: Client) => void
   onEditRow: (client: Client) => void
@@ -68,9 +57,9 @@ export function ClientsTable({
   statusFilterCount: number
   createdOnFilter: CreatedOnKey
 }) {
-  // Always-visible columns are checkbox + Client + row menu (3); plus
-  // however many toggleable columns are currently visible.
-  const totalColSpan = 3 + visibleColumns.size
+  // Always-visible columns are Client + row menu (2); plus however many
+  // toggleable columns are currently visible.
+  const totalColSpan = 2 + visibleColumns.size
 
   const emptyMessage = search.trim()
     ? `No clients matching "${search}".`
@@ -103,13 +92,6 @@ export function ClientsTable({
               color: 'var(--text-secondary)',
             }}
           >
-            <th className="w-10 px-4 py-3">
-              <SelectAllCheckbox
-                checked={allSelected}
-                indeterminate={!allSelected && someSelected}
-                onChange={toggleAll}
-              />
-            </th>
             <th className="px-4 py-3 font-medium">Client</th>
             {showColumn('phone') && (
               <SortHeader
@@ -164,9 +146,7 @@ export function ClientsTable({
               client={c}
               primaryCase={primaryCaseByClient.get(c.id)}
               assignees={assigneesByClient.get(c.id) ?? []}
-              selected={selected.has(c.id)}
               showColumn={showColumn}
-              onToggleSelected={() => toggleOne(c.id)}
               onManageAssignees={() => onManageRow(c)}
               onView={() => onViewRow(c)}
               onEdit={() => onEditRow(c)}

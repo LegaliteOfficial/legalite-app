@@ -112,15 +112,10 @@ export default function ClientsPage() {
           rows={state.filteredAndSorted}
           primaryCaseByClient={state.primaryCaseByClient}
           assigneesByClient={state.assigneesByClient}
-          selected={state.selected}
-          allSelected={state.allSelected}
-          someSelected={state.someSelected}
           showColumn={state.showColumn}
           visibleColumns={state.visibleColumns}
           sort={state.sort}
           toggleSort={state.toggleSort}
-          toggleAll={state.toggleAll}
-          toggleOne={state.toggleOne}
           onManageRow={(c) => state.setManageClient(c)}
           onViewRow={(c) => state.setViewClient(c)}
           onEditRow={(c) => openModal({ type: 'editClient', id: c.id })}
