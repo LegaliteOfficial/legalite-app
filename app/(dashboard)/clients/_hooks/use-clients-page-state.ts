@@ -13,8 +13,8 @@
 import { useMemo, useState } from 'react'
 import { useCases } from '@/hooks/use-cases'
 import {
+  useAssignableMembers,
   useClientAssignees,
-  type Assignee,
 } from '@/hooks/use-client-assignees'
 import { useClients } from '@/hooks/use-clients'
 import type { Case, CaseStatus, Client } from '@/types'
@@ -33,39 +33,13 @@ import type {
 export function useClientsPageState() {
   const { data: clients, isLoading, error } = useClients()
   const { data: cases } = useCases()
-  const hookAssigneesByClient = useClientAssignees()
+  // Persisted client teams (clientAssignments query). Saving goes through
+  // the Manage assignees dialog, which refetches this on success.
+  const assigneesByClient = useClientAssignees()
 
-  // Local override applied on top of the hook's assignee map so the
-  // Manage assignees dialog can produce immediate, visible changes
-  // without a backend. When the integrations release ships, the hook
-  // itself owns the writes and this state goes away.
-  const [assigneeOverrides, setAssigneeOverrides] = useState<
-    Map<string, Assignee[]>
-  >(new Map())
-
-  const assigneesByClient = useMemo(() => {
-    if (assigneeOverrides.size === 0) return hookAssigneesByClient
-    const merged = new Map(hookAssigneesByClient)
-    for (const [clientId, list] of assigneeOverrides) {
-      merged.set(clientId, list)
-    }
-    return merged
-  }, [hookAssigneesByClient, assigneeOverrides])
-
-  // Flat, de-duped list of every firm member who appears on any
-  // client's roster. Drives the Assigned-to filter dropdown. Sorted
-  // alphabetically so the list is scannable.
-  const allFirmMembers = useMemo(() => {
-    const map = new Map<string, Assignee>()
-    for (const list of assigneesByClient.values()) {
-      for (const a of list) {
-        if (!map.has(a.id)) map.set(a.id, a)
-      }
-    }
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    )
-  }, [assigneesByClient])
+  // The firm's active roster — drives the Assigned-to filter, so anyone in
+  // the firm can be filtered on, not just members already on a client.
+  const { members: allFirmMembers } = useAssignableMembers()
 
   // Maps client_id → the case that "represents" the client in this
   // list view. Picks the most recently-updated open case if any;
@@ -119,6 +93,8 @@ export function useClientsPageState() {
   // Timer dialog keeps the id (not the whole client) so it re-reads
   // from useClients and stays correct if the record is edited mid-flow.
   const [timerClientId, setTimerClientId] = useState<string | null>(null)
+  // Client the bill composer drawer is open for ("Create bill" row action).
+  const [billClientId, setBillClientId] = useState<string | null>(null)
 
   const filteredAndSorted = useMemo(() => {
     let list = clients ?? []
@@ -220,17 +196,6 @@ export function useClientsPageState() {
     })
   const showColumn = (key: ColumnKey) => visibleColumns.has(key)
 
-  /**
-   * Replace the current assignee list for a client. Updates the local
-   * override map so the table re-renders immediately; once real
-   * persistence ships this becomes the success path of a mutation.
-   */
-  const setClientAssignees = (clientId: string, next: Assignee[]) =>
-    setAssigneeOverrides((prev) => {
-      const map = new Map(prev)
-      map.set(clientId, next)
-      return map
-    })
 
   return {
     // raw data
@@ -270,9 +235,10 @@ export function useClientsPageState() {
     manageClient,
     setManageClient,
     timerClientId,
+    billClientId,
+    setBillClientId,
     setTimerClientId,
     // mutations
-    setClientAssignees,
   }
 }
 

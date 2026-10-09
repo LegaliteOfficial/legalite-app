@@ -3,9 +3,10 @@
 /**
  * BillComposerDialog
  * ------------------
- * Create / edit a bill, with live-computed totals as the user
- * adds line items. Used from the /billing page's "New bill"
- * action and from each row's "View / Edit" action.
+ * Create / edit a bill, with live-computed totals as the user adds
+ * line items. A side drawer (full screen on phones) opened from the
+ * /billing page ("New bill", row "View / Edit") and from the clients
+ * table ("Create bill", with the client pre-selected).
  *
  * Fields:
  *   - Client          (required, select from useClients)
@@ -28,12 +29,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  FormDrawer,
+  FormDrawerBody,
+  FormDrawerFooter,
+  FormDrawerHeader,
+  FormDrawerSection,
+} from '@/components/ui/form-drawer'
 import { useClients } from '@/hooks/use-clients'
 import { useCases } from '@/hooks/use-cases'
 import {
@@ -51,6 +52,11 @@ interface BillComposerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   editing?: Bill | null
+  /** New bills only: start with this client (and case) selected. */
+  defaultClientId?: string | null
+  defaultCaseId?: string | null
+  /** New bills only: called with the created bill after saving. */
+  onCreated?: (bill: Bill) => void
 }
 
 /** Stable temp-id minter for line-items being typed in the form. */
@@ -85,6 +91,9 @@ export function BillComposerDialog({
   open,
   onOpenChange,
   editing,
+  defaultClientId,
+  defaultCaseId,
+  onCreated,
 }: BillComposerDialogProps) {
   const createBill = useBillsLocalStore((s) => s.createBill)
   const updateBill = useBillsLocalStore((s) => s.updateBill)
@@ -142,8 +151,8 @@ export function BillComposerDialog({
       setTaxRatePct(editing.tax_rate * 100)
       setNotes(editing.notes ?? '')
     } else {
-      setClientId('')
-      setCaseId('')
+      setClientId(defaultClientId ?? '')
+      setCaseId(defaultClientId ? (defaultCaseId ?? '') : '')
       setIssueDate(defaultIssueDate())
       setDueDate(defaultDueDate())
       setPaymentTerms('Net 14')
@@ -152,7 +161,7 @@ export function BillComposerDialog({
       setNotes('')
     }
     setSubmitting(false)
-  }, [open, editing])
+  }, [open, editing, defaultClientId, defaultCaseId])
 
   // When the picked client changes (or the resolved rate refreshes,
   // e.g. the partner edits the client's rate in another tab), pre-
@@ -315,6 +324,7 @@ export function BillComposerDialog({
       } else {
         const created = createBill(payload)
         toast.success(`Added ${created.bill_number} as Draft.`)
+        onCreated?.(created)
       }
       onOpenChange(false)
     } catch (err) {
@@ -328,359 +338,289 @@ export function BillComposerDialog({
     }
   }
 
+  const lockedClient = !editing && !!defaultClientId
+  const fieldClass =
+    'h-10 w-full rounded-lg border px-3 text-[13px] bg-[var(--surface-card)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-focus)] disabled:opacity-60'
+
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle
-            style={{
-              fontFamily:
-                'var(--font-heading, "Playfair Display", serif)',
-            }}
-          >
-            {editing ? `Edit ${editing.bill_number}` : 'New bill'}
-          </DialogTitle>
-        </DialogHeader>
+      <FormDrawer open={open} onOpenChange={onOpenChange} size="lg">
+        <FormDrawerHeader
+          title={editing ? `Edit ${editing.bill_number}` : 'New bill'}
+          description={
+            editing
+              ? `${pickedClient?.full_name ?? 'Client'} · ${editing.status}`
+              : lockedClient && pickedClient
+                ? `Billing ${pickedClient.full_name}. Saved as a draft you can send from Billing.`
+                : 'Saved as a draft you can review and send from Billing.'
+          }
+          onClose={() => onOpenChange(false)}
+        />
 
-        <div className="grid gap-4 py-2">
-          {/* Client + case */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="bill-client" className="text-[13px]">
-                Client{' '}
-                <span style={{ color: 'var(--accent-danger)' }}>*</span>
-              </Label>
-              <select
-                id="bill-client"
-                value={clientId}
-                onChange={(e) => {
-                  setClientId(e.target.value)
-                  setCaseId('')
-                }}
-                className="h-9 rounded-md border px-2 text-[13px] bg-transparent"
-                style={{ borderColor: 'var(--border-default)' }}
-              >
-                <option value="">Pick a client…</option>
-                {(clients ?? []).map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.full_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-1.5">
-              <Label
-                htmlFor="bill-case"
-                className="text-[13px] inline-flex items-center gap-1.5"
-              >
-                <Briefcase size={12} strokeWidth={1.75} />
-                Case (optional)
-              </Label>
-              <select
-                id="bill-case"
-                value={caseId}
-                onChange={(e) => setCaseId(e.target.value)}
-                disabled={!clientId}
-                className="h-9 rounded-md border px-2 text-[13px] bg-transparent"
-                style={{ borderColor: 'var(--border-default)' }}
-              >
-                <option value="">No linked case</option>
-                {filteredCases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Issue + due + terms */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="bill-issue" className="text-[13px]">
-                Issue date
-              </Label>
-              <Input
-                id="bill-issue"
-                type="date"
-                value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="bill-due" className="text-[13px]">
-                Due date
-              </Label>
-              <Input
-                id="bill-due"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="bill-terms" className="text-[13px]">
-                Payment terms
-              </Label>
-              <Input
-                id="bill-terms"
-                value={paymentTerms}
-                onChange={(e) => setPaymentTerms(e.target.value)}
-                placeholder="Net 14"
-              />
-            </div>
-          </div>
-
-          {/* Line items */}
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-[13px]">Line items</Label>
-              <div className="flex items-center gap-2">
-                {/*
-                 * Rate chip: surfaces which rate is being pre-filled
-                 * so the partner doesn't wonder why a line item lands
-                 * at GHS 1,200 vs the firm default 600. Hidden until a
-                 * client is picked because there's no rate to resolve
-                 * without one.
-                 *
-                 * Three states:
-                 *   - source 'client' : navy chip — this client has
-                 *                       their own rate set; the value
-                 *                       comes straight from the
-                 *                       client record.
-                 *   - source 'firm'   : muted chip — falling back to
-                 *                       the firm-wide default because
-                 *                       this client doesn't have one.
-                 *   - source 'none'   : warning chip — no rate set
-                 *                       anywhere, partner needs to
-                 *                       type one (or set one on the
-                 *                       client record).
-                 */}
-                {clientId && (
-                  <RateChip
-                    source={resolvedRate.source}
-                    rate={resolvedRate.rate}
-                    clientLabel={pickedClient?.full_name ?? ''}
-                  />
-                )}
-                {/* Catalog picker — opens the ExpensePickerDialog
-                    where the partner picks a reusable item + quantity.
-                    Sits left of "Add line item" because catalog items
-                    are the faster path for small disbursements. */}
-                <button
-                  type="button"
-                  onClick={() => setPickerOpen(true)}
-                  className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] font-medium cursor-pointer"
-                  style={{
-                    background: 'rgba(13,27,42,0.06)',
-                    color: 'var(--navy)',
+        <FormDrawerBody>
+          <FormDrawerSection title="Client">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label htmlFor="bill-client" className="text-[12.5px]">
+                  Client <span style={{ color: 'var(--accent-danger)' }}>*</span>
+                </Label>
+                <select
+                  id="bill-client"
+                  value={clientId}
+                  onChange={(e) => {
+                    setClientId(e.target.value)
+                    setCaseId('')
                   }}
-                  title="Add a small reusable expense (paper, photocopy, filing fee...)"
+                  disabled={lockedClient}
+                  className={fieldClass}
+                  style={{ borderColor: 'var(--border-default)' }}
                 >
-                  <BookBookmark size={11} strokeWidth={2.25} />
-                  Add expense
-                </button>
-                <button
-                  type="button"
-                  onClick={addItem}
-                  className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] font-medium cursor-pointer"
-                  style={{
-                    background: 'var(--accent-today-tint, rgba(201,151,43,0.12))',
-                    color: 'var(--accent-today)',
-                  }}
+                  <option value="">Pick a client…</option>
+                  {(clients ?? []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="bill-case" className="inline-flex items-center gap-1.5 text-[12.5px]">
+                  <Briefcase size={12} strokeWidth={1.75} />
+                  Case (optional)
+                </Label>
+                <select
+                  id="bill-case"
+                  value={caseId}
+                  onChange={(e) => setCaseId(e.target.value)}
+                  disabled={!clientId}
+                  className={fieldClass}
+                  style={{ borderColor: 'var(--border-default)' }}
                 >
-                  <Plus size={11} strokeWidth={2.25} />
-                  Add line item
-                </button>
+                  <option value="">No linked case</option>
+                  {filteredCases.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+            {clientId && (
+              <RateChip
+                source={resolvedRate.source}
+                rate={resolvedRate.rate}
+                clientLabel={pickedClient?.full_name ?? ''}
+              />
+            )}
+          </FormDrawerSection>
+
+          <FormDrawerSection title="Dates and terms">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="bill-issue" className="text-[12.5px]">Issue date</Label>
+                <Input id="bill-issue" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="h-10" />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="bill-due" className="text-[12.5px]">Due date</Label>
+                <Input id="bill-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-10" />
+              </div>
+              <div className="col-span-2 grid gap-1.5 sm:col-span-1">
+                <Label htmlFor="bill-terms" className="text-[12.5px]">Payment terms</Label>
+                <Input id="bill-terms" value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} placeholder="Net 14" className="h-10" />
+              </div>
+            </div>
+          </FormDrawerSection>
+
+          <FormDrawerSection title="Line items">
+            {/* Wide drawers: a compact table header. Phones: each item is a card. */}
             <div
-              className="rounded-md border overflow-hidden"
-              style={{ borderColor: 'var(--border-default)' }}
+              className="hidden grid-cols-[minmax(0,1fr)_72px_104px_100px_32px] gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider sm:grid"
+              style={{ color: 'var(--text-muted)' }}
             >
-              <div
-                className="grid border-b px-2 py-1.5 text-[11.5px] font-semibold uppercase tracking-wider"
-                style={{
-                  gridTemplateColumns: '1fr 80px 100px 100px 32px',
-                  background: 'var(--surface-sunken)',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                <span>Description</span>
-                <span className="text-right">Qty</span>
-                <span className="text-right">Rate (GHS)</span>
-                <span className="text-right">Amount</span>
-                <span />
-              </div>
-              {items.map((it) => (
-                <div
+              <span>Description</span>
+              <span className="text-right">Qty</span>
+              <span className="text-right">Rate (GHS)</span>
+              <span className="text-right">Amount</span>
+              <span />
+            </div>
+            <ul className="space-y-2">
+              {items.map((it, index) => (
+                <li
                   key={it.id}
-                  className="grid items-center px-2 py-1.5 border-b last:border-b-0"
-                  style={{
-                    gridTemplateColumns: '1fr 80px 100px 100px 32px',
-                    borderColor: 'var(--border-soft)',
-                  }}
+                  className="rounded-xl border p-3 sm:grid sm:grid-cols-[minmax(0,1fr)_72px_104px_100px_32px] sm:items-center sm:gap-2 sm:rounded-lg sm:p-1.5"
+                  style={{ borderColor: 'var(--border-default)', background: 'var(--surface-card)' }}
                 >
+                  <div className="mb-2 flex items-center justify-between sm:hidden">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                      Item {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Remove line item"
+                      onClick={() => removeItem(it.id)}
+                      disabled={items.length === 1}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md disabled:opacity-30"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      <Trash size={14} strokeWidth={1.75} />
+                    </button>
+                  </div>
                   <Input
                     value={it.description}
-                    onChange={(e) =>
-                      updateItem(it.id, { description: e.target.value })
-                    }
+                    onChange={(e) => updateItem(it.id, { description: e.target.value })}
                     placeholder="e.g. Discovery review (May)"
-                    className="h-8 text-[13px] border-none focus-visible:ring-0"
+                    aria-label="Description"
+                    className="h-10 text-[13px] sm:h-9 sm:border-transparent sm:shadow-none"
                   />
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    value={it.quantity}
-                    onChange={(e) =>
-                      updateItem(it.id, {
-                        quantity: Number(e.target.value) || 0,
-                      })
-                    }
-                    className="h-8 text-[13px] text-right border-none focus-visible:ring-0 tabular-nums"
-                  />
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    value={it.rate}
-                    onChange={(e) =>
-                      updateItem(it.id, {
-                        rate: Number(e.target.value) || 0,
-                      })
-                    }
-                    className="h-8 text-[13px] text-right border-none focus-visible:ring-0 tabular-nums"
-                  />
-                  <span
-                    className="text-[13px] text-right tabular-nums pr-1"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {(it.quantity * it.rate).toLocaleString('en-GH', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
+                  <div className="mt-2 grid grid-cols-3 gap-2 sm:contents">
+                    <label className="grid gap-1 sm:block">
+                      <span className="text-[11px] sm:hidden" style={{ color: 'var(--text-muted)' }}>Qty</span>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        value={it.quantity}
+                        onChange={(e) => updateItem(it.id, { quantity: Number(e.target.value) || 0 })}
+                        aria-label="Quantity"
+                        className="h-10 text-right text-[13px] tabular-nums sm:h-9"
+                      />
+                    </label>
+                    <label className="grid gap-1 sm:block">
+                      <span className="text-[11px] sm:hidden" style={{ color: 'var(--text-muted)' }}>Rate (GHS)</span>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        value={it.rate}
+                        onChange={(e) => updateItem(it.id, { rate: Number(e.target.value) || 0 })}
+                        aria-label="Rate in GHS"
+                        className="h-10 text-right text-[13px] tabular-nums sm:h-9"
+                      />
+                    </label>
+                    <div className="grid gap-1 sm:block">
+                      <span className="text-[11px] sm:hidden" style={{ color: 'var(--text-muted)' }}>Amount</span>
+                      <span className="flex h-10 items-center justify-end text-[13px] font-medium tabular-nums sm:h-9 sm:pr-1" style={{ color: 'var(--text-primary)' }}>
+                        {(it.quantity * it.rate).toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     aria-label="Remove line item"
                     onClick={() => removeItem(it.id)}
                     disabled={items.length === 1}
-                    className="inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer disabled:opacity-30"
+                    className="hidden h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-[var(--surface-sunken)] disabled:opacity-30 sm:inline-flex"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    <Trash size={12} strokeWidth={1.75} />
+                    <Trash size={13} strokeWidth={1.75} />
                   </button>
-                </div>
+                </li>
               ))}
-            </div>
-          </div>
-
-          {/* Tax + summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-            <div className="grid gap-1.5">
-              <Label htmlFor="bill-tax" className="text-[13px]">
-                Tax rate (%)
-              </Label>
-              <Input
-                id="bill-tax"
-                type="number"
-                inputMode="decimal"
-                value={taxRatePct}
-                onChange={(e) =>
-                  setTaxRatePct(Number(e.target.value) || 0)
-                }
-              />
-              <p
-                className="text-[11.5px]"
-                style={{ color: 'var(--text-muted)' }}
+            </ul>
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              <button
+                type="button"
+                onClick={addItem}
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-semibold sm:h-8"
+                style={{ background: 'var(--accent-today-tint, rgba(201,151,43,0.12))', color: 'var(--gold-dark)' }}
               >
-                Ghana VAT is 12.5%. Override per bill as needed.
-              </p>
+                <Plus size={13} strokeWidth={2.25} />
+                Add line item
+              </button>
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-semibold sm:h-8"
+                style={{ background: 'rgba(13,27,42,0.06)', color: 'var(--navy)' }}
+                title="Add a small reusable expense (paper, photocopy, filing fee...)"
+              >
+                <BookBookmark size={13} strokeWidth={2.25} />
+                Add expense
+              </button>
             </div>
+          </FormDrawerSection>
+
+          <FormDrawerSection title="Tax and notes">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[160px_minmax(0,1fr)]">
+              <div className="grid gap-1.5 self-start">
+                <Label htmlFor="bill-tax" className="text-[12.5px]">Tax rate (%)</Label>
+                <Input
+                  id="bill-tax"
+                  type="number"
+                  inputMode="decimal"
+                  value={taxRatePct}
+                  onChange={(e) => setTaxRatePct(Number(e.target.value) || 0)}
+                  className="h-10"
+                />
+                <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>Ghana VAT is 12.5%.</p>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="bill-notes" className="text-[12.5px]">Notes (optional)</Label>
+                <Textarea
+                  id="bill-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Payment instructions, references…"
+                  rows={3}
+                />
+              </div>
+            </div>
+          </FormDrawerSection>
+
+          <FormDrawerSection title="Summary">
             <div
-              className="rounded-md border p-3 text-[13px] tabular-nums"
-              style={{
-                borderColor: 'var(--border-default)',
-                background: 'var(--surface-sunken)',
-                color: 'var(--text-secondary)',
-              }}
+              className="rounded-xl border p-3 text-[13px] tabular-nums"
+              style={{ borderColor: 'var(--border-default)', background: 'var(--surface-sunken)', color: 'var(--text-secondary)' }}
             >
               <SummaryRow label="Subtotal" amount={totals.subtotal} />
-              <SummaryRow
-                label={`Tax (${taxRatePct.toFixed(2)}%)`}
-                amount={totals.tax_amount}
-              />
-              <div
-                className="border-t my-1"
-                style={{ borderColor: 'var(--border-soft)' }}
-              />
-              <SummaryRow
-                label="Total"
-                amount={totals.total}
-                emphasis
-              />
+              <SummaryRow label={`Tax (${taxRatePct.toFixed(2)}%)`} amount={totals.tax_amount} />
+              <div className="my-1 border-t" style={{ borderColor: 'var(--border-soft)' }} />
+              <SummaryRow label="Total" amount={totals.total} emphasis />
               {editing && editing.paid > 0 && (
                 <>
-                  <SummaryRow
-                    label="Paid"
-                    amount={editing.paid}
-                  />
-                  <SummaryRow
-                    label="Balance due"
-                    amount={totals.balance_due}
-                    emphasis
-                  />
+                  <SummaryRow label="Paid" amount={editing.paid} />
+                  <SummaryRow label="Balance due" amount={totals.balance_due} emphasis />
                 </>
               )}
             </div>
-          </div>
+          </FormDrawerSection>
+        </FormDrawerBody>
 
-          {/* Notes */}
-          <div className="grid gap-1.5">
-            <Label htmlFor="bill-notes" className="text-[13px]">
-              Notes (optional)
-            </Label>
-            <Textarea
-              id="bill-notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Internal notes, payment instructions, references…"
-              rows={3}
-            />
+        {/* Sticky footer: the running total stays visible while editing. */}
+        <FormDrawerFooter split>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              {editing && editing.paid > 0 ? 'Balance due' : 'Total'}
+            </p>
+            <p className="truncate text-[16px] font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+              GHS{' '}
+              {(editing && editing.paid > 0 ? totals.balance_due : totals.total).toLocaleString('en-GH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
           </div>
-        </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting} className="hidden sm:inline-flex">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!canSave || submitting}
+              className="h-10 sm:h-9"
+              style={{ background: 'var(--gold)', color: 'var(--navy)' }}
+            >
+              <Check size={13} strokeWidth={2} />
+              {editing ? 'Save changes' : 'Save as draft'}
+            </Button>
+          </div>
+        </FormDrawerFooter>
+      </FormDrawer>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!canSave || submitting}
-            style={{
-              background: 'var(--gold)',
-              color: 'var(--navy)',
-            }}
-          >
-            <Check size={13} strokeWidth={2} />
-            {editing ? 'Save changes' : 'Save as Draft'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    {/* Expense picker — separate dialog so opening it doesn't tear
-        down the composer's local state. Hands a chosen catalog item
-        + quantity back to addExpenseFromCatalog. */}
-    <ExpensePickerDialog
-      open={pickerOpen}
-      onOpenChange={setPickerOpen}
-      onAdd={addExpenseFromCatalog}
-    />
+      {/* Expense picker — separate dialog so opening it doesn't tear
+          down the composer's local state. Hands a chosen catalog item
+          + quantity back to addExpenseFromCatalog. */}
+      <ExpensePickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onAdd={addExpenseFromCatalog} />
     </>
   )
 }
@@ -719,7 +659,7 @@ function RateChip({
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[11.5px] font-medium tabular-nums"
+      className="inline-flex max-w-full items-start gap-1.5 rounded-md px-2 py-1.5 text-[11.5px] font-medium tabular-nums"
       style={{ background: palette.bg, color: palette.fg }}
       title={
         source === 'client'

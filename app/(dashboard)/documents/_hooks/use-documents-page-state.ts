@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
   useCreateDocument,
@@ -274,6 +274,27 @@ export function useDocumentsPageState() {
       suitNumber: doc.suit_number ?? '',
     })
   }, [loadIntoStudio])
+
+  // Deep link: /documents?open=<id> (e.g. "Open in editor" on a case)
+  // opens that draft in the studio once the documents have loaded. Read
+  // from location rather than useSearchParams so the page needs no
+  // Suspense boundary; handled once per visit.
+  const deepLinkHandled = useRef(false)
+  useEffect(() => {
+    if (deepLinkHandled.current || !documents) return
+    const params = new URLSearchParams(window.location.search)
+    const id = params.get('open')
+    if (!id) return
+    deepLinkHandled.current = true
+    const doc = documents.find((d) => d.id === id)
+    // One-time sync from the URL (an external source), not derived state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (doc && !doc.file_url) openDraftInEditor(doc)
+    else toast.error('That document could not be opened in the editor.')
+    params.delete('open')
+    const rest = params.toString()
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''))
+  }, [documents, openDraftInEditor])
 
   const deleteDraft = useCallback(async (id: string, title: string | null | undefined) => {
     if (!confirm(`Delete "${title || 'this draft'}"? This cannot be undone.`)) return

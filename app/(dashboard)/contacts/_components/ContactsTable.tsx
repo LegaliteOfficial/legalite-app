@@ -12,28 +12,18 @@ export function ContactsTable({
   rows,
   expanded,
   orderedColumns,
-  selected,
-  allOnPageSelected,
-  onToggleSelectAll,
-  onToggleRow,
   sortBy,
   sortDir,
   onSort,
   onEditRow,
-  onBillRow,
 }: {
   rows: ContactRow[]
   expanded: boolean
   orderedColumns: ColumnDef[]
-  selected: Set<string>
-  allOnPageSelected: boolean
-  onToggleSelectAll: () => void
-  onToggleRow: (id: string) => void
   sortBy: ColumnId | null
   sortDir: SortDir
   onSort: (id: ColumnId) => void
   onEditRow: (row: ContactRow) => void
-  onBillRow: (row: ContactRow) => void
 }) {
   return (
     <div className="overflow-auto flex-1 min-h-0">
@@ -43,23 +33,6 @@ export function ContactsTable({
           style={{ background: 'var(--surface-sunken)' }}
         >
           <tr>
-            <th
-              className="px-3 py-2.5 text-left"
-              style={{
-                color: 'var(--text-muted)',
-                minWidth: 44,
-                width: 44,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={allOnPageSelected}
-                onChange={onToggleSelectAll}
-                aria-label="Select all rows"
-                className="cursor-pointer"
-                style={{ accentColor: 'var(--gold)' }}
-              />
-            </th>
             <th
               className="px-3 py-2.5 text-[11.5px] font-semibold whitespace-nowrap"
               style={{
@@ -97,11 +70,8 @@ export function ContactsTable({
               key={row.id}
               row={row}
               expanded={expanded}
-              selected={selected.has(row.id)}
               orderedColumns={orderedColumns}
-              onToggleSelected={() => onToggleRow(row.id)}
               onEdit={() => onEditRow(row)}
-              onBill={() => onBillRow(row)}
             />
           ))}
         </tbody>
