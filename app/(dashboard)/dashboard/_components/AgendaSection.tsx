@@ -87,6 +87,7 @@ export function AgendaSection() {
     const now = Date.now()
     return (events ?? [])
       .filter((e) => {
+        if (e.status === 'cancelled') return false
         const end = new Date(e.end_time || e.start_time).getTime()
         return Number.isFinite(end) && end >= now
       })

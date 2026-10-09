@@ -25,7 +25,12 @@ import { useCalendarPageState } from './_hooks/use-calendar-page-state'
 export default function CalendarPage() {
   const { data: events } = useCalendarEvents()
   const router = useRouter()
-  const deadlines = useMemo(() => events?.map(eventToDeadline), [events])
+  // Cancelled events come off the grid — attendees were emailed when it
+  // happened, and the event stays in the database for its history.
+  const deadlines = useMemo(
+    () => events?.filter((e) => e.status !== 'cancelled').map(eventToDeadline),
+    [events],
+  )
   const state = useCalendarPageState(deadlines)
 
   return (

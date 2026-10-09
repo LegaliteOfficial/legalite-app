@@ -66,6 +66,7 @@ type Documents = {
     "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CreateCalendarEventDocument,
     "\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.UpdateCalendarEventDocument,
     "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n": typeof types.DeleteCalendarEventDocument,
+    "\n  mutation CancelCalendarEvent($input: CancelCalendarEventInput!) {\n    cancelCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CancelCalendarEventDocument,
     "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.RespondToEventDocument,
     "\n  query PendingDueEvents($limit: Int) {\n    pendingDueEvents(limit: $limit) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.PendingDueEventsDocument,
     "\n  query EventHistory($event_id: ID!) {\n    eventHistory(event_id: $event_id) {\n      ...EventHistoryEntryFields\n    }\n  }\n": typeof types.EventHistoryDocument,
@@ -216,6 +217,7 @@ const documents: Documents = {
     "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.CreateCalendarEventDocument,
     "\n  mutation UpdateCalendarEvent($id: ID!, $input: UpdateCalendarEventInput!) {\n    updateCalendarEvent(id: $id, input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.UpdateCalendarEventDocument,
     "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n": types.DeleteCalendarEventDocument,
+    "\n  mutation CancelCalendarEvent($input: CancelCalendarEventInput!) {\n    cancelCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.CancelCalendarEventDocument,
     "\n  mutation RespondToEvent($input: RespondToEventInput!) {\n    respondToEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.RespondToEventDocument,
     "\n  query PendingDueEvents($limit: Int) {\n    pendingDueEvents(limit: $limit) {\n      ...CalendarEventFields\n    }\n  }\n": types.PendingDueEventsDocument,
     "\n  query EventHistory($event_id: ID!) {\n    eventHistory(event_id: $event_id) {\n      ...EventHistoryEntryFields\n    }\n  }\n": types.EventHistoryDocument,
@@ -536,6 +538,10 @@ export function graphql(source: "\n  mutation UpdateCalendarEvent($id: ID!, $inp
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCalendarEvent($id: ID!) {\n    deleteCalendarEvent(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CancelCalendarEvent($input: CancelCalendarEventInput!) {\n    cancelCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"): (typeof documents)["\n  mutation CancelCalendarEvent($input: CancelCalendarEventInput!) {\n    cancelCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

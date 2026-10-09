@@ -43,6 +43,20 @@ export const DeleteCalendarEventMutationDoc = graphql(/* GraphQL */ `
   }
 `)
 
+/**
+ * Cancels an upcoming event and emails every other attendee. Organiser or
+ * firm owner/admin only (enforced server-side). Distinct from
+ * CancelEventOccurrence, which records after the fact that a past event
+ * didn't take place.
+ */
+export const CancelCalendarEventMutationDoc = graphql(/* GraphQL */ `
+  mutation CancelCalendarEvent($input: CancelCalendarEventInput!) {
+    cancelCalendarEvent(input: $input) {
+      ...CalendarEventFields
+    }
+  }
+`)
+
 export const RespondToEventMutationDoc = graphql(/* GraphQL */ `
   mutation RespondToEvent($input: RespondToEventInput!) {
     respondToEvent(input: $input) {
