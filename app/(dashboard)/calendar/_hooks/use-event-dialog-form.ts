@@ -67,6 +67,7 @@ export function useEventDialogForm({
   const { data: clients } = useClients()
   const { data: cases } = useCases()
   const currentUserId = useAuthStore((s) => s.user?.id)
+  const firmRole = useAuthStore((s) => s.activeMembership?.firm_role)
 
   // In edit mode, pull the full event (attendees + reminders) to prefill from.
   const { data: fullEvent } = useCalendarEvent(editing?.id)
@@ -290,6 +291,9 @@ export function useEventDialogForm({
 
   return {
     mode,
+    /** The stored event in edit mode (organiser, status, attendees…). */
+    event: fullEvent,
+    viewer: { userId: currentUserId, firmRole, memberId: selfParticipant?.id },
     fields: {
       title, setTitle,
       date, setDate,

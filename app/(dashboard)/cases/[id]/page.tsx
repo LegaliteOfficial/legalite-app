@@ -81,7 +81,7 @@ export default function CaseDetailPage({
   const { data: documents } = useDocuments()
   const { data: calendarEvents, refetch: refetchDeadlines } = useCalendarEvents()
   const deadlines = useMemo(
-    () => calendarEvents?.map(eventToDeadline),
+    () => calendarEvents?.filter((e) => e.status !== 'cancelled').map(eventToDeadline),
     [calendarEvents],
   )
   const updateMutation = useUpdateCase()

@@ -1,6 +1,7 @@
 'use client'
 
-import { Bell, Briefcase, CaretDown, Plus, Users } from '@phosphor-icons/react'
+import { useState } from 'react'
+import { Bell, Briefcase, CaretDown, Plus, Prohibit, Users } from '@phosphor-icons/react'
 import {
   Dialog,
   DialogContent,
@@ -13,8 +14,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import type { Deadline } from '@/hooks/use-deadlines'
 import { useCases } from '@/hooks/use-cases'
+import { canCancelEvent } from '@/hooks/use-calendar'
 import type { SlotPrefill } from '../_constants'
 import { useEventDialogForm } from '../_hooks/use-event-dialog-form'
+import { CancelEventDialog } from './CancelEventDialog'
 import { ParticipantsPicker } from './ParticipantsPicker'
 import { ReminderRow } from './ReminderRow'
 
@@ -24,7 +27,8 @@ import { ReminderRow } from './ReminderRow'
  * shell that wires those into inputs.
  *
  *   - `editing != null`  → loads that Deadline's values, swaps the
- *     header, surfaces a Delete button.
+ *     header, surfaces Delete — and Cancel event (which emails the other
+ *     participants) for the organiser or a firm owner/admin.
  *   - `editing == null && prefill != null` → fresh event from a slot
  *     click, prefilled date + times.
  *   - both null → defaults to today + next round hour.
@@ -41,7 +45,8 @@ export function EventDialog({
   editing: Deadline | null
 }) {
   const { data: cases } = useCases()
-  const { mode, fields, state, actions } = useEventDialogForm({
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const { mode, event, viewer, fields, state, actions } = useEventDialogForm({
     open,
     prefill,
     editing,
@@ -93,8 +98,22 @@ export function EventDialog({
           onCancel={() => onOpenChange(false)}
           onSave={actions.handleSave}
           onDelete={actions.handleDelete}
+          onCancelEvent={
+            mode === 'edit' && event && canCancelEvent(event, viewer.userId, viewer.firmRole)
+              ? () => setCancelOpen(true)
+              : undefined
+          }
         />
       </DialogContent>
+      {event && (
+        <CancelEventDialog
+          open={cancelOpen}
+          onOpenChange={setCancelOpen}
+          event={event}
+          selfMemberId={viewer.memberId}
+          onCancelled={() => onOpenChange(false)}
+        />
+      )}
     </Dialog>
   )
 }
@@ -328,12 +347,15 @@ function EventDialogFooter({
   onCancel,
   onSave,
   onDelete,
+  onCancelEvent,
 }: {
   mode: 'create' | 'edit'
   state: { submitting: boolean; deleting: boolean; canSave: boolean }
   onCancel: () => void
   onSave: () => void
   onDelete: () => void
+  /** Present only when the viewer may cancel this (still upcoming) event. */
+  onCancelEvent?: () => void
 }) {
   return (
     <DialogFooter
@@ -379,6 +401,21 @@ function EventDialogFooter({
         </button>
       </div>
       {mode === 'edit' && (
+        <div className="flex items-center gap-1">
+        {onCancelEvent && (
+          <button
+            type="button"
+            onClick={onCancelEvent}
+            disabled={state.submitting || state.deleting}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12.5px] font-medium cursor-pointer transition-colors disabled:opacity-50"
+            style={{ color: '#C0392B', background: 'transparent' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(192,57,43,0.08)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+          >
+            <Prohibit size={13} strokeWidth={1.75} />
+            Cancel event
+          </button>
+        )}
         <button
           type="button"
           onClick={onDelete}
@@ -390,6 +427,7 @@ function EventDialogFooter({
         >
           {state.deleting ? 'Deleting…' : 'Delete event'}
         </button>
+        </div>
       )}
     </DialogFooter>
   )

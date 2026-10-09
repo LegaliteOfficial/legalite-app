@@ -5,6 +5,7 @@ import {
   CreateCalendarEventMutationDoc,
   UpdateCalendarEventMutationDoc,
   DeleteCalendarEventMutationDoc,
+  CancelCalendarEventMutationDoc,
   RespondToEventMutationDoc,
 } from '@/lib/graphql/calendar'
 import type {
@@ -109,6 +110,37 @@ export function useDeleteCalendarEvent() {
       await mutate({ variables: { id } })
     },
   }
+}
+
+/** Cancels an upcoming event; the server emails every other attendee. */
+export function useCancelCalendarEvent() {
+  const [mutate, state] = useMutation(CancelCalendarEventMutationDoc, {
+    refetchQueries: [CalendarEventsQueryDoc],
+  })
+  return {
+    isPending: state.loading,
+    mutateAsync: async (event_id: string, reason?: string) => {
+      const res = await mutate({
+        variables: { input: { event_id, reason: reason?.trim() || undefined } },
+      })
+      return res.data?.cancelCalendarEvent
+    },
+  }
+}
+
+/**
+ * Whether the signed-in user may cancel this event: its organiser or a firm
+ * owner/admin (the server enforces the same rule), and only while it's still
+ * upcoming or in progress and not already cancelled or resolved.
+ */
+export function canCancelEvent(
+  event: Pick<CalendarEvent, 'created_by' | 'status' | 'end_time' | 'outcome_status'>,
+  userId: string | undefined,
+  firmRole: string | undefined,
+): boolean {
+  if (event.status === 'cancelled' || event.outcome_status) return false
+  if (new Date(event.end_time).getTime() < Date.now()) return false
+  return event.created_by === userId || firmRole === 'owner' || firmRole === 'admin'
 }
 
 /** RSVP to an event you've been invited to. */
