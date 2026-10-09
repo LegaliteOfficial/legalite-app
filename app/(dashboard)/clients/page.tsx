@@ -1,12 +1,13 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { Plus } from '@phosphor-icons/react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { ClientForm } from '@/components/shared/ClientForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { StartTimerDialog } from '@/components/shared/StartTimerDialog'
+import { BillComposerDialog } from '@/components/shared/BillComposerDialog'
+import { toast } from 'sonner'
 import { useUIStore } from '@/stores/ui.store'
 
 import { ClientDetailsDialog } from './_components/ClientDetailsDialog'
@@ -124,6 +125,7 @@ export default function ClientsPage() {
           // the client_ids array.
           onAssignCaseRow={(c) => router.push(`/cases/new?client=${c.id}`)}
           onStartTimerRow={(c) => state.setTimerClientId(c.id)}
+          onCreateBillRow={(c) => state.setBillClientId(c.id)}
           onDeleteRow={(c) =>
             openModal({
               type: 'confirmDelete',
@@ -150,6 +152,25 @@ export default function ClientsPage() {
          * live in TimeTrackerBoot at the dashboard layout level so
          * they survive navigation.
          */}
+        {/* Bill composer drawer — "Create bill" on a client row. The
+            client and their main case are pre-selected; the draft lands
+            on the Billing page. */}
+        <BillComposerDialog
+          open={state.billClientId !== null}
+          onOpenChange={(o) => !o && state.setBillClientId(null)}
+          defaultClientId={state.billClientId}
+          defaultCaseId={
+            state.billClientId
+              ? state.primaryCaseByClient.get(state.billClientId)?.id ?? null
+              : null
+          }
+          onCreated={(bill) =>
+            toast(`${bill.bill_number} is ready in Billing.`, {
+              action: { label: 'View draft', onClick: () => router.push('/billing?tab=Draft') },
+            })
+          }
+        />
+
         <StartTimerDialog
           open={state.timerClientId !== null}
           onOpenChange={(o) => !o && state.setTimerClientId(null)}
@@ -180,22 +201,12 @@ export default function ClientsPage() {
 
         <ManageAssigneesDialog
           client={state.manageClient}
-          allMembers={state.allFirmMembers}
           current={
             state.manageClient
               ? state.assigneesByClient.get(state.manageClient.id) ?? []
               : []
           }
           onOpenChange={(o) => !o && state.setManageClient(null)}
-          onSave={(next) => {
-            if (state.manageClient) {
-              state.setClientAssignees(state.manageClient.id, next)
-              toast.success(
-                `Assignees updated for ${state.manageClient.full_name}.`,
-              )
-              state.setManageClient(null)
-            }
-          }}
         />
       </div>
     </div>

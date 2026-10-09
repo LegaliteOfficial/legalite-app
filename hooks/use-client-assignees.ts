@@ -13,6 +13,7 @@ import {
   ClientAssignmentsQueryDoc,
   SetClientAssignmentsMutationDoc,
 } from '@/lib/graphql/assignments'
+import { useFirmMembers } from '@/hooks/use-firm-members'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
@@ -28,10 +29,22 @@ export type AssigneeRole =
   | 'paralegal'
   | 'admin'
 
+/** A member's part on a client team (backend `assignment_role`). */
+export type AssignmentRole = 'responsible' | 'originating' | 'collaborator'
+
+export const ASSIGNMENT_ROLE_LABEL: Record<AssignmentRole, string> = {
+  responsible: 'Lead',
+  originating: 'Originating',
+  collaborator: 'Team member',
+}
+
 export interface Assignee {
+  /** Firm member id. */
   id: string
   name: string
   role: AssigneeRole
+  /** Their part on this client's team; absent outside a team context. */
+  assignmentRole?: AssignmentRole
   /** Optional avatar URL; the UI falls back to initials when null. */
   avatar_url?: string | null
 }
@@ -88,7 +101,7 @@ const DEV_SAMPLE_ASSIGNEES: Record<string, Assignee[]> = {
 }
 
 // professional_title (backend) → the narrower AssigneeRole the UI colours by.
-function toAssigneeRole(title?: string | null): AssigneeRole {
+export function toAssigneeRole(title?: string | null): AssigneeRole {
   switch (title) {
     case 'managing_partner':
     case 'senior_partner':
@@ -125,6 +138,7 @@ export function useClientAssignees(): Map<string, Assignee[]> {
         id: a.member_id,
         name: a.name,
         role: toAssigneeRole(a.professional_title),
+        assignmentRole: normaliseAssignmentRole(a.assignment_role),
         avatar_url: a.avatar_url ?? null,
       }
       const list = map.get(a.client_id)
@@ -135,10 +149,33 @@ export function useClientAssignees(): Map<string, Assignee[]> {
   }, [data])
 }
 
+function normaliseAssignmentRole(r: string | null | undefined): AssignmentRole {
+  return r === 'responsible' || r === 'originating' ? r : 'collaborator'
+}
+
+/**
+ * Everyone in the firm who can be put on a client team: active members of
+ * the firm roster, alphabetical. Dev bypass falls back to the sample team.
+ */
+export function useAssignableMembers(): { members: Assignee[]; isLoading: boolean } {
+  const { data, isLoading } = useFirmMembers()
+  const members = useMemo(() => {
+    if (DEV_BYPASS) {
+      return Object.values(TEAM).sort((a, b) => a.name.localeCompare(b.name))
+    }
+    return (data ?? [])
+      .filter((m) => m.status === 'active')
+      .map((m) => ({ id: m.id, name: m.name, role: toAssigneeRole(m.professional_title) }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [data])
+  return { members, isLoading: DEV_BYPASS ? false : isLoading }
+}
+
 /** Replace the full set of members assigned to a client. */
 export function useSetClientAssignments() {
   const [mutate, state] = useMutation(SetClientAssignmentsMutationDoc, {
     refetchQueries: [ClientAssignmentsQueryDoc],
+    awaitRefetchQueries: true,
   })
   return {
     isPending: state.loading,

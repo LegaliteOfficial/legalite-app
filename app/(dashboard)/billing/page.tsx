@@ -189,6 +189,17 @@ export default function BillingPage() {
 
   const [subNav, setSubNav] = useState<SubNavKey>('bills')
   const [tab, setTab] = useState<BillTabKey>('Unpaid')
+
+  // Deep link: /billing?tab=Draft (e.g. after "Create bill" on a client)
+  // opens on that bills tab. One-time sync from the URL; read from
+  // location so the page needs no Suspense boundary.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab')
+    const valid: BillTabKey[] = ['Draft', 'PendingApproval', 'Unpaid', 'Paid', 'All', 'Archive']
+    if (wanted && (valid as string[]).includes(wanted)) {
+      setTab(wanted as BillTabKey)
+    }
+  }, [])
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [sort, setSort] = useState<{ key: SortKey | null; dir: SortDir }>({

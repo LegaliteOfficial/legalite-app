@@ -25,6 +25,7 @@ export function ClientsTableRow({
   onEdit,
   onAssignCase,
   onStartTimer,
+  onCreateBill,
   onDelete,
 }: {
   client: Client
@@ -36,6 +37,7 @@ export function ClientsTableRow({
   onEdit: () => void
   onAssignCase: () => void
   onStartTimer: () => void
+  onCreateBill: () => void
   onDelete: () => void
 }) {
   const statusLabel = primaryCase?.status ?? 'Active'
@@ -107,6 +109,7 @@ export function ClientsTableRow({
             onEdit={onEdit}
             onAssignCase={onAssignCase}
             onStartTimer={onStartTimer}
+            onCreateBill={onCreateBill}
             onDelete={onDelete}
           />
         </div>

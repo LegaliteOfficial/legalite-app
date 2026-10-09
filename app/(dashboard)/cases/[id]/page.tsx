@@ -2,7 +2,7 @@
 
 import { use, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Calendar as CalendarIcon, Check, CaretDown, Clock, FileText, GridFour, List, DotsThree, Pencil, Plus, X } from '@phosphor-icons/react'
+import { ArrowLeft, Calendar as CalendarIcon, Check, CaretDown, Clock, GridFour, List, DotsThree, Pencil, Plus, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,7 @@ import { useDocuments } from '@/hooks/use-documents'
 import { useCalendarEvents } from '@/hooks/use-calendar'
 import { eventToDeadline } from '../../calendar/_lib/adapt'
 import { AttachmentsPanel } from '@/components/shared/AttachmentsPanel'
+import { CaseDocumentList, LinkDocumentButton } from './_components/CaseDocuments'
 import type { CaseStatus, Client } from '@/types'
 import { displayCaseCode } from '@/lib/case-code'
 
@@ -469,52 +470,17 @@ export default function CaseDetailPage({
             rightSlot={
               <div className="flex items-center gap-2">
                 <DocumentsViewToggle value={docView} onChange={setDocView} />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    toast.info(
-                      'Case-scoped document creation ships with the docs editor.',
-                    )
-                  }
-                >
-                  <Plus size={13} strokeWidth={2} />
-                  Create document
-                </Button>
+                <LinkDocumentButton
+                  caseId={id}
+                  caseTitle={kase.title}
+                  caseClientId={kase.client_id ?? null}
+                  allDocuments={documents ?? []}
+                />
               </div>
             }
             hideEdit
           >
-            {caseDocuments.length === 0 ? (
-              <p
-                className="text-[12.5px] py-2"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                No documents attached to this case yet.
-              </p>
-            ) : docView === 'grid' ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {caseDocuments.map((d) => (
-                  <DocumentCard
-                    key={d.id}
-                    title={d.title}
-                    type={d.template_type ?? ''}
-                    updatedAt={d.updated_at}
-                  />
-                ))}
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {caseDocuments.map((d) => (
-                  <DocumentRowItem
-                    key={d.id}
-                    title={d.title}
-                    type={d.template_type ?? ''}
-                    updatedAt={d.updated_at}
-                  />
-                ))}
-              </ul>
-            )}
+            <CaseDocumentList caseId={id} documents={caseDocuments} view={docView} />
           </Section>
 
           {/* ─── Attachments ───────────────────────────────────────── */}
@@ -1641,172 +1607,6 @@ function DocumentsViewToggle({
         )
       })}
     </div>
-  )
-}
-
-/**
- * Returns the file-icon background colour for a given document
- * category. PDFs land in red, Word docs land in blue (matches the
- * screenshot's classic Office iconography).
- */
-function fileTint(type: string) {
-  const t = type.toLowerCase()
-  if (t.includes('pdf')) return { bg: '#E11D48', glyph: 'PDF' }
-  if (
-    t.includes('docx') ||
-    t.includes('doc') ||
-    t.includes('word')
-  )
-    return { bg: '#2563EB', glyph: 'W' }
-  if (t.includes('xls') || t.includes('sheet'))
-    return { bg: '#16A34A', glyph: 'X' }
-  return { bg: 'var(--gold-dark)', glyph: 'F' }
-}
-
-function DocumentCard({
-  title,
-  type,
-  updatedAt,
-}: {
-  title: string
-  type: string
-  updatedAt: string
-}) {
-  const tint = fileTint(type)
-  const last = updatedAt
-    ? new Date(updatedAt).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-    : '—'
-  return (
-    <div
-      className="rounded-xl border p-3 flex items-start gap-3"
-      style={{
-        background: 'var(--surface-card)',
-        borderColor: 'var(--border-soft)',
-      }}
-    >
-      <span
-        className="inline-flex items-center justify-center h-9 w-9 rounded-md text-[10px] font-bold text-white shrink-0"
-        style={{ background: tint.bg }}
-        aria-hidden
-      >
-        {tint.glyph}
-      </span>
-      <div className="flex-1 min-w-0">
-        <div
-          className="text-[12.5px] font-semibold truncate"
-          style={{ color: 'var(--text-primary)' }}
-          title={title}
-        >
-          {title}
-        </div>
-        <div
-          className="text-[11.5px] mt-0.5"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          Last edited on {last}
-        </div>
-      </div>
-      <DocumentRowMenu />
-    </div>
-  )
-}
-
-function DocumentRowItem({
-  title,
-  type,
-  updatedAt,
-}: {
-  title: string
-  type: string
-  updatedAt: string
-}) {
-  const tint = fileTint(type)
-  const last = updatedAt
-    ? new Date(updatedAt).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-    : '—'
-  return (
-    <li
-      className="rounded-lg border px-3 py-2 flex items-center gap-3"
-      style={{
-        background: 'var(--surface-card)',
-        borderColor: 'var(--border-soft)',
-      }}
-    >
-      <span
-        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-[9px] font-bold text-white shrink-0"
-        style={{ background: tint.bg }}
-        aria-hidden
-      >
-        {tint.glyph}
-      </span>
-      <span
-        className="flex-1 min-w-0 text-[13px] font-medium truncate"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        {title}
-      </span>
-      <span
-        className="text-[11.5px] shrink-0"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        Last edited on {last}
-      </span>
-      <DocumentRowMenu />
-    </li>
-  )
-}
-
-function DocumentRowMenu() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            className="inline-flex items-center justify-center h-7 w-7 rounded-md cursor-pointer"
-            style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--surface-sunken)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent'
-            }}
-            aria-label="Document actions"
-          >
-            <DotsThree size={14} strokeWidth={1.75} />
-          </button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-36">
-        <DropdownMenuItem
-          className="text-[12.5px] cursor-pointer"
-          onClick={() => toast.info('Document preview is coming next.')}
-        >
-          <FileText size={12} strokeWidth={1.75} /> Open
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-[12.5px] cursor-pointer"
-          onClick={() => toast.info('Document download ships next.')}
-        >
-          DownloadSimple
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-[12.5px] cursor-pointer"
-          style={{ color: '#C0392B' }}
-          onClick={() => toast.info('Document delete ships next.')}
-        >
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }
 

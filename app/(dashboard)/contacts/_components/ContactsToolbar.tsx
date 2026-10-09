@@ -4,14 +4,12 @@ import { MagnifyingGlass } from '@phosphor-icons/react'
 import { Input } from '@/components/ui/input'
 import { TYPE_FILTERS } from '../_constants'
 import type { ContactRoleFilter, ColumnId, TypeFilter } from '../_types'
-import { BulkActionsBar } from './BulkActionsBar'
 import { ColumnsPicker } from './ColumnsPicker'
 import { FiltersPopover } from './FiltersPopover'
 
 /**
- * Tools row above the table — type-filter pills (or the bulk-actions
- * strip when rows are selected), search input, columns picker, filters
- * popover.
+ * Tools row above the table — type-filter pills, search input,
+ * columns picker and filters popover.
  */
 export function ContactsToolbar({
   typeFilter,
@@ -25,9 +23,6 @@ export function ContactsToolbar({
   contactTagsFilter,
   setContactRoleFilter,
   setContactTagsFilter,
-  selectedCount,
-  onClearSelection,
-  onDeleteSelected,
 }: {
   typeFilter: TypeFilter
   setTypeFilter: (v: TypeFilter) => void
@@ -40,20 +35,10 @@ export function ContactsToolbar({
   contactTagsFilter: string[]
   setContactRoleFilter: (v: ContactRoleFilter) => void
   setContactTagsFilter: (v: string[]) => void
-  selectedCount: number
-  onClearSelection: () => void
-  onDeleteSelected: () => void
 }) {
   return (
     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 sm:mt-5">
-      {selectedCount > 0 ? (
-        <BulkActionsBar
-          count={selectedCount}
-          onClearSelection={onClearSelection}
-          onDelete={onDeleteSelected}
-        />
-      ) : (
-        <div className="-mx-1 flex max-w-full items-center gap-1 overflow-x-auto px-1 scrollbar-none">
+      <div className="-mx-1 flex max-w-full items-center gap-1 overflow-x-auto px-1 scrollbar-none">
           {TYPE_FILTERS.map((t) => {
             const isActive = typeFilter === t.id
             const count = typeCounts[t.id]
@@ -106,8 +91,7 @@ export function ContactsToolbar({
               </button>
             )
           })}
-        </div>
-      )}
+      </div>
 
       <div className="flex w-full items-center gap-2 sm:w-auto">
         <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
