@@ -20,13 +20,16 @@
  * it persists across navigations. Disappears whenever
  * `active_entry_id` is null — i.e. no timer running.
  *
- * Positioning is fixed bottom-right with a small offset so it
- * doesn't sit on top of toasts (which Sonner places top-center by
- * default). Z-index is below the CheckInDialog overlay so the
- * prompt always wins.
+ * Starts in the bottom right, clear of toasts (Sonner places those
+ * top-centre), and can be dragged anywhere in the viewport — a timer that
+ * runs for hours should not be stuck over whatever is underneath it. The
+ * chosen spot is remembered, and clamped back inside the window on resize
+ * so it can never be stranded off screen. Z-index is below the
+ * CheckInDialog overlay so the prompt always wins.
  */
 
 import { useEffect, useState } from 'react'
+import { useDraggable } from '@/hooks/use-draggable'
 import { Clock, XCircle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useClients } from '@/hooks/use-clients'
@@ -66,6 +69,10 @@ export function ActiveTimerWidget() {
     return () => clearInterval(id)
   }, [activeId])
 
+  // Must run before the early return below: hooks cannot be conditional,
+  // and this component returns null whenever no timer is active.
+  const drag = useDraggable({ storageKey: 'll:timer-widget-pos' })
+
   const { data: clients } = useClients()
   const clientName =
     entry == null
@@ -87,15 +94,24 @@ export function ActiveTimerWidget() {
 
   return (
     <div
+      ref={drag.ref}
+      {...drag.handlers}
       role="status"
-      aria-label="Active billable timer"
-      // Positioned fixed bottom-right with a comfortable offset
-      // from the viewport edges. zIndex 40 keeps us above page
-      // content but below the dialog overlay (which sits at 50).
+      aria-label="Active billable timer. Drag to move."
+      // Laid out from the top left so dragging is a single coordinate
+      // space; `position` is null for the first frame while the widget is
+      // measured, and it stays hidden until then rather than flashing in
+      // the wrong place. zIndex 40 keeps us above page content but below
+      // the dialog overlay (which sits at 50).
       style={{
         position: 'fixed',
-        right: 20,
-        bottom: 20,
+        left: drag.position?.x ?? 0,
+        top: drag.position?.y ?? 0,
+        visibility: drag.position ? 'visible' : 'hidden',
+        cursor: drag.dragging ? 'grabbing' : 'grab',
+        touchAction: 'none',
+        userSelect: 'none',
+        transition: drag.dragging ? 'none' : 'box-shadow 150ms ease',
         zIndex: 40,
         boxShadow: '0 14px 42px rgba(13,27,42,0.22)',
         background: 'var(--navy)',
