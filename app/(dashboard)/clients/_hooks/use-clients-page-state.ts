@@ -97,7 +97,6 @@ export function useClientsPageState() {
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [sort, setSort] = useState<SortState>({ key: null, dir: 'asc' })
-  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   // Filter sets — each narrows the list further; an empty set means
   // "no filter applied".
@@ -197,25 +196,6 @@ export function useClientsPageState() {
     })
   }
 
-  const allSelected =
-    filteredAndSorted.length > 0 &&
-    filteredAndSorted.every((c) => selected.has(c.id))
-  const someSelected = filteredAndSorted.some((c) => selected.has(c.id))
-  const toggleAll = () => {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (allSelected) filteredAndSorted.forEach((c) => next.delete(c.id))
-      else filteredAndSorted.forEach((c) => next.add(c.id))
-      return next
-    })
-  }
-  const toggleOne = (id: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
 
   const toggleAssignedTo = (id: string) =>
     setAssignedToFilter((prev) => {
@@ -266,11 +246,6 @@ export function useClientsPageState() {
     sort,
     toggleSort,
     // selection
-    selected,
-    allSelected,
-    someSelected,
-    toggleAll,
-    toggleOne,
     // filters
     assignedToFilter,
     setAssignedToFilter,
