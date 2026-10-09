@@ -13,7 +13,7 @@ export function EmptyState({ onPick }: { onPick: (text: string) => void }) {
     <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto text-center">
       <div className="h-14 w-14 rounded-2xl overflow-hidden flex items-center justify-center mb-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/favicon.ico" alt="LegaLite" className="h-14 w-14 object-cover" />
+        <img src="/brand/legalite-badge.svg" alt="LegaLite" width={56} height={56} className="h-14 w-14" />
       </div>
       <h2
         className="font-heading text-[22px] font-semibold mb-2 tracking-tight"

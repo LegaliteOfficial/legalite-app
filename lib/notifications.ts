@@ -107,7 +107,7 @@ export function notifyDeadline(deadline: {
 
   const notification = new Notification('LegaLite — Deadline Reminder', {
     body: `${deadline.title}\n${urgency} (${deadline.priority} priority)`,
-    icon: '/favicon.ico',
+    icon: '/brand/legalite-badge.png',
     tag: `deadline-${deadline.id}`,
     requireInteraction: diffDays <= 1,
   })
