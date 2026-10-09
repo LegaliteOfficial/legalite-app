@@ -39,7 +39,6 @@ export function useContactsPageState() {
   const [sortBy, setSortBy] = useState<ColumnId | null>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [tagsDialogOpen, setTagsDialogOpen] = useState(false)
-  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   // Filters popover state.
   // `contactRoleFilter`: tri-state — null = show all, 'none' = no role,
@@ -61,10 +60,9 @@ export function useContactsPageState() {
     saveVisibleColumns(visibleColumns)
   }, [visibleColumns, hydrated])
 
-  // Reset pagination + selection when any filter input changes.
+  // Reset pagination when any filter input changes.
   useEffect(() => {
     setPage(0)
-    setSelected(new Set())
   }, [typeFilter, search, pageSize, contactRoleFilter, contactTagsFilter])
 
   const contacts = useMemo<ContactRow[]>(() => {
@@ -162,26 +160,6 @@ export function useContactsPageState() {
     contactRoleFilter !== null ||
     contactTagsFilter.length > 0
 
-  const allOnPageSelected =
-    pageRows.length > 0 && pageRows.every((r) => selected.has(r.id))
-
-  const toggleSelectAll = () => {
-    const next = new Set(selected)
-    if (allOnPageSelected) {
-      pageRows.forEach((r) => next.delete(r.id))
-    } else {
-      pageRows.forEach((r) => next.add(r.id))
-    }
-    setSelected(next)
-  }
-
-  const toggleRow = (id: string) => {
-    const next = new Set(selected)
-    if (next.has(id)) next.delete(id)
-    else next.add(id)
-    setSelected(next)
-  }
-
   function handleSort(id: ColumnId) {
     if (sortBy !== id) {
       setSortBy(id)
@@ -242,11 +220,6 @@ export function useContactsPageState() {
     sortedAll: sorted,
     contactCount: sorted.length,
     // selection
-    selected,
-    allOnPageSelected,
-    toggleSelectAll,
-    toggleRow,
-    clearSelection: () => setSelected(new Set()),
     // tag dialog
     tagsDialogOpen,
     setTagsDialogOpen,

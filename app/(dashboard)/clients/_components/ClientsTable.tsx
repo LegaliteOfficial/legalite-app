@@ -30,6 +30,7 @@ export function ClientsTable({
   onEditRow,
   onAssignCaseRow,
   onStartTimerRow,
+  onCreateBillRow,
   onDeleteRow,
   // Empty-state inputs — used to pick the right message when zero rows.
   search,
@@ -50,6 +51,7 @@ export function ClientsTable({
   onEditRow: (client: Client) => void
   onAssignCaseRow: (client: Client) => void
   onStartTimerRow: (client: Client) => void
+  onCreateBillRow: (client: Client) => void
   onDeleteRow: (client: Client) => void
   search: string
   tab: TabKey
@@ -152,6 +154,7 @@ export function ClientsTable({
               onEdit={() => onEditRow(c)}
               onAssignCase={() => onAssignCaseRow(c)}
               onStartTimer={() => onStartTimerRow(c)}
+              onCreateBill={() => onCreateBillRow(c)}
               onDelete={() => onDeleteRow(c)}
             />
           ))}

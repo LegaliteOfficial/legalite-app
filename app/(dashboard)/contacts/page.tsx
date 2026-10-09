@@ -135,18 +135,6 @@ export default function ContactsPage() {
               contactTagsFilter={state.contactTagsFilter}
               setContactRoleFilter={state.setContactRoleFilter}
               setContactTagsFilter={state.setContactTagsFilter}
-              selectedCount={state.selected.size}
-              onClearSelection={state.clearSelection}
-              onDeleteSelected={() => {
-                // Local-only delete against dev sample data — the real
-                // backend mutation will be one bulk call once the
-                // contacts API supports it.
-                const n = state.selected.size
-                state.clearSelection()
-                toast.success(
-                  `Deleted ${n} contact${n === 1 ? '' : 's'}.`,
-                )
-              }}
             />
 
             <div
@@ -188,20 +176,11 @@ export default function ContactsPage() {
                   rows={state.pageRows}
                   expanded={state.expandRows}
                   orderedColumns={state.orderedVisibleColumns}
-                  selected={state.selected}
-                  allOnPageSelected={state.allOnPageSelected}
-                  onToggleSelectAll={state.toggleSelectAll}
-                  onToggleRow={state.toggleRow}
                   sortBy={state.sortBy}
                   sortDir={state.sortDir}
                   onSort={state.handleSort}
                   onEditRow={(row) =>
                     openModal({ type: 'editClient', id: row.id })
-                  }
-                  onBillRow={(row) =>
-                    toast.info(
-                      `Bill for ${row.full_name} — opens once the billing screen ships.`,
-                    )
                   }
                 />
                 </div>

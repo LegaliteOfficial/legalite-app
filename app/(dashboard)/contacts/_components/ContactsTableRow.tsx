@@ -6,25 +6,19 @@ import { ActionsCell } from './ActionsCell'
 
 /**
  * One <tr> in the contacts table. Click navigates to the contact's
- * detail page; the checkbox + ActionsCell stop propagation so they
- * don't trigger that navigation.
+ * detail page; the ActionsCell stops propagation so Edit does
+ * not trigger that navigation.
  */
 export function ContactsTableRow({
   row,
   expanded,
-  selected,
   orderedColumns,
-  onToggleSelected,
   onEdit,
-  onBill,
 }: {
   row: ContactRow
   expanded: boolean
-  selected: boolean
   orderedColumns: ColumnDef[]
-  onToggleSelected: () => void
   onEdit: () => void
-  onBill: () => void
 }) {
   const router = useRouter()
   const padY = expanded ? 'py-3.5' : 'py-2'
@@ -41,18 +35,7 @@ export function ContactsTableRow({
       }}
     >
       <td className={`px-3 ${padY}`}>
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggleSelected}
-          aria-label={`Select ${row.full_name}`}
-          className="cursor-pointer"
-          style={{ accentColor: 'var(--gold)' }}
-          onClick={(e) => e.stopPropagation()}
-        />
-      </td>
-      <td className={`px-3 ${padY}`}>
-        <ActionsCell row={row} onEdit={onEdit} onBill={onBill} />
+        <ActionsCell row={row} onEdit={onEdit} />
       </td>
       {orderedColumns.map((col) => (
         <td

@@ -6,7 +6,7 @@
  * the team card reads the firm's client assignments.
  */
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   Buildings,
   Cake,
@@ -19,20 +19,24 @@ import {
   CalendarCheck,
 } from '@phosphor-icons/react'
 import { ROLE_LABEL, useClientAssignees } from '@/hooks/use-client-assignees'
+import { ManageAssigneesDialog } from '../../_components/ManageAssigneesDialog'
 import { useHydrated } from '@/hooks/use-hydrated'
 import { initialsOf } from '../../_lib/initials'
 import { useClientRecord } from '../_hooks/use-client-profile'
 import { SideCardSkeleton } from './skeletons'
 
-function Card({ title, children }: { title: string; children: ReactNode }) {
+function Card({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section
       className="rounded-2xl border p-5"
       style={{ background: 'var(--surface-card)', borderColor: 'var(--border-default)' }}
     >
-      <h2 className="mb-3.5 font-heading text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-        {title}
-      </h2>
+      <div className="mb-3.5 flex items-center justify-between gap-2">
+        <h2 className="font-heading text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+          {title}
+        </h2>
+        {action}
+      </div>
       {children}
     </section>
   )
@@ -121,18 +125,39 @@ function Missing() {
 
 export function AssignedTeam({ clientId }: { clientId: string }) {
   const hydrated = useHydrated()
+  const { client } = useClientRecord(clientId)
   const assignees = useClientAssignees().get(clientId) ?? []
+  const [managing, setManaging] = useState(false)
   if (!hydrated) return <SideCardSkeleton rows={2} />
 
+  // Lead first, then everyone else in roster order.
+  const ordered = [...assignees].sort(
+    (a, b) => Number(b.assignmentRole === 'responsible') - Number(a.assignmentRole === 'responsible'),
+  )
+
   return (
-    <Card title="Assigned team">
-      {assignees.length === 0 ? (
+    <Card
+      title="Assigned team"
+      action={
+        client && (
+          <button
+            type="button"
+            onClick={() => setManaging(true)}
+            className="text-[12px] font-semibold underline-offset-2 hover:underline"
+            style={{ color: 'var(--gold-dark)' }}
+          >
+            {assignees.length ? 'Manage' : 'Assign'}
+          </button>
+        )
+      }
+    >
+      {ordered.length === 0 ? (
         <p className="text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
-          No one is assigned to this client yet. Assign members from the clients list.
+          No one is assigned to this client yet.
         </p>
       ) : (
         <ul className="space-y-2.5">
-          {assignees.map((a) => (
+          {ordered.map((a) => (
             <li key={a.id} className="flex items-center gap-3">
               <span
                 aria-hidden
@@ -141,14 +166,28 @@ export function AssignedTeam({ clientId }: { clientId: string }) {
               >
                 {initialsOf(a.name)}
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>{a.name}</p>
                 <p className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>{ROLE_LABEL[a.role]}</p>
               </div>
+              {a.assignmentRole === 'responsible' && (
+                <span
+                  className="shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
+                  style={{ background: 'var(--gold-muted)', color: 'var(--gold-dark)' }}
+                >
+                  Lead
+                </span>
+              )}
             </li>
           ))}
         </ul>
       )}
+
+      <ManageAssigneesDialog
+        client={managing && client ? { id: client.id, full_name: client.full_name } : null}
+        current={assignees}
+        onOpenChange={(o) => setManaging(o)}
+      />
     </Card>
   )
 }

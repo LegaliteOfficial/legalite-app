@@ -5,6 +5,7 @@ import {
   DotsThree,
   Eye,
   PencilSimple,
+  Receipt,
   Trash,
   User as UserIcon,
 } from '@phosphor-icons/react'
@@ -26,6 +27,7 @@ export function RowMenu({
   onEdit,
   onAssignCase,
   onStartTimer,
+  onCreateBill,
   onDelete,
 }: {
   clientName: string
@@ -33,6 +35,7 @@ export function RowMenu({
   onEdit: () => void
   onAssignCase: () => void
   onStartTimer: () => void
+  onCreateBill: () => void
   onDelete: () => void
 }) {
   return (
@@ -81,6 +84,15 @@ export function RowMenu({
         >
           <Clock size={13} strokeWidth={1.75} />
           Time working hours
+        </DropdownMenuItem>
+        {/* Raise a bill for this client in the bill composer drawer,
+            with the client (and their main case) pre-selected. */}
+        <DropdownMenuItem
+          onClick={onCreateBill}
+          className="text-[13px] cursor-pointer"
+        >
+          <Receipt size={13} strokeWidth={1.75} />
+          Create bill
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onDelete}
