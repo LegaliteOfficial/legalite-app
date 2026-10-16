@@ -1,16 +1,13 @@
 'use client'
 
 import { ArrowCounterClockwise, Trash } from '@phosphor-icons/react'
-import { DocTypeSelect } from './DocTypeSelect'
 import { DropZone } from './DropZone'
 import { FileRow } from './FileRow'
 import { useBulkUploadQueue } from '../_hooks/use-bulk-upload-queue'
 
 export function UploadWorkspace() {
-  const { docType, setDocType, rows, addFiles, clearFinished, resetAll, summary, hydrated } =
-    useBulkUploadQueue()
+  const { rows, addFiles, clearFinished, resetAll, summary, hydrated } = useBulkUploadQueue()
 
-  const locked = rows.length > 0
   const hasFinished = summary.completed + summary.failed + summary.skipped > 0
   const overallPct =
     summary.total === 0 ? 0 : Math.round(((summary.completed + summary.failed + summary.skipped) / summary.total) * 100)
@@ -22,34 +19,33 @@ export function UploadWorkspace() {
           Legal document upload
         </h1>
         <p className="mt-1 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-          Bulk-upload PDFs to train LegaLite AI. Pick a document type, then drop in as many files as you need.
+          Bulk-upload PDFs to train LegaLite AI. Drop in as many files as you need — each one is read and
+          classified automatically (Act, Regulation, Case Law, …) before it is indexed.
         </p>
       </div>
 
-      <div className="flex items-end justify-between gap-4 flex-wrap">
-        <DocTypeSelect value={docType} onChange={setDocType} disabled={locked} />
-        {locked ? (
-          <button
-            type="button"
-            onClick={resetAll}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-black/[0.03]"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <ArrowCounterClockwise size={13} />
-            Type is locked to <span className="font-medium">{docType}</span> — start a new batch to change it
-          </button>
-        ) : (
-          // Held back until the persisted batch has been read, so a
-          // restored session never flashes this line before locking.
-          hydrated && (
-            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-              Your progress is saved on this device — safe to close the tab and come back later.
-            </p>
-          )
-        )}
-      </div>
+      <DropZone onFiles={addFiles} />
 
-      <DropZone disabled={!docType} onFiles={addFiles} />
+      {/* Held back until the persisted batch has been read, so a restored
+          session never flashes the wrong line first. */}
+      {hydrated && (
+        <div className="-mt-3 flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+            Your progress is saved on this device — safe to close the tab and come back later.
+          </p>
+          {rows.length > 0 && (
+            <button
+              type="button"
+              onClick={resetAll}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-black/[0.03]"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <ArrowCounterClockwise size={13} />
+              Start a new batch
+            </button>
+          )}
+        </div>
+      )}
 
       {rows.length > 0 && (
         <div className="flex flex-col gap-3">

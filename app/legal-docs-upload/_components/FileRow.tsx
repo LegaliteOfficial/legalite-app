@@ -19,7 +19,7 @@ function formatSize(bytes: number): string {
 const STATUS_LABEL: Record<UploadRow['status'], string> = {
   uploading: 'Uploading…',
   queued: 'Queued',
-  processing: 'Processing…',
+  processing: 'Reading…',
   completed: 'Ingested',
   failed: 'Failed',
   rejected: 'Rejected',
@@ -90,6 +90,22 @@ export function FileRow({ row }: { row: UploadRow }) {
             style={{ width: `${barWidth}%`, background: barColor }}
           />
         </div>
+
+        {row.status === 'completed' && row.docType && (
+          <div className="mt-1.5 flex min-w-0 items-start gap-2">
+            <span
+              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+              style={{ background: 'var(--surface-sunken)', color: 'var(--text-secondary)' }}
+            >
+              {row.docType}
+            </span>
+            {row.summary && (
+              <p className="line-clamp-2 text-[11px]" style={{ color: 'var(--text-secondary)' }} title={row.summary}>
+                {row.summary}
+              </p>
+            )}
+          </div>
+        )}
 
         {row.message && (
           <p className="mt-1 truncate text-[11px]" style={{ color: isError ? '#DC2626' : 'var(--text-muted)' }} title={row.message}>
