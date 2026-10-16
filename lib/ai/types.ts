@@ -260,7 +260,11 @@ export interface JobStatusResponse {
   visibility_scope: string
   document_origin: string | null
   title: string
+  /** ``'auto'`` until an auto-classified upload has been read, then the detected type. */
   doc_type: string
+  /** Set only for auto-classified uploads; ``summary`` only when the LLM classified it. */
+  summary?: string | null
+  doc_type_source?: 'llm' | 'heuristic' | null
   source_filename: string
   organization_id: string | null
   user_id: string | null

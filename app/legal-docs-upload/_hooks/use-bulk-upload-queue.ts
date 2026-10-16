@@ -37,6 +37,10 @@ export interface UploadRow {
   jobId?: string
   documentId?: string
   chunkCount?: number
+  /** Type the server detected from the PDF's content, once ingested. */
+  docType?: string
+  /** One-to-two sentence description of the document, when the AI produced one. */
+  summary?: string
   skipReason?: BulkUploadSkipReason
   /** Human-readable rejection/skip/error explanation for the row. */
   message?: string
@@ -84,7 +88,6 @@ const STORAGE_KEY = 'legalite:bulk-upload-queue:v1'
 const MAX_PERSISTED_ROWS = 500
 
 interface PersistedState {
-  docType: string
   rows: UploadRow[]
 }
 
@@ -99,15 +102,15 @@ function isPersistableRow(value: unknown): value is UploadRow {
 }
 
 function loadPersisted(): PersistedState {
-  if (typeof window === 'undefined') return { docType: '', rows: [] }
+  if (typeof window === 'undefined') return { rows: [] }
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { docType: '', rows: [] }
+    if (!raw) return { rows: [] }
     const parsed = JSON.parse(raw) as Partial<PersistedState> | null
     const rows = Array.isArray(parsed?.rows) ? parsed.rows.filter(isPersistableRow) : []
-    return { docType: typeof parsed?.docType === 'string' ? parsed.docType : '', rows }
+    return { rows }
   } catch {
-    return { docType: '', rows: [] }
+    return { rows: [] }
   }
 }
 
@@ -121,7 +124,7 @@ function persist(state: PersistedState) {
     // shown as a permanently stuck ghost row on reload.
     const restorable = state.rows.filter((r) => r.jobId || r.status === 'skipped')
     const capped = restorable.slice(-MAX_PERSISTED_ROWS)
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ docType: state.docType, rows: capped }))
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows: capped }))
   } catch {
     // Storage full or unavailable (private browsing) — degrade to
     // in-memory only for this session rather than crash the upload flow.
@@ -132,28 +135,23 @@ function persist(state: PersistedState) {
  * Drives the whole /legal-docs-upload flow: client-side validation,
  * batching files into groups of BULK_UPLOAD_MAX_FILES for
  * POST /upload-law/bulk, and polling GET /ingestion/jobs/bulk until
- * every accepted file reaches a terminal state. Also owns `docType`
- * (rather than the page) so both restore from the same persisted
- * snapshot and can never disagree after a reload.
+ * every accepted file reaches a terminal state. No document type is
+ * picked up front: the server classifies each file from its content and
+ * the detected type + summary arrive with the completed job.
  */
 export function useBulkUploadQueue() {
-  // Both states start empty so the first client render matches the
-  // server-rendered HTML; the persisted snapshot is read in an effect
-  // after mount. Seeding useState from localStorage instead would make
-  // the client's first render disagree with the server's and throw away
-  // the whole tree as a hydration mismatch.
-  const [docType, setDocType] = useState<string>('')
+  // Starts empty so the first client render matches the server-rendered
+  // HTML; the persisted snapshot is read in an effect after mount.
+  // Seeding useState from localStorage instead would make the client's
+  // first render disagree with the server's and throw away the whole
+  // tree as a hydration mismatch.
   const [rows, setRows] = useState<UploadRow[]>([])
   const [hydrated, setHydrated] = useState(false)
   const rowsRef = useRef(rows)
   rowsRef.current = rows
 
-  const docTypeRef = useRef(docType)
-  docTypeRef.current = docType
-
   useEffect(() => {
     const persisted = loadPersisted()
-    if (persisted.docType) setDocType(persisted.docType)
     if (persisted.rows.length > 0) setRows(persisted.rows)
     setHydrated(true)
   }, [])
@@ -162,8 +160,8 @@ export function useBulkUploadQueue() {
     // Never write before the restore effect has run, or the empty
     // initial state would overwrite the snapshot we are about to load.
     if (!hydrated) return
-    persist({ docType, rows })
-  }, [hydrated, docType, rows])
+    persist({ rows })
+  }, [hydrated, rows])
 
   // Files added but not yet included in a submitted batch.
   const pendingRef = useRef<{ row: UploadRow; file: File }[]>([])
@@ -186,7 +184,6 @@ export function useBulkUploadQueue() {
         try {
           const response = await uploadLawsBulk(
             batch.map((b) => b.file),
-            docTypeRef.current,
             { signal: abortRef.current.signal },
           )
           if (!isMountedRef.current) return
@@ -281,6 +278,8 @@ export function useBulkUploadQueue() {
                 progress: 100,
                 documentId: job.document_id ?? undefined,
                 chunkCount: job.chunk_count,
+                docType: job.doc_type,
+                summary: job.summary ?? undefined,
               })
             } else {
               patchRow(rowId, {
@@ -361,12 +360,11 @@ export function useBulkUploadQueue() {
     setRows((prev) => prev.filter((r) => !TERMINAL.has(r.status)))
   }, [])
 
-  /** Wipes the whole batch (including in-progress rows) and unlocks the
-   * doc-type picker — the only way to start a differently-typed batch,
-   * now that a page refresh restores rather than clears the session. */
+  /** Wipes the whole list, including in-progress rows — a page refresh
+   * restores rather than clears the session. Server-side ingestion of
+   * already-accepted files carries on regardless. */
   const resetAll = useCallback(() => {
     setRows([])
-    setDocType('')
   }, [])
 
   const summary = useMemo(() => {
@@ -378,5 +376,5 @@ export function useBulkUploadQueue() {
     return { total, completed, failed, skipped, inProgress }
   }, [rows])
 
-  return { docType, setDocType, rows, addFiles, clearFinished, resetAll, summary, hydrated }
+  return { rows, addFiles, clearFinished, resetAll, summary, hydrated }
 }

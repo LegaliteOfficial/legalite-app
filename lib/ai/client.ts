@@ -354,8 +354,9 @@ export const BULK_STATUS_MAX_IDS = 50
 
 /**
  * POST /upload-law/bulk — enqueue up to {@link BULK_UPLOAD_MAX_FILES} PDFs
- * in one request. Legacy contract: anonymous, GLOBAL visibility, one
- * ``doc_type`` applied to the whole batch (see
+ * in one request. Legacy contract: anonymous, GLOBAL visibility. No
+ * ``doc_type`` is sent, so the server classifies each file from its
+ * content during ingestion and reports the result on the job (see
  * legalite-ai/app/api/routes/documents.py::upload_law_bulk).
  *
  * The endpoint returns 202 for any batch with at least one accepted file
@@ -367,7 +368,6 @@ export const BULK_STATUS_MAX_IDS = 50
  */
 export async function uploadLawsBulk(
   files: File[],
-  docType: string,
   options: { signal?: AbortSignal } = {},
 ): Promise<BulkUploadResponse> {
   if (!AI_BASE_URL) {
@@ -382,7 +382,6 @@ export async function uploadLawsBulk(
 
   const form = new FormData()
   for (const file of files) form.append('files', file, file.name)
-  form.append('doc_type', docType)
 
   let res: Response
   try {
