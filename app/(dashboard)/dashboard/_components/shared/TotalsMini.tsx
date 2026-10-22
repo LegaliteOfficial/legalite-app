@@ -1,12 +1,19 @@
 'use client'
 
 /**
- * Small "label + em-dash value + coloured tick" used in the Firm
- * overview totals row. Renders an em-dash today because the
- * utilisation data isn't wired through yet; the structure is here so
- * the moment the ledger lands the values just drop in.
+ * Small "label + value + coloured tick" used in the Firm overview
+ * totals row. Falls back to an em-dash when there is nothing to show,
+ * which reads as "no figure" rather than a misleading zero.
  */
-export function TotalsMini({ label, color }: { label: string; color: string }) {
+export function TotalsMini({
+  label,
+  color,
+  value,
+}: {
+  label: string
+  color: string
+  value?: string | null
+}) {
   return (
     <div className="relative pl-3">
       <span
@@ -24,7 +31,7 @@ export function TotalsMini({ label, color }: { label: string; color: string }) {
         className="font-heading text-[22px] font-semibold leading-tight tracking-tight"
         style={{ color: 'var(--text-primary)' }}
       >
-        —
+        {value ?? '—'}
       </div>
     </div>
   )
