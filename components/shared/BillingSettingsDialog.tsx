@@ -288,8 +288,6 @@ function SettingsForm({
             </div>
           </div>
 
-          </div>
-
           {/* ── Firm default flat fee ───────────────────────── */}
           <div className="grid gap-2">
             <Label
@@ -370,6 +368,7 @@ function SettingsForm({
                 className="h-10 rounded-md text-[13px]"
               />
             </div>
+          </div>
           </div>
         </div>
 
