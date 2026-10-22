@@ -131,7 +131,7 @@ export default function MarketingHome() {
         <div className={mk.container}>
           <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-end">
             <Reveal from="up">
-              <SectionMark>For Ghanaian law firms</SectionMark>
+              <SectionMark>For Ghanaian legal practitioners</SectionMark>
               <h1 className={`mt-6 ${mk.h1}`}>
                 Run your entire practice from one{' '}
                 <span className="italic text-[#B8861F]">intelligent</span> platform.
