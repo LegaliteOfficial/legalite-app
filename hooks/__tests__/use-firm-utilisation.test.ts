@@ -62,6 +62,29 @@ describe('aggregateUtilisation — hours', () => {
     expect(r.months[0].billableHours).toBe(0)
   })
 
+  it('counts a running timer by how long it has been going', () => {
+    // A running entry has total_seconds 0 until it is stopped, so reading
+    // that field alone would leave work in progress out of the figures.
+    const started = new Date(NOW.getTime() - 90 * 60_000).toISOString() // 1.5h ago
+    const r = aggregateUtilisation(
+      [
+        entry({
+          id: 'running',
+          status: 'running',
+          started_at: started,
+          ended_at: null,
+          total_seconds: 0,
+          total_amount: 0,
+        }),
+      ],
+      [],
+      2026,
+      NOW,
+    )
+    expect(r.totals.billableHours).toBeCloseTo(1.5, 1)
+    expect(r.totals.billableAmount).toBeCloseTo(900, 0)
+  })
+
   it('separates billable from non-billable by whether a rate was attached', () => {
     const r = aggregateUtilisation(
       [entry({ id: 'a' }), entry({ id: 'b', rate_at_start: 0, total_amount: 0 })],

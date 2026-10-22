@@ -16,13 +16,19 @@
  * only the three store reads below change.
  */
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useBillsLocalStore, type Bill } from '@/stores/bills-local.store'
 import {
   useTimeTrackerStore,
-  getElapsedSeconds,
   type TimeEntry,
 } from '@/stores/time-tracker-local.store'
+
+/**
+ * How often the figures advance while a timer is running. Hours are shown
+ * to one decimal, so a second-by-second tick would redraw the chart far
+ * more often than the numbers actually change.
+ */
+const TICK_MS = 15_000
 
 /**
  * Working hours a full time fee earner is expected to record in a month.
@@ -73,13 +79,19 @@ const EMPTY_MONTH = (): MonthBuckets => ({
 })
 
 /**
- * Hours on an entry. A running timer counts what it has accrued so far, so
- * the chart does not ignore work in progress.
+ * Hours on an entry. A running timer has total_seconds 0 until it stops, so
+ * its contribution is measured from when it started — otherwise work in
+ * progress would be missing from the figures entirely.
+ *
+ * Elapsed time is measured against the `now` passed in rather than the real
+ * clock, so the whole aggregation stays pure and a caller can ask what the
+ * numbers were at any moment.
  */
-function hoursFor(entry: TimeEntry): number {
-  const seconds =
-    entry.status === 'running' ? getElapsedSeconds(entry) : entry.total_seconds
-  return Math.max(0, seconds) / 3600
+function hoursFor(entry: TimeEntry, now: Date): number {
+  if (entry.status !== 'running') return Math.max(0, entry.total_seconds) / 3600
+  const started = new Date(entry.started_at).getTime()
+  if (!Number.isFinite(started)) return 0
+  return Math.max(0, now.getTime() - started) / 3_600_000
 }
 
 /** An entry earns money when a rate was attached at the time it was recorded. */
@@ -109,7 +121,7 @@ export function aggregateUtilisation(
   for (const entry of entries) {
     const m = monthOf(entry.started_at, year)
     if (m === null) continue
-    const hours = hoursFor(entry)
+    const hours = hoursFor(entry, now)
     if (hours <= 0) continue
 
     if (isBillable(entry)) {
@@ -209,13 +221,28 @@ export function useFirmUtilisation(year: number): FirmUtilisation {
   // so the memo recomputes without subscribing to whole record maps.
   const entryMap = useTimeTrackerStore((s) => s.entries)
   const timeRevision = useTimeTrackerStore((s) => s.revision)
+  const activeEntryId = useTimeTrackerStore((s) => s.active_entry_id)
   const billMap = useBillsLocalStore((s) => s.bills)
   const billRevision = useBillsLocalStore((s) => s.revision)
+
+  // A running timer's hours grow between store writes, and `revision` only
+  // bumps when something is written. Without a tick the billable total
+  // would sit still for the whole session and only jump when the timer was
+  // stopped. Ticking only while a timer runs keeps an idle dashboard
+  // completely still.
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    if (!activeEntryId) return
+    const id = setInterval(() => setTick((t) => t + 1), TICK_MS)
+    return () => clearInterval(id)
+  }, [activeEntryId])
 
   return useMemo(
     () =>
       aggregateUtilisation(Object.values(entryMap), Object.values(billMap), year),
+    // `tick` is a deliberate dependency: it is what advances a running
+    // timer's contribution to the totals.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [year, timeRevision, billRevision, entryMap, billMap],
+    [year, timeRevision, billRevision, entryMap, billMap, tick],
   )
 }
