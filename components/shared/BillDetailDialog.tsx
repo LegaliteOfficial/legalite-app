@@ -195,7 +195,7 @@ export function BillDetailDialog({
 
   return (
     <Dialog open={!!liveBill} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[920px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto scrollbar-none sm:max-w-[640px]">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -523,30 +523,31 @@ export function BillDetailDialog({
                   .map((r) => (
                     <li
                       key={r.id}
-                      className="grid items-center gap-3 px-3 py-2 border-b last:border-b-0"
-                      style={{
-                        gridTemplateColumns: '160px 1fr 80px',
-                        borderColor: 'var(--border-soft)',
-                      }}
+                      // Date and channel share a line; the message takes its
+                      // own. The previous 160px / 1fr / 80px split left the
+                      // message about 25px in this column and it truncated to
+                      // nothing, which is the one part worth reading.
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 border-b last:border-b-0"
+                      style={{ borderColor: 'var(--border-soft)' }}
                     >
                       <span
-                        className="text-[12px] tabular-nums inline-flex items-center gap-1.5"
+                        className="text-[12px] tabular-nums inline-flex shrink-0 items-center gap-1.5"
                         style={{ color: 'var(--text-secondary)' }}
                       >
                         <Bell size={11} strokeWidth={1.75} />
                         {fmtDateTime(r.sent_at)}
                       </span>
                       <span
-                        className="text-[12.5px] truncate"
-                        style={{ color: 'var(--text-primary)' }}
-                      >
-                        {r.notes ?? 'Reminder sent.'}
-                      </span>
-                      <span
-                        className="text-[11px] uppercase tracking-wider font-semibold text-right"
+                        className="ml-auto shrink-0 text-[11px] uppercase tracking-wider font-semibold"
                         style={{ color: 'var(--text-muted)' }}
                       >
                         {r.channel === 'email' ? 'Email' : 'Manual'}
+                      </span>
+                      <span
+                        className="basis-full text-[12.5px]"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        {r.notes ?? 'Reminder sent.'}
                       </span>
                     </li>
                   ))}
