@@ -13,6 +13,7 @@ import type {
   CreateCalendarEventInput,
   UpdateCalendarEventInput,
 } from '@/types/generated/graphql'
+import { devCalendarEvents } from '@/lib/calendar/dev-events'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
@@ -52,7 +53,12 @@ export function useCalendarEvents(from?: string, to?: string) {
     errorPolicy: DEV_BYPASS ? 'all' : 'none',
   })
   return {
-    data: (DEV_BYPASS ? [] : (data?.calendarEvents as CalendarEvent[] | undefined)),
+    // Without a backend the calendar had no events at all, so none of it
+    // could be used or reviewed locally. Sample events sit in the current
+    // week so whichever week you land on has something in it.
+    data: (DEV_BYPASS
+      ? devCalendarEvents()
+      : (data?.calendarEvents as CalendarEvent[] | undefined)),
     isLoading: DEV_BYPASS ? false : loading,
     error: DEV_BYPASS ? undefined : error,
     refetch,

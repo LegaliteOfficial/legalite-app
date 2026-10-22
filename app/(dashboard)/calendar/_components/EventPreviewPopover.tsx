@@ -53,7 +53,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Deadline } from '@/hooks/use-deadlines'
-import { useDeleteDeadline, useUpdateDeadline } from '@/hooks/use-deadlines'
+import { useUpdateDeadline } from '@/hooks/use-deadlines'
+import { useDeleteCalendarEvent } from '@/hooks/use-calendar'
 import { EventBlock } from './EventBlock'
 
 interface PriorityMeta {
@@ -98,8 +99,16 @@ export function EventPreviewPopover({
   onDuplicate?: (d: Deadline) => void
 }) {
   const updateDeadline = useUpdateDeadline()
-  const deleteDeadline = useDeleteDeadline()
+  // The grid renders calendar events adapted into the Deadline shape, so
+  // `deadline.id` is a calendar event id. Deleting it through the
+  // deadlines API sent that id to the wrong resolver; this is the one
+  // that owns the record, and it refetches the calendar afterwards.
+  const deleteEvent = useDeleteCalendarEvent()
   const [open, setOpen] = useState(false)
+  // The actions menu portals its content outside this popup, so the
+  // popover reads a click on it as an outside press. Knowing when the
+  // menu is open lets us ignore that one case.
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const start = new Date(deadline.due_date)
   const end = new Date(start.getTime() + DEFAULT_END_OFFSET_MIN * 60_000)
@@ -140,8 +149,9 @@ export function EventPreviewPopover({
   }
 
   const handleDelete = async () => {
+    setMenuOpen(false)
     try {
-      await deleteDeadline.mutateAsync(deadline.id)
+      await deleteEvent.mutateAsync(deadline.id)
       toast.success('Event deleted.')
       setOpen(false)
     } catch {
@@ -160,7 +170,24 @@ export function EventPreviewPopover({
   }
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <Popover.Root
+      open={open}
+      onOpenChange={(next, details) => {
+        // Base UI portals menu content to the body, so pressing the three
+        // dots or any item registers as a press outside this popup. The
+        // popover would close and unmount the menu in the same tick,
+        // which is why an option could never be clicked. Ignore those two
+        // reasons while the menu is open; every other close still works.
+        if (
+          !next &&
+          menuOpen &&
+          (details?.reason === 'outside-press' || details?.reason === 'focus-out')
+        ) {
+          return
+        }
+        setOpen(next)
+      }}
+    >
       <Popover.Trigger render={<EventBlock deadline={deadline} />} />
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} align="center" side="right">
@@ -367,7 +394,7 @@ export function EventPreviewPopover({
                   <ArrowsClockwise size={12} strokeWidth={2} />
                 </OutcomeBtn>
                 <span className="flex-1" />
-                <DropdownMenu>
+                <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                   <DropdownMenuTrigger
                     aria-label="More options"
                     className="inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors"
@@ -388,7 +415,7 @@ export function EventPreviewPopover({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDelete}
-                      disabled={deleteDeadline.isPending}
+                      disabled={deleteEvent.isPending}
                       style={{ color: '#C0392B' }}
                     >
                       <Trash size={12} strokeWidth={1.75} />
