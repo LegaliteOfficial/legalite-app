@@ -195,7 +195,7 @@ export function BillDetailDialog({
 
   return (
     <Dialog open={!!liveBill} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[920px]">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -273,10 +273,10 @@ export function BillDetailDialog({
           </div>
         )}
 
-        <div className="grid gap-5 py-2">
+        <div className="grid gap-5 py-2 lg:grid-cols-2 lg:items-start">
           {/* Meta strip */}
           <div
-            className="grid grid-cols-3 gap-3 rounded-md border p-3"
+            className="grid grid-cols-3 gap-3 rounded-md border p-3 lg:col-span-2"
             style={{
               borderColor: 'var(--border-soft)',
               background: 'var(--surface-sunken)',
@@ -314,7 +314,7 @@ export function BillDetailDialog({
           </div>
 
           {/* Line items */}
-          <div className="grid gap-2">
+          <div className="grid gap-2 lg:col-span-2">
             <span
               className="text-[11.5px] font-semibold uppercase tracking-wider"
               style={{ color: 'var(--text-muted)' }}
@@ -387,7 +387,7 @@ export function BillDetailDialog({
 
           {/* Totals card */}
           <div
-            className="rounded-md border p-4"
+            className="rounded-md border p-4 lg:col-span-2"
             style={{
               borderColor: 'var(--border-default)',
               background: 'var(--surface-sunken)',
@@ -578,7 +578,7 @@ export function BillDetailDialog({
 
           {/* Created / updated footer */}
           <p
-            className="text-[11px] tabular-nums"
+            className="text-[11px] tabular-nums lg:col-span-2"
             style={{ color: 'var(--text-subtle)' }}
           >
             Created {fmtDateTime(liveBill.created_at)} · last updated{' '}

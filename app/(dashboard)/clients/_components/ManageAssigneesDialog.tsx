@@ -50,7 +50,7 @@ export function ManageAssigneesDialog({
 }) {
   return (
     <Dialog open={!!client} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         {/* Keyed by client so the draft starts fresh for each client. */}
         {client && (
           <AssigneeEditor

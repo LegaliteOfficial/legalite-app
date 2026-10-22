@@ -130,7 +130,7 @@ export function ReminderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle
             style={{ fontFamily: 'var(--font-heading, "Playfair Display", serif)' }}
