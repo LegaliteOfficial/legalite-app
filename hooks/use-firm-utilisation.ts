@@ -61,6 +61,8 @@ export interface FirmUtilisation {
   }
   /** False when the firm has recorded nothing at all for the year. */
   hasData: boolean
+  /** Earliest and latest activity actually recorded, or null if none. */
+  span: { from: Date; to: Date } | null
 }
 
 const EMPTY_MONTH = (): MonthBuckets => ({
@@ -172,7 +174,26 @@ export function aggregateUtilisation(
     }
   }
 
+  // The real span of recorded work, so the card can say what it is
+  // showing rather than printing a fixed range.
+  let earliest: number | null = null
+  let latest: number | null = null
+  const note = (iso: string) => {
+    const t = new Date(iso).getTime()
+    if (!Number.isFinite(t) || new Date(t).getFullYear() !== year) return
+    if (earliest === null || t < earliest) earliest = t
+    if (latest === null || t > latest) latest = t
+  }
+  for (const e of entries) note(e.started_at)
+  for (const b of bills) {
+    if (b.status !== 'Draft' && b.status !== 'PendingApproval') note(b.issue_date)
+  }
+
   return {
+    span:
+      earliest !== null && latest !== null
+        ? { from: new Date(earliest), to: new Date(latest) }
+        : null,
     months,
     totals,
     averageRate:

@@ -42,6 +42,9 @@ export function FirmOverview() {
   const [expanded, setExpanded] = useState(true)
 
   const data = useFirmUtilisation(year)
+  // The legend advertises a prior-year comparison, so plot one rather than
+  // leave three swatches describing a series that was never drawn.
+  const priorData = useFirmUtilisation(year - 1)
   const currency = useClientRatesStore((s) => s.firm_default_currency)
 
   // Hours, money or share of capacity — the same three series, measured
@@ -71,7 +74,25 @@ export function FirmOverview() {
     [data.months, unit],
   )
 
+  const priorSeries = priorData.months.map((m) => {
+    if (unit === 'ghs') return m.billableAmount
+    const total = m.billableHours + m.nonBillableHours + m.untrackedHours
+    if (unit === 'pct') return total > 0 ? 1 : 0
+    return total
+  })
+
   // Scale to the tallest stack so the chart uses its full height.
+  // The actual range of recorded activity, not a fixed window.
+  const spanLabel = data.span
+    ? (() => {
+        const fmt = (d: Date) =>
+          d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        const from = fmt(data.span.from)
+        const to = fmt(data.span.to)
+        return from === to ? `${from}, ${year}` : `${from} – ${to}, ${year}`
+      })()
+    : `No activity in ${year}`
+
   const axisLabel = (fraction: number): string => {
     if (peak <= 0) return unit === 'pct' ? `${Math.round(fraction * 100)}%` : '0'
     const v = fraction * peak
@@ -89,9 +110,12 @@ export function FirmOverview() {
   // Scale to the tallest stack so the chart uses its full height. Left to
   // the React Compiler rather than a manual useMemo, which it could not
   // preserve once the helpers below closed over this value.
-  const peak = series.reduce(
-    (max, m) => Math.max(max, m.billable + m.nonBillable + m.untracked),
-    0,
+  const peak = Math.max(
+    series.reduce(
+      (max, m) => Math.max(max, m.billable + m.nonBillable + m.untracked),
+      0,
+    ),
+    ...priorSeries,
   )
 
   return (
@@ -103,16 +127,15 @@ export function FirmOverview() {
             className="mt-1 text-[12px]"
             style={{ color: 'var(--text-muted)' }}
           >
-            Data last refreshed 4 hours ago · 05/20/2026 10:00 PM GMT
+            {/* This reads live stores, so there is no refresh lag to report.
+                Say what the figures cover instead of inventing a timestamp. */}
+            {data.hasData
+              ? `Live from recorded time and bills · ${year}`
+              : `Nothing recorded for ${year} yet`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Pill>
-            GHS (GH) <CaretDown size={12} strokeWidth={2} />
-          </Pill>
-          <Pill>
-            All users <CaretDown size={12} strokeWidth={2} />
-          </Pill>
+          <Pill>{currency}</Pill>
           <div
             className="flex items-center rounded-lg border overflow-hidden"
             style={{
@@ -195,7 +218,7 @@ export function FirmOverview() {
                 className="font-medium"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                Jan 1 – May 21, {year}
+                {spanLabel}
               </span>
             </span>
             <Question
@@ -383,7 +406,7 @@ export function FirmOverview() {
                         return (
                           <div
                             key={MONTHS[i]}
-                            className="flex h-full flex-1 flex-col justify-end"
+                            className="relative flex h-full flex-1 flex-col justify-end"
                             title={`${MONTHS[i]} ${year}: ${
                               unit === 'ghs'
                                 ? formatCurrency(m.billable, currency)
@@ -392,6 +415,18 @@ export function FirmOverview() {
                                   : `${hours(m.billable)} billable`
                             }`}
                           >
+                            {/* Last year at the same month, as a dashed
+                                outline behind the solid stack. */}
+                            {priorSeries[i] > 0 && (
+                              <div
+                                aria-hidden
+                                className="pointer-events-none absolute inset-x-0 bottom-0 rounded-t-[3px] border border-dashed"
+                                style={{
+                                  height: `${(priorSeries[i] / peak) * 100}%`,
+                                  borderColor: 'var(--text-subtle)',
+                                }}
+                              />
+                            )}
                             {stack.map(({ key, v, c }) =>
                               v <= 0 ? null : (
                                 <div
@@ -444,6 +479,11 @@ export function FirmOverview() {
                   color={UTILISATION_COLORS.untracked}
                   label="Untracked"
                 />
+                {/* Only advertise the comparison when there is a prior
+                    year to compare against; three swatches for a series
+                    that is not on the chart is worse than none. */}
+                {priorData.hasData && (
+                  <>
                 <LegendSwatch
                   color={UTILISATION_COLORS.billable}
                   label={`${year - 1} billable`}
@@ -459,7 +499,9 @@ export function FirmOverview() {
                   label={`${year - 1} untracked`}
                   dashed
                 />
-              </div>
+                  </>
+                )}
+</div>
             </div>
           </div>
         )}
