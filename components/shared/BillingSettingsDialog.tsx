@@ -58,7 +58,7 @@ export function BillingSettingsDialog({
   // React 19's "no setState in effect" rule.
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-[760px]">
         <DialogHeader>
           <DialogTitle
             className="flex items-center gap-2"
@@ -191,7 +191,7 @@ function SettingsForm({
               the historical numbers keep their original meaning.
             </p>
             <div
-              className="grid grid-cols-2 gap-2 mt-1"
+              className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-3"
               role="radiogroup"
               aria-label="Billing currency"
             >
@@ -240,11 +240,13 @@ function SettingsForm({
             </div>
           </div>
 
-          {/* ── Firm default rate section ───────────────────── */}
+          {/* Rate defaults sit side by side: three stacked full-width
+              sections made the dialog taller than most laptop screens. */}
           <div
-            className="grid gap-2 border-t pt-4"
+            className="grid gap-5 border-t pt-4 md:grid-cols-3"
             style={{ borderColor: 'var(--border-soft)' }}
           >
+          <div className="grid gap-2">
             <Label
               htmlFor="bs-rate"
               className="text-[13px] font-semibold inline-flex items-center gap-1.5"
@@ -286,11 +288,10 @@ function SettingsForm({
             </div>
           </div>
 
+          </div>
+
           {/* ── Firm default flat fee ───────────────────────── */}
-          <div
-            className="grid gap-2 border-t pt-4"
-            style={{ borderColor: 'var(--border-soft)' }}
-          >
+          <div className="grid gap-2">
             <Label
               htmlFor="bs-flat"
               className="text-[13px] font-semibold inline-flex items-center gap-1.5"
@@ -331,10 +332,7 @@ function SettingsForm({
           </div>
 
           {/* ── Firm default contingency share ──────────────── */}
-          <div
-            className="grid gap-2 border-t pt-4"
-            style={{ borderColor: 'var(--border-soft)' }}
-          >
+          <div className="grid gap-2">
             <Label
               htmlFor="bs-contingency"
               className="text-[13px] font-semibold inline-flex items-center gap-1.5"

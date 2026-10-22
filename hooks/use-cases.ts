@@ -12,7 +12,7 @@ import type {
   CreateCaseInput,
   UpdateCaseInput,
 } from '@/types/generated/graphql'
-import { nextCaseCode } from '@/lib/case-code'
+import { nextCaseCode } from '@/lib/reference-code'
 
 /**
  * Wire shape returned by the legalite-backend Cases query. The backend now

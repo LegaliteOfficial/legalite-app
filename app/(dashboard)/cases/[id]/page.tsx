@@ -25,7 +25,7 @@ import { eventToDeadline } from '../../calendar/_lib/adapt'
 import { AttachmentsPanel } from '@/components/shared/AttachmentsPanel'
 import { CaseDocumentList, LinkDocumentButton } from './_components/CaseDocuments'
 import type { CaseStatus, Client } from '@/types'
-import { displayCaseCode } from '@/lib/case-code'
+import { displayCaseCode } from '@/lib/reference-code'
 
 // ── Constants ──────────────────────────────────────────────────────────
 

@@ -4,7 +4,9 @@ import {
   parseCaseCode,
   formatCaseCode,
   displayCaseCode,
-} from '../case-code'
+  nextClientCode,
+  displayClientCode,
+} from '../reference-code'
 
 describe('parseCaseCode', () => {
   it('reads a generated code', () => {
@@ -97,5 +99,63 @@ describe('displayCaseCode', () => {
   })
   it('passes a real code through', () => {
     expect(displayCaseCode('LL-2026-0042')).toBe('LL-2026-0042')
+  })
+})
+
+// ── Client codes ──────────────────────────────────────────────────────────
+
+describe('nextClientCode', () => {
+  it('starts a year at 0001', () => {
+    expect(nextClientCode([], { year: 2026 })).toBe('CL-2026-0001')
+  })
+
+  it('continues from the highest client code in the year', () => {
+    expect(
+      nextClientCode(['CL-2026-0001', 'CL-2026-0007', 'CL-2026-0003'], { year: 2026 }),
+    ).toBe('CL-2026-0008')
+  })
+
+  it('uses a prefix of its own so a client cannot collide with a case', () => {
+    // The whole reason for CL: both used to be "LL", so LL-0004 was
+    // ambiguous and a case and a client could carry the same reference.
+    const caseCode = nextCaseCode([], { year: 2026 })
+    const clientCode = nextClientCode([], { year: 2026 })
+    expect(caseCode).toBe('LL-2026-0001')
+    expect(clientCode).toBe('CL-2026-0001')
+    expect(caseCode).not.toBe(clientCode)
+  })
+
+  it('ignores case codes when numbering clients', () => {
+    expect(
+      nextClientCode(['LL-2026-0042', 'LL-2026-0099'], { year: 2026 }),
+    ).toBe('CL-2026-0001')
+  })
+
+  it('ignores the legacy yearless LL-0004 client codes', () => {
+    // Old hand typed values must not be read as a sequence, or the first
+    // generated code would collide with one of them.
+    expect(nextClientCode(['LL-0004', 'LL-0012'], { year: 2026 })).toBe('CL-2026-0001')
+  })
+
+  it('does not reuse a number after a client is deleted', () => {
+    // Sequence comes from the highest code seen, not the count, so
+    // deleting CL-2026-0002 must not hand its number to the next client.
+    expect(nextClientCode(['CL-2026-0001', 'CL-2026-0003'], { year: 2026 })).toBe(
+      'CL-2026-0004',
+    )
+  })
+
+  it('restarts the sequence in a new year', () => {
+    expect(nextClientCode(['CL-2026-0050'], { year: 2027 })).toBe('CL-2027-0001')
+  })
+})
+
+describe('displayClientCode', () => {
+  it('returns null for a client that has none', () => {
+    expect(displayClientCode(null)).toBeNull()
+    expect(displayClientCode('   ')).toBeNull()
+  })
+  it('passes a real code through untouched', () => {
+    expect(displayClientCode('CL-2026-0004')).toBe('CL-2026-0004')
   })
 })
