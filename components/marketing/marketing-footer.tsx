@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import { SOCIAL_ACCOUNTS } from '@/lib/social-links'
 
 const PRODUCT_LINKS = [
   { href: '/product/case-management', label: 'Case management' },
@@ -10,10 +11,14 @@ const PRODUCT_LINKS = [
   { href: '/security-page', label: 'Security' },
 ]
 
+// The social accounts used to sit in this column as plain text, which left
+// Company with one real destination and buried the accounts in a list. They
+// now render as icons under the brand; these are the pages a visitor is
+// actually looking for under "Company".
 const COMPANY_LINKS = [
   { href: '/contact-us', label: 'Contact us' },
-  { href: 'https://www.linkedin.com/company/legalitetech/', label: 'LinkedIn', external: true },
-  { href: 'https://x.com/LegaLite', label: 'X', external: true },
+  { href: '/news', label: 'News' },
+  { href: '/#pricing', label: 'Pricing' },
 ]
 
 export function MarketingFooter() {
@@ -107,6 +112,29 @@ export function MarketingFooter() {
               <p className="mt-4 max-w-xs text-sm text-white/45 leading-relaxed">
                 The intelligent platform for modern legal practice in Ghana.
               </p>
+
+              <ul className="mt-6 flex items-center gap-2.5">
+                {SOCIAL_ACCOUNTS.map((s) => (
+                  <li key={s.label}>
+                    <Link
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={s.label}
+                      title={s.label}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] transition hover:border-[#C9972B]/50 hover:bg-white/[0.12]"
+                    >
+                      <Image
+                        src={s.icon}
+                        alt=""
+                        width={18}
+                        height={18}
+                        className="h-[17px] w-[17px]"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             {/* Product */}
@@ -129,12 +157,7 @@ export function MarketingFooter() {
               <ul className="mt-5 flex flex-col gap-3">
                 {COMPANY_LINKS.map((l) => (
                   <li key={l.label}>
-                    <Link
-                      href={l.href}
-                      target={l.external ? '_blank' : undefined}
-                      rel={l.external ? 'noopener noreferrer' : undefined}
-                      className="text-sm text-white/70 transition hover:text-white"
-                    >
+                    <Link href={l.href} className="text-sm text-white/70 transition hover:text-white">
                       {l.label}
                     </Link>
                   </li>

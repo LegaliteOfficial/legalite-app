@@ -5,19 +5,11 @@ import { ContactForm } from '@/components/marketing/contact-form'
 import { Reveal } from '@/components/marketing/reveal'
 import { SectionMark } from '@/components/marketing/section-mark'
 import { mk } from '@/lib/marketing-theme'
+import { SOCIAL_ACCOUNTS } from '@/lib/social-links'
 
 export const metadata: Metadata = {
   title: 'Request a demo',
 }
-
-const SOCIALS = [
-  { href: 'https://x.com/LegaLite', label: 'X', icon: '/marketing/contact/x.svg' },
-  {
-    href: 'https://www.linkedin.com/company/legalitetech/',
-    label: 'LinkedIn',
-    icon: '/marketing/contact/linkedin.svg',
-  },
-]
 
 export default function ContactUsPage() {
   return (
@@ -55,13 +47,14 @@ export default function ContactUsPage() {
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              {SOCIALS.map((s) => (
+              {SOCIAL_ACCOUNTS.map((s) => (
                 <Link
                   key={s.label}
                   href={s.href}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   aria-label={s.label}
+                  title={s.label}
                   className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#0D1B2A] transition hover:bg-[#16283D]"
                 >
                   <Image src={s.icon} alt="" width={18} height={18} className="h-4 w-4" />
