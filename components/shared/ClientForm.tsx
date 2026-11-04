@@ -225,7 +225,17 @@ export function ClientForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="client_code" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Client ID</Label>
-              <Input id="client_code" placeholder="e.g. LL-0001" className="h-10 rounded-lg text-[13px]" style={{ borderColor: 'var(--border)' }} {...form.register('client_code')} />
+              {/* Assigned by the system on create, so it is shown rather than
+                  typed. Editing an existing client still displays its code,
+                  including legacy hand typed ones, but will not change it. */}
+              <Input
+                id="client_code"
+                readOnly
+                placeholder={isEdit ? 'Not assigned' : 'Assigned when you save'}
+                className="h-10 rounded-lg text-[13px] cursor-default"
+                style={{ borderColor: 'var(--border)', background: 'var(--surface-sunken)', color: 'var(--text-muted)' }}
+                {...form.register('client_code')}
+              />
             </div>
             <div>
               <Label htmlFor="status" className="text-[12px] font-semibold mb-1.5 block" style={{ color: 'var(--navy)' }}>Status</Label>

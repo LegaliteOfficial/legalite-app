@@ -55,6 +55,17 @@ export function DayColumn({
   const handleMouseLeave = () => setHoverMinutes(null)
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // The event popover and its actions menu are React portals rendered
+    // from inside this column, so their clicks bubble up the React tree
+    // and land here even though they sit elsewhere in the DOM. That fired
+    // "create event" behind the menu, and the new dialog's backdrop then
+    // covered the menu so Delete could never be pressed.
+    //
+    // A portal's DOM target is outside this element, so containment is the
+    // reliable test: it catches the popover, the menu and any dialog
+    // without naming each one.
+    if (!e.currentTarget.contains(e.target as Node)) return
+
     // Defensive: if the click bubbled up from an event block that
     // forgot to stopPropagation, bail out so we don't dual-fire.
     if ((e.target as HTMLElement).closest('[data-event-block]')) return

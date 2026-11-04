@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PrioritiesPanel } from '@/components/shared/PrioritiesPanel'
 import type { DashboardStats } from '@/types'
 import { FirmOverview } from './FirmOverview'
+import { FirmBilling } from './FirmBilling'
 
 /**
  * Firm tab body: utilisation overview at the top, then a two-third
@@ -23,6 +24,10 @@ export function FirmDashboard({
   return (
     <div className="space-y-6">
       <FirmOverview />
+
+      {/* What the recorded time turned into. Sits under utilisation so the
+          firm tab reads hours first, then money. */}
+      <FirmBilling year={new Date().getFullYear()} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card padding="none" className="col-span-2 overflow-hidden">

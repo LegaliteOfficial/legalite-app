@@ -44,7 +44,7 @@ export function ClientDetailsDialog({
 }) {
   return (
     <Dialog open={!!client} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle
             style={{
