@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/shared/PageHeader'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { TemplateAssembly } from '@/components/shared/TemplateAssembly'
 
+import { CaseContextBanner } from './_components/CaseContextBanner'
 import { DocumentsErrorPanel } from './_components/DocumentsErrorPanel'
 import { DocumentsTabs } from './_components/DocumentsTabs'
 import { DraftsTab } from './_components/DraftsTab'
@@ -46,6 +47,10 @@ export default function DocumentsPage() {
           documentCount={state.drafts?.length ?? 0}
         />
 
+        {state.caseContext && state.activeTab === 'templates' && !state.showQuickSetup && (
+          <CaseContextBanner caseTitle={state.caseContext.title} onClear={state.clearCaseContext} />
+        )}
+
         {state.activeTab === 'templates' && !state.showQuickSetup && (
           <MyTemplates
             templates={state.myTemplates}
@@ -77,6 +82,7 @@ export default function DocumentsPage() {
                 state.setSelectedTemplate('')
               }}
               onSaved={() => state.setActiveTab('drafts')}
+              initialCaseId={state.caseContext?.id}
             />
           )}
 
@@ -128,6 +134,9 @@ export default function DocumentsPage() {
             onDesignChange={state.setDesign}
             onSave={state.handleSave}
             onSaveAsTemplate={state.handleSaveAsTemplate}
+            cases={state.documentCases ?? []}
+            caseId={state.draftCaseId}
+            onCaseChange={state.setDraftCaseId}
           />
         )}
 

@@ -6,13 +6,16 @@
  * The contact Documents tab also organises files into folders, soft-
  * deletes them to a recycle bin, and threads comments — those
  * operations live alongside the core document CRUD below.
+ *
+ * `documents` and `documentFolders` accept a case or client filter so a
+ * case or contact page loads only its own files.
  */
 
 import { graphql } from '@/types/generated'
 
 export const DocumentsQueryDoc = graphql(/* GraphQL */ `
-  query Documents($includeDeleted: Boolean) {
-    documents(includeDeleted: $includeDeleted) {
+  query Documents($includeDeleted: Boolean, $caseId: ID, $clientId: ID) {
+    documents(includeDeleted: $includeDeleted, caseId: $caseId, clientId: $clientId) {
       ...DocumentFields
     }
   }
@@ -48,6 +51,15 @@ export const DeleteDocumentMutationDoc = graphql(/* GraphQL */ `
   }
 `)
 
+/** Link existing documents to a case in one request. */
+export const LinkDocumentsToCaseMutationDoc = graphql(/* GraphQL */ `
+  mutation LinkDocumentsToCase($caseId: ID!, $documentIds: [ID!]!) {
+    linkDocumentsToCase(caseId: $caseId, documentIds: $documentIds) {
+      ...DocumentFields
+    }
+  }
+`)
+
 export const RestoreDocumentMutationDoc = graphql(/* GraphQL */ `
   mutation RestoreDocument($id: ID!) {
     restoreDocument(id: $id) {
@@ -80,8 +92,8 @@ export const SignDocumentUploadMutationDoc = graphql(/* GraphQL */ `
 // ── Folders ────────────────────────────────────────────────────────────────
 
 export const DocumentFoldersQueryDoc = graphql(/* GraphQL */ `
-  query DocumentFolders($clientId: ID) {
-    documentFolders(clientId: $clientId) {
+  query DocumentFolders($clientId: ID, $caseId: ID) {
+    documentFolders(clientId: $clientId, caseId: $caseId) {
       ...DocumentFolderFields
     }
   }

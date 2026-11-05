@@ -188,7 +188,11 @@ export function EditorShell({
               id="documents"
               label="Document folders"
               registerRef={registerSectionRef('documents')}
-              description="Folder structure created automatically when the case opens."
+              description={
+                isEdit
+                  ? 'New folders are added to the case when you save. Removing a row does not delete an existing folder; manage folders from the case page.'
+                  : 'Folders created on the case when it opens. Documents uploaded to the case can be filed into them.'
+              }
             >
               <DocumentFoldersSection form={form} setField={setField} />
             </Section>

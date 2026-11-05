@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   useCreateDocument,
@@ -56,9 +57,28 @@ export function useDocumentsPageState() {
   const [contentVersion, setContentVersion] = useState(0)
   /** Set when editing an existing draft — Save updates it instead of duping. */
   const [editingDocId, setEditingDocId] = useState<string | null>(null)
+  /** Case the draft in the studio is linked to ('' = none). */
+  const [draftCaseId, setDraftCaseId] = useState('')
+  /**
+   * Case the user came from (/documents?case=<id>, "New draft" on a case).
+   * New documents started during the visit are linked to it by default.
+   */
+  const [caseContextId, setCaseContextId] = useState<string | null>(null)
 
   const loadIntoStudio = useCallback(
-    (doc: { html: string; design?: unknown; title: string; court?: string; suitNumber?: string; id?: string | null }) => {
+    (doc: {
+      html: string
+      design?: unknown
+      title: string
+      court?: string
+      suitNumber?: string
+      id?: string | null
+      /** Existing drafts pass their own case; new ones inherit the context. */
+      caseId?: string | null
+    }) => {
+      setDraftCaseId(
+        doc.caseId !== undefined ? (doc.caseId ?? '') : (caseContextId ?? ''),
+      )
       setEditorHTML(doc.html)
       setPreviewContent(doc.html)
       setDesign(normaliseDesign(doc.design ?? null))
@@ -69,12 +89,17 @@ export function useDocumentsPageState() {
       setContentVersion((v) => v + 1)
       setActiveTab('editor')
     },
-    [],
+    [caseContextId],
   )
 
   // ── Data hooks ────────────────────────────────────────────────────────
+  const router = useRouter()
   const { data: documents, isLoading, error } = useDocuments()
   const { data: documentCases } = useCases()
+  const caseContext = useMemo(
+    () => (caseContextId ? documentCases?.find((c) => c.id === caseContextId) : undefined),
+    [caseContextId, documentCases],
+  )
   const createMutation = useCreateDocument()
   const updateMutation = useUpdateDocument()
   const deleteDocumentMutation = useDeleteDocument()
@@ -187,22 +212,36 @@ export function useDocumentsPageState() {
       placeholderFields[f.key] = f.placeholder ?? `[${f.label}]`
     }
     setTemplateFields(placeholderFields)
-    const html = generateDocumentHTML(id, 'High Court (General Division)', '', tmpl.name, placeholderFields)
-    loadIntoStudio({ html, title: tmpl.name })
-    setPreviewContent(generateDocumentContent(id, 'High Court (General Division)', '', tmpl.name, placeholderFields))
-  }, [loadIntoStudio])
+    // Drafting for a case: start from its court and suit number.
+    const tmplCourt = caseContext?.court || 'High Court (General Division)'
+    const tmplSuit = caseContext?.suit_number ?? ''
+    const html = generateDocumentHTML(id, tmplCourt, tmplSuit, tmpl.name, placeholderFields)
+    loadIntoStudio({ html, title: tmpl.name, court: caseContext?.court ?? '', suitNumber: tmplSuit })
+    setPreviewContent(generateDocumentContent(id, tmplCourt, tmplSuit, tmpl.name, placeholderFields))
+  }, [loadIntoStudio, caseContext])
 
   /** Start a new document from one of the firm's own templates. */
   const openMyTemplate = useCallback((doc: Document) => {
     setSelectedTemplate('')
-    loadIntoStudio({ html: doc.content ?? '', design: doc.design, title: doc.title })
-  }, [loadIntoStudio])
+    loadIntoStudio({
+      html: doc.content ?? '',
+      design: doc.design,
+      title: doc.title,
+      court: caseContext?.court ?? '',
+      suitNumber: caseContext?.suit_number ?? '',
+    })
+  }, [loadIntoStudio, caseContext])
 
   /** Blank document with the default design. */
   const startBlankDocument = useCallback(() => {
     setSelectedTemplate('')
-    loadIntoStudio({ html: '', title: '' })
-  }, [loadIntoStudio])
+    loadIntoStudio({
+      html: '',
+      title: '',
+      court: caseContext?.court ?? '',
+      suitNumber: caseContext?.suit_number ?? '',
+    })
+  }, [loadIntoStudio, caseContext])
 
   const handleOpenQuickSetup = useCallback((id: string) => {
     setSelectedTemplate(id)
@@ -226,21 +265,30 @@ export function useDocumentsPageState() {
       suit_number: suitNumber,
       content: editorHTML || previewContent,
       design: design as unknown as Record<string, unknown>,
+      // '' clears the link on update; the backend files a linked draft
+      // under the case's client.
+      case_id: draftCaseId,
     }
+    const linkedCase = draftCaseId ? documentCases?.find((c) => c.id === draftCaseId) : undefined
+    const viewCase = linkedCase
+      ? { action: { label: 'View case', onClick: () => router.push(`/cases/${linkedCase.id}`) } }
+      : undefined
     try {
       if (editingDocId) {
         await updateMutation.mutateAsync({ id: editingDocId, data })
-        toast.success('Draft updated.')
+        toast.success(linkedCase ? `Draft updated on ${linkedCase.title}.` : 'Draft updated.', viewCase)
       } else {
         const created = await createMutation.mutateAsync(data)
         if (created?.id) setEditingDocId(created.id)
-        toast.success('Draft saved.')
+        toast.success(linkedCase ? `Draft saved to ${linkedCase.title}.` : 'Draft saved.', viewCase)
       }
       setActiveTab('drafts')
-    } catch {
-      toast.error('Unable to save document. Please try again.')
+    } catch (err) {
+      toast.error(
+        err instanceof Error && err.message ? err.message : 'Unable to save document. Please try again.',
+      )
     }
-  }, [draftTitle, template, court, suitNumber, editorHTML, previewContent, design, editingDocId, createMutation, updateMutation])
+  }, [draftTitle, template, court, suitNumber, editorHTML, previewContent, design, editingDocId, draftCaseId, documentCases, router, createMutation, updateMutation])
 
   /** Saves the current content and design as a reusable firm template. */
   const handleSaveAsTemplate = useCallback(async () => {
@@ -264,7 +312,7 @@ export function useDocumentsPageState() {
   }, [draftTitle, editorHTML, design, createMutation])
 
   /** Open a saved draft in the editor (Drafts tab → pencil button). */
-  const openDraftInEditor = useCallback((doc: { id: string; content?: string | null; title?: string | null; court?: string | null; suit_number?: string | null; design?: unknown }) => {
+  const openDraftInEditor = useCallback((doc: { id: string; content?: string | null; title?: string | null; court?: string | null; suit_number?: string | null; design?: unknown; case_id?: string | null }) => {
     loadIntoStudio({
       id: doc.id,
       html: doc.content ?? '',
@@ -272,6 +320,7 @@ export function useDocumentsPageState() {
       title: doc.title ?? '',
       court: doc.court ?? '',
       suitNumber: doc.suit_number ?? '',
+      caseId: doc.case_id ?? null,
     })
   }, [loadIntoStudio])
 
@@ -295,6 +344,20 @@ export function useDocumentsPageState() {
     const rest = params.toString()
     window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''))
   }, [documents, openDraftInEditor])
+
+  // Deep link: /documents?case=<id> ("New draft" on a case) sets the case
+  // context, so whatever the user starts from here is linked to that case.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const id = params.get('case')
+    if (!id) return
+    // One-time sync from the URL (an external source), not derived state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCaseContextId(id)
+    params.delete('case')
+    const rest = params.toString()
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''))
+  }, [])
 
   const deleteDraft = useCallback(async (id: string, title: string | null | undefined) => {
     if (!confirm(`Delete "${title || 'this draft'}"? This cannot be undone.`)) return
@@ -320,6 +383,10 @@ export function useDocumentsPageState() {
     myTemplates,
     openMyTemplate,
     startBlankDocument,
+    // case linking
+    caseContext,
+    clearCaseContext: () => setCaseContextId(null),
+    draftCaseId, setDraftCaseId,
     // drafts
     documents, drafts, documentCases,
     isLoading, error,

@@ -249,7 +249,9 @@ export const documentSchema = z.object({
 export const documentFolderSchema = z.object({
   name: z.string().min(1, 'Folder name is required'),
   client_id: z.string().optional().or(z.literal('')),
+  case_id: z.string().optional().or(z.literal('')),
   parent_id: z.string().optional().or(z.literal('')),
+  category: z.string().optional(),
 })
 
 export const documentCommentSchema = z.object({

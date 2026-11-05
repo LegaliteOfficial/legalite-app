@@ -129,9 +129,11 @@ export function DocumentsTab({ contactId }: { contactId: string }) {
   // The recycle-bin toggle swaps the underlying query between live and
   // binned documents (the backend filters on `deleted_at`).
   const [showBin, setShowBin] = useState(false)
-  const { data: allDocs } = useDocuments(showBin)
+  // Filtered server-side to this contact; the client-side check stays as a
+  // guard while a refetch for another contact is in flight.
+  const { data: allDocs } = useDocuments({ includeDeleted: showBin, clientId: contactId })
   const { data: allCases } = useCases()
-  const { data: allFolders } = useDocumentFolders(contactId)
+  const { data: allFolders } = useDocumentFolders({ clientId: contactId })
   const docs = useMemo(
     () => (allDocs ?? []).filter((d) => d.client_id === contactId),
     [allDocs, contactId],

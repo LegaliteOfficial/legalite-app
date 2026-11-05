@@ -335,7 +335,9 @@ export const DocumentFolderFieldsFragmentDoc = graphql(/* GraphQL */ `
     id
     firm_id
     client_id
+    case_id
     parent_id
+    category
     user_id
     name
     document_count

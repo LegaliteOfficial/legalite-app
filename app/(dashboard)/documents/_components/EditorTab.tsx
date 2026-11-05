@@ -19,6 +19,7 @@ import type { DocumentDesign } from '@/lib/documents/design'
 import { PdfExportError, pdfFilename, renderDocumentPdf, saveBlob } from '@/lib/documents/pdf'
 import { useLetterheadFirm } from '../_hooks/use-letterhead-firm'
 import { EditorHeader } from './EditorHeader'
+import type { Case } from '@/types'
 import { DesignPanel } from './studio/DesignPanel'
 import { PdfPreviewDialog } from './studio/PdfPreviewDialog'
 import { StudioCanvas } from './studio/StudioCanvas'
@@ -38,6 +39,9 @@ export function EditorTab({
   onDesignChange,
   onSave,
   onSaveAsTemplate,
+  cases,
+  caseId,
+  onCaseChange,
 }: {
   draftTitle: string
   onTitleChange: (v: string) => void
@@ -51,6 +55,9 @@ export function EditorTab({
   onDesignChange: (d: DocumentDesign) => void
   onSave: () => void
   onSaveAsTemplate: () => void
+  cases: Case[]
+  caseId: string
+  onCaseChange: (id: string) => void
 }) {
   const firm = useLetterheadFirm()
   const isPhone = useIsPhone()
@@ -124,6 +131,9 @@ export function EditorTab({
         onDownload={() => void renderPdf('download')}
         onSaveAsTemplate={onSaveAsTemplate}
         onSave={onSave}
+        cases={cases}
+        caseId={caseId}
+        onCaseChange={onCaseChange}
       />
 
       {editor ? (

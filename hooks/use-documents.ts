@@ -11,6 +11,7 @@ import {
   DocumentFoldersQueryDoc,
   DocumentQueryDoc,
   DocumentsQueryDoc,
+  LinkDocumentsToCaseMutationDoc,
   RestoreDocumentMutationDoc,
   SignDocumentUploadMutationDoc,
   UpdateDocumentFolderMutationDoc,
@@ -34,9 +35,29 @@ const DOC_REFETCH = [
   'DashboardStats',
 ]
 
-export function useDocuments(includeDeleted = false) {
+export interface DocumentsFilter {
+  /** Show the recycle bin (only binned documents) instead of live ones. */
+  includeDeleted?: boolean
+  /** Only documents linked to this case. */
+  caseId?: string
+  /** Only documents filed under this client. */
+  clientId?: string
+  /** Defer the request (e.g. until a picker opens). */
+  skip?: boolean
+}
+
+/**
+ * Firm documents. Pass `caseId` or `clientId` so a case or contact page
+ * loads only its own files rather than the whole library.
+ */
+export function useDocuments(filter: DocumentsFilter = {}) {
   const { data, loading, error, refetch } = useQuery(DocumentsQueryDoc, {
-    variables: { includeDeleted },
+    variables: {
+      includeDeleted: filter.includeDeleted ?? false,
+      caseId: filter.caseId ?? null,
+      clientId: filter.clientId ?? null,
+    },
+    skip: filter.skip,
   })
   if (DEV_BYPASS) {
     return { data: [] as Document[], isLoading: false, error: undefined, refetch }
@@ -80,7 +101,7 @@ export function useCreateDocument() {
 
 export function useUpdateDocument() {
   const [mutate, state] = useMutation(UpdateDocumentMutationDoc, {
-    refetchQueries: [DocumentsQueryDoc, DocumentFoldersQueryDoc],
+    refetchQueries: DOC_REFETCH,
   })
   return {
     isPending: state.loading,
@@ -97,6 +118,24 @@ export function useUpdateDocument() {
     },
     mutate: ({ id, data }: { id: string; data: Partial<DocumentFormData> }) => {
       void mutate({ variables: { id, input: data } })
+    },
+  }
+}
+
+/**
+ * Link existing documents to a case in one request. The backend files each
+ * one under the case's client and moves any out of another case's folder.
+ */
+export function useLinkDocumentsToCase() {
+  const [mutate, state] = useMutation(LinkDocumentsToCaseMutationDoc, {
+    refetchQueries: DOC_REFETCH,
+  })
+  return {
+    isPending: state.loading,
+    error: state.error,
+    mutateAsync: async ({ caseId, documentIds }: { caseId: string; documentIds: string[] }) => {
+      const res = await mutate({ variables: { caseId, documentIds } })
+      return res.data?.linkDocumentsToCase
     },
   }
 }
@@ -168,9 +207,10 @@ export function useUploadDocumentFile() {
 
 // ── Folders ────────────────────────────────────────────────────────────────
 
-export function useDocumentFolders(clientId?: string) {
+/** Folders for one contact (`clientId`) or one case (`caseId`). */
+export function useDocumentFolders(filter: { clientId?: string; caseId?: string } = {}) {
   const { data, loading, error, refetch } = useQuery(DocumentFoldersQueryDoc, {
-    variables: { clientId: clientId ?? null },
+    variables: { clientId: filter.clientId ?? null, caseId: filter.caseId ?? null },
   })
   if (DEV_BYPASS) {
     return {

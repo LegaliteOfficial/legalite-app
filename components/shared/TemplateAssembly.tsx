@@ -47,6 +47,11 @@ interface TemplateAssemblyProps {
   onBack: () => void
   /** Called when the document is successfully saved to library. */
   onSaved?: () => void
+  /**
+   * Case to start with (e.g. the user came from "New draft" on a case).
+   * Its client and case are preselected until the user picks others.
+   */
+  initialCaseId?: string | null
 }
 
 const CATEGORY_COLORS: Record<string, { bg: string; accent: string }> = {
@@ -82,12 +87,13 @@ function buildCaseContext(client: Client, kase: Case): CaseContext {
   }
 }
 
-export function TemplateAssembly({ template, onBack, onSaved }: TemplateAssemblyProps) {
+export function TemplateAssembly({ template, onBack, onSaved, initialCaseId }: TemplateAssemblyProps) {
   // ── Pickers ────────────────────────────────────────────────────────────
   const [clientQuery, setClientQuery] = useState('')
   const [showClientList, setShowClientList] = useState(false)
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null)
+  // `undefined` = untouched (fall back to initialCaseId), `null` = cleared.
+  const [clientPick, setSelectedClient] = useState<Client | null | undefined>(undefined)
+  const [casePick, setSelectedCase] = useState<Case | null | undefined>(undefined)
 
   // ── Form fields ────────────────────────────────────────────────────────
   // The "shell" fields (court, suit number, draft title) live alongside
@@ -121,6 +127,24 @@ export function TemplateAssembly({ template, onBack, onSaved }: TemplateAssembly
   const { data: clients, isLoading: clientsLoading } = useClients()
   const { data: cases } = useCases()
   const createMutation = useCreateDocument()
+
+  // ── Derived: current picks, defaulting to the initial case ────────────
+  const initialCase = useMemo(
+    () => (initialCaseId ? cases?.find((c) => c.id === initialCaseId) : undefined),
+    [initialCaseId, cases],
+  )
+  const initialClient = useMemo(
+    () => (initialCase ? clients?.find((c) => c.id === initialCase.client_id) : undefined),
+    [initialCase, clients],
+  )
+  const selectedClient: Client | null =
+    clientPick !== undefined ? clientPick : (initialClient ?? null)
+  const selectedCase: Case | null =
+    casePick !== undefined
+      ? casePick
+      : clientPick === undefined && initialClient
+        ? (initialCase ?? null)
+        : null
 
   // ── Derived: client search results ────────────────────────────────────
   const matchingClients = useMemo(() => {
