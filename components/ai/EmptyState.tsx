@@ -1,11 +1,12 @@
 'use client'
 
-import { Scales, BookOpen, MagnifyingGlass } from '@phosphor-icons/react'
+import { Scales, BookOpen, MagnifyingGlass, PencilSimpleLine } from '@phosphor-icons/react'
 
 const SUGGESTIONS = [
   { Icon: Scales, text: 'What are the grounds for judicial review in Ghana?' },
   { Icon: BookOpen, text: 'Summarize the Matrimonial Causes Act provisions on divorce.' },
   { Icon: MagnifyingGlass, text: 'Find precedents on breach of contract in commercial disputes.' },
+  { Icon: PencilSimpleLine, text: 'Draft a polite fee-reminder email to a client.' },
 ]
 
 export function EmptyState({ onPick }: { onPick: (text: string) => void }) {
@@ -25,7 +26,8 @@ export function EmptyState({ onPick }: { onPick: (text: string) => void }) {
         className="text-[13.5px] mb-8 leading-relaxed"
         style={{ color: 'var(--text-secondary)' }}
       >
-        Ask about Ghana law, find case precedents, or get help drafting legal arguments.
+        Ask about Ghana law, find case precedents, draft documents — or ask me anything else.
+        Legal answers cite the Legalite library.
       </p>
       <div className="w-full space-y-2">
         {SUGGESTIONS.map((s, i) => {
