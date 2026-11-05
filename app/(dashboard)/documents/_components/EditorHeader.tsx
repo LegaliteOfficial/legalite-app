@@ -1,12 +1,19 @@
 'use client'
 
-import { BookmarkSimple, DownloadSimple, Eye, FileText, Palette } from '@phosphor-icons/react'
+import { useMemo } from 'react'
+import { BookmarkSimple, Briefcase, DownloadSimple, Eye, FileText, Palette } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/shared/Spinner'
+import type { Case } from '@/types'
+
+/** Select value for "not linked" (Select items need a non-empty value). */
+const NO_CASE = '__none__'
 
 /**
  * Studio header: inline-editable title and court meta on the left; the
- * design toggle, PDF preview/download and save actions on the right.
+ * case link, design toggle, PDF preview/download and save actions on the
+ * right. The case picker decides which case the draft is saved to.
  */
 export function EditorHeader({
   draftTitle,
@@ -22,6 +29,9 @@ export function EditorHeader({
   onDownload,
   onSaveAsTemplate,
   onSave,
+  cases,
+  caseId,
+  onCaseChange,
 }: {
   draftTitle: string
   onTitleChange: (v: string) => void
@@ -36,7 +46,17 @@ export function EditorHeader({
   onDownload: () => void
   onSaveAsTemplate: () => void
   onSave: () => void
+  cases: Case[]
+  caseId: string
+  onCaseChange: (id: string) => void
 }) {
+  const caseItems = useMemo(
+    () => [
+      { value: NO_CASE, label: 'No case' },
+      ...cases.map((c) => ({ value: c.id, label: c.client_name ? `${c.title} · ${c.client_name}` : c.title })),
+    ],
+    [cases],
+  )
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3" style={{ borderColor: 'var(--border-soft)' }}>
       <div className="flex min-w-0 basis-full items-center gap-3 sm:min-w-[220px] sm:basis-auto sm:flex-1">
@@ -61,6 +81,29 @@ export function EditorHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
+        <Select
+          items={caseItems}
+          value={caseId || NO_CASE}
+          onValueChange={(v) => onCaseChange(!v || v === NO_CASE ? '' : (v as string))}
+        >
+          <SelectTrigger
+            className="h-8 max-w-[220px] rounded-lg text-[12.5px]"
+            aria-label="Case this draft is saved to"
+            title="Case this draft is saved to"
+          >
+            <Briefcase size={14} className="shrink-0" style={{ color: caseId ? 'var(--gold-dark)' : 'var(--text-muted)' }} />
+            <span className="min-w-0 truncate">
+              <SelectValue />
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            {caseItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
           variant="outline"
           size="sm"

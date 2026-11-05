@@ -9,9 +9,11 @@ import { DOC_CATEGORIES } from '../../_constants'
 import type { DocFolderDraft, NewCaseForm, SetField } from '../../_types'
 
 /**
- * Folder structure spawned on case open. Each row binds a folder name
- * to a category from DOC_CATEGORIES; the firm-settings screen will let
- * firms edit that list per practice area down the road.
+ * Folder structure for the case. Each row binds a folder name to a
+ * category from DOC_CATEGORIES. The rows are saved in the case's
+ * `details` JSON and the backend creates a real document folder for each
+ * new name on save (existing folders are never removed from here, since
+ * they may hold documents).
  */
 export function DocumentFoldersSection({
   form,

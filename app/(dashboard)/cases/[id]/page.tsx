@@ -2,7 +2,7 @@
 
 import { use, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Calendar as CalendarIcon, Check, CaretDown, Clock, GridFour, List, DotsThree, Pencil, Plus, X } from '@phosphor-icons/react'
+import { ArrowLeft, Calendar as CalendarIcon, Check, CaretDown, Clock, DotsThree, Pencil, Plus, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,11 +19,10 @@ import { CaseEventComposerDialog } from '@/components/shared/CaseEventComposerDi
 import { StartTimerDialog } from '@/components/shared/StartTimerDialog'
 import { useCase, useDeleteCase, useUpdateCase } from '@/hooks/use-cases'
 import { useClients } from '@/hooks/use-clients'
-import { useDocuments } from '@/hooks/use-documents'
 import { useCalendarEvents } from '@/hooks/use-calendar'
 import { eventToDeadline } from '../../calendar/_lib/adapt'
 import { AttachmentsPanel } from '@/components/shared/AttachmentsPanel'
-import { CaseDocumentList, LinkDocumentButton } from './_components/CaseDocuments'
+import { CaseDocumentsSection } from './_components/CaseDocuments'
 import type { CaseStatus, Client } from '@/types'
 import { displayCaseCode } from '@/lib/reference-code'
 
@@ -79,7 +78,6 @@ export default function CaseDetailPage({
 
   const { data: kase, isLoading, error } = useCase(id)
   const { data: clients } = useClients()
-  const { data: documents } = useDocuments()
   const { data: calendarEvents, refetch: refetchDeadlines } = useCalendarEvents()
   const deadlines = useMemo(
     () => calendarEvents?.filter((e) => e.status !== 'cancelled').map(eventToDeadline),
@@ -97,11 +95,8 @@ export default function CaseDetailPage({
   // Unbilled Time list with sensible context.
   const [timerOpen, setTimerOpen] = useState(false)
 
-  // Derived state: documents + deadlines linked to this case.
-  const caseDocuments = useMemo(
-    () => (documents ?? []).filter((d) => d.case_id === id),
-    [documents, id],
-  )
+  // Derived state: deadlines linked to this case. Documents load inside
+  // CaseDocumentsSection, scoped to the case on the server.
   const caseDeadlines = useMemo(
     () => (deadlines ?? []).filter((d) => d.case_id === id),
     [deadlines, id],
@@ -113,10 +108,6 @@ export default function CaseDetailPage({
     () => (clients ?? []).find((c) => c.id === kase?.client_id),
     [clients, kase?.client_id],
   )
-
-  // Document view mode toggle — grid vs list. Stored locally; no
-  // need to persist across sessions for a detail screen.
-  const [docView, setDocView] = useState<'grid' | 'list'>('grid')
 
   // Inline edit dispatcher — small helper that wraps the update
   // mutation so every field commits the same way. Toasts on
@@ -465,23 +456,7 @@ export default function CaseDetailPage({
           </Section>
 
           {/* ─── Documents ─────────────────────────────────────────── */}
-          <Section
-            label="Documents"
-            rightSlot={
-              <div className="flex items-center gap-2">
-                <DocumentsViewToggle value={docView} onChange={setDocView} />
-                <LinkDocumentButton
-                  caseId={id}
-                  caseTitle={kase.title}
-                  caseClientId={kase.client_id ?? null}
-                  allDocuments={documents ?? []}
-                />
-              </div>
-            }
-            hideEdit
-          >
-            <CaseDocumentList caseId={id} documents={caseDocuments} view={docView} />
-          </Section>
+          <CaseDocumentsSection kase={kase} />
 
           {/* ─── Attachments ───────────────────────────────────────── */}
           <AttachmentsPanel entityType="case" entityId={id} />
@@ -1336,7 +1311,6 @@ const fmtDay = (v?: string | null) =>
 interface ReminderRow { recipient?: string; amount?: string; unit?: string }
 interface ContactRow { contact_id?: string; relationship?: string; bill_recipient?: boolean }
 interface RateRow { user_or_group?: string; amount?: string }
-interface FolderRow { name?: string; category?: string }
 
 /**
  * Renders every extended field captured during case creation (stored in the
@@ -1376,7 +1350,6 @@ function CaseExtendedDetails({
   const contacts = a<ContactRow>('related_contacts')
   const rates = a<RateRow>('custom_billing_rates')
   const taskLists = a<string>('task_lists')
-  const folders = a<FolderRow>('document_folders')
   const conflicts = a<string>('conflict_checks')
 
   const hasAdditional = !!(s('responsible_staff') || s('client_reference') || s('location'))
@@ -1507,16 +1480,6 @@ function CaseExtendedDetails({
         </CollapsibleSection>
       )}
 
-      {folders.length > 0 && (
-        <CollapsibleSection label="Document folders">
-          {folders.map((f, i) => (
-            <MetaRow key={i} label={f.name || 'Folder'}>
-              <RO>{f.category || '—'}</RO>
-            </MetaRow>
-          ))}
-        </CollapsibleSection>
-      )}
-
       {hasAllocations && (
         <CollapsibleSection label="Reporting allocations">
           <MetaRow label="Originating">
@@ -1567,46 +1530,6 @@ function Section({
       </header>
       {children}
     </section>
-  )
-}
-
-// ── Documents ──────────────────────────────────────────────────────────
-
-function DocumentsViewToggle({
-  value,
-  onChange,
-}: {
-  value: 'grid' | 'list'
-  onChange: (v: 'grid' | 'list') => void
-}) {
-  return (
-    <div
-      className="inline-flex rounded-lg border overflow-hidden"
-      style={{ borderColor: 'var(--border-default)' }}
-    >
-      {(['grid', 'list'] as const).map((mode) => {
-        const active = value === mode
-        const Icon = mode === 'grid' ? GridFour : List
-        return (
-          <button
-            key={mode}
-            type="button"
-            onClick={() => onChange(mode)}
-            className="inline-flex items-center justify-center h-8 w-8 cursor-pointer transition-colors"
-            style={{
-              background: active
-                ? 'var(--surface-sunken)'
-                : 'var(--surface-card)',
-              color: active ? 'var(--text-primary)' : 'var(--text-muted)',
-            }}
-            aria-label={`${mode} view`}
-            aria-pressed={active}
-          >
-            <Icon size={13} strokeWidth={1.75} />
-          </button>
-        )
-      })}
-    </div>
   )
 }
 

@@ -154,8 +154,12 @@ export interface DocumentFolder {
   id: string
   firm_id?: string | null
   client_id?: string | null
+  // Case the folder belongs to (null = contact or firm folder).
+  case_id?: string | null
   // Parent folder id (null = top level).
   parent_id?: string | null
+  // Document category the folder is for (from the case editor).
+  category?: string | null
   user_id: string
   name: string
   document_count: number
