@@ -11,12 +11,12 @@
  *
  * Context
  * -------
- * The assistant answers about what is on screen. The AI service's /ask
- * contract only carries `question` and `session_id`, and that service is
- * a separate deployment we do not change from here, so the page context
- * is folded into the question itself under a labelled preamble. The
- * preamble is capped (see CONTEXT_BUDGET) because the editor body can run
- * to many pages and the service rejects oversized payloads.
+ * The assistant answers about what is on screen. The page context is sent
+ * in /ask's separate `context` field (not folded into `question`), so the
+ * library search and conversation memory key off the user's own words and
+ * a long document never trips the question-length limit. The service
+ * treats it as data, not instructions. It is still capped (see
+ * CONTEXT_BUDGET) to bound prompt size.
  *
  * Dismissal
  * ---------
@@ -26,12 +26,13 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { PaperPlaneRight, Sparkle, X, ArrowClockwise } from '@phosphor-icons/react'
 import { askStream, AiServiceError } from '@/lib/ai/client'
 import { DEFAULT_DISCLAIMER } from '@/lib/ai/types'
 
-/** Characters of page context sent with a question. Roughly 1,500 tokens. */
-const CONTEXT_BUDGET = 6000
+/** Characters of page context sent with a question. Roughly 4,500 tokens. */
+const CONTEXT_BUDGET = 18000
 
 export interface DocumentContext {
   /** Which tab the user is looking at. */
@@ -61,15 +62,12 @@ function htmlToText(html: string): string {
 }
 
 /**
- * Folds the page context into the question. Returns the question
- * unchanged when there is nothing useful on screen, so a general legal
+ * Builds the on-screen context sent alongside a question. Returns
+ * `context: null` when there is nothing useful on screen, so a general
  * question is not weighed down by an empty preamble.
  */
-export function buildContextualQuestion(
-  question: string,
-  ctx: DocumentContext,
-): {
-  prompt: string
+export function buildPageContext(ctx: DocumentContext): {
+  context: string | null
   /** What the assistant actually got to see, so the UI can say so honestly. */
   contextKind: 'none' | 'document' | 'document-truncated' | 'list'
 } {
@@ -99,7 +97,7 @@ export function buildContextualQuestion(
     )
   }
 
-  if (parts.length === 0) return { prompt: question, contextKind: 'none' }
+  if (parts.length === 0) return { context: null, contextKind: 'none' }
 
   const contextKind: 'document' | 'document-truncated' | 'list' = body
     ? truncated
@@ -107,20 +105,13 @@ export function buildContextualQuestion(
       : 'document'
     : 'list'
 
-  const preamble = [
-    'The user is working in the Documents section of their legal practice software.',
-    `They are on the "${ctx.tab}" tab.`,
-    'Use the following on-screen context when it is relevant to the question.',
-    'If the question is general legal research, answer it on its own terms.',
+  const context = [
+    `The user is in the Documents section, on the "${ctx.tab}" tab.`,
     '',
-    '--- BEGIN PAGE CONTEXT ---',
     parts.join('\n\n'),
-    '--- END PAGE CONTEXT ---',
-    '',
-    'Question:',
   ].join('\n')
 
-  return { prompt: `${preamble}\n${question}`, contextKind }
+  return { context, contextKind }
 }
 
 /** Plain description of what the assistant could see, shown as a chip. */
@@ -140,6 +131,7 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [error, setError] = useState<string | null>(null)
   const [contextNote, setContextNote] = useState<string | null>(null)
+  const [statusLine, setStatusLine] = useState<string | null>(null)
 
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -201,16 +193,17 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
     const ctrl = new AbortController()
     abortRef.current = ctrl
 
-    const { prompt, contextKind } = buildContextualQuestion(question, context)
+    const { context: pageContext, contextKind } = buildPageContext(context)
 
     setAnswer('')
     setError(null)
+    setStatusLine(null)
     setPhase('retrieving')
     setContextNote(CONTEXT_LABEL[contextKind] ?? null)
 
     try {
       for await (const evt of askStream(
-        { question: prompt, session_id: sessionRef.current },
+        { question, session_id: sessionRef.current, context: pageContext },
         { signal: ctrl.signal },
       )) {
         switch (evt.event) {
@@ -219,6 +212,9 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
             break
           case 'sources_found':
             setPhase('answering')
+            break
+          case 'status':
+            setStatusLine(evt.data.message)
             break
           case 'answer_delta':
             setPhase('answering')
@@ -327,12 +323,12 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
                     </p>
                   ) : answer ? (
                     <>
-                      <p
-                        className="whitespace-pre-wrap text-[13px] leading-relaxed"
+                      <div
+                        className="text-[13px] leading-relaxed ai-markdown"
                         style={{ color: 'var(--text-primary)' }}
                       >
-                        {answer}
-                      </p>
+                        <ReactMarkdown>{answer}</ReactMarkdown>
+                      </div>
                       {phase === 'idle' && (
                         <p
                           className="mt-2.5 text-[10.5px] leading-snug"
@@ -348,9 +344,8 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       <ArrowClockwise size={12} className="animate-spin" />
-                      {phase === 'retrieving'
-                        ? 'Looking through the sources…'
-                        : 'Writing…'}
+                      {statusLine ??
+                        (phase === 'retrieving' ? 'Thinking…' : 'Writing…')}
                     </p>
                   )}
                 </div>

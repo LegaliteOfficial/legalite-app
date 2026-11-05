@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { BookOpen, CaretDown, Copy, Check, Scales, Buildings, Briefcase, Sparkle, ArrowSquareOut, ThumbsUp, ThumbsDown, PaperPlaneTilt } from '@phosphor-icons/react'
 import type {
+  AnswerMode,
   AskResponse,
   Citation,
   Confidence,
@@ -72,6 +73,12 @@ export function AnswerCard({
   const reasoning = structured?.legal_reasoning || response.reasoning_summary
   const confidenceText = structured?.confidence_assessment
   const confidence = CONFIDENCE_META[response.confidence]
+  const mode: AnswerMode | null = response.answer_mode ?? null
+  const modeMeta = mode ? MODE_META[mode] : null
+  const searches = response.searches ?? []
+  // Small talk reads like a chat bubble — no confidence pill, no
+  // disclaimer about legal advice attached to "hello".
+  const isChatty = mode === 'conversational'
 
   const copyAll = async () => {
     try {
@@ -110,7 +117,7 @@ export function AnswerCard({
               />
               Answering…
             </span>
-          ) : (
+          ) : mode === 'grounded' || !mode ? (
             <span
               className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
               style={{ background: confidence.bg, color: confidence.color }}
@@ -122,8 +129,18 @@ export function AnswerCard({
               />
               {confidence.label}
             </span>
+          ) : null}
+          {!streaming && modeMeta && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
+              style={{ background: modeMeta.bg, color: modeMeta.color }}
+              title={modeMeta.hint}
+            >
+              <modeMeta.Icon size={11} strokeWidth={1.75} />
+              {modeMeta.label}
+            </span>
           )}
-          {response.query_intent && (
+          {response.query_intent && !mode && (
             <span
               className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium"
               style={{ background: 'var(--surface-sunken)', color: 'var(--text-muted)' }}
@@ -175,6 +192,24 @@ export function AnswerCard({
           {streaming && <TypingCursor />}
         </div>
       </div>
+
+      {/* Agent answers have no separate reasoning section; surface the
+          grounding note (e.g. "answered from general knowledge") and the
+          searches that ran, so the user can see how the answer was built. */}
+      {!streaming && mode && !isChatty && !reasoning && (confidenceText || searches.length > 0) && (
+        <div className="px-5 pb-3 space-y-1">
+          {confidenceText && (
+            <p className="text-[12px] italic" style={{ color: 'var(--text-muted)' }}>
+              {confidenceText}
+            </p>
+          )}
+          {searches.length > 0 && (
+            <p className="text-[11.5px]" style={{ color: 'var(--text-subtle)' }}>
+              Searched the library for: {searches.map((q) => `“${q}”`).join(', ')}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Legal reasoning */}
       {!streaming && reasoning && (
@@ -249,7 +284,7 @@ export function AnswerCard({
       )}
 
       {/* Disclaimer — withheld while streaming; not final content yet. */}
-      {!streaming && (
+      {!streaming && !isChatty && (
         <p
           className="text-[11px] px-5 py-3 border-t"
           style={{
@@ -868,6 +903,40 @@ function formatCitationHeading(c: Citation): string {
   }
   if (c.law) return c.law
   return 'Source'
+}
+
+const MODE_META: Record<
+  AnswerMode,
+  { label: string; hint: string; color: string; bg: string; Icon: typeof BookOpen }
+> = {
+  grounded: {
+    label: 'From the Legalite library',
+    hint: 'Cites passages retrieved from the Legalite library.',
+    color: '#2E5E8C',
+    bg: 'rgba(46,94,140,0.10)',
+    Icon: BookOpen,
+  },
+  general: {
+    label: 'General knowledge',
+    hint: 'Not drawn from the Legalite library. Verify legal points against current law.',
+    color: '#8A6D1E',
+    bg: 'rgba(201,151,43,0.14)',
+    Icon: Sparkle,
+  },
+  conversational: {
+    label: 'Chat',
+    hint: 'Conversational reply.',
+    color: 'var(--text-muted)',
+    bg: 'var(--surface-sunken)',
+    Icon: Sparkle,
+  },
+  refused: {
+    label: 'Not enough evidence',
+    hint: 'The strict pipeline declined to answer.',
+    color: '#C0392B',
+    bg: 'rgba(192,57,43,0.10)',
+    Icon: Scales,
+  },
 }
 
 function humanizeIntent(intent: string): string {

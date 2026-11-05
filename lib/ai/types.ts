@@ -87,7 +87,23 @@ export interface StructuredAnswer {
 export interface AskRequest {
   question: string
   session_id?: string | null
+  /**
+   * Optional on-screen context (e.g. the document open in the editor).
+   * Sent separately from ``question`` so retrieval and memory key off the
+   * user's own words. The service treats it as data, not instructions.
+   */
+  context?: string | null
 }
+
+/**
+ * How the chat agent produced an answer.
+ *   grounded       — cites passages from the Legalite library
+ *   general        — the model's general knowledge (nothing citable found,
+ *                    or the question isn't legal)
+ *   conversational — greeting / small talk
+ *   refused        — legacy strict pipeline refused
+ */
+export type AnswerMode = 'grounded' | 'general' | 'conversational' | 'refused'
 
 /**
  * Mirrors ``AskResponse.disclaimer``'s Pydantic default in
@@ -117,6 +133,11 @@ export interface AskResponse {
   // segment for POST /ask/{message_id}/feedback. Null when the backend
   // didn't persist a chat_messages row (e.g. early refusal paths).
   message_id: string | null
+  // Chat agent (v4). Absent on responses from the legacy pipeline.
+  answer_mode?: AnswerMode | null
+  /** Library searches the agent ran for this turn. */
+  searches?: string[]
+  model?: string | null
 }
 
 // ───────────────────────── Streaming (SSE) ─────────────────────────
@@ -141,6 +162,15 @@ export type AskStreamEvent =
       data: { count: number; scopes: { global: number; tenant_private: number } }
     }
   | { event: 'answer_delta'; data: { text: string } }
+  | {
+      /**
+       * Chat agent progress line. May repeat: the agent can search the
+       * library several times per turn (``sources_found`` then fires once
+       * per search too). ``message`` is safe to show as-is.
+       */
+      event: 'status'
+      data: { phase: 'searching' | 'answering'; message: string; query?: string }
+    }
   | { event: 'reasoning'; data: { summary: string } }
   | {
       event: 'citations'

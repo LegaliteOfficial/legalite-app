@@ -46,6 +46,9 @@ export default function AiAssistantPage() {
   // producing output.
   const [streamingText, setStreamingText] = useState('')
   const [streamingPhase, setStreamingPhase] = useState<'retrieving' | 'answering' | null>(null)
+  // Agent progress line from `status` events ("Searching the Legalite
+  // library: …"). Shown in LoadingTurn until answer text starts arriving.
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -123,10 +126,6 @@ export default function AiAssistantPage() {
   const handleSend = useCallback(async () => {
     const question = input.trim()
     if (!question || isLoading) return
-    if (question.length < 1) {
-      toast.error('Question must be at least 3 characters.')
-      return
-    }
 
     // Cancel any in-flight request before starting a new one.
     abortRef.current?.abort()
@@ -141,6 +140,7 @@ export default function AiAssistantPage() {
     setIsLoading(true)
     setStreamingText('')
     setStreamingPhase('retrieving')
+    setStatusMessage(null)
     refreshSidebar()
 
     try {
@@ -155,6 +155,9 @@ export default function AiAssistantPage() {
             break
           case 'sources_found':
             setStreamingPhase('answering')
+            break
+          case 'status':
+            setStatusMessage(evt.data.message)
             break
           case 'answer_delta':
             setStreamingText((prev) => prev + evt.data.text)
@@ -254,6 +257,7 @@ export default function AiAssistantPage() {
         setIsLoading(false)
         setStreamingText('')
         setStreamingPhase(null)
+        setStatusMessage(null)
       }
     }
   }, [input, isLoading, activeId, refreshSidebar])
@@ -373,7 +377,7 @@ export default function AiAssistantPage() {
                     </div>
                   </div>
                 ) : (
-                  <LoadingTurn phase={streamingPhase} />
+                  <LoadingTurn phase={streamingPhase} message={statusMessage} />
                 ))}
               <div ref={chatEndRef} />
             </div>

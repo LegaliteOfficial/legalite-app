@@ -3,14 +3,17 @@
 import Image from 'next/image'
 
 const LOADING_PHASE_TEXT: Record<'retrieving' | 'answering', string> = {
-  retrieving: 'Searching Ghana legal corpus',
+  retrieving: 'Thinking',
   answering: 'Drafting an answer',
 }
 
 export function LoadingTurn({
   phase = 'retrieving',
+  message,
 }: {
   phase?: 'retrieving' | 'answering' | null
+  /** Live progress line from the agent's `status` SSE event, when present. */
+  message?: string | null
 }) {
   return (
     <div className="flex justify-start">
@@ -44,10 +47,10 @@ export function LoadingTurn({
             Legaliting<span className="inline-block ml-0.5 typing-dots" aria-hidden>…</span>
           </span>
           <span
-            className="text-[11.5px]"
+            className="text-[11.5px] line-clamp-2 max-w-[60ch]"
             style={{ color: 'var(--text-muted)' }}
           >
-            {LOADING_PHASE_TEXT[phase ?? 'retrieving']}
+            {message || LOADING_PHASE_TEXT[phase ?? 'retrieving']}
           </span>
         </div>
         <style jsx>{`
