@@ -5,17 +5,21 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import ReactMarkdown from 'react-markdown'
 
 import { getApolloClient } from '@/lib/apollo'
+import { CreateCalendarEventMutationDoc } from '@/lib/graphql/calendar'
 import { CreateCaseMutationDoc } from '@/lib/graphql/cases'
 import { CreateClientMutationDoc } from '@/lib/graphql/clients'
-import { CreateDeadlineMutationDoc } from '@/lib/graphql/deadlines'
+import { CreateDeadlineMutationDoc, UpdateDeadlineMutationDoc } from '@/lib/graphql/deadlines'
 import { CreateDocumentMutationDoc } from '@/lib/graphql/documents'
-import { CreateTaskMutationDoc } from '@/lib/graphql/tasks'
+import { CreateTaskMutationDoc, UpdateTaskMutationDoc } from '@/lib/graphql/tasks'
 import type {
+  CreateCalendarEventInput,
   CreateCaseInput,
   CreateClientInput,
   CreateDeadlineInput,
   CreateDocumentInput,
   CreateTaskInput,
+  UpdateDeadlineInput,
+  UpdateTaskInput,
 } from '@/types/generated/graphql'
 import type { ProposedAction } from './types'
 
@@ -40,6 +44,9 @@ const REFETCH: Record<ProposedAction['type'], string[]> = {
   create_deadline: ['Deadlines', 'DeadlineStats', 'AttentionFeed'],
   create_task: ['Tasks', 'DashboardStats'],
   create_document: ['Documents', 'DocumentFolders', 'DashboardStats'],
+  create_event: ['CalendarEvents', 'PendingDueEvents', 'AttentionFeed'],
+  update_task: ['Tasks', 'DashboardStats'],
+  update_deadline: ['Deadlines', 'DeadlineStats', 'AttentionFeed'],
 }
 
 export async function executeProposedAction(action: ProposedAction): Promise<ActionResult> {
@@ -102,6 +109,36 @@ export async function executeProposedAction(action: ProposedAction): Promise<Act
       const id = res.data?.createTask.id
       if (!id) throw new Error('The task was not created.')
       return { recordId: id, href: '/tasks', label: 'Open tasks' }
+    }
+    case 'create_event': {
+      const res = await client.mutate({
+        mutation: CreateCalendarEventMutationDoc,
+        variables: { input: payload as CreateCalendarEventInput },
+        refetchQueries,
+      })
+      const id = res.data?.createCalendarEvent.id
+      if (!id) throw new Error('The event was not created.')
+      return { recordId: id, href: '/calendar', label: 'Open calendar' }
+    }
+    case 'update_task': {
+      const res = await client.mutate({
+        mutation: UpdateTaskMutationDoc,
+        variables: { id: String(payload.id), input: payload.input as UpdateTaskInput },
+        refetchQueries,
+      })
+      const id = res.data?.updateTask.id
+      if (!id) throw new Error('The task was not updated.')
+      return { recordId: id, href: '/tasks', label: 'Open tasks' }
+    }
+    case 'update_deadline': {
+      const res = await client.mutate({
+        mutation: UpdateDeadlineMutationDoc,
+        variables: { id: String(payload.id), input: payload.input as UpdateDeadlineInput },
+        refetchQueries,
+      })
+      const id = res.data?.updateDeadline.id
+      if (!id) throw new Error('The deadline was not updated.')
+      return { recordId: id, href: '/calendar', label: 'Open calendar' }
     }
     case 'create_document': {
       // The assistant writes markdown; the document editor stores HTML.
