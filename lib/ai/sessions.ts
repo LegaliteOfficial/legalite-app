@@ -46,6 +46,26 @@ export interface UserTurn {
 
 export type Turn = UserTurn | AssistantTurn
 
+/**
+ * Plain-text transcript of earlier turns for the AI service's memory
+ * fallback (see AskRequest.history). Keeps the most recent turns and
+ * clips very long answers.
+ */
+export function historyForRequest(
+  turns: Turn[],
+  { maxTurns = 40, maxChars = 6000 }: { maxTurns?: number; maxChars?: number } = {},
+): { role: 'user' | 'assistant'; content: string }[] {
+  return turns.slice(-maxTurns).flatMap((t) => {
+    const content =
+      t.role === 'user'
+        ? t.content
+        : t.response.structured_answer?.direct_answer || t.response.answer
+    const text = (content ?? '').trim()
+    if (!text) return []
+    return [{ role: t.role, content: text.length > maxChars ? text.slice(0, maxChars) : text }]
+  })
+}
+
 export interface SessionRecord {
   id: string
   title: string
