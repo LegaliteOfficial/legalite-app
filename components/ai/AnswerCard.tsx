@@ -978,7 +978,22 @@ function buildPlainText(r: AskResponse): string {
   const reasoning = sa?.legal_reasoning || r.reasoning_summary
   let out = direct
   if (reasoning) out += '\n\nLegal reasoning:\n' + reasoning
-  if (r.citations.length) {
+  // Numbered sources, matching the [n] markers in the answer. The flat
+  // `citations` list is deduplicated and ordered by relevance, so it is
+  // only used when the structured list is missing (older answers).
+  const numbered = sa
+    ? [...sa.applicable_law, ...sa.relevant_public_cases, ...sa.firm_similar_cases]
+        .filter((c) => c.citation_id > 0)
+        .sort((a, b) => a.citation_id - b.citation_id)
+    : []
+  if (numbered.length) {
+    out += '\n\nSources:\n'
+    for (const c of numbered) {
+      out += `[${c.citation_id}] ${c.case_title ? formatCaseHeading(c) : formatLawHeading(c)}`
+      if (c.page_number) out += `, p.${c.page_number}`
+      out += '\n'
+    }
+  } else if (r.citations.length) {
     out += '\n\nSources:\n'
     for (const c of r.citations) {
       out += `- ${formatCitationHeading(c)}`
