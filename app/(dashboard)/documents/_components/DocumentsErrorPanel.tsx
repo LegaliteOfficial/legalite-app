@@ -37,7 +37,7 @@ export function DocumentsErrorPanel({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => (onRetry ? onRetry() : window.location.reload())}
+            onClick={() => (onRetry?.())}
             className="mt-4"
           >
             Retry

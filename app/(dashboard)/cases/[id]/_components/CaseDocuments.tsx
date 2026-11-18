@@ -644,7 +644,7 @@ function useDocumentActions() {
 
   const open = (d: Document) => {
     if (d.file_url) window.open(d.file_url, '_blank', 'noopener,noreferrer')
-    else router.push(`/documents?open=${d.id}`)
+    else router.push(`/documents/${d.id}`)
   }
 
   const download = async (d: Document) => {

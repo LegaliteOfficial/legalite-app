@@ -123,6 +123,22 @@ export function useUpdateDocument() {
 }
 
 /**
+ * Studio autosave. Same mutation as useUpdateDocument but without the
+ * list/dashboard refetch: autosave fires every few seconds while typing,
+ * and Apollo already updates the cached Document from the response.
+ */
+export function useAutosaveDocument() {
+  const [mutate, state] = useMutation(UpdateDocumentMutationDoc)
+  return {
+    isPending: state.loading,
+    mutateAsync: async ({ id, data }: { id: string; data: Partial<DocumentFormData> }) => {
+      const res = await mutate({ variables: { id, input: data } })
+      return res.data?.updateDocument
+    },
+  }
+}
+
+/**
  * Link existing documents to a case in one request. The backend files each
  * one under the case's client and moves any out of another case's folder.
  */

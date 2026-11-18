@@ -244,6 +244,7 @@ export const documentSchema = z.object({
   // Drafting-studio page design; shape owned by lib/documents/design.ts.
   design: z.record(z.string(), z.unknown()).optional(),
   is_template: z.boolean().optional(),
+  status: z.enum(['draft', 'in_review', 'final', 'filed']).optional(),
 })
 
 export const documentFolderSchema = z.object({

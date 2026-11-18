@@ -1,144 +1,131 @@
 'use client'
 
 /**
- * Documents page — composition root only.
- *
- * State + handlers live in _hooks/use-documents-page-state; each tab's
- * UI lives in _components; static types/constants in _types and
- * _constants. The page itself just wires tabs to sub-views.
+ * Documents home. Starting a document (AI, blank or template) is the first
+ * thing on the page; below it, the firm's documents with their workflow
+ * status. Each document opens in the studio on its own route,
+ * /documents/[id], so drafting never shares a page with the list.
  */
 
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
 import { TemplateAssembly } from '@/components/shared/TemplateAssembly'
+import { DocumentAssistant } from '@/components/ai/DocumentAssistant'
 
 import { CaseContextBanner } from './_components/CaseContextBanner'
 import { DocumentsErrorPanel } from './_components/DocumentsErrorPanel'
 import { DocumentsTabs } from './_components/DocumentsTabs'
-import { DraftsTab } from './_components/DraftsTab'
-import { EditorTab } from './_components/EditorTab'
 import { LibraryTab } from './_components/LibraryTab'
-import { TemplatesTab } from './_components/TemplatesTab'
 import { MyTemplates } from './_components/MyTemplates'
-import { DocumentAssistant } from '@/components/ai/DocumentAssistant'
+import { TemplatesTab } from './_components/TemplatesTab'
+import { DocumentsList } from './_components/home/DocumentsList'
+import { DraftComposer } from './_components/home/DraftComposer'
 import { useDocumentsPageState } from './_hooks/use-documents-page-state'
+
+const TAB_LABELS: Record<string, string> = {
+  documents: 'Documents',
+  templates: 'Templates',
+  library: 'Legal library',
+}
 
 export default function DocumentsPage() {
   const state = useDocumentsPageState()
+  const { start } = state
 
-  // Only the drafts and library tabs need the server. Templates are static
-  // and the editor is local, so a failed documents query must not blank the
-  // whole page — that is what made this look completely broken in
-  // production while it worked locally, where DEV_BYPASS hides the error.
   if (state.isLoading) return <PageSkeleton />
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-6 py-5">
-        <PageHeader
-          title="Documents"
-          description="Templates, drafts, and your legal library."
-        />
+      <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6">
+        <PageHeader title="Documents" description="Draft, review and file your legal documents, with AI beside you." />
+
+        {state.caseContext && (
+          <div className="mt-5">
+            <CaseContextBanner caseTitle={state.caseContext.title} onClear={state.clearCaseContext} />
+          </div>
+        )}
+
+        <div className="mt-5">
+          <DraftComposer
+            cases={state.documentCases}
+            defaultCaseId={state.caseContext?.id ?? null}
+            starting={start.starting}
+            onDraft={(instruction, linked) => void start.startWithAi(instruction, linked)}
+            onBlank={(linked) => void start.startBlank(linked)}
+            onBrowseTemplates={() => state.setActiveTab('templates')}
+          />
+        </div>
 
         <DocumentsTabs
           active={state.activeTab}
           onChange={state.setActiveTab}
-          documentCount={state.drafts?.length ?? 0}
+          documentCount={state.workDocuments.length}
         />
 
-        {state.caseContext && state.activeTab === 'templates' && !state.showQuickSetup && (
-          <CaseContextBanner caseTitle={state.caseContext.title} onClear={state.clearCaseContext} />
-        )}
+        <div className="pt-6 pb-24">
+          {state.activeTab === 'documents' &&
+            (state.error ? (
+              <DocumentsErrorPanel what="documents" onRetry={() => void state.refetch()} />
+            ) : (
+              <DocumentsList
+                documents={state.workDocuments}
+                cases={state.documentCases}
+                onSetStatus={(doc, s) => void state.setStatus(doc, s)}
+                onDelete={(doc) => void state.deleteDocument(doc.id, doc.title)}
+                onStartBlank={() => void start.startBlank()}
+              />
+            ))}
 
-        {state.activeTab === 'templates' && !state.showQuickSetup && (
-          <MyTemplates
-            templates={state.myTemplates}
-            onOpen={state.openMyTemplate}
-            onBlank={state.startBlankDocument}
-            onDelete={state.deleteDraft}
-          />
-        )}
+          {state.activeTab === 'templates' && !state.quickSetupTemplate && (
+            <>
+              <MyTemplates
+                templates={state.myTemplates}
+                onOpen={(doc) => void start.startFromFirmTemplate(doc)}
+                onBlank={() => void start.startBlank()}
+                onDelete={(id, title) => void state.deleteDocument(id, title)}
+              />
+              <TemplatesTab
+                search={state.templateSearch}
+                onSearchChange={state.setTemplateSearch}
+                selectedCategory={state.selectedCategory}
+                onSelectCategory={state.setSelectedCategory}
+                filteredTemplates={state.filteredTemplates}
+                onSelectTemplate={(id) => void start.startFromTemplate(id)}
+                onQuickSetup={state.openQuickSetup}
+              />
+            </>
+          )}
 
-        {state.activeTab === 'templates' && !state.showQuickSetup && (
-          <TemplatesTab
-            search={state.templateSearch}
-            onSearchChange={state.setTemplateSearch}
-            selectedCategory={state.selectedCategory}
-            onSelectCategory={state.setSelectedCategory}
-            filteredTemplates={state.filteredTemplates}
-            onSelectTemplate={state.handleSelectTemplate}
-            onQuickSetup={state.handleOpenQuickSetup}
-          />
-        )}
-
-        {state.activeTab === 'templates' &&
-          state.showQuickSetup &&
-          state.template && (
+          {state.activeTab === 'templates' && state.quickSetupTemplate && (
             <TemplateAssembly
-              template={state.template}
-              onBack={() => {
-                state.setShowQuickSetup(false)
-                state.setSelectedTemplate('')
+              template={state.quickSetupTemplate}
+              onBack={state.closeQuickSetup}
+              onSaved={() => {
+                state.closeQuickSetup()
+                state.setActiveTab('documents')
               }}
-              onSaved={() => state.setActiveTab('drafts')}
               initialCaseId={state.caseContext?.id}
             />
           )}
 
-        {state.activeTab === 'drafts' && state.error && (
-          <DocumentsErrorPanel what="drafts" />
-        )}
-
-        {state.activeTab === 'drafts' && !state.error && (
-          <DraftsTab
-            documents={state.drafts}
-            documentCases={state.documentCases}
-            search={state.draftSearch}
-            onSearchChange={state.setDraftSearch}
-            onOpen={state.openDraftInEditor}
-            onDelete={state.deleteDraft}
-            onBrowseTemplates={() => state.setActiveTab('templates')}
-          />
-        )}
-
-        {state.activeTab === 'library' && (
-          <LibraryTab
-            search={state.librarySearch}
-            onSearchChange={state.setLibrarySearch}
-            category={state.libraryCategory}
-            onCategoryChange={state.setLibraryCategory}
-            filteredLibrary={state.filteredLibrary}
-            isLoading={state.libraryLoading}
-            isUploading={state.isUploadingLibrary}
-            isDownloading={state.isDownloadingLibrary}
-            onUpload={state.handleLibraryUpload}
-            onDownload={state.handleLibraryDownload}
-            onDelete={state.handleLibraryDelete}
-            onFavorite={state.handleLibraryFavorite}
-          />
-        )}
-
-        {state.activeTab === 'editor' && (
-          <EditorTab
-            key={state.contentVersion}
-            draftTitle={state.draftTitle}
-            onTitleChange={state.setDraftTitle}
-            court={state.court}
-            suitNumber={state.suitNumber}
-            editingDocId={state.editingDocId}
-            isSaving={state.isEditorSaving}
-            initialHTML={state.editorHTML}
-            onContentChange={state.setEditorHTML}
-            design={state.design}
-            onDesignChange={state.setDesign}
-            onSave={state.handleSave}
-            onSaveAsTemplate={state.handleSaveAsTemplate}
-            cases={state.documentCases ?? []}
-            caseId={state.draftCaseId}
-            onCaseChange={state.setDraftCaseId}
-          />
-        )}
+          {state.activeTab === 'library' && (
+            <LibraryTab
+              search={state.librarySearch}
+              onSearchChange={state.setLibrarySearch}
+              category={state.libraryCategory}
+              onCategoryChange={state.setLibraryCategory}
+              filteredLibrary={state.filteredLibrary}
+              isLoading={state.libraryLoading}
+              isUploading={state.isUploadingLibrary}
+              isDownloading={state.isDownloadingLibrary}
+              onUpload={state.handleLibraryUpload}
+              onDownload={state.handleLibraryDownload}
+              onDelete={state.handleLibraryDelete}
+              onFavorite={state.handleLibraryFavorite}
+            />
+          )}
+        </div>
 
         <DeleteDialog />
       </div>
@@ -146,30 +133,14 @@ export default function DocumentsPage() {
       <DocumentAssistant
         context={{
           tab: TAB_LABELS[state.activeTab] ?? state.activeTab,
-          // Only the editor tab has a document open; elsewhere the
-          // assistant answers about what is listed instead.
-          documentTitle:
-            state.activeTab === 'editor' ? state.draftTitle : null,
-          documentHTML:
-            state.activeTab === 'editor' ? state.editorHTML : null,
           visibleDocuments:
-            state.activeTab === 'drafts'
-              ? (state.drafts ?? []).map((d) => d.title)
+            state.activeTab === 'documents'
+              ? state.workDocuments.map((d) => d.title)
               : state.activeTab === 'library'
                 ? state.filteredLibrary.map((d) => d.title)
-                : state.activeTab === 'templates'
-                  ? state.filteredTemplates.map((t) => t.name)
-                  : [],
+                : state.filteredTemplates.map((t) => t.name),
         }}
       />
     </div>
   )
-}
-
-/** Tab ids are terse; the assistant should say what the user sees. */
-const TAB_LABELS: Record<string, string> = {
-  templates: 'Templates',
-  drafts: 'Drafts',
-  library: 'Library',
-  editor: 'Editor',
 }
