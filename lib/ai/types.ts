@@ -93,6 +93,13 @@ export interface AskRequest {
    * user's own words. The service treats it as data, not instructions.
    */
   context?: string | null
+  /**
+   * This browser's copy of the conversation so far (oldest first, current
+   * question excluded). The service only uses it to seed its memory when
+   * it has no record of ``session_id``, so the assistant never loses a
+   * conversation the user can still see.
+   */
+  history?: { role: 'user' | 'assistant'; content: string }[]
 }
 
 /**

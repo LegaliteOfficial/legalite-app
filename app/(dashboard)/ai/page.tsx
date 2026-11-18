@@ -15,6 +15,7 @@ import {
   renameSession,
   pinSession,
   refineTitle,
+  historyForRequest,
   type SessionRecord,
   type Turn,
 } from '@/lib/ai/sessions'
@@ -146,7 +147,12 @@ export default function AiAssistantPage() {
     try {
       let response: AskResponse | null = null
       for await (const evt of askStream(
-        { question, session_id: id },
+        {
+          question,
+          session_id: id,
+          // Everything before the turn just appended (the current question).
+          history: historyForRequest(record.turns.slice(0, -1)),
+        },
         { signal: ctrl.signal },
       )) {
         switch (evt.event) {
