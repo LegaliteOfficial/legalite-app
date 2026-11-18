@@ -116,7 +116,15 @@ export type AnswerMode = 'grounded' | 'general' | 'conversational' | 'workspace'
  */
 export interface ProposedAction {
   id: string
-  type: 'create_case' | 'create_client' | 'create_deadline' | 'create_task' | 'create_document'
+  type:
+    | 'create_case'
+    | 'create_client'
+    | 'create_deadline'
+    | 'create_task'
+    | 'create_event'
+    | 'create_document'
+    | 'update_task'
+    | 'update_deadline'
   summary: string
   payload: Record<string, unknown>
   /** Human-readable labels, e.g. { case: 'Mensah v Owusu' }. */

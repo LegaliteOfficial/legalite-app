@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import ReactMarkdown from 'react-markdown'
 import { toast } from 'sonner'
 import {
   Briefcase,
   CheckCircle,
   CheckSquare,
+  CalendarPlus,
+  PencilSimple,
   FileText,
   Timer,
   UserPlus,
@@ -28,11 +31,17 @@ const TYPE_META: Record<ProposedAction['type'], { label: string; Icon: typeof Br
   create_deadline: { label: 'New deadline', Icon: Timer, verb: 'Add deadline' },
   create_task: { label: 'New task', Icon: CheckSquare, verb: 'Add task' },
   create_document: { label: 'Save document', Icon: FileText, verb: 'Save document' },
+  create_event: { label: 'New calendar event', Icon: CalendarPlus, verb: 'Add to calendar' },
+  update_task: { label: 'Update task', Icon: PencilSimple, verb: 'Apply update' },
+  update_deadline: { label: 'Update deadline', Icon: PencilSimple, verb: 'Apply update' },
 }
 
 // Payload keys shown on the card, in order, with friendly labels.
 const FIELD_LABELS: [string, string][] = [
   ['title', 'Title'],
+  ['status', 'Status'],
+  ['location', 'Location'],
+  ['event_type', 'Kind'],
   ['full_name', 'Name'],
   ['due_date', 'Due'],
   ['priority', 'Priority'],
@@ -64,7 +73,8 @@ export function ProposedActionCard({ action }: Props) {
   const meta = TYPE_META[action.type]
   const [state, setState] = useState<ActionState | null>(null)
   const [busy, setBusy] = useState(false)
-  const [showContent, setShowContent] = useState(false)
+  // Drafts are the point of a document card, so show them open.
+  const [showContent, setShowContent] = useState(true)
 
   // Read persisted outcome after mount (localStorage is client-only).
   useEffect(() => {
@@ -94,8 +104,13 @@ export function ProposedActionCard({ action }: Props) {
     setState(next)
   }
 
+  // Update proposals carry the changes under `input`.
+  const values =
+    action.type === 'update_task' || action.type === 'update_deadline'
+      ? ((action.payload.input as Record<string, unknown> | undefined) ?? {})
+      : action.payload
   const fields = FIELD_LABELS.flatMap(([key, label]) => {
-    const v = action.payload[key]
+    const v = values[key]
     if (v === undefined || v === null || v === '') return []
     return [[label, String(v)] as const]
   })
@@ -150,12 +165,12 @@ export function ProposedActionCard({ action }: Props) {
         </button>
       )}
       {content && showContent && (
-        <pre
-          className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-md p-3 text-[12px]"
+        <div
+          className="mt-2 max-h-96 overflow-auto rounded-md p-4 text-[13px] leading-relaxed ai-markdown"
           style={{ background: 'var(--surface-card)', color: 'var(--text-primary)' }}
         >
-          {content}
-        </pre>
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
       )}
 
       <div className="mt-3 flex items-center gap-2">
