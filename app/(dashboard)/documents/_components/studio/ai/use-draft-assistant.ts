@@ -14,6 +14,13 @@
  * - `review`   no text; a list of issues the panel shows.
  *
  * Nothing but `fill` touches the document without the lawyer accepting.
+ *
+ * Saving: TipTap only emits `update` when a transaction changes the
+ * document. A `fill` streams in with updates suppressed (so half-written
+ * text is not autosaved), and the final version is usually identical to
+ * what was streamed, so no `update` fires at the end. `onContent` is
+ * therefore called explicitly whenever a fill ends (done, stopped or
+ * failed), so the page and what autosave sees can never drift apart.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -68,9 +75,17 @@ function renderable(html: string): string {
   return lastOpen > html.lastIndexOf('>') ? html.slice(0, lastOpen) : html
 }
 
-export function useDraftAssistant(editor: Editor | null, getContext: () => DraftContext) {
+export function useDraftAssistant(
+  editor: Editor | null,
+  getContext: () => DraftContext,
+  onContent: (html: string) => void,
+) {
   const [run, setRun] = useState<DraftRun | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const onContentRef = useRef(onContent)
+  useEffect(() => {
+    onContentRef.current = onContent
+  })
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
@@ -173,7 +188,12 @@ export function useDraftAssistant(editor: Editor | null, getContext: () => Draft
         setRun((r) => (r ? { ...r, phase: 'error', status: null, error: message } : r))
         toast.error(message)
       } finally {
-        if (opts.target.kind === 'fill') editor.setEditable(true)
+        if (opts.target.kind === 'fill') {
+          editor.setEditable(true)
+          // Whatever is on the page now (complete, stopped or partial) is
+          // what autosave must hold.
+          onContentRef.current(editor.getHTML())
+        }
       }
     },
     [editor, getContext],
@@ -288,6 +308,7 @@ export function useDraftAssistant(editor: Editor | null, getContext: () => Draft
   const undoFill = useCallback(() => {
     if (!editor) return
     editor.commands.clearContent(true)
+    onContentRef.current(editor.getHTML())
     setRun(null)
   }, [editor])
 

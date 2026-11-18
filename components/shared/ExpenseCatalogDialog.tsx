@@ -44,6 +44,7 @@ import {
   useActiveCurrencyCode,
   useFormatCurrency,
 } from '@/lib/format-currency'
+import { confirmAction } from '@/stores/confirm.store'
 
 interface ExpenseCatalogDialogProps {
   open: boolean
@@ -163,16 +164,18 @@ export function ExpenseCatalogDialog({
     beginEdit(saved)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!editor.id) return
-    if (
-      !window.confirm(
-        'Delete this catalog item permanently? Historical bills that referenced it will keep their line-item details but the picker will no longer offer it.',
-      )
-    ) {
-      return
-    }
-    deleteExpense(editor.id)
+    const id = editor.id
+    const ok = await confirmAction({
+      title: 'Delete this catalog item?',
+      description: 'It is deleted permanently and will no longer be offered when adding expenses.',
+      details: ['Bills that already used it keep their line-item details'],
+      tone: 'danger',
+      confirmLabel: 'Delete item',
+    })
+    if (!ok) return
+    deleteExpense(id)
     toast.success('Catalog item deleted.')
     beginCreate()
   }

@@ -45,6 +45,7 @@ import { useClient } from '@/hooks/use-clients'
 import { useAuthStore } from '@/stores/auth.store'
 import { PagerBtn } from '../PagerBtn'
 import { GhostDialogBtn, PrimaryDialogBtn } from '../DialogButtons'
+import { promptText } from '@/stores/confirm.store'
 
 // ── Notes tab ──────────────────────────────────────────────────────────
 
@@ -1011,10 +1012,19 @@ function NoteEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
-  const promptForLink = () => {
+  const promptForLink = async () => {
     if (!editor) return
     const current = editor.getAttributes('link').href as string | undefined
-    const next = window.prompt('URL', current ?? 'https://')
+    const next = await promptText({
+      title: current ? 'Edit link' : 'Add a link',
+      description: current ? 'Change the address, or clear it to remove the link.' : 'Paste the web address to link the selected text to.',
+      inputLabel: 'URL',
+      inputType: 'url',
+      placeholder: 'https://',
+      defaultValue: current ?? 'https://',
+      confirmLabel: current ? 'Update link' : 'Add link',
+      validate: (v) => (v === '' || /^(https?:\/\/|mailto:)\S+$/i.test(v) ? null : 'Enter a full address starting with https://'),
+    })
     if (next === null) return
     if (next === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run()

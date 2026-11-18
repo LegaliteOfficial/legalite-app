@@ -19,6 +19,7 @@ import { STATUS_META, type DocumentStatus } from '@/lib/documents/status'
 import type { Document } from '@/types'
 import type { LibraryCategory, Tab } from '../_types'
 import { useStartDocument } from './use-start-document'
+import { confirmAction } from '@/stores/confirm.store'
 
 /**
  * State and handlers for the Documents home (list, templates, library).
@@ -64,13 +65,22 @@ export function useDocumentsPageState() {
 
   const deleteDocument = useCallback(
     async (id: string, title: string | null | undefined) => {
-      if (!confirm(`Move "${title || 'this document'}" to the bin?`)) return
-      try {
-        await deleteMutation.mutateAsync(id)
-        toast.success('Moved to the bin.')
-      } catch {
-        toast.error('Unable to delete the document. Please try again.')
-      }
+      const ok = await confirmAction({
+        title: 'Move this document to the bin?',
+        description: `"${title || 'Untitled document'}" will be moved to the bin. You can restore it from there.`,
+        tone: 'danger',
+        confirmLabel: 'Move to bin',
+        successLabel: 'Moved to the bin',
+        onConfirm: async () => {
+          try {
+            await deleteMutation.mutateAsync(id)
+          } catch {
+            toast.error('Unable to delete the document. Please try again.')
+            throw new Error('The document could not be moved to the bin.')
+          }
+        },
+      })
+      if (ok) toast.success('Moved to the bin.')
     },
     [deleteMutation],
   )

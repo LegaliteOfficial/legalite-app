@@ -1,23 +1,35 @@
 'use client'
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { useUIStore } from '@/stores/ui.store'
 import { useDeleteClient } from '@/hooks/use-clients'
 import { useDeleteCase } from '@/hooks/use-cases'
 import { useDeleteTask } from '@/hooks/use-tasks'
 import { useDeleteDocument } from '@/hooks/use-documents'
 import { useDeleteInvoice } from '@/hooks/use-invoices'
-import { Spinner } from '@/components/shared/Spinner'
-import { toast } from 'sonner'
+import { ConfirmDialogView } from '@/components/shared/ConfirmDialog'
 
+// What the database actually does on delete (see the ON DELETE rules in the
+// backend migrations). Only stated where it is known.
+const CONSEQUENCES: Record<string, string[]> = {
+  client: [
+    'Their cases, invoices and messages are deleted with them',
+    'Documents, tasks and events stay, without the client link',
+  ],
+  case: [
+    'The case team assignments are removed',
+    'Documents, tasks and events stay, unlinked from the case',
+  ],
+}
+
+// Deletes that take other records with them ask the user to type a word.
+const TYPE_TO_CONFIRM: Record<string, string> = { client: 'delete' }
+
+/**
+ * Delete confirmation driven by the UI store's `confirmDelete` modal. Runs
+ * the matching mutation inside the animated confirm dialog.
+ */
 export function DeleteDialog() {
   const { modal, closeModal } = useUIStore()
   const deleteClient = useDeleteClient()
@@ -27,55 +39,53 @@ export function DeleteDialog() {
   const deleteInvoice = useDeleteInvoice()
 
   const isOpen = modal?.type === 'confirmDelete'
-  if (!isOpen) return null
+  // Keep the last request so the dialog still has content while it animates out.
+  const [last, setLast] = useState<Extract<typeof modal, { type: 'confirmDelete' }> | null>(null)
+  if (isOpen && modal !== last) setLast(modal)
+  const current = isOpen ? modal : last
+  if (!current) return null
 
-  const { entity, id, name } = modal
-
-  const mutationMap: Record<string, { mutateAsync: (id: string) => Promise<void>; isPending: boolean }> = {
+  const { entity, id, name } = current
+  const mutationMap: Record<string, { mutateAsync: (id: string) => Promise<void> }> = {
     client: deleteClient,
     case: deleteCase,
     task: deleteTask,
     document: deleteDocument,
     invoice: deleteInvoice,
   }
-
   const mutation = mutationMap[entity]
   if (!mutation) return null
-
-  const handleDelete = async () => {
-    try {
-      await mutation.mutateAsync(id)
-      toast.success(`${entity.charAt(0).toUpperCase() + entity.slice(1)} deleted`)
-      closeModal()
-    } catch {
-      toast.error(`Failed to delete ${entity}`)
-    }
-  }
+  const Entity = entity.charAt(0).toUpperCase() + entity.slice(1)
 
   return (
-    <Dialog open onOpenChange={closeModal}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="font-heading" style={{ color: 'var(--navy)' }}>
-            Delete {entity}
-          </DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete <strong>{name}</strong>? This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={closeModal}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? <><Spinner size={14} /> Deleting...</> : 'Delete'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDialogView
+      key={`${entity}:${id}`}
+      open={isOpen}
+      tone="danger"
+      title={`Delete this ${entity}?`}
+      description={
+        <>
+          <strong style={{ color: 'var(--navy)' }}>{name}</strong> will be permanently deleted. This cannot be undone.
+        </>
+      }
+      details={CONSEQUENCES[entity]}
+      requireText={TYPE_TO_CONFIRM[entity]}
+      confirmLabel={`Delete ${entity}`}
+      successLabel={`${Entity} deleted`}
+      action={async () => {
+        try {
+          await mutation.mutateAsync(id)
+          toast.success(`${Entity} deleted`)
+        } catch (err) {
+          toast.error(`Failed to delete ${entity}`)
+          throw err
+        }
+      }}
+      onCancel={closeModal}
+      onDone={closeModal}
+      onOpenChangeComplete={(open) => {
+        if (!open) setLast(null)
+      }}
+    />
   )
 }

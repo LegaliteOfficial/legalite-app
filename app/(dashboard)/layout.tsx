@@ -9,6 +9,7 @@ import { PriorityRemindersBoot } from '@/components/shared/PriorityRemindersBoot
 import { TimeTrackerBoot } from '@/components/shared/TimeTrackerBoot'
 import { EventNoticeBanner } from '@/components/shared/EventNoticeBanner'
 import { EventDuePrompt } from '@/components/shared/EventDuePrompt/EventDuePrompt'
+import { ConfirmHost } from '@/components/shared/ConfirmDialog'
 
 export default function DashboardLayout({
   children,
@@ -58,6 +59,8 @@ export default function DashboardLayout({
         {/* Mobile nav drawer — mounted at the root, outside the zoomed
             <main>, so its fixed positioning tracks the viewport. */}
         <MobileNav />
+        {/* In-app confirm / prompt dialog (confirmAction, promptText). */}
+        <ConfirmHost />
       </div>
     </AuthGuard>
   )

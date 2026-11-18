@@ -34,10 +34,7 @@ export function CasesPageTabs({
         </TabButton>
         <TabButton
           active={activeTab === 'stages'}
-          onClick={() => {
-            onTabChange('stages')
-            toast.info('Stages admin is coming next.')
-          }}
+          onClick={() => onTabChange('stages')}
         >
           Stages
         </TabButton>

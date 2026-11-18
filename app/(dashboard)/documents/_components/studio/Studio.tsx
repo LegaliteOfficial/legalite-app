@@ -42,6 +42,7 @@ import { StudioCanvas } from './StudioCanvas'
 import { StudioHeader, type StudioPanel } from './StudioHeader'
 import { StudioToolbar } from './StudioToolbar'
 import { studioExtensions } from './extensions'
+import { confirmAction } from '@/stores/confirm.store'
 
 /** Case facts for the model. Only what a drafter would put in a heading. */
 export function buildMatter(doc: Pick<Document, 'court' | 'suit_number' | 'parties' | 'judge'>, linked: Case | undefined): string | null {
@@ -126,7 +127,7 @@ export function Studio({ doc }: { doc: Document }) {
     contextRef.current = { title, matter: buildMatter(doc, linkedCase), useAuthorities }
   })
   const getContext = useCallback(() => contextRef.current, [])
-  const assistant = useDraftAssistant(editor, getContext)
+  const assistant = useDraftAssistant(editor, getContext, setHtml)
 
   const openAi = useCallback((tab?: AiTab) => {
     setPanel('ai')
@@ -134,16 +135,22 @@ export function Studio({ doc }: { doc: Document }) {
   }, [])
 
   // "Draft with AI" from the home page: write the first version on arrival.
+  // `assistant` is a new object every render, so read it through a ref: a
+  // dependency on it would re-run this effect and cancel the timer.
+  const generateRef = useRef(assistant.generate)
+  useEffect(() => {
+    generateRef.current = assistant.generate
+  })
   const intentHandled = useRef(false)
   useEffect(() => {
     if (!editor || intentHandled.current) return
-    intentHandled.current = true
     const intent = takeDraftIntent(doc.id)
+    intentHandled.current = true
     if (!intent) return
     // Wait for cases so the draft can use the linked case's facts.
-    const t = setTimeout(() => assistant.generate(intent.instruction), 400)
+    const t = setTimeout(() => generateRef.current(intent.instruction), 400)
     return () => clearTimeout(t)
-  }, [editor, doc.id, assistant])
+  }, [editor, doc.id])
 
   // ── Keyboard ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -152,7 +159,12 @@ export function Studio({ doc }: { doc: Document }) {
       const k = e.key.toLowerCase()
       if (k === 's') {
         e.preventDefault()
-        void autosave.saveNow().then((ok) => ok && toast.success('Saved.'))
+        const current = editor?.getHTML()
+        if (current !== undefined) setHtml(current)
+        void autosave.saveNow(current !== undefined ? { content: current } : undefined).then((ok) => {
+          if (ok) toast.success('Saved.')
+          else toast.error('Could not save. Check your connection and try again.')
+        })
       } else if (k === 'j') {
         e.preventDefault()
         openAi(hasSelection ? 'draft' : undefined)
@@ -160,7 +172,7 @@ export function Studio({ doc }: { doc: Document }) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [autosave, openAi, hasSelection])
+  }, [autosave, openAi, hasSelection, editor])
 
   // ── PDF ─────────────────────────────────────────────────────────────
   const [pdfBusy, setPdfBusy] = useState<'preview' | 'download' | null>(null)
@@ -218,14 +230,24 @@ export function Studio({ doc }: { doc: Document }) {
   }, [title, html, design, createMutation])
 
   const moveToBin = useCallback(async () => {
-    if (!confirm(`Move "${displayTitle}" to the bin?`)) return
-    try {
-      await deleteMutation.mutateAsync(doc.id)
-      toast.success('Moved to the bin.')
-      router.push('/documents')
-    } catch {
-      toast.error('Unable to delete the document. Please try again.')
-    }
+    const ok = await confirmAction({
+      title: 'Move this document to the bin?',
+      description: `"${displayTitle}" will be moved to the bin. You can restore it from there.`,
+      tone: 'danger',
+      confirmLabel: 'Move to bin',
+      successLabel: 'Moved to the bin',
+      onConfirm: async () => {
+        try {
+          await deleteMutation.mutateAsync(doc.id)
+        } catch {
+          toast.error('Unable to delete the document. Please try again.')
+          throw new Error('The document could not be moved to the bin.')
+        }
+      },
+    })
+    if (!ok) return
+    toast.success('Moved to the bin.')
+    router.push('/documents')
   }, [deleteMutation, doc.id, displayTitle, router])
 
   const changeStatus = useCallback((s: DocumentStatus) => {

@@ -23,6 +23,7 @@ import {
 } from '../_constants'
 import { minutesToHHMM } from '../_lib/date'
 import { newReminderId, offsetMinutes } from '../_lib/reminders'
+import { confirmAction } from '@/stores/confirm.store'
 
 // Map a reminder's minute lead time to the closest preset offset key.
 function minutesToOffsetKey(minutes: number): ReminderOffsetKey {
@@ -260,18 +261,31 @@ export function useEventDialogForm({
 
   const handleDelete = async () => {
     if (!editing) return
-    if (!confirm(`Delete "${editing.title}"?`)) return
+    const target = editing
     setDeleting(true)
     try {
-      await deleteMutation.mutateAsync(editing.id)
+      const ok = await confirmAction({
+        title: 'Delete this event?',
+        description: `"${target.title}" will be removed from the calendar for everyone invited.`,
+        tone: 'danger',
+        confirmLabel: 'Delete event',
+        successLabel: 'Event deleted',
+        onConfirm: async () => {
+          try {
+            await deleteMutation.mutateAsync(target.id)
+          } catch (err) {
+            toast.error(
+              err instanceof Error
+                ? `Delete failed: ${err.message}`
+                : 'Delete failed. Please try again.',
+            )
+            throw err
+          }
+        },
+      })
+      if (!ok) return
       toast.success('Event deleted.')
       onClose()
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? `Delete failed: ${err.message}`
-          : 'Delete failed. Please try again.',
-      )
     } finally {
       setDeleting(false)
     }

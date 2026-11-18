@@ -14,6 +14,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -174,16 +175,18 @@ function AttentionRow({
                 }
               />
               <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel className="text-[11px]">Remind me later</DropdownMenuLabel>
-                {snoozePresets(now).map((p) => (
-                  <DropdownMenuItem
-                    key={p.label}
-                    onClick={() => onSnooze(item, p.until)}
-                    className="text-[12.5px] cursor-pointer"
-                  >
-                    {p.label}
-                  </DropdownMenuItem>
-                ))}
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-[11px]">Remind me later</DropdownMenuLabel>
+                  {snoozePresets(now).map((p) => (
+                    <DropdownMenuItem
+                      key={p.label}
+                      onClick={() => onSnooze(item, p.until)}
+                      className="text-[12.5px] cursor-pointer"
+                    >
+                      {p.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
