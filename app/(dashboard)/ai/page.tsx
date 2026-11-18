@@ -162,6 +162,11 @@ export default function AiAssistantPage() {
           case 'answer_delta':
             setStreamingText((prev) => prev + evt.data.text)
             break
+          case 'action_proposed':
+            // The terminal `completed` payload carries every proposal;
+            // the confirmation cards render from that.
+            setStatusMessage(`Prepared: ${evt.data.summary}`)
+            break
           case 'reasoning':
           case 'citations':
             // Not needed for the live bubble — the terminal event below

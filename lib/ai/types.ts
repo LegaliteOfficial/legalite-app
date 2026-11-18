@@ -101,9 +101,27 @@ export interface AskRequest {
  *   general        — the model's general knowledge (nothing citable found,
  *                    or the question isn't legal)
  *   conversational — greeting / small talk
+ *   workspace      — drawn from the user's own cases, deadlines, documents
  *   refused        — legacy strict pipeline refused
  */
-export type AnswerMode = 'grounded' | 'general' | 'conversational' | 'refused'
+export type AnswerMode = 'grounded' | 'general' | 'conversational' | 'workspace' | 'refused'
+
+/**
+ * A record the assistant proposed creating. Nothing exists yet: the UI
+ * shows a confirmation card and, on confirm, runs the matching GraphQL
+ * mutation (see lib/ai/actions.ts). ``payload`` is already shaped like
+ * that mutation's input, except two assistant-only keys handled by the
+ * executor: ``new_client`` (create_case) and ``content_format``
+ * (create_document, markdown to be converted to HTML).
+ */
+export interface ProposedAction {
+  id: string
+  type: 'create_case' | 'create_client' | 'create_deadline' | 'create_task' | 'create_document'
+  summary: string
+  payload: Record<string, unknown>
+  /** Human-readable labels, e.g. { case: 'Mensah v Owusu' }. */
+  display: Record<string, string>
+}
 
 /**
  * Mirrors ``AskResponse.disclaimer``'s Pydantic default in
@@ -138,6 +156,8 @@ export interface AskResponse {
   /** Library searches the agent ran for this turn. */
   searches?: string[]
   model?: string | null
+  /** Records the assistant proposed this turn, pending confirmation. */
+  proposed_actions?: ProposedAction[]
 }
 
 // ───────────────────────── Streaming (SSE) ─────────────────────────
@@ -169,7 +189,12 @@ export type AskStreamEvent =
        * per search too). ``message`` is safe to show as-is.
        */
       event: 'status'
-      data: { phase: 'searching' | 'answering'; message: string; query?: string }
+      data: { phase: 'searching' | 'answering' | 'workspace'; message: string; query?: string }
+    }
+  | {
+      /** The assistant proposed a record; the ``completed`` payload repeats it. */
+      event: 'action_proposed'
+      data: ProposedAction
     }
   | { event: 'reasoning'; data: { summary: string } }
   | {

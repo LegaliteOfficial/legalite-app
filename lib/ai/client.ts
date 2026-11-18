@@ -8,13 +8,16 @@ import type {
   FeedbackCreate,
   FeedbackResponse,
 } from './types'
+import { readToken } from '@/lib/apollo'
 
 /**
  * Client for the LegaLite AI FastAPI service.
  *
  * The service runs separately from the NestJS backend (different repo,
  * different host) so we hit it directly from the browser. CORS is handled
- * by the FastAPI middleware; no auth header is required for /ask today
+ * by the FastAPI middleware. /ask works anonymously; when the user is signed
+ * in, their token is forwarded (see askHeaders) so the assistant can use
+ * their workspace. Tenant headers remain optional
  * (legacy contract, see legalite-ai/app/core/service_auth.py).
  */
 const AI_BASE_URL = process.env.NEXT_PUBLIC_LEGALITE_AI_URL
@@ -41,6 +44,23 @@ export class AiServiceError extends Error {
 }
 
 /**
+ * Headers for /ask. The signed-in user's token is forwarded so the
+ * assistant can read that user's own cases, deadlines, tasks and
+ * documents. The AI service does not trust it itself: it only passes it
+ * on to the NestJS backend, which validates it and applies the user's
+ * permissions. Anonymous use still works without it.
+ */
+function askHeaders(accept: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: accept,
+  }
+  const token = readToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  return headers
+}
+
+/**
  * POST /ask — ask the legal Q&A pipeline a question.
  *
  * - `signal` lets the caller abort if the user navigates away or sends
@@ -63,7 +83,7 @@ export async function ask(
   try {
     res = await fetch(`${AI_BASE_URL}/ask`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: askHeaders('application/json'),
       body: JSON.stringify(payload),
       signal: options.signal,
     })
@@ -123,7 +143,7 @@ export async function* askStream(
   try {
     res = await fetch(`${AI_BASE_URL}/ask?stream=true`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      headers: askHeaders('text/event-stream'),
       body: JSON.stringify(payload),
       signal: options.signal,
     })
