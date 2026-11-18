@@ -16,6 +16,7 @@ import {
   SourcePreviewDrawer,
   type SourcePreviewAnchor,
 } from '@/components/ai/SourcePreviewDrawer'
+import { ProposedActionCard } from '@/components/ai/ProposedActionCard'
 
 interface AnswerCardProps {
   response: AskResponse
@@ -192,6 +193,16 @@ export function AnswerCard({
           {streaming && <TypingCursor />}
         </div>
       </div>
+
+      {/* Records the assistant proposed (case, deadline, draft …). Each
+          waits for the user's confirmation before anything is created. */}
+      {!streaming && (response.proposed_actions?.length ?? 0) > 0 && (
+        <div className="px-5 pb-3 space-y-2">
+          {response.proposed_actions!.map((a) => (
+            <ProposedActionCard key={a.id} action={a} />
+          ))}
+        </div>
+      )}
 
       {/* Agent answers have no separate reasoning section; surface the
           grounding note (e.g. "answered from general knowledge") and the
@@ -929,6 +940,13 @@ const MODE_META: Record<
     color: 'var(--text-muted)',
     bg: 'var(--surface-sunken)',
     Icon: Sparkle,
+  },
+  workspace: {
+    label: 'Your workspace',
+    hint: 'Drawn from your own cases, deadlines, tasks and documents in Legalite.',
+    color: '#2E5E8C',
+    bg: 'rgba(46,94,140,0.10)',
+    Icon: Briefcase,
   },
   refused: {
     label: 'Not enough evidence',
