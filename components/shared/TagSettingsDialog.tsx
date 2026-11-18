@@ -26,6 +26,7 @@ import {
   useDeleteTag,
   type Tag,
 } from '@/hooks/use-tags'
+import { confirmAction } from '@/stores/confirm.store'
 
 export function TagSettingsDialog({
   open,
@@ -84,13 +85,22 @@ export function TagSettingsDialog({
     }
   }
   const handleRemove = async (tag: Tag) => {
-    if (!confirm(`Delete the "${tag.name}" tag? It will be removed from all contacts.`))
-      return
-    try {
-      await deleteTag.mutateAsync(tag.id)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not delete tag.')
-    }
+    const ok = await confirmAction({
+      title: `Delete the "${tag.name}" tag?`,
+      description: 'It will be removed from every contact and case that uses it.',
+      tone: 'danger',
+      confirmLabel: 'Delete tag',
+      successLabel: 'Tag deleted',
+      onConfirm: async () => {
+        try {
+          await deleteTag.mutateAsync(tag.id)
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : 'Could not delete tag.')
+          throw err
+        }
+      },
+    })
+    if (ok) toast.success('Tag deleted.')
   }
 
   return (

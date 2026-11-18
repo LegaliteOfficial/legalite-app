@@ -53,6 +53,8 @@ interface TaskComposerDialogProps {
   editing?: Task | null
   /** Lane the new task lands in when created from a specific column. */
   defaultStatus?: TaskStatus
+  /** Case a new task is linked to when created from a case page. */
+  defaultCaseId?: string
 }
 
 interface ReminderRow {
@@ -112,6 +114,7 @@ export function TaskComposerDialog({
   onOpenChange,
   editing,
   defaultStatus = 'Pending',
+  defaultCaseId,
 }: TaskComposerDialogProps) {
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
@@ -168,7 +171,7 @@ export function TaskComposerDialog({
           : [],
       )
       setReminders([])
-      setCaseId('')
+      setCaseId(defaultCaseId ?? '')
     }
     setSubmitting(false)
     // selfMember resolves async — the seed effect below back-fills it.

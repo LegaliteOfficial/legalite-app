@@ -24,6 +24,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -284,13 +285,15 @@ function DocumentRow({
               {isFile ? 'Open file' : 'Open in studio'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-[11px]">Mark as</DropdownMenuLabel>
-            {DOCUMENT_STATUSES.map((s) => (
-              <DropdownMenuItem key={s} className="cursor-pointer text-[13px]" disabled={s === current} onClick={() => onSetStatus(doc, s)}>
-                {s === current ? <CheckCircle size={13} weight="fill" /> : <span className="w-[13px]" />}
-                {STATUS_META[s].label}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-[11px]">Mark as</DropdownMenuLabel>
+              {DOCUMENT_STATUSES.map((s) => (
+                <DropdownMenuItem key={s} className="cursor-pointer text-[13px]" disabled={s === current} onClick={() => onSetStatus(doc, s)}>
+                  {s === current ? <CheckCircle size={13} weight="fill" /> : <span className="w-[13px]" />}
+                  {STATUS_META[s].label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer text-[13px]" style={{ color: 'var(--accent-danger)' }} onClick={() => onDelete(doc)}>
               <Trash size={13} />

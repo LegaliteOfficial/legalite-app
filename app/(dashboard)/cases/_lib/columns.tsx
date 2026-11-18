@@ -2,6 +2,7 @@ import { Bell } from '@phosphor-icons/react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import type { ColumnDef } from '../_types'
 import { formatDate } from './filters'
+import { daysUntil, relativeDays, urgencyOf, URGENCY_STYLE } from '../[id]/_lib/case-details'
 
 /**
  * Column registry for the cases table. Lives outside the component so
@@ -163,7 +164,7 @@ export const COLUMNS: ColumnDef[] = [
   {
     id: 'pending_date',
     label: 'Pending date',
-    defaultVisible: true,
+    defaultVisible: false,
     minWidth: 130,
     sortable: true,
     sortValue: (row) => (row.pending_at ? new Date(row.pending_at).getTime() : null),
@@ -240,29 +241,22 @@ export const COLUMNS: ColumnDef[] = [
   {
     id: 'next_date',
     label: 'Next court date',
-    defaultVisible: false,
-    minWidth: 150,
+    defaultVisible: true,
+    minWidth: 170,
     sortable: true,
     sortValue: (row) => (row.next_court_date ? new Date(row.next_court_date).getTime() : null),
     render: (row) => {
       if (!row.next_court_date) return Dash
-      const d = new Date(row.next_court_date)
-      const isUpcoming =
-        d.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 &&
-        d.getTime() > Date.now()
+      const days = row.status === 'Closed' ? null : daysUntil(row.next_court_date)
+      const u = URGENCY_STYLE[urgencyOf(days)]
       return (
-        <span
-          className="inline-flex items-center gap-1.5 text-[12.5px] tabular-nums"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          {isUpcoming && (
-            <span
-              aria-hidden
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: '#C0392B' }}
-            />
-          )}
+        <span className="inline-flex items-center gap-2 text-[12.5px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
           {formatDate(row.next_court_date)}
+          {days !== null && (
+            <span className="rounded-full px-1.5 py-px text-[11px] font-semibold whitespace-nowrap" style={{ color: u.fg, background: u.bg }}>
+              {relativeDays(days)}
+            </span>
+          )}
         </span>
       )
     },

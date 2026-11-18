@@ -42,6 +42,7 @@ import { StudioCanvas } from './StudioCanvas'
 import { StudioHeader, type StudioPanel } from './StudioHeader'
 import { StudioToolbar } from './StudioToolbar'
 import { studioExtensions } from './extensions'
+import { confirmAction } from '@/stores/confirm.store'
 
 /** Case facts for the model. Only what a drafter would put in a heading. */
 export function buildMatter(doc: Pick<Document, 'court' | 'suit_number' | 'parties' | 'judge'>, linked: Case | undefined): string | null {
@@ -229,14 +230,24 @@ export function Studio({ doc }: { doc: Document }) {
   }, [title, html, design, createMutation])
 
   const moveToBin = useCallback(async () => {
-    if (!confirm(`Move "${displayTitle}" to the bin?`)) return
-    try {
-      await deleteMutation.mutateAsync(doc.id)
-      toast.success('Moved to the bin.')
-      router.push('/documents')
-    } catch {
-      toast.error('Unable to delete the document. Please try again.')
-    }
+    const ok = await confirmAction({
+      title: 'Move this document to the bin?',
+      description: `"${displayTitle}" will be moved to the bin. You can restore it from there.`,
+      tone: 'danger',
+      confirmLabel: 'Move to bin',
+      successLabel: 'Moved to the bin',
+      onConfirm: async () => {
+        try {
+          await deleteMutation.mutateAsync(doc.id)
+        } catch {
+          toast.error('Unable to delete the document. Please try again.')
+          throw new Error('The document could not be moved to the bin.')
+        }
+      },
+    })
+    if (!ok) return
+    toast.success('Moved to the bin.')
+    router.push('/documents')
   }, [deleteMutation, doc.id, displayTitle, router])
 
   const changeStatus = useCallback((s: DocumentStatus) => {

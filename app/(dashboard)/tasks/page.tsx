@@ -39,6 +39,7 @@ import {
   type TaskPriority,
   type TaskStatus,
 } from './_components/task-meta'
+import { confirmAction } from '@/stores/confirm.store'
 
 const VIEW_KEY = 'll:tasks-view'
 
@@ -183,13 +184,22 @@ export default function TasksPage() {
 
   // ── Handlers ────────────────────────────────────────────────────
   const handleDelete = async (task: Task) => {
-    if (!confirm(`Delete "${task.title}"?`)) return
-    try {
-      await deleteTask.mutateAsync(task.id)
-      toast.success(`Deleted "${task.title}".`)
-    } catch (err) {
-      toast.error(err instanceof Error ? `Couldn't delete: ${err.message}` : 'Delete failed.')
-    }
+    const ok = await confirmAction({
+      title: 'Delete this task?',
+      description: `"${task.title}" will be permanently deleted. This cannot be undone.`,
+      tone: 'danger',
+      confirmLabel: 'Delete task',
+      successLabel: 'Task deleted',
+      onConfirm: async () => {
+        try {
+          await deleteTask.mutateAsync(task.id)
+        } catch (err) {
+          toast.error(err instanceof Error ? `Couldn't delete: ${err.message}` : 'Delete failed.')
+          throw err
+        }
+      },
+    })
+    if (ok) toast.success(`Deleted "${task.title}".`)
   }
   const handleCycleStatus = async (task: Task) => {
     const next = STATUS_META[normStatus(task.status)].next

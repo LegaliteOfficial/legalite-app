@@ -19,7 +19,8 @@ import { EmptyState } from './_components/EmptyState'
 import { ErrorPanel } from './_components/ErrorPanel'
 import { FilterDrawer } from './_components/FilterDrawer'
 import { PaginationFooter } from './_components/PaginationFooter'
-import { StagesPlaceholder } from './_components/StagesPlaceholder'
+import { StagesBoard } from './_components/StagesBoard'
+import { CasesSummary } from './_components/CasesSummary'
 import { useCasesFiltering } from './_hooks/use-cases-filtering'
 import { useCasesPageState } from './_hooks/use-cases-page-state'
 import { exportToCsv } from './_lib/export'
@@ -57,98 +58,103 @@ export default function CasesPage() {
           onNewCase={() => router.push('/cases/new')}
         />
 
-        {state.activeTab === 'stages' ? (
-          <StagesPlaceholder />
-        ) : (
-          <>
-            <CasesToolbar
-              statusFilter={state.statusFilter}
-              onStatusChange={state.setStatusFilter}
-              statusCounts={statusCounts}
-              search={state.search}
-              onSearchChange={state.setSearch}
-              visibleColumns={state.visibleColumns}
-              onColumnsChange={state.setVisibleColumns}
-              activeFilterCount={state.activeFilterCount}
-              onOpenFilters={() => state.setFiltersOpen(true)}
-            />
+        <CasesSummary
+          cases={all}
+          counts={statusCounts}
+          status={state.statusFilter}
+          onStatus={state.setStatusFilter}
+        />
 
-            <div
-              className="mt-4 rounded-2xl border overflow-hidden flex flex-col flex-1 min-h-0"
-              style={{
-                background: 'var(--surface-card)',
-                borderColor: 'var(--border-soft)',
-                boxShadow: 'var(--shadow-xs)',
-              }}
-            >
-              {sorted.length === 0 ? (
-                <EmptyState
-                  hasFilters={state.hasFiltersActive}
-                  onClearFilters={state.clearFilters}
-                />
-              ) : (
-                <>
-                {/* Phones: tappable case cards. */}
-                <ul className="flex-1 overflow-y-auto md:hidden">
-                  {pageRows.map((c) => (
-                    <MobileListItem
-                      key={c.id}
-                      href={`/cases/${c.id}`}
-                      leading={
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'var(--gold-muted)' }}>
-                          <Scales size={18} weight="duotone" style={{ color: 'var(--gold-dark)' }} />
-                        </span>
-                      }
-                      title={c.title}
-                      subtitle={c.client_name ?? undefined}
-                      meta={[c.case_type, c.case_stage, c.next_court_date ? `Court ${new Date(c.next_court_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : null].filter(Boolean).join(' · ') || undefined}
-                      trailing={<StatusBadge status={c.status} />}
-                    />
-                  ))}
-                </ul>
-                <div className="hidden min-h-0 flex-1 flex-col md:flex">
-                <CasesTable
-                  rows={pageRows}
-                  columns={state.orderedVisibleColumns}
-                  sortBy={state.sortBy}
-                  sortDir={state.sortDir}
-                  onSort={state.handleSort}
-                  expandRows={state.expandRows}
-                  onRowClick={(id) => router.push(`/cases/${id}`)}
-                  onEdit={(id) => openModal({ type: 'editCase', id })}
-                  onDelete={(id, name) =>
-                    openModal({
-                      type: 'confirmDelete',
-                      entity: 'case',
-                      id,
-                      name,
-                    })
+        <CasesToolbar
+          statusFilter={state.statusFilter}
+          onStatusChange={state.setStatusFilter}
+          statusCounts={statusCounts}
+          search={state.search}
+          onSearchChange={state.setSearch}
+          visibleColumns={state.visibleColumns}
+          onColumnsChange={state.setVisibleColumns}
+          activeFilterCount={state.activeFilterCount}
+          onOpenFilters={() => state.setFiltersOpen(true)}
+        />
+
+        {state.activeTab === 'stages' ? (
+          <StagesBoard cases={sorted} />
+        ) : (
+        <div
+          className="mt-4 rounded-2xl border overflow-hidden flex flex-col flex-1 min-h-0"
+          style={{
+            background: 'var(--surface-card)',
+            borderColor: 'var(--border-soft)',
+            boxShadow: 'var(--shadow-xs)',
+          }}
+        >
+          {sorted.length === 0 ? (
+            <EmptyState
+              hasFilters={state.hasFiltersActive}
+              onClearFilters={state.clearFilters}
+            />
+          ) : (
+            <>
+            {/* Phones: tappable case cards. */}
+            <ul className="flex-1 overflow-y-auto md:hidden">
+              {pageRows.map((c) => (
+                <MobileListItem
+                  key={c.id}
+                  href={`/cases/${c.id}`}
+                  leading={
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'var(--gold-muted)' }}>
+                      <Scales size={18} weight="duotone" style={{ color: 'var(--gold-dark)' }} />
+                    </span>
                   }
+                  title={c.title}
+                  subtitle={c.client_name ?? undefined}
+                  meta={[c.case_type, c.case_stage, c.next_court_date ? `Court ${new Date(c.next_court_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : null].filter(Boolean).join(' · ') || undefined}
+                  trailing={<StatusBadge status={c.status} />}
                 />
-                </div>
-                </>
-              )}
-              <PaginationFooter
-                page={safePage}
-                totalPages={totalPages}
-                start={start}
-                end={end}
-                total={sorted.length}
-                pageSize={state.pageSize}
-                expandRows={state.expandRows}
-                canExport={sorted.length > 0}
-                onPageChange={state.setPage}
-                onPageSizeChange={state.setPageSize}
-                onExpandRowsChange={state.setExpandRows}
-                onExport={() => {
-                  exportToCsv(sorted, Array.from(state.visibleColumns))
-                  toast.success(
-                    `Exported ${sorted.length} case${sorted.length === 1 ? '' : 's'} to CSV.`,
-                  )
-                }}
-              />
+              ))}
+            </ul>
+            <div className="hidden min-h-0 flex-1 flex-col md:flex">
+            <CasesTable
+              rows={pageRows}
+              columns={state.orderedVisibleColumns}
+              sortBy={state.sortBy}
+              sortDir={state.sortDir}
+              onSort={state.handleSort}
+              expandRows={state.expandRows}
+              onRowClick={(id) => router.push(`/cases/${id}`)}
+              onEdit={(id) => openModal({ type: 'editCase', id })}
+              onDelete={(id, name) =>
+                openModal({
+                  type: 'confirmDelete',
+                  entity: 'case',
+                  id,
+                  name,
+                })
+              }
+            />
             </div>
-          </>
+            </>
+          )}
+          <PaginationFooter
+            page={safePage}
+            totalPages={totalPages}
+            start={start}
+            end={end}
+            total={sorted.length}
+            pageSize={state.pageSize}
+            expandRows={state.expandRows}
+            canExport={sorted.length > 0}
+            onPageChange={state.setPage}
+            onPageSizeChange={state.setPageSize}
+            onExpandRowsChange={state.setExpandRows}
+            onExport={() => {
+              exportToCsv(sorted, Array.from(state.visibleColumns))
+              toast.success(
+                `Exported ${sorted.length} case${sorted.length === 1 ? '' : 's'} to CSV.`,
+              )
+            }}
+          />
+        </div>
         )}
 
         <CaseForm />

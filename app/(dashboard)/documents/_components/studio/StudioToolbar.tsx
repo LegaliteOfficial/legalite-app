@@ -39,6 +39,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -198,13 +199,15 @@ export function StudioToolbar({ editor }: { editor: Editor }) {
         <DropdownMenu>
           <DropdownMenuTrigger render={<Btn title="Line spacing" onClick={() => undefined}><LineSegments size={15} /></Btn>} />
           <DropdownMenuContent align="start" className="w-40">
-            <DropdownMenuLabel className="text-[11px]">Line spacing</DropdownMenuLabel>
-            <DropdownMenuItem className="text-[12.5px]" onClick={() => chain().unsetLineHeight().run()}>Document default</DropdownMenuItem>
-            {LINE_HEIGHTS.map((h) => (
-              <DropdownMenuItem key={h} className="text-[12.5px]" onClick={() => chain().setLineHeight(String(h)).run()}>
-                {h.toFixed(h % 1 ? 2 : 1).replace(/0$/, '')}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-[11px]">Line spacing</DropdownMenuLabel>
+              <DropdownMenuItem className="text-[12.5px]" onClick={() => chain().unsetLineHeight().run()}>Document default</DropdownMenuItem>
+              {LINE_HEIGHTS.map((h) => (
+                <DropdownMenuItem key={h} className="text-[12.5px]" onClick={() => chain().setLineHeight(String(h)).run()}>
+                  {h.toFixed(h % 1 ? 2 : 1).replace(/0$/, '')}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </Group>
@@ -299,18 +302,20 @@ function SwatchMenu({
     <DropdownMenu>
       <DropdownMenuTrigger render={<Btn title={title} onClick={() => undefined}>{icon}</Btn>} />
       <DropdownMenuContent align="start" className="w-48 p-2">
-        <DropdownMenuLabel className="px-1 text-[11px]">{title}</DropdownMenuLabel>
-        <div className="grid grid-cols-8 gap-1 px-1 py-1">
-          {swatches.map((c) => (
-            <DropdownMenuItem
-              key={c}
-              onClick={() => onPick(c)}
-              className="h-5 w-5 rounded-sm border p-0"
-              style={{ background: c, borderColor: 'var(--border-default)' }}
-              aria-label={c}
-            />
-          ))}
-        </div>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="px-1 text-[11px]">{title}</DropdownMenuLabel>
+          <div className="grid grid-cols-8 gap-1 px-1 py-1">
+            {swatches.map((c) => (
+              <DropdownMenuItem
+                key={c}
+                onClick={() => onPick(c)}
+                className="h-5 w-5 rounded-sm border p-0"
+                style={{ background: c, borderColor: 'var(--border-default)' }}
+                aria-label={c}
+              />
+            ))}
+          </div>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-[12.5px]" onClick={onClear}>{clearLabel}</DropdownMenuItem>
       </DropdownMenuContent>

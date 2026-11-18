@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { SessionRecord } from '@/lib/ai/sessions'
+import { confirmAction } from '@/stores/confirm.store'
 
 /**
  * Conversation sidebar — mirrors Claude Desktop's left rail:
@@ -329,13 +330,14 @@ function RowMenu({
         <DropdownMenuItem
           onClick={(e) => {
             e.stopPropagation()
-            if (
-              window.confirm(
-                `Delete "${session.title}"? This can't be undone.`,
-              )
-            ) {
-              onDelete()
-            }
+            void confirmAction({
+              title: 'Delete this conversation?',
+              description: `"${session.title}" and its messages will be deleted. This cannot be undone.`,
+              tone: 'danger',
+              confirmLabel: 'Delete',
+            }).then((ok) => {
+              if (ok) onDelete()
+            })
           }}
           className="text-[13px] cursor-pointer"
           style={{ color: 'var(--accent-danger)' }}
