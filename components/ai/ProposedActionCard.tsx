@@ -14,9 +14,13 @@ import {
   Timer,
   UserPlus,
   CaretDown,
+  ArrowRight,
+  FolderSimplePlus,
+  UserGear,
 } from '@phosphor-icons/react'
 
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/shared/Spinner'
 import {
   executeProposedAction,
   getActionState,
@@ -34,6 +38,9 @@ const TYPE_META: Record<ProposedAction['type'], { label: string; Icon: typeof Br
   create_event: { label: 'New calendar event', Icon: CalendarPlus, verb: 'Add to calendar' },
   update_task: { label: 'Update task', Icon: PencilSimple, verb: 'Apply update' },
   update_deadline: { label: 'Update deadline', Icon: PencilSimple, verb: 'Apply update' },
+  update_case: { label: 'Edit case', Icon: Briefcase, verb: 'Apply changes' },
+  update_client: { label: 'Edit client', Icon: UserGear, verb: 'Apply changes' },
+  link_documents: { label: 'File documents', Icon: FolderSimplePlus, verb: 'File documents' },
 }
 
 // Payload keys shown on the card, in order, with friendly labels.
@@ -66,8 +73,9 @@ interface Props {
 
 /**
  * Confirmation card for a record the assistant proposed. Nothing is
- * created until the user clicks the primary button; then the matching
- * GraphQL mutation runs with the user's own session.
+ * created or changed until the user clicks the primary button; then the
+ * matching GraphQL mutation runs with the user's own session. Edits show
+ * a before/after list of exactly what will change.
  */
 export function ProposedActionCard({ action }: Props) {
   const meta = TYPE_META[action.type]
@@ -106,10 +114,11 @@ export function ProposedActionCard({ action }: Props) {
 
   // Update proposals carry the changes under `input`.
   const values =
-    action.type === 'update_task' || action.type === 'update_deadline'
-      ? ((action.payload.input as Record<string, unknown> | undefined) ?? {})
+    action.payload.input && typeof action.payload.input === 'object'
+      ? (action.payload.input as Record<string, unknown>)
       : action.payload
-  const fields = FIELD_LABELS.flatMap(([key, label]) => {
+  const changes = action.changes ?? []
+  const fields = (changes.length > 0 ? [] : FIELD_LABELS).flatMap(([key, label]) => {
     const v = values[key]
     if (v === undefined || v === null || v === '') return []
     return [[label, String(v)] as const]
@@ -137,6 +146,40 @@ export function ProposedActionCard({ action }: Props) {
           </span>
         )}
       </div>
+
+      {changes.length > 0 && (
+        <p className="mb-2 text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>
+          {action.summary}
+        </p>
+      )}
+      {changes.length > 0 && (
+        <ul
+          className="mb-2 divide-y overflow-hidden rounded-lg border text-[13px]"
+          style={{ borderColor: 'var(--border-soft)', background: 'var(--surface-card)' }}
+          aria-label="Changes"
+        >
+          {changes.map((c) => (
+            <li key={c.field} className="grid gap-1 px-3 py-2 sm:grid-cols-[9rem_1fr]" style={{ borderColor: 'var(--border-soft)' }}>
+              <span className="text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>{c.label}</span>
+              <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                <span
+                  className="max-w-full break-words rounded px-1.5 py-0.5 line-through decoration-1"
+                  style={{ background: 'rgba(217,45,32,0.06)', color: 'var(--text-secondary)' }}
+                >
+                  {c.from}
+                </span>
+                <ArrowRight size={12} style={{ color: 'var(--text-muted)' }} aria-hidden />
+                <span
+                  className="max-w-full break-words rounded px-1.5 py-0.5 font-medium"
+                  style={{ background: 'rgba(18,183,106,0.1)', color: 'var(--text-primary)' }}
+                >
+                  {c.to}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-[13px]">
         {fields.map(([label, value]) => (
@@ -181,6 +224,7 @@ export function ProposedActionCard({ action }: Props) {
         ) : state?.status === 'dismissed' ? null : (
           <>
             <Button size="sm" onClick={confirm} disabled={busy}>
+              {busy && <Spinner size={12} />}
               {busy ? 'Working…' : meta.verb}
             </Button>
             <Button size="sm" variant="ghost" onClick={dismiss} disabled={busy}>

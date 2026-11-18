@@ -6,10 +6,10 @@ import ReactMarkdown from 'react-markdown'
 
 import { getApolloClient } from '@/lib/apollo'
 import { CreateCalendarEventMutationDoc } from '@/lib/graphql/calendar'
-import { CreateCaseMutationDoc } from '@/lib/graphql/cases'
-import { CreateClientMutationDoc } from '@/lib/graphql/clients'
+import { CreateCaseMutationDoc, UpdateCaseMutationDoc } from '@/lib/graphql/cases'
+import { CreateClientMutationDoc, UpdateClientMutationDoc } from '@/lib/graphql/clients'
 import { CreateDeadlineMutationDoc, UpdateDeadlineMutationDoc } from '@/lib/graphql/deadlines'
-import { CreateDocumentMutationDoc } from '@/lib/graphql/documents'
+import { CreateDocumentMutationDoc, UpdateDocumentMutationDoc } from '@/lib/graphql/documents'
 import { CreateTaskMutationDoc, UpdateTaskMutationDoc } from '@/lib/graphql/tasks'
 import type {
   CreateCalendarEventInput,
@@ -18,6 +18,8 @@ import type {
   CreateDeadlineInput,
   CreateDocumentInput,
   CreateTaskInput,
+  UpdateCaseInput,
+  UpdateClientInput,
   UpdateDeadlineInput,
   UpdateTaskInput,
 } from '@/types/generated/graphql'
@@ -47,6 +49,9 @@ const REFETCH: Record<ProposedAction['type'], string[]> = {
   create_event: ['CalendarEvents', 'PendingDueEvents', 'AttentionFeed'],
   update_task: ['Tasks', 'DashboardStats'],
   update_deadline: ['Deadlines', 'DeadlineStats', 'AttentionFeed'],
+  update_case: ['Cases', 'Case', 'DashboardStats', 'AttentionFeed'],
+  update_client: ['Clients', 'Client'],
+  link_documents: ['Documents', 'Case'],
 }
 
 export async function executeProposedAction(action: ProposedAction): Promise<ActionResult> {
@@ -139,6 +144,50 @@ export async function executeProposedAction(action: ProposedAction): Promise<Act
       const id = res.data?.updateDeadline.id
       if (!id) throw new Error('The deadline was not updated.')
       return { recordId: id, href: '/calendar', label: 'Open calendar' }
+    }
+    case 'update_case': {
+      const id = String(payload.id)
+      const res = await client.mutate({
+        mutation: UpdateCaseMutationDoc,
+        variables: { id, input: payload.input as UpdateCaseInput },
+        refetchQueries,
+      })
+      if (!res.data?.updateCase.id) throw new Error('The case was not updated.')
+      return { recordId: id, href: `/cases/${id}`, label: 'Open case' }
+    }
+    case 'update_client': {
+      const id = String(payload.id)
+      const res = await client.mutate({
+        mutation: UpdateClientMutationDoc,
+        variables: { id, input: payload.input as UpdateClientInput },
+        refetchQueries,
+      })
+      if (!res.data?.updateClient.id) throw new Error('The client was not updated.')
+      return { recordId: id, href: `/clients/${id}`, label: 'Open client' }
+    }
+    case 'link_documents': {
+      const caseId = String(payload.case_id)
+      const ids = Array.isArray(payload.document_ids) ? payload.document_ids.map(String) : []
+      if (ids.length === 0) throw new Error('No documents to file.')
+      // One mutation per document; report a partial result honestly
+      // rather than claiming all were filed.
+      const results = await Promise.allSettled(
+        ids.map((id) =>
+          client.mutate({
+            mutation: UpdateDocumentMutationDoc,
+            variables: { id, input: { case_id: caseId } },
+          }),
+        ),
+      )
+      await client.refetchQueries({ include: refetchQueries })
+      const failed = results.filter((r) => r.status === 'rejected').length
+      if (failed === ids.length) throw new Error('The documents could not be filed under this case.')
+      if (failed > 0) {
+        throw new Error(
+          `${ids.length - failed} of ${ids.length} documents were filed; ${failed} could not be moved. Try again for the rest.`,
+        )
+      }
+      return { recordId: caseId, href: `/cases/${caseId}?tab=documents`, label: 'Open case documents' }
     }
     case 'create_document': {
       // The assistant writes markdown; the document editor stores HTML.

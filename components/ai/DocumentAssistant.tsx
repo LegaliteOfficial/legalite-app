@@ -29,7 +29,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { PaperPlaneRight, Sparkle, X, ArrowClockwise } from '@phosphor-icons/react'
 import { askStream, AiServiceError } from '@/lib/ai/client'
-import { DEFAULT_DISCLAIMER } from '@/lib/ai/types'
+import { DEFAULT_DISCLAIMER, type PermissionRequest, type WorkspaceConsent } from '@/lib/ai/types'
+import { useResolveWorkspacePermission } from '@/hooks/use-ai-workspace-access'
+import { WorkspacePermissionCard, type PermissionChoice } from '@/components/ai/WorkspacePermissionCard'
 import { htmlToText } from '@/lib/documents/text'
 
 /** Characters of page context sent with a question. Roughly 4,500 tokens. */
@@ -117,6 +119,9 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
   const [error, setError] = useState<string | null>(null)
   const [contextNote, setContextNote] = useState<string | null>(null)
   const [statusLine, setStatusLine] = useState<string | null>(null)
+  // Set when the assistant paused to ask for workspace access.
+  const [permission, setPermission] = useState<{ question: string; request: PermissionRequest } | null>(null)
+  const resolvePermission = useResolveWorkspacePermission()
 
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -170,10 +175,7 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
     return 'Ask about your documents…'
   }, [context.documentTitle])
 
-  const send = useCallback(async () => {
-    const question = input.trim()
-    if (!question || busy) return
-
+  const ask = useCallback(async (question: string, consent?: WorkspaceConsent) => {
     abortRef.current?.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -183,12 +185,18 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
     setAnswer('')
     setError(null)
     setStatusLine(null)
+    setPermission(null)
     setPhase('retrieving')
     setContextNote(CONTEXT_LABEL[contextKind] ?? null)
 
     try {
       for await (const evt of askStream(
-        { question, session_id: sessionRef.current, context: pageContext },
+        {
+          question,
+          session_id: sessionRef.current,
+          context: pageContext,
+          workspace_consent: consent ?? null,
+        },
         { signal: ctrl.signal },
       )) {
         switch (evt.event) {
@@ -211,7 +219,11 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
             break
           case 'completed':
             sessionRef.current = evt.data.session_id ?? sessionRef.current
-            setAnswer(evt.data.answer)
+            if (evt.data.answer_mode === 'permission_required' && evt.data.permission_request) {
+              setPermission({ question, request: evt.data.permission_request })
+            } else {
+              setAnswer(evt.data.answer)
+            }
             break
           case 'error':
             throw new AiServiceError(evt.data.message, 0)
@@ -229,7 +241,22 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
     } finally {
       if (!ctrl.signal.aborted) setPhase('idle')
     }
-  }, [input, busy, context])
+  }, [context])
+
+  const send = useCallback(async () => {
+    const question = input.trim()
+    if (!question || busy) return
+    await ask(question)
+  }, [input, busy, ask])
+
+  const decide = useCallback(
+    async (choice: PermissionChoice) => {
+      if (!permission) return
+      const consent = await resolvePermission(choice, permission.request)
+      await ask(permission.question, consent)
+    },
+    [permission, resolvePermission, ask],
+  )
 
   return (
     // Below lg the app shows a 58px bottom tab bar, so the control is
@@ -288,7 +315,7 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
 
               {/* Answer area — only occupies space once there is something
                   to show, so the opened panel starts as just a composer. */}
-              {(busy || answer || error) && (
+              {(busy || answer || error || permission) && (
                 <div className="min-h-0 flex-1 overflow-y-auto px-3.5 py-3">
                   {contextNote && (
                     <div
@@ -302,7 +329,9 @@ export function DocumentAssistant({ context }: { context: DocumentContext }) {
                     </div>
                   )}
 
-                  {error ? (
+                  {permission && !busy ? (
+                    <WorkspacePermissionCard request={permission.request} onDecide={decide} />
+                  ) : error ? (
                     <p className="text-[12.5px]" style={{ color: '#C0392B' }}>
                       {error}
                     </p>

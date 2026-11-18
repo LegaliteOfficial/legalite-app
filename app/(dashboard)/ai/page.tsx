@@ -20,7 +20,14 @@ import {
   type Turn,
 } from '@/lib/ai/sessions'
 import { buildStreamingResponse } from '@/lib/ai/streaming'
-import { DEFAULT_DISCLAIMER, type AskResponse, type FeedbackThumbs } from '@/lib/ai/types'
+import {
+  DEFAULT_DISCLAIMER,
+  type AskResponse,
+  type FeedbackThumbs,
+  type WorkspaceConsent,
+} from '@/lib/ai/types'
+import type { PermissionChoice } from '@/components/ai/WorkspacePermissionCard'
+import { useResolveWorkspacePermission } from '@/hooks/use-ai-workspace-access'
 import { AnswerCard } from '@/components/ai/AnswerCard'
 import { ConversationSidebar } from '@/components/ai/ConversationSidebar'
 import { ChatHeader } from '@/components/ai/ChatHeader'
@@ -53,6 +60,7 @@ export default function AiAssistantPage() {
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const resolvePermission = useResolveWorkspacePermission()
 
   // Load persisted sessions on mount (client-only — localStorage isn't
   // available during SSR, and we want the latest snapshot every mount).
@@ -124,20 +132,35 @@ export default function AiAssistantPage() {
     [refreshSidebar],
   )
 
-  const handleSend = useCallback(async () => {
-    const question = input.trim()
-    if (!question || isLoading) return
-
+  /**
+   * Run one question through the assistant. ``resume`` re-runs the last
+   * question after the user answered a workspace permission card: the
+   * card turn is replaced by the real answer, and no new user turn is
+   * added.
+   */
+  const runTurn = useCallback(async (
+    question: string,
+    opts: { consent?: WorkspaceConsent; resume?: boolean } = {},
+  ) => {
     // Cancel any in-flight request before starting a new one.
     abortRef.current?.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
 
-    const now = new Date().toISOString()
-    const { id, record } = appendUserTurn(activeId, question, now)
+    let id: string
+    let record: SessionRecord
+    const existing = opts.resume && activeId ? getSession(activeId) : null
+    if (existing && activeId) {
+      dropLastAssistantTurn(activeId)
+      id = activeId
+      record = getSession(activeId) ?? existing
+    } else {
+      const appended = appendUserTurn(activeId, question, new Date().toISOString())
+      id = appended.id
+      record = appended.record
+    }
     setActiveId(id)
     setTurns(record.turns)
-    setInput('')
     setIsLoading(true)
     setStreamingText('')
     setStreamingPhase('retrieving')
@@ -152,6 +175,7 @@ export default function AiAssistantPage() {
           session_id: id,
           // Everything before the turn just appended (the current question).
           history: historyForRequest(record.turns.slice(0, -1)),
+          workspace_consent: opts.consent ?? null,
         },
         { signal: ctrl.signal },
       )) {
@@ -167,6 +191,11 @@ export default function AiAssistantPage() {
             break
           case 'answer_delta':
             setStreamingText((prev) => prev + evt.data.text)
+            break
+          case 'permission_required':
+            // The terminal `completed` payload carries the request; the
+            // permission card renders from that.
+            setStatusMessage('Waiting for your permission')
             break
           case 'action_proposed':
             // The terminal `completed` payload carries every proposal;
@@ -237,7 +266,7 @@ export default function AiAssistantPage() {
         // first question implied.
         const isFirstAssistantTurn =
           updated.turns.filter((t) => t.role === 'assistant').length === 1
-        if (isFirstAssistantTurn) {
+        if (isFirstAssistantTurn && response.answer_mode !== 'permission_required') {
           refineTitle(finalId, question, response)
         }
         refreshSidebar()
@@ -271,7 +300,32 @@ export default function AiAssistantPage() {
         setStatusMessage(null)
       }
     }
-  }, [input, isLoading, activeId, refreshSidebar])
+  }, [activeId, refreshSidebar])
+
+  const handleSend = useCallback(() => {
+    const question = input.trim()
+    if (!question || isLoading) return
+    setInput('')
+    void runTurn(question)
+  }, [input, isLoading, runTurn])
+
+  /**
+   * The user answered the permission card on the last turn. Record the
+   * decision, save "Always allow" as their preference, then re-run the
+   * same question with the decision attached.
+   */
+  const handlePermission = useCallback(
+    async (choice: PermissionChoice) => {
+      const last = turns[turns.length - 1]
+      const prev = turns[turns.length - 2]
+      const request = last?.role === 'assistant' ? last.response.permission_request : null
+      if (!request || prev?.role !== 'user' || isLoading) return
+
+      const consent = await resolvePermission(choice, request)
+      await runTurn(prev.content, { resume: true, consent })
+    },
+    [turns, isLoading, runTurn, resolvePermission],
+  )
 
   /**
    * Persist a thumbs vote (and optional comment) for an assistant
@@ -365,6 +419,8 @@ export default function AiAssistantPage() {
                 <TurnBubble
                   key={i}
                   turn={turn}
+                  busy={isLoading}
+                  onPermission={i === turns.length - 1 ? handlePermission : undefined}
                   onSubmitFeedback={
                     turn.role === 'assistant' && turn.response.message_id && activeId
                       ? (input) =>

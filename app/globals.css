@@ -576,3 +576,13 @@
   .case-tab-panel .case-panel,
   .case-status-dot[data-live] { animation: none !important; }
 }
+
+/* ── AI workspace permission card ─────────────────────────────────────────
+   components/ai/WorkspacePermissionCard.tsx. Reuses the confirm-dialog
+   keyframes: the card rises in, the shield pops, scope lines stagger. */
+.ll-perm-card { animation: ll-confirm-rise 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.ll-perm-icon { animation: ll-confirm-icon-in 520ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both; }
+.ll-perm-scope { animation: ll-confirm-rise 240ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .ll-perm-card, .ll-perm-icon, .ll-perm-scope { animation: none; }
+}
