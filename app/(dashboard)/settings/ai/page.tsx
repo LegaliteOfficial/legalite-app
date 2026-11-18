@@ -12,6 +12,7 @@ import { Spinner } from '@/components/shared/Spinner'
 import { AiSettingsHeader } from './_components/AiSettingsHeader'
 import { AiSettingsForm } from './_components/AiSettingsForm'
 import { AiSaveBar } from './_components/AiSaveBar'
+import { WorkspaceAccessSection } from './_components/WorkspaceAccessSection'
 import { useAiSettingsForm } from './_hooks/use-ai-settings-form'
 
 export default function AiSettingsPage() {
@@ -24,6 +25,7 @@ export default function AiSettingsPage() {
       style={{ background: 'var(--surface-page)' }}
     >
       <AiSettingsHeader />
+      <WorkspaceAccessSection />
 
       {!hydrated || !draft ? (
         <div

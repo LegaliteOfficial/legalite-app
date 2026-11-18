@@ -32,6 +32,9 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/shared/Spinner'
 import { buildPageContext } from '@/components/ai/DocumentAssistant'
 import { askStream, AiServiceError } from '@/lib/ai/client'
+import type { PermissionRequest, WorkspaceConsent } from '@/lib/ai/types'
+import { useResolveWorkspacePermission } from '@/hooks/use-ai-workspace-access'
+import { WorkspacePermissionCard, type PermissionChoice } from '@/components/ai/WorkspacePermissionCard'
 import { DEFAULT_DISCLAIMER } from '@/lib/ai/types'
 import { REWRITE_ACTIONS, type DraftSource, type ReviewIssue } from '@/lib/ai/drafting'
 import { sanitizeAiHtml } from '@/lib/documents/text'
@@ -511,25 +514,31 @@ function AskTab({
   const [error, setError] = useState<string | null>(null)
   const sessionRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const [permission, setPermission] = useState<PermissionRequest | null>(null)
+  const resolvePermission = useResolveWorkspacePermission()
 
-  const send = useCallback(async () => {
-    const q = question.trim()
-    if (!q || busy) return
+  const run = useCallback(async (q: string, consent?: WorkspaceConsent) => {
     abortRef.current?.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
     const { context } = buildPageContext({ tab: 'Studio', documentTitle, documentHTML: editor.getHTML() })
     setAsked(q)
-    setQuestion('')
     setAnswer('')
     setError(null)
     setStatus(null)
+    setPermission(null)
     setBusy(true)
     try {
-      for await (const evt of askStream({ question: q, session_id: sessionRef.current, context }, { signal: ctrl.signal })) {
+      for await (const evt of askStream(
+        { question: q, session_id: sessionRef.current, context, workspace_consent: consent ?? null },
+        { signal: ctrl.signal },
+      )) {
         if (evt.event === 'status') setStatus(evt.data.message)
         else if (evt.event === 'answer_delta') setAnswer((a) => a + evt.data.text)
-        else if (evt.event === 'refused' || evt.event === 'completed') {
+        else if (evt.event === 'completed' && evt.data.answer_mode === 'permission_required' && evt.data.permission_request) {
+          sessionRef.current = evt.data.session_id ?? sessionRef.current
+          setPermission(evt.data.permission_request)
+        } else if (evt.event === 'refused' || evt.event === 'completed') {
           sessionRef.current = evt.data.session_id ?? sessionRef.current
           setAnswer(evt.data.answer)
         } else if (evt.event === 'error') throw new AiServiceError(evt.data.message, 0)
@@ -539,7 +548,23 @@ function AskTab({
     } finally {
       if (!ctrl.signal.aborted) setBusy(false)
     }
-  }, [question, busy, documentTitle, editor])
+  }, [documentTitle, editor])
+
+  const send = useCallback(async () => {
+    const q = question.trim()
+    if (!q || busy) return
+    setQuestion('')
+    await run(q)
+  }, [question, busy, run])
+
+  const decide = useCallback(
+    async (choice: PermissionChoice) => {
+      if (!permission || !asked) return
+      const consent = await resolvePermission(choice, permission)
+      await run(asked, consent)
+    },
+    [permission, asked, resolvePermission, run],
+  )
 
   return (
     <div className="space-y-3 p-3">
@@ -566,7 +591,9 @@ function AskTab({
       {asked && (
         <div className="space-y-2">
           <p className="text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>{asked}</p>
-          {error ? (
+          {permission && !busy ? (
+            <WorkspacePermissionCard request={permission} onDecide={decide} />
+          ) : error ? (
             <p className="text-[12.5px]" style={{ color: '#C0392B' }}>{error}</p>
           ) : answer ? (
             <div className="ai-markdown text-[12.5px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>

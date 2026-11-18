@@ -100,7 +100,37 @@ export interface AskRequest {
    * conversation the user can still see.
    */
   history?: { role: 'user' | 'assistant'; content: string }[]
+  /**
+   * The user's answer to a workspace permission card, sent with the same
+   * question the card was raised for. ``allow`` covers this one request.
+   */
+  workspace_consent?: WorkspaceConsent | null
 }
+
+export interface WorkspaceConsent {
+  decision: 'allow' | 'deny'
+  request_id: string
+}
+
+/**
+ * The assistant paused before reading the user's workspace. The UI shows
+ * a permission card; the user's choice is sent back with the question.
+ */
+export interface PermissionRequest {
+  request_id: string
+  /** Plain-language lines: what the assistant wanted to look at. */
+  scopes: string[]
+  tools: string[]
+  /** Unix seconds after which ``request_id`` is no longer accepted. */
+  expires_at: number
+  reason: 'workspace'
+}
+
+/** How the workspace was treated on a turn. */
+export type WorkspaceAccessState = 'granted' | 'ask' | 'denied' | 'disabled' | 'unavailable'
+
+/** The user's standing preference, stored by the backend. */
+export type WorkspaceAccessMode = 'ask' | 'always' | 'never'
 
 /**
  * How the chat agent produced an answer.
@@ -110,8 +140,23 @@ export interface AskRequest {
  *   conversational — greeting / small talk
  *   workspace      — drawn from the user's own cases, deadlines, documents
  *   refused        — legacy strict pipeline refused
+ *   permission_required — paused: the user must allow workspace access
  */
-export type AnswerMode = 'grounded' | 'general' | 'conversational' | 'workspace' | 'refused'
+export type AnswerMode =
+  | 'grounded'
+  | 'general'
+  | 'conversational'
+  | 'workspace'
+  | 'refused'
+  | 'permission_required'
+
+/** One before/after row on an edit proposal. */
+export interface ProposedChange {
+  field: string
+  label: string
+  from: string
+  to: string
+}
 
 /**
  * A record the assistant proposed creating. Nothing exists yet: the UI
@@ -132,10 +177,15 @@ export interface ProposedAction {
     | 'create_document'
     | 'update_task'
     | 'update_deadline'
+    | 'update_case'
+    | 'update_client'
+    | 'link_documents'
   summary: string
   payload: Record<string, unknown>
   /** Human-readable labels, e.g. { case: 'Mensah v Owusu' }. */
   display: Record<string, string>
+  /** Edits only: exactly what changes, shown as a before/after list. */
+  changes?: ProposedChange[]
 }
 
 /**
@@ -173,6 +223,10 @@ export interface AskResponse {
   model?: string | null
   /** Records the assistant proposed this turn, pending confirmation. */
   proposed_actions?: ProposedAction[]
+  /** Set when ``answer_mode`` is ``permission_required``. */
+  permission_request?: PermissionRequest | null
+  /** How the workspace was treated on this turn. */
+  workspace_access?: WorkspaceAccessState | null
 }
 
 // ───────────────────────── Streaming (SSE) ─────────────────────────
@@ -210,6 +264,11 @@ export type AskStreamEvent =
       /** The assistant proposed a record; the ``completed`` payload repeats it. */
       event: 'action_proposed'
       data: ProposedAction
+    }
+  | {
+      /** Terminal pause: the ``completed`` payload repeats it. */
+      event: 'permission_required'
+      data: PermissionRequest
     }
   | { event: 'reasoning'; data: { summary: string } }
   | {

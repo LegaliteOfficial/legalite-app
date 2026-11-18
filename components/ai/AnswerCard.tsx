@@ -948,6 +948,13 @@ const MODE_META: Record<
     bg: 'rgba(46,94,140,0.10)',
     Icon: Briefcase,
   },
+  permission_required: {
+    label: 'Waiting for permission',
+    hint: 'The assistant needs your permission to look at your workspace.',
+    color: '#8A6D1E',
+    bg: 'rgba(201,151,43,0.14)',
+    Icon: Briefcase,
+  },
   refused: {
     label: 'Not enough evidence',
     hint: 'The strict pipeline declined to answer.',

@@ -56,6 +56,8 @@ export function historyForRequest(
   { maxTurns = 40, maxChars = 6000 }: { maxTurns?: number; maxChars?: number } = {},
 ): { role: 'user' | 'assistant'; content: string }[] {
   return turns.slice(-maxTurns).flatMap((t) => {
+    // A turn that only asked for workspace permission is not an answer.
+    if (t.role === 'assistant' && t.response.answer_mode === 'permission_required') return []
     const content =
       t.role === 'user'
         ? t.content

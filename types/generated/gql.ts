@@ -36,6 +36,10 @@ type Documents = {
     "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": typeof types.EventReminderFieldsFragmentDoc,
     "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    outcome_status\n    outcome_notes\n    outcome_recorded_by\n    outcome_recorded_at\n    cancellation_reason\n    original_start_time\n    created_at\n    updated_at\n  }\n": typeof types.CalendarEventFieldsFragmentDoc,
     "\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n": typeof types.EventHistoryEntryFieldsFragmentDoc,
+    "\n  query AiWorkspaceAccess {\n    aiWorkspaceAccess {\n      mode\n      is_set\n      updated_at\n    }\n  }\n": typeof types.AiWorkspaceAccessDocument,
+    "\n  query AiConsentEvents($limit: Int) {\n    aiConsentEvents(limit: $limit) {\n      id\n      decision\n      source\n      request_id\n      scopes\n      created_at\n    }\n  }\n": typeof types.AiConsentEventsDocument,
+    "\n  mutation SetAiWorkspaceAccess($input: SetAiWorkspaceAccessInput!) {\n    setAiWorkspaceAccess(input: $input) {\n      mode\n      is_set\n      updated_at\n    }\n  }\n": typeof types.SetAiWorkspaceAccessDocument,
+    "\n  mutation RecordAiConsent($input: RecordAiConsentInput!) {\n    recordAiConsent(input: $input)\n  }\n": typeof types.RecordAiConsentDocument,
     "\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n": typeof types.AiConversationsDocument,
     "\n  query AiConversation($id: ID!) {\n    aiConversation(id: $id) {\n      id\n      title\n      created_at\n      updated_at\n      messages {\n        id\n        role\n        content\n        sources\n        created_at\n      }\n    }\n  }\n": typeof types.AiConversationDocument,
     "\n  mutation AiChat($input: AiChatInput!) {\n    aiChat(input: $input) {\n      response\n      conversation_id\n      sources {\n        id\n        title\n        content\n        similarity\n      }\n    }\n  }\n": typeof types.AiChatDocument,
@@ -188,6 +192,10 @@ const documents: Documents = {
     "\n  fragment EventReminderFields on EventReminder {\n    id\n    event_id\n    minutes_before\n    method\n    remind_at\n    status\n    sent_at\n  }\n": types.EventReminderFieldsFragmentDoc,
     "\n  fragment CalendarEventFields on CalendarEvent {\n    id\n    firm_id\n    created_by\n    case_id\n    client_id\n    title\n    description\n    location\n    event_type\n    status\n    start_time\n    end_time\n    all_day\n    case_title\n    client_name\n    attendees {\n      ...EventAttendeeFields\n    }\n    reminders {\n      ...EventReminderFields\n    }\n    outcome_status\n    outcome_notes\n    outcome_recorded_by\n    outcome_recorded_at\n    cancellation_reason\n    original_start_time\n    created_at\n    updated_at\n  }\n": types.CalendarEventFieldsFragmentDoc,
     "\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n": types.EventHistoryEntryFieldsFragmentDoc,
+    "\n  query AiWorkspaceAccess {\n    aiWorkspaceAccess {\n      mode\n      is_set\n      updated_at\n    }\n  }\n": types.AiWorkspaceAccessDocument,
+    "\n  query AiConsentEvents($limit: Int) {\n    aiConsentEvents(limit: $limit) {\n      id\n      decision\n      source\n      request_id\n      scopes\n      created_at\n    }\n  }\n": types.AiConsentEventsDocument,
+    "\n  mutation SetAiWorkspaceAccess($input: SetAiWorkspaceAccessInput!) {\n    setAiWorkspaceAccess(input: $input) {\n      mode\n      is_set\n      updated_at\n    }\n  }\n": types.SetAiWorkspaceAccessDocument,
+    "\n  mutation RecordAiConsent($input: RecordAiConsentInput!) {\n    recordAiConsent(input: $input)\n  }\n": types.RecordAiConsentDocument,
     "\n  query AiConversations {\n    aiConversations {\n      id\n      title\n      created_at\n      updated_at\n    }\n  }\n": types.AiConversationsDocument,
     "\n  query AiConversation($id: ID!) {\n    aiConversation(id: $id) {\n      id\n      title\n      created_at\n      updated_at\n      messages {\n        id\n        role\n        content\n        sources\n        created_at\n      }\n    }\n  }\n": types.AiConversationDocument,
     "\n  mutation AiChat($input: AiChatInput!) {\n    aiChat(input: $input) {\n      response\n      conversation_id\n      sources {\n        id\n        title\n        content\n        similarity\n      }\n    }\n  }\n": types.AiChatDocument,
@@ -420,6 +428,22 @@ export function graphql(source: "\n  fragment CalendarEventFields on CalendarEve
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n"): (typeof documents)["\n  fragment EventHistoryEntryFields on EventHistoryEntry {\n    id\n    event_id\n    actor_id\n    actor_name\n    action\n    from_state\n    to_state\n    notes\n    metadata\n    created_at\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query AiWorkspaceAccess {\n    aiWorkspaceAccess {\n      mode\n      is_set\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  query AiWorkspaceAccess {\n    aiWorkspaceAccess {\n      mode\n      is_set\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query AiConsentEvents($limit: Int) {\n    aiConsentEvents(limit: $limit) {\n      id\n      decision\n      source\n      request_id\n      scopes\n      created_at\n    }\n  }\n"): (typeof documents)["\n  query AiConsentEvents($limit: Int) {\n    aiConsentEvents(limit: $limit) {\n      id\n      decision\n      source\n      request_id\n      scopes\n      created_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetAiWorkspaceAccess($input: SetAiWorkspaceAccessInput!) {\n    setAiWorkspaceAccess(input: $input) {\n      mode\n      is_set\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  mutation SetAiWorkspaceAccess($input: SetAiWorkspaceAccessInput!) {\n    setAiWorkspaceAccess(input: $input) {\n      mode\n      is_set\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RecordAiConsent($input: RecordAiConsentInput!) {\n    recordAiConsent(input: $input)\n  }\n"): (typeof documents)["\n  mutation RecordAiConsent($input: RecordAiConsentInput!) {\n    recordAiConsent(input: $input)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
