@@ -53,7 +53,7 @@ export function useAutosave(docId: string, fields: SavedFields) {
   // The mutation helper is a fresh object each render; keep the latest in a
   // ref so flush (and the effects that depend on it) stay stable.
   const mutateRef = useRef(save.mutateAsync)
-  const flushRef = useRef<() => Promise<boolean>>(async () => false)
+  const flushRef = useRef<(latest?: Partial<SavedFields>) => Promise<boolean>>(async () => false)
 
   useEffect(() => {
     latestRef.current = fields
@@ -72,12 +72,22 @@ export function useAutosave(docId: string, fields: SavedFields) {
     return diff
   }, [])
 
-  const flush = useCallback(async (): Promise<boolean> => {
+  /**
+   * Saves now. `latest` lets a caller pass values it has just read (e.g.
+   * the editor's HTML on Ctrl+S) before React has re-rendered with them.
+   * A save already in flight is waited for, then this one runs.
+   */
+  const flush = useCallback(async (latest?: Partial<SavedFields>): Promise<boolean> => {
+    if (latest) latestRef.current = { ...latestRef.current, ...latest }
     if (timerRef.current) {
       clearTimeout(timerRef.current)
       timerRef.current = null
     }
-    if (inFlightRef.current) return false
+    if (inFlightRef.current) {
+      // Let the running save finish; it reschedules for anything newer.
+      while (inFlightRef.current) await new Promise((r) => setTimeout(r, 100))
+      return flushRef.current()
+    }
     const diff = changedFields()
     if (Object.keys(diff).length === 0) {
       setState('saved')
