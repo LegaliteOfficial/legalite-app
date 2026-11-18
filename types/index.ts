@@ -1,4 +1,5 @@
 // ── Core domain types matching the ACTUAL DB schema (snake_case) ─────────
+import type { DocumentStatus } from '@/lib/documents/status'
 
 export interface User {
   id: string
@@ -132,6 +133,8 @@ export interface Document {
   design?: Record<string, unknown> | null
   // True when the firm saved this document as a reusable template.
   is_template?: boolean
+  // Drafting workflow state (lib/documents/status.ts).
+  status?: DocumentStatus
   // Cloudinary asset (uploaded files). Null for editor-authored drafts.
   file_url?: string | null
   file_public_id?: string | null

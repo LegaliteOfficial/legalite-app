@@ -3,12 +3,7 @@
 import { TAB_DESCRIPTORS } from '../_constants'
 import type { Tab } from '../_types'
 
-/**
- * Tab bar across the top of the documents page. Library tab shows a
- * count badge with the number of saved drafts (the original kept it
- * keyed off `documents.length` regardless of which tab the count
- * applies to, preserved here).
- */
+/** Tab bar across the documents home. Documents shows the firm's count. */
 export function DocumentsTabs({
   active,
   onChange,
@@ -36,7 +31,7 @@ export function DocumentsTabs({
             }}
           >
             {tab.label}
-            {tab.id === 'library' && documentCount > 0 && (
+            {tab.id === 'documents' && documentCount > 0 && (
               <span
                 className="text-[10.5px] font-medium px-1.5 py-0.5 rounded tabular-nums"
                 style={{

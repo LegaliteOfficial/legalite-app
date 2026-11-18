@@ -2,7 +2,7 @@
  * Static category metadata + tab list for the documents route.
  */
 
-import { BookOpen, Briefcase, FileText, Gavel, House, SquaresFour, PencilLine, Scales, Users } from '@phosphor-icons/react'
+import { BookOpen, Briefcase, FileText, Gavel, House, SquaresFour, Scales, Users } from '@phosphor-icons/react'
 import type {
   Tab,
   TemplateCategory,
@@ -44,10 +44,9 @@ export const TAB_DESCRIPTORS: ReadonlyArray<{
   label: string
   icon: typeof FileText
 }> = [
+  { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'templates', label: 'Templates', icon: SquaresFour },
-  { id: 'drafts',    label: 'Drafts',    icon: FileText },
-  { id: 'library',   label: 'Library',   icon: BookOpen },
-  { id: 'editor',    label: 'Editor',    icon: PencilLine },
+  { id: 'library',   label: 'Legal library', icon: BookOpen },
 ]
 
 /** Per-library-category upload accept attribute. */

@@ -153,7 +153,7 @@ export async function executeProposedAction(action: ProposedAction): Promise<Act
       })
       const id = res.data?.createDocument.id
       if (!id) throw new Error('The document was not saved.')
-      return { recordId: id, href: `/documents?open=${id}`, label: 'Open document' }
+      return { recordId: id, href: `/documents/${id}`, label: 'Open document' }
     }
   }
 }

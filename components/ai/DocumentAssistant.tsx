@@ -30,6 +30,7 @@ import ReactMarkdown from 'react-markdown'
 import { PaperPlaneRight, Sparkle, X, ArrowClockwise } from '@phosphor-icons/react'
 import { askStream, AiServiceError } from '@/lib/ai/client'
 import { DEFAULT_DISCLAIMER } from '@/lib/ai/types'
+import { htmlToText } from '@/lib/documents/text'
 
 /** Characters of page context sent with a question. Roughly 4,500 tokens. */
 const CONTEXT_BUDGET = 18000
@@ -43,22 +44,6 @@ export interface DocumentContext {
   documentHTML?: string | null
   /** Titles of the documents listed on the current tab. */
   visibleDocuments?: string[]
-}
-
-/** Strips tags and collapses whitespace so the model sees prose, not markup. */
-function htmlToText(html: string): string {
-  return html
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
 }
 
 /**

@@ -312,6 +312,7 @@ export const DocumentFieldsFragmentDoc = graphql(/* GraphQL */ `
     content
     design
     is_template
+    status
     file_url
     file_public_id
     file_thumbnail_url
