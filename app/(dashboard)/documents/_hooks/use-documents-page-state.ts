@@ -120,25 +120,45 @@ export function useDocumentsPageState() {
   const deleteLibItem = useDeleteLibraryItem()
   const downloadItem = useDownloadLibraryItem()
 
+  /**
+   * Upload one file to the library. When the user belongs to a firm the
+   * backend also adds it to the firm archive, where Legalite AI reads and
+   * indexes it in the background.
+   */
+  const uploadToLibrary = useCallback(
+    async (file: File, category: LibraryCategory) => {
+      const toastId = toast.loading(`Uploading "${file.name}"...`)
+      try {
+        const fileData = await uploadFile.mutateAsync({ file, category })
+        const item = await createLibraryItem.mutateAsync({
+          title: file.name.replace(/\.[^.]+$/, ''),
+          category,
+          ...fileData,
+        })
+        toast.success(
+          item?.archive_entry_id
+            ? `"${file.name}" uploaded. Legalite is reading it for the firm archive.`
+            : `"${file.name}" uploaded.`,
+          { id: toastId },
+        )
+        return true
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Upload failed.', { id: toastId })
+        return false
+      }
+    },
+    [uploadFile, createLibraryItem],
+  )
+
   const handleLibraryUpload = useCallback(
     async (file: File) => {
       if (!user?.id) {
         toast.error('Please sign in to upload files.')
         return
       }
-      try {
-        const fileData = await uploadFile.mutateAsync({ file, userId: user.id, category: libraryCategory })
-        await createLibraryItem.mutateAsync({
-          title: file.name.replace(/\.[^.]+$/, ''),
-          category: libraryCategory,
-          ...fileData,
-        })
-        toast.success('File uploaded successfully.')
-      } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Upload failed.')
-      }
+      await uploadToLibrary(file, libraryCategory)
     },
-    [user, libraryCategory, uploadFile, createLibraryItem],
+    [user, libraryCategory, uploadToLibrary],
   )
 
   const handleLibraryDownload = useCallback(
@@ -241,6 +261,7 @@ export function useDocumentsPageState() {
     libraryLoading,
     filteredLibrary,
     isUploadingLibrary: uploadFile.isPending || createLibraryItem.isPending,
+    uploadToLibrary,
     isDownloadingLibrary: downloadItem.isPending,
     handleLibraryUpload,
     handleLibraryDownload,

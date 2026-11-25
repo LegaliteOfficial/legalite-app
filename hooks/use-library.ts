@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   CreateLibraryItemMutationDoc,
+  CreateLibraryUploadTargetMutationDoc,
   DeleteLibraryItemMutationDoc,
   LibraryDownloadUrlQueryDoc,
   LibraryItemsQueryDoc,
@@ -28,7 +29,9 @@ export interface LibraryItem {
   updated_at: string
 }
 
-type LibraryItemInput = Partial<Omit<LibraryItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+type LibraryItemInput = Partial<
+  Omit<LibraryItem, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { add_to_archive: boolean }
+>
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
@@ -138,29 +141,21 @@ export function useDownloadLibraryItem() {
   }
 }
 
-// Direct Supabase upload for library files — outside the GraphQL graph because
-// binary file upload via GraphQL multipart adds complexity for no benefit here.
+// Library file upload. The backend issues a one-time signed upload URL
+// (service role) and the browser streams the bytes straight to Storage.
+// Password logins have no Supabase session, so the old anonymous upload
+// into the bucket was refused by Storage; the signed URL needs no session.
 //
-// The Supabase client is constructed lazily inside `mutateAsync` rather
-// than at hook-call time. Eager init would crash any page using this
-// hook when `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-// are missing — most notably DEV_BYPASS without a backend reachable.
-// Lazy init keeps the page rendering and only surfaces the env
-// requirement when the partner actually tries to upload.
+// The Supabase client is constructed lazily inside `mutateAsync` so pages
+// using this hook still render when the Supabase env vars are missing (e.g.
+// DEV_BYPASS); the requirement only surfaces on an actual upload.
 export function useUploadLibraryFile() {
+  const [createTarget] = useMutation(CreateLibraryUploadTargetMutationDoc)
   const [isPending, setIsPending] = useState(false)
 
   return {
     isPending,
-    mutateAsync: async ({
-      file,
-      userId,
-      category,
-    }: {
-      file: File
-      userId: string
-      category: string
-    }) => {
+    mutateAsync: async ({ file, category }: { file: File; category: string }) => {
       if (DEV_BYPASS) {
         throw new Error(
           'File uploads are disabled in dev bypass mode. Connect a Supabase project to enable them.',
@@ -173,27 +168,27 @@ export function useUploadLibraryFile() {
           'Supabase project URL / anon key are not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY before uploading.',
         )
       }
-      const supabase = createBrowserClient(url, anonKey)
 
       setIsPending(true)
       try {
-      const path = `${userId}/${category}/${Date.now()}_${file.name}`
-      const { data, error } = await supabase.storage
-        .from('library')
-        .upload(path, file, { cacheControl: '3600', upsert: false })
+        const res = await createTarget({ variables: { category, fileName: file.name } })
+        const target = res.data?.createLibraryUploadTarget
+        if (!target) throw new Error('Could not start the upload. Please try again.')
 
-      if (error) throw new Error(`Upload failed: ${error.message}`)
+        const supabase = createBrowserClient(url, anonKey)
+        const { error } = await supabase.storage
+          .from('library')
+          .uploadToSignedUrl(target.path, target.token, file, {
+            contentType: file.type || undefined,
+          })
+        if (error) throw new Error(`Upload failed: ${error.message}`)
 
-      const { data: urlData } = supabase.storage
-        .from('library')
-        .getPublicUrl(data.path)
-
-      return {
-        file_url: urlData.publicUrl,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-      }
+        return {
+          file_url: target.public_url,
+          file_name: file.name,
+          file_type: file.type || null,
+          file_size: file.size,
+        }
       } finally {
         setIsPending(false)
       }

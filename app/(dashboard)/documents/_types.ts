@@ -2,7 +2,7 @@
  * Shared types for the documents route.
  */
 
-export const TABS = ['documents', 'templates', 'library'] as const
+export const TABS = ['documents', 'templates', 'library', 'archive'] as const
 export type Tab = (typeof TABS)[number]
 
 export const LIBRARY_CATEGORIES = ['book', 'article', 'document'] as const

@@ -26,6 +26,19 @@ export const CreateLibraryItemMutationDoc = graphql(/* GraphQL */ `
   mutation CreateLibraryItem($input: CreateLibraryItemInput!) {
     createLibraryItem(input: $input) {
       ...LibraryItemFields
+      archive_entry_id
+    }
+  }
+`)
+
+/** One-time signed URL the browser streams a library file to. */
+export const CreateLibraryUploadTargetMutationDoc = graphql(/* GraphQL */ `
+  mutation CreateLibraryUploadTarget($category: String!, $fileName: String!) {
+    createLibraryUploadTarget(category: $category, fileName: $fileName) {
+      path
+      token
+      signed_url
+      public_url
     }
   }
 `)
