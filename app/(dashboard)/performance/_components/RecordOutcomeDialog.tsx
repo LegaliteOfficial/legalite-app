@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,7 @@ import type {
   Worker,
 } from '@/stores/performance-local.store'
 import { usePerformanceStore } from '@/stores/performance-local.store'
-import { useTasksLocalStore } from '@/stores/tasks-local.store'
+import { useTasks } from '@/hooks/use-tasks'
 import { OUTCOME_META, OUTCOME_TYPES } from '../_constants'
 
 function todayInput(): string {
@@ -42,7 +42,7 @@ export function RecordOutcomeDialog({
   canAddKeyTask?: boolean
 }) {
   const addOutcome = usePerformanceStore((s) => s.addOutcome)
-  const tasksMap = useTasksLocalStore((s) => s.tasks)
+  const { data: apiTasks } = useTasks()
 
   const [workerId, setWorkerId] = useState('')
   const [type, setType] = useState<OutcomeType>('case_won')
@@ -51,18 +51,20 @@ export function RecordOutcomeDialog({
   const [taskId, setTaskId] = useState('')
   const [note, setNote] = useState('')
 
-  // Reset on open; default to the locked worker (member) or first worker.
-  // Rehydrate the tasks store so the key-task picker has current data.
-  useEffect(() => {
-    if (!open) return
-    void useTasksLocalStore.persist.rehydrate()
-    setWorkerId(lockedWorker?.id ?? workers[0]?.id ?? '')
-    setType('case_won')
-    setDate(todayInput())
-    setLabel('')
-    setTaskId('')
-    setNote('')
-  }, [open, workers, lockedWorker])
+  // Start each opening from a clean form, on the locked worker (member) or
+  // the first worker. Done while rendering, when `open` flips to true.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setWorkerId(lockedWorker?.id ?? workers[0]?.id ?? '')
+      setType('case_won')
+      setDate(todayInput())
+      setLabel('')
+      setTaskId('')
+      setNote('')
+    }
+  }
 
   // Key task is admin-only; hide it from the type grid otherwise.
   const availableTypes = useMemo(
@@ -72,10 +74,8 @@ export function RecordOutcomeDialog({
 
   const tasks = useMemo(
     () =>
-      Object.values(tasksMap).sort((a, b) =>
-        b.updated_at.localeCompare(a.updated_at),
-      ),
-    [tasksMap],
+      [...(apiTasks ?? [])].sort((a, b) => b.updated_at.localeCompare(a.updated_at)),
+    [apiTasks],
   )
 
   const subject = OUTCOME_META[type].subject

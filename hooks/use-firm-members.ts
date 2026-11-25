@@ -49,10 +49,10 @@ export function useFirmMembers() {
   }
 }
 
-export function usePendingInvitations() {
+/** Pending invitations; only readable with manage-users, so callers pass whether to load. */
+export function usePendingInvitations(enabled = true) {
   const { data, loading, error, refetch } = useQuery<PendingInvitationsQuery, PendingInvitationsQueryVariables>(PendingInvitationsQueryDoc, {
-    // skip: DEV_BYPASS,
-    // errorPolicy: DEV_BYPASS ? 'all' : 'none',
+    skip: !enabled,
   })
   return {
     data: data?.pendingInvitations as PendingInvitation[] | undefined,

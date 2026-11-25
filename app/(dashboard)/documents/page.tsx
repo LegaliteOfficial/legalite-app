@@ -7,6 +7,7 @@
  * /documents/[id], so drafting never shares a page with the list.
  */
 
+import { RequirePermission } from '@/components/shared/RequirePermission'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
@@ -32,6 +33,14 @@ const TAB_LABELS: Record<string, string> = {
 }
 
 export default function DocumentsPage() {
+  return (
+    <RequirePermission permission="view-documents" what="documents">
+      <DocumentsPageInner />
+    </RequirePermission>
+  )
+}
+
+function DocumentsPageInner() {
   const state = useDocumentsPageState()
   const { start } = state
 
@@ -130,7 +139,6 @@ export default function DocumentsPage() {
 
           {state.activeTab === 'archive' && (
             <ArchiveTab
-              cases={state.documentCases ?? []}
               onUpload={(file) => state.uploadToLibrary(file, 'document')}
               isUploading={state.isUploadingLibrary}
             />

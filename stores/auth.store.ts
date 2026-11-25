@@ -33,13 +33,18 @@ interface AuthStore {
   token: string | null
   activeMembership: FirmMembership | null
   memberships: FirmMembership[]
+  /** Effective permission slugs in the active firm; ['*'] means all. */
+  permissions: string[]
   isAuthenticated: boolean
   setAuth: (
     user: User,
     token: string,
     activeMembership?: FirmMembership | null,
     memberships?: FirmMembership[],
+    permissions?: string[],
   ) => void
+  /** Refresh what the user may do without changing who they are. */
+  setAccess: (access: { permissions: string[]; firm_role?: string | null; professional_title?: string | null }) => void
   logout: () => void
 }
 
@@ -50,20 +55,38 @@ export const useAuthStore = create<AuthStore>()(
       token: null,
       activeMembership: null,
       memberships: [],
+      permissions: [],
       isAuthenticated: false,
 
-      setAuth: (user, token, activeMembership = null, memberships = []) => {
+      // Arguments left out keep their current value, so a profile update
+      // (user + token only) does not drop the firm membership.
+      setAuth: (user, token, activeMembership, memberships, permissions) => {
         if (typeof window !== 'undefined') {
           localStorage.setItem('ll:token', token)
         }
-        set({
+        set((state) => ({
           user,
           token,
-          activeMembership,
-          memberships,
+          activeMembership:
+            activeMembership === undefined ? state.activeMembership : activeMembership,
+          memberships: memberships ?? state.memberships,
+          permissions: permissions ?? state.permissions,
           isAuthenticated: true,
-        })
+        }))
       },
+
+      setAccess: ({ permissions, firm_role, professional_title }) =>
+        set((state) => ({
+          permissions,
+          activeMembership: state.activeMembership
+            ? {
+                ...state.activeMembership,
+                firm_role: firm_role ?? state.activeMembership.firm_role,
+                professional_title:
+                  professional_title ?? state.activeMembership.professional_title,
+              }
+            : null,
+        })),
 
       logout: () => {
         if (typeof window !== 'undefined') {
@@ -74,6 +97,7 @@ export const useAuthStore = create<AuthStore>()(
           token: null,
           activeMembership: null,
           memberships: [],
+          permissions: [],
           isAuthenticated: false,
         })
       },

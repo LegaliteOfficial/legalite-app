@@ -11,10 +11,14 @@ import { CaretRight } from '@phosphor-icons/react'
 export function TopBar({
   isCreating,
   onCreate,
+  editing = false,
 }: {
   isCreating: boolean
   onCreate: () => void
+  /** Editing an existing role rather than creating one. */
+  editing?: boolean
 }) {
+  const title = editing ? 'Edit custom role' : 'Create custom role'
   return (
     <div
       className="sticky top-0 z-20 backdrop-blur"
@@ -53,13 +57,13 @@ export function TopBar({
               strokeWidth={2.25}
               style={{ color: '#9CA3AF' }}
             />
-            <span className="font-bold">Create custom role</span>
+            <span className="font-bold">{title}</span>
           </div>
           <h1
             className="font-heading text-2xl font-extrabold leading-tight"
             style={{ color: 'var(--navy)' }}
           >
-            Create custom role
+            {title}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -84,7 +88,7 @@ export function TopBar({
                 'linear-gradient(135deg, #C9972B 0%, #B8860B 100%)',
             }}
           >
-            {isCreating ? 'Creating…' : 'Create custom role'}
+            {isCreating ? (editing ? 'Saving…' : 'Creating…') : editing ? 'Save changes' : 'Create custom role'}
           </button>
         </div>
       </div>

@@ -147,7 +147,10 @@ export function ContactCombobox({
               onMouseDown={(e) => {
                 e.preventDefault()
                 setOpen(false)
-                toast.info('New contact form is coming next.')
+                // A new tab keeps the case being edited; the new contact
+                // shows up in this list once saved.
+                window.open('/contacts/new', '_blank', 'noopener')
+                toast.info('Add the contact in the new tab, then pick it here.')
               }}
               className="flex items-center gap-2 w-full text-left px-3 py-2.5 text-[13px] font-medium transition-colors cursor-pointer"
               style={{ color: 'var(--gold-dark)' }}

@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { DotsThreeOutline } from '@phosphor-icons/react'
 import { useUIStore } from '@/stores/ui.store'
-import { NAV_ITEMS, TAB_BAR_IDS, isNavActive } from './nav'
+import { usePermissionChecker } from '@/lib/access'
+import { NAV_ITEMS, TAB_BAR_IDS, isNavActive, visibleNavItems } from './nav'
 
 /**
  * Bottom tab bar for phones and tablets (below lg): the four most-used
@@ -15,7 +16,9 @@ import { NAV_ITEMS, TAB_BAR_IDS, isNavActive } from './nav'
 export function MobileTabBar() {
   const pathname = usePathname()
   const setMobileNav = useUIStore((s) => s.setMobileNav)
-  const tabs = TAB_BAR_IDS.map((id) => NAV_ITEMS.find((i) => i.id === id)).filter(
+  const can = usePermissionChecker()
+  const allowed = visibleNavItems(NAV_ITEMS, can)
+  const tabs = TAB_BAR_IDS.map((id) => allowed.find((i) => i.id === id)).filter(
     (t): t is NonNullable<typeof t> => Boolean(t),
   )
   const onTab = tabs.some((t) => isNavActive(pathname, t.href))

@@ -3,6 +3,8 @@ import {
   Briefcase,
   Clock,
   CreditCard,
+  FileText,
+  Archive,
   Gear as SettingsIcon,
   ListChecks,
   Lock,
@@ -187,11 +189,52 @@ export const PERMISSION_SECTIONS: SectionDef[] = [
         ],
       },
       {
+        id: 'manage-tasks',
+        label: 'Create, edit and delete tasks',
+        Icon: ListChecks,
+        permissions: [
+          { id: 'create-tasks', label: 'Create tasks' },
+          { id: 'edit-tasks', label: 'Edit and assign tasks' },
+          { id: 'delete-tasks', label: 'Delete tasks' },
+        ],
+      },
+      {
         id: 'bulk-tasks',
         label: 'Bulk delete tasks',
         Icon: Trash,
         permissions: [
           { id: 'bulk-delete-tasks', label: 'Bulk delete tasks' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'documents',
+    label: 'Documents & Archive management',
+    description:
+      'Controls who can view, upload, edit and delete documents, and who can use or manage the firm archive.',
+    groups: [
+      {
+        id: 'documents',
+        label: 'Documents',
+        Icon: FileText,
+        permissions: [
+          { id: 'view-documents', label: 'View and download documents' },
+          { id: 'create-documents', label: 'Create and upload documents' },
+          { id: 'edit-documents', label: 'Edit documents and folders' },
+          { id: 'delete-documents', label: 'Delete and restore documents' },
+        ],
+      },
+      {
+        id: 'archive',
+        label: 'Firm archive',
+        Icon: Archive,
+        permissions: [
+          { id: 'view-archive', label: 'Search and read the firm archive' },
+          {
+            id: 'manage-archive',
+            label: "Edit or remove other people's archive entries",
+          },
         ],
       },
     ],

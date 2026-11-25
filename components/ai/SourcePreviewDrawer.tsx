@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   ArrowSquareOut,
   Scales,
@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react'
 
 import { getDocument, AiServiceError } from '@/lib/ai/client'
+import { useAsyncResource } from '@/hooks/use-async-resource'
 import type { DocumentView, DocumentChunkView } from '@/lib/ai/types'
 
 /**
@@ -56,42 +57,19 @@ export function SourcePreviewDrawer({
   anchor,
   onClose,
 }: SourcePreviewDrawerProps) {
-  const [doc, setDoc] = useState<DocumentView | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const chunkRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
   const closeBtnRef = useRef<HTMLButtonElement>(null)
 
   const open = anchor !== null
 
-  // Fetch on open / id change. Abort on close so we don't leave a
-  // dangling promise resolving into a closed drawer.
-  useEffect(() => {
-    if (!anchor) {
-      setDoc(null)
-      setError(null)
-      return
-    }
-    const ctrl = new AbortController()
-    setLoading(true)
-    setError(null)
-    setDoc(null)
-    getDocument(anchor.documentId, { signal: ctrl.signal })
-      .then((d) => {
-        setDoc(d)
-        setLoading(false)
-      })
-      .catch((err) => {
-        if (err instanceof DOMException && err.name === 'AbortError') return
-        setError(
-          err instanceof AiServiceError
-            ? err.message
-            : 'Could not load the source.',
-        )
-        setLoading(false)
-      })
-    return () => ctrl.abort()
-  }, [anchor])
+  // Fetch on open / id change. The request is aborted on close or change so
+  // a late response never lands in a closed drawer.
+  const { value: doc, error, loading } = useAsyncResource<DocumentView>(
+    anchor?.documentId ?? null,
+    (signal) => getDocument(anchor!.documentId, { signal }),
+    (err) =>
+      err instanceof AiServiceError ? err.message : 'Could not load the source.',
+  )
 
   // ESC closes; backdrop click closes.
   useEffect(() => {
@@ -196,7 +174,6 @@ const DrawerHeader = ({
   anchor: SourcePreviewAnchor | null
   onClose: () => void
 }) => {
-  const Icon = pickIcon(doc?.doc_type)
   return (
     <div
       className="px-5 pt-4 pb-3 border-b"
@@ -205,7 +182,8 @@ const DrawerHeader = ({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <Icon
+            <DocTypeIcon
+              docType={doc?.doc_type}
               size={14}
               strokeWidth={1.75}
               style={{ color: 'var(--text-muted)' }}
@@ -495,15 +473,18 @@ function formatChunkBreadcrumb(c: DocumentChunkView): string | null {
   return parts.length ? parts.join(' · ') : null
 }
 
-function pickIcon(docType: string | undefined): typeof Scales {
-  if (!docType) return BookOpen
-  const lc = docType.toLowerCase()
-  if (lc.includes('case')) return Buildings
+function DocTypeIcon({
+  docType,
+  ...props
+}: { docType: string | undefined } & React.ComponentProps<typeof Scales>) {
+  const lc = (docType ?? '').toLowerCase()
+  if (!lc) return <BookOpen {...props} />
+  if (lc.includes('case')) return <Buildings {...props} />
   if (lc.includes('memo') || lc.includes('sample') || lc.includes('template'))
-    return Briefcase
+    return <Briefcase {...props} />
   if (lc.includes('constitution') || lc.includes('act') || lc.includes('regulation'))
-    return Scales
-  return BookOpen
+    return <Scales {...props} />
+  return <BookOpen {...props} />
 }
 
 function formatTtl(seconds: number): string {

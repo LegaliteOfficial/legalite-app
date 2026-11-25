@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type {
   CaseFilters,
   CasesTab,
@@ -12,7 +12,14 @@ import type {
 import { EMPTY_FILTERS } from '../_constants'
 import { COLUMNS } from '../_lib/columns'
 import { countActiveFilters } from '../_lib/filters'
-import { loadVisibleColumns, persistVisibleColumns } from '../_lib/storage'
+import {
+  defaultVisibleColumns,
+  parseVisibleColumns,
+  serializeVisibleColumns,
+} from '../_lib/storage'
+import { STORAGE_KEY_COLUMNS } from '../_constants'
+import { usePersistedState } from '@/hooks/use-persisted-state'
+import { useKeyedPage } from '@/hooks/use-keyed-page'
 
 /**
  * Owns all UI state for the cases list view: tabs, status filter,
@@ -24,37 +31,23 @@ export function useCasesPageState() {
   const [activeTab, setActiveTab] = useState<CasesTab>('cases')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Open')
   const [search, setSearch] = useState('')
-  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(
-    () => new Set(COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id)),
+  const [visibleColumns, setVisibleColumns] = usePersistedState<Set<ColumnId>>(
+    STORAGE_KEY_COLUMNS,
+    defaultVisibleColumns,
+    parseVisibleColumns,
+    serializeVisibleColumns,
   )
-  const [hydrated, setHydrated] = useState(false)
   const [expandRows, setExpandRows] = useState(false)
   const [pageSize, setPageSize] = useState<PageSize>(25)
-  const [page, setPage] = useState(0)
   const [sortBy, setSortBy] = useState<ColumnId | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filters, setFilters] = useState<CaseFilters>(EMPTY_FILTERS)
   const [tagsDialogOpen, setTagsDialogOpen] = useState(false)
 
-  // Hydrate column visibility from localStorage post-mount. Split from
-  // the initial useState to avoid SSR/CSR divergence: server renders
-  // defaults, then this effect aligns to the user's saved choices.
-  useEffect(() => {
-    setVisibleColumns(loadVisibleColumns())
-    setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-    persistVisibleColumns(visibleColumns)
-  }, [visibleColumns, hydrated])
-
-  // Reset to page 0 whenever the working set changes — otherwise switching
-  // filters can leave the user on a non-existent page.
-  useEffect(() => {
-    setPage(0)
-  }, [statusFilter, search, pageSize, filters])
+  // Back to page 0 whenever the working set changes, otherwise switching
+  // filters can leave the user on a page that no longer exists.
+  const [page, setPage] = useKeyedPage([statusFilter, search, pageSize, filters])
 
   /**
    * Tri-state sort click on the same column: asc → desc → none.

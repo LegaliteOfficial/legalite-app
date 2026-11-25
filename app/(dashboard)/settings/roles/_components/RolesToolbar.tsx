@@ -1,13 +1,11 @@
 'use client'
 
-import { MagnifyingGlass, SlidersHorizontal } from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { MagnifyingGlass } from '@phosphor-icons/react'
 import { TABS } from '../_constants'
 import type { TabId } from '../_types'
 
 /**
- * Tabs + keyword search + filter affordance. The filter button toasts
- * a "coming soon" message until the advanced-filters panel ships.
+ * Tabs + keyword search.
  */
 export function RolesToolbar({
   activeTab,
@@ -62,19 +60,6 @@ export function RolesToolbar({
             style={{ borderColor: 'var(--border)', color: 'var(--navy)' }}
           />
         </div>
-        <button
-          type="button"
-          onClick={() => toast.message('Filter panel coming soon.')}
-          aria-label="Open filters"
-          className="h-9 w-9 rounded-md border flex items-center justify-center transition-colors hover:bg-black/[0.02]"
-          style={{ borderColor: 'var(--border)', background: 'white' }}
-        >
-          <SlidersHorizontal
-            size={14}
-            strokeWidth={2}
-            style={{ color: 'var(--navy)' }}
-          />
-        </button>
       </div>
     </div>
   )

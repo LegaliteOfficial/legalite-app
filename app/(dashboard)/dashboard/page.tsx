@@ -8,7 +8,7 @@
  * `_components/`. Static config in `_constants.ts`.
  */
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { useDashboardStats } from '@/hooks/use-dashboard'
 import { BANNER_DISMISSED_KEY } from './_constants'
 import type { TabId } from './_types'
@@ -20,23 +20,42 @@ import { PerformanceTab } from './_components/PerformanceTab'
 import { PersonalDashboard } from './_components/PersonalDashboard'
 import { TabBar } from './_components/TabBar'
 
+const BANNER_EVENT = 'll:banner-dismissed'
+
+function subscribeBanner(cb: () => void) {
+  window.addEventListener('storage', cb)
+  window.addEventListener(BANNER_EVENT, cb)
+  return () => {
+    window.removeEventListener('storage', cb)
+    window.removeEventListener(BANNER_EVENT, cb)
+  }
+}
+
+function readBannerVisible(): boolean {
+  try {
+    return window.localStorage.getItem(BANNER_DISMISSED_KEY) !== '1'
+  } catch {
+    return true
+  }
+}
+
 export default function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats()
   const [activeTab, setActiveTab] = useState<TabId>('personal')
-  const [bannerVisible, setBannerVisible] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    setBannerVisible(
-      window.localStorage.getItem(BANNER_DISMISSED_KEY) !== '1',
-    )
-  }, [])
+  // Hidden on the server and first paint, then shown unless dismissed before.
+  const bannerVisible = useSyncExternalStore(
+    subscribeBanner,
+    readBannerVisible,
+    () => false,
+  )
 
   const dismissBanner = () => {
-    setBannerVisible(false)
-    if (typeof window !== 'undefined') {
+    try {
       window.localStorage.setItem(BANNER_DISMISSED_KEY, '1')
+    } catch {
+      /* storage blocked: the banner just returns next visit */
     }
+    window.dispatchEvent(new Event(BANNER_EVENT))
   }
 
   return (

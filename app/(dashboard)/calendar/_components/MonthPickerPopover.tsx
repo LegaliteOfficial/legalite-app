@@ -43,12 +43,15 @@ export function MonthPickerPopover({
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [open])
 
-  // Resync the picker month whenever the popover opens — covers the case
-  // where the user navigated the main calendar while the picker was closed.
-  useEffect(() => {
-    if (!open) return
-    setViewedMonth(new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1))
-  }, [open, anchorDate])
+  // Resync the picker month whenever the popover opens, which covers the user
+  // having moved the main calendar while the picker was closed.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setViewedMonth(new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1))
+    }
+  }
 
   // 6 × 7 day grid starting at the Sunday on/before the 1st.
   const days = useMemo(() => {

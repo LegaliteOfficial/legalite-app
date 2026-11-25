@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import {
   Archive,
   ArrowClockwise,
@@ -16,10 +17,8 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FileUploadZone } from '@/components/shared/FileUploadZone'
 import { useArchiveEntries, type ArchiveListEntry } from '@/hooks/use-archive'
-import type { Case } from '@/types'
 import { LIBRARY_ACCEPT, LIBRARY_MAX_MB } from '../../_constants'
 import { ARCHIVE_TYPE_LABELS, archiveTypeLabel, formatDate, needsReview } from './archive-meta'
-import { ArchiveEntryDialog } from './ArchiveEntryDialog'
 
 const ALL = 'all'
 
@@ -29,18 +28,15 @@ const ALL = 'all'
  * numbers and summaries. New uploads land here automatically.
  */
 export function ArchiveTab({
-  cases,
   onUpload,
   isUploading,
 }: {
-  cases: Case[]
   onUpload: (file: File) => Promise<unknown>
   isUploading: boolean
 }) {
   const [query, setQuery] = useState('')
   const [search, setSearch] = useState('')
   const [type, setType] = useState<string>(ALL)
-  const [openId, setOpenId] = useState<string | null>(null)
 
   // Debounce the full-text search.
   useEffect(() => {
@@ -163,18 +159,17 @@ export function ArchiveTab({
         <ul className="space-y-3">
           {entries.map((e) => (
             <li key={e.id}>
-              <ArchiveRow entry={e} onOpen={() => setOpenId(e.id)} />
+              <ArchiveRow entry={e} />
             </li>
           ))}
         </ul>
       )}
 
-      <ArchiveEntryDialog id={openId} cases={cases} onClose={() => setOpenId(null)} />
     </div>
   )
 }
 
-function ArchiveRow({ entry, onOpen }: { entry: ArchiveListEntry; onOpen: () => void }) {
+function ArchiveRow({ entry }: { entry: ArchiveListEntry }) {
   const meta = [
     entry.suit_number,
     entry.court,
@@ -187,10 +182,9 @@ function ArchiveRow({ entry, onOpen }: { entry: ArchiveListEntry; onOpen: () => 
   ].join(' on ')
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="w-full rounded-xl border bg-white p-4 text-left transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2"
+    <Link
+      href={`/documents/archive/${entry.id}`}
+      className="block w-full rounded-xl border bg-white p-4 text-left transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2"
       style={{ borderColor: 'var(--border)' }}
     >
       <div className="flex items-start gap-3">
@@ -228,7 +222,7 @@ function ArchiveRow({ entry, onOpen }: { entry: ArchiveListEntry; onOpen: () => 
           </div>
         </div>
       </div>
-    </button>
+    </Link>
   )
 }
 

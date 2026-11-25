@@ -5,7 +5,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { useFirmStore } from '@/stores/firm.store'
 import { SignOut } from '@phosphor-icons/react'
-import { NAV_GROUPS } from './nav'
+import { usePermissionChecker } from '@/lib/access'
+import { NAV_GROUPS, visibleNavItems } from './nav'
+import { FirmSwitcher } from './FirmSwitcher'
 const TEXT_DIM = 'rgba(255,255,255,0.58)'
 const TEXT_MUTED = 'rgba(255,255,255,0.38)'
 const TEXT_LABEL = 'rgba(255,255,255,0.32)'
@@ -16,6 +18,10 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
+  const can = usePermissionChecker()
+  const groups = NAV_GROUPS.map((g) => ({ ...g, items: visibleNavItems(g.items, can) })).filter(
+    (g) => g.items.length > 0,
+  )
   // Firm branding overrides — when set in Gear -> Account Info
   // the wordmark/logo at the top of the sidebar switches to the
   // firm's own identity. Falls back to "LegaLite" when both are null.
@@ -110,9 +116,11 @@ export function Sidebar() {
         </div>
       </Link>
 
+      <FirmSwitcher />
+
       {/* Nav */}
       <nav className="flex-1 px-3 overflow-y-auto">
-        {NAV_GROUPS.map((group, idx) => (
+        {groups.map((group, idx) => (
           <div key={group.label} className={idx === 0 ? '' : 'mt-6'}>
             <div
               className="px-2 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em]"

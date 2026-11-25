@@ -18,6 +18,7 @@
  * tasks route so the visual language stays consistent across the app.
  */
 
+import { useNow } from '@/hooks/use-now'
 import { useMemo } from 'react'
 import Link from 'next/link'
 import {
@@ -83,8 +84,8 @@ export function AgendaSection() {
     return { today, overdueCount }
   }, [tasks])
 
+  const now = useNow()
   const upcoming = useMemo(() => {
-    const now = Date.now()
     return (events ?? [])
       .filter((e) => {
         if (e.status === 'cancelled') return false
@@ -92,7 +93,7 @@ export function AgendaSection() {
         return Number.isFinite(end) && end >= now
       })
       .sort((a, b) => a.start_time.localeCompare(b.start_time))
-  }, [events])
+  }, [events, now])
 
   const isLoading = tasksLoading || eventsLoading
   const bothEmpty = !isLoading && today.length === 0 && upcoming.length === 0

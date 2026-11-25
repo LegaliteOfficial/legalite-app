@@ -11,6 +11,8 @@ import {
   useHasCustomFirmName,
 } from '@/hooks/use-firm-name'
 import { useAuthStore } from '@/stores/auth.store'
+import { useQuery } from '@apollo/client/react'
+import { CurrentFirmQueryDoc } from '@/lib/graphql/firms'
 
 const plans = [
   {
@@ -20,7 +22,6 @@ const plans = [
     price: 0,
     period: '/month',
     Icon: Lightning,
-    isCurrent: true,
     isPopular: false,
     features: [
       { text: '5 clients', Icon: Users },
@@ -38,7 +39,6 @@ const plans = [
     price: 149,
     period: '/month',
     Icon: Crown,
-    isCurrent: false,
     isPopular: true,
     features: [
       { text: 'Unlimited clients', Icon: Users },
@@ -59,7 +59,6 @@ const plans = [
     price: 999,
     period: '/month',
     Icon: Buildings,
-    isCurrent: false,
     isPopular: false,
     features: [
       { text: 'Everything in Premium', Icon: Check },
@@ -148,6 +147,9 @@ export default function BillingPage() {
   const firmNameIsCustom = useHasCustomFirmName()
   const partnerName = useAuthStore((s) => s.user?.name ?? null)
   const partnerEmail = useAuthStore((s) => s.user?.email ?? null)
+  // The firm's plan as recorded by Legalite (firms.plan).
+  const { data: firmData } = useQuery(CurrentFirmQueryDoc)
+  const currentPlan = firmData?.currentFirm?.plan ?? null
 
   /**
    * Upgrade CTA. There's no payment processor wired yet, so the
@@ -255,7 +257,7 @@ export default function BillingPage() {
                 </div>
 
                 <div className="mb-6">
-                  {plan.isCurrent ? (
+                  {plan.id === currentPlan ? (
                     <div
                       className="w-full h-9 rounded-lg flex items-center justify-center gap-1.5 text-[13px] font-medium border"
                       style={{

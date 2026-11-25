@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowRight } from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { BILLING_EMAIL } from '../_constants'
 
 /**
  * Account-level governance: transfer ownership (one owner per firm) and
@@ -39,19 +39,16 @@ export function AccountFooter() {
             Close account
           </p>
           <p className="text-[13px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-            Permanently close the firm account and end the subscription.
+            Ask the Legalite team to close the firm account and end the subscription. We confirm with the owner before anything is deleted.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() =>
-            toast.error('Closing an account requires multi-step confirmation — disabled in this build.')
-          }
+        <a
+          href={`mailto:${BILLING_EMAIL}?subject=${encodeURIComponent('Close our firm account')}`}
           className="shrink-0 rounded-md border px-3.5 py-2 text-[13px] font-semibold transition-colors hover:bg-red-50"
           style={{ borderColor: '#FCA5A5', color: '#B91C1C' }}
         >
-          Close account
-        </button>
+          Request closure
+        </a>
       </div>
     </section>
   )

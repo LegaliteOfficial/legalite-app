@@ -1,5 +1,6 @@
-import { UnderConstruction } from '@/components/shared/UnderConstruction'
+import { redirect } from 'next/navigation'
 
-export default function Page() {
-  return <UnderConstruction path="/firm/calendar" />
+/** The firm calendar is the shared calendar. */
+export default function FirmCalendarPage() {
+  redirect('/calendar')
 }

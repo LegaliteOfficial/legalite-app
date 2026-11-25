@@ -2,8 +2,10 @@
 
 import Link from 'next/link'
 import { FolderLock, Plus } from '@phosphor-icons/react'
+import { useCan } from '@/lib/access'
 
 export function EmptyState() {
+  const canCreate = useCan('manage-roles')
   return (
     <div className="py-16 px-5 text-center">
       <div
@@ -25,13 +27,13 @@ export function EmptyState() {
       <p className="text-sm mb-5" style={{ color: 'var(--text-secondary)' }}>
         Keep roles organised to manage user access across the firm.
       </p>
-      <Link
+      {canCreate && <Link
         href="/settings/roles/new"
         className="inline-flex items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         style={{ background: 'var(--gold)' }}
       >
         <Plus size={14} strokeWidth={2.5} /> Create role
-      </Link>
+      </Link>}
     </div>
   )
 }

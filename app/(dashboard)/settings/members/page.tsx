@@ -21,6 +21,7 @@ import {
   useFirmMembers,
   usePendingInvitations,
 } from '@/hooks/use-firm-members'
+import { useCan } from '@/lib/access'
 import { TABS } from './_constants'
 import type { TabId } from './_types'
 import { InvitationsTable } from './_components/InvitationsTable'
@@ -58,7 +59,11 @@ export default function FirmMembersPage() {
   }, [pathname, router])
 
   const { data: members, isLoading: membersLoading } = useFirmMembers()
-  const { data: invites, isLoading: invitesLoading } = usePendingInvitations()
+  // Inviting and managing people needs manage-users; everyone else sees the
+  // member list only.
+  const canManage = useCan('manage-users')
+  const { data: invites, isLoading: invitesLoading } = usePendingInvitations(canManage)
+  const tabs = canManage ? TABS : TABS.filter((t) => t.id === 'members')
 
   const filteredMembers = useMemo(() => {
     const list = members ?? []
@@ -130,6 +135,7 @@ export default function FirmMembersPage() {
             by email and expire if not accepted.
           </p>
         </div>
+        {canManage && (
         <button
           type="button"
           onClick={() => setInviteOpen(true)}
@@ -140,6 +146,7 @@ export default function FirmMembersPage() {
         >
           <UserPlus size={14} strokeWidth={2.5} /> Invite member
         </button>
+        )}
       </div>
 
       <div
@@ -156,7 +163,7 @@ export default function FirmMembersPage() {
           style={{ borderColor: 'var(--border)' }}
         >
           <div className="flex items-center gap-1 flex-wrap">
-            {TABS.map((t) => {
+            {tabs.map((t) => {
               const active = t.id === activeTab
               return (
                 <button
@@ -208,11 +215,11 @@ export default function FirmMembersPage() {
           </div>
         </div>
 
-        {activeTab === 'members' ? (
+        {activeTab === 'members' || !canManage ? (
           <MembersTable
             members={filteredMembers}
             loading={membersLoading}
-            onInvite={() => setInviteOpen(true)}
+            onInvite={canManage ? () => setInviteOpen(true) : undefined}
           />
         ) : (
           <InvitationsTable
@@ -223,10 +230,12 @@ export default function FirmMembersPage() {
         )}
       </div>
 
-      <InviteMemberDialog
-        open={inviteOpen}
-        onClose={() => setInviteOpen(false)}
-      />
+      {canManage && (
+        <InviteMemberDialog
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+        />
+      )}
     </div>
   )
 }

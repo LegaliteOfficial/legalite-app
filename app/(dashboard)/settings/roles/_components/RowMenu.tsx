@@ -1,28 +1,30 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { DotsThreeVertical } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useArchiveFirmRole } from '@/hooks/use-firm-roles'
+import { errorMessage } from '@/lib/errors'
 import type { Role } from '../_types'
 
 /**
- * Per-row 3-dot action menu. Archive is disabled for system roles
- * (Owner / Administrator / Member); Edit toasts a "coming next" hint
- * until the role-edit screen ships.
+ * Per-row 3-dot action menu. System roles (Owner / Administrator /
+ * Member) cannot be edited or archived.
  */
 export function RowMenu({ role }: { role: Role }) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
   const archiveRole = useArchiveFirmRole()
 
   const handleArchive = async () => {
+    if (role.isSystem || archiveRole.isPending) return
+    const id = toast.loading(`Archiving "${role.name}"...`)
     try {
       await archiveRole.mutateAsync(role.id)
-      toast.success(`Role "${role.name}" archived.`)
+      toast.success(`Role "${role.name}" archived. Members left without a role now hold Member.`, { id })
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to archive role.',
-      )
+      toast.error(errorMessage(err, 'Unable to archive role.'), { id })
     }
   }
 
@@ -44,9 +46,10 @@ export function RowMenu({ role }: { role: Role }) {
           style={{ background: 'white', borderColor: 'var(--border)' }}
         >
           <MenuItem
-            onClick={() =>
-              toast.message(`Edit "${role.name}" — coming next.`)
-            }
+            onClick={() => {
+              if (!role.isSystem) router.push(`/settings/roles/${role.id}`)
+            }}
+            tone={role.isSystem ? 'disabled' : undefined}
           >
             Edit
           </MenuItem>

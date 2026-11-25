@@ -8,6 +8,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { useCan } from '@/lib/access'
 import Link from 'next/link'
 import {
   ArrowSquareOut,
@@ -228,6 +229,7 @@ function DocumentRow({
   onSetStatus: (doc: Document, status: DocumentStatus) => void
   onDelete: (doc: Document) => void
 }) {
+  const canDelete = useCan('delete-documents')
   const isFile = !!doc.file_url
   const current = normaliseStatus(doc.status)
   return (
@@ -294,11 +296,11 @@ function DocumentRow({
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-[13px]" style={{ color: 'var(--accent-danger)' }} onClick={() => onDelete(doc)}>
+            {canDelete && <DropdownMenuSeparator />}
+            {canDelete && (<DropdownMenuItem className="cursor-pointer text-[13px]" style={{ color: 'var(--accent-danger)' }} onClick={() => onDelete(doc)}>
               <Trash size={13} />
               Move to bin
-            </DropdownMenuItem>
+            </DropdownMenuItem>)}
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

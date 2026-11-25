@@ -8,6 +8,7 @@
  * hook; the field data lives in the local persisted store.
  */
 
+import { RequirePermission } from '@/components/shared/RequirePermission'
 import { useState } from 'react'
 import { Spinner } from '@/components/shared/Spinner'
 import type { CustomField } from '@/stores/custom-fields-local.store'
@@ -18,7 +19,7 @@ import { EmptyState } from './_components/EmptyState'
 import { FieldDialog } from './_components/FieldDialog'
 import { useCustomFieldsPageState } from './_hooks/use-custom-fields-page-state'
 
-export default function CustomFieldsPage() {
+function CustomFieldsPageContent() {
   const state = useCustomFieldsPageState()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<CustomField | null>(null)
@@ -74,5 +75,13 @@ export default function CustomFieldsPage() {
         field={editing}
       />
     </div>
+  )
+}
+
+export default function CustomFieldsPage() {
+  return (
+    <RequirePermission permission="manage-custom-fields" what="custom fields">
+      <CustomFieldsPageContent />
+    </RequirePermission>
   )
 }

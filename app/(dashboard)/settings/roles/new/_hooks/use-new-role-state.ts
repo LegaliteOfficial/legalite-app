@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { useCreateFirmRole } from '@/hooks/use-firm-roles'
+import { useCreateFirmRole, useUpdateFirmRole, type FirmRole } from '@/hooks/use-firm-roles'
+import { errorMessage } from '@/lib/errors'
 import {
   ALWAYS_ON,
   DEFAULT_ENABLED,
@@ -18,12 +19,14 @@ import type { GrantedCount } from '../_types'
  * Builds the initial permissions map — default-enabled checks plus the
  * always-on locked section. Recomputed when a template is picked.
  */
-function buildInitialPermissions(): Record<string, boolean> {
+function buildInitialPermissions(granted?: readonly string[]): Record<string, boolean> {
   const map: Record<string, boolean> = {}
   for (const section of PERMISSION_SECTIONS) {
     for (const group of section.groups) {
       for (const p of group.permissions) {
-        map[p.id] = DEFAULT_ENABLED.has(p.id) || ALWAYS_ON.has(p.id)
+        map[p.id] = granted
+          ? granted.includes(p.id) || ALWAYS_ON.has(p.id)
+          : DEFAULT_ENABLED.has(p.id) || ALWAYS_ON.has(p.id)
       }
     }
   }
@@ -31,19 +34,20 @@ function buildInitialPermissions(): Record<string, boolean> {
 }
 
 /**
- * New-role page state: name + description fields, template choice,
- * per-permission toggle map, scroll-spy active id, and the create
- * handler that POSTs to the role-create mutation.
+ * Role editor state: name + description fields, template choice,
+ * per-permission toggle map, scroll-spy active id, and the save handler.
+ * With `role` it edits that custom role; without, it creates a new one.
  */
-export function useNewRoleState() {
+export function useNewRoleState(role?: FirmRole) {
   const router = useRouter()
   const createRole = useCreateFirmRole()
+  const updateRole = useUpdateFirmRole()
 
-  const [roleName, setRoleName] = useState('')
-  const [roleDescription, setRoleDescription] = useState('')
+  const [roleName, setRoleName] = useState(role?.name ?? '')
+  const [roleDescription, setRoleDescription] = useState(role?.description ?? '')
   const [template, setTemplate] = useState('')
-  const [permissions, setPermissions] = useState<Record<string, boolean>>(
-    buildInitialPermissions,
+  const [permissions, setPermissions] = useState<Record<string, boolean>>(() =>
+    buildInitialPermissions(role?.permissions),
   )
   const [activeId, setActiveId] = useState<string>('role-details')
 
@@ -128,18 +132,28 @@ export function useNewRoleState() {
       .filter(([id, on]) => on && !ALWAYS_ON.has(id))
       .map(([id]) => id)
 
+    const name = roleName.trim()
+    const id = toast.loading(role ? `Saving "${name}"...` : `Creating "${name}"...`)
     try {
-      await createRole.mutateAsync({
-        name: roleName.trim(),
-        description: roleDescription.trim(),
-        permissions: selectedPermissions,
-      })
-      toast.success(`Role "${roleName.trim()}" created.`)
+      if (role) {
+        await updateRole.mutateAsync({
+          role_id: role.id,
+          name,
+          description: roleDescription.trim(),
+          permissions: selectedPermissions,
+        })
+        toast.success(`Role "${name}" saved. Members holding it have the new access straight away.`, { id })
+      } else {
+        await createRole.mutateAsync({
+          name,
+          description: roleDescription.trim(),
+          permissions: selectedPermissions,
+        })
+        toast.success(`Role "${name}" created.`, { id })
+      }
       router.push('/settings/roles')
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to create role.',
-      )
+      toast.error(errorMessage(err, role ? 'Unable to save the role.' : 'Unable to create role.'), { id })
     }
   }
 
@@ -155,6 +169,6 @@ export function useNewRoleState() {
     grantedCounts,
     activeId,
     handleCreate,
-    isCreating: createRole.isPending,
+    isCreating: createRole.isPending || updateRole.isPending,
   }
 }

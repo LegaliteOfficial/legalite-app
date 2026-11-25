@@ -64,6 +64,7 @@ export const AuthPayloadFieldsFragmentDoc = graphql(/* GraphQL */ `
     memberships {
       ...FirmMembershipFields
     }
+    permissions
   }
 `)
 

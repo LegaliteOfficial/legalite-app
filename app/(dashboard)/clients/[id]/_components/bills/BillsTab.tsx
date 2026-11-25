@@ -1,5 +1,6 @@
 'use client'
 
+import { useKeyedPage } from '@/hooks/use-keyed-page'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CaretDoubleLeft,
@@ -164,7 +165,6 @@ export function BillsTab({ contactId }: { contactId: string }) {
   const [pageSize, setPageSize] = useState<(typeof BILL_PAGE_SIZES)[number]>(
     25,
   )
-  const [page, setPage] = useState(0)
 
   // Status filter pipeline.
   const byStatus = useMemo(() => {
@@ -225,6 +225,7 @@ export function BillsTab({ contactId }: { contactId: string }) {
   }, [byStatus, search, filters])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const [page, setPage] = useKeyedPage([billTab, search, filters, pageSize])
   const safePage = Math.min(page, totalPages - 1)
   const start = safePage * pageSize
   const end = Math.min(start + pageSize, filtered.length)
@@ -234,11 +235,6 @@ export function BillsTab({ contactId }: { contactId: string }) {
     () => BILL_COLUMNS.filter((c) => visibleCols.has(c.id)),
     [visibleCols],
   )
-
-  // Reset paging when filters / status change.
-  useEffect(() => {
-    setPage(0)
-  }, [billTab, search, filters, pageSize])
 
   // Active facet count surfaced as a badge on the Filters button.
   const activeFilterCount =

@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useSyncExternalStore } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -8,8 +8,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeSlash, Buildings, ShieldCheck, Warning } from '@phosphor-icons/react'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { toast } from 'sonner'
 import { acceptInviteSchema, type AcceptInviteFormData } from '@/schemas'
-import { useAcceptInvite, useInvitationLookup } from '@/hooks/use-auth'
+import { useAcceptInvitation, useAcceptInvite, useInvitationLookup } from '@/hooks/use-auth'
+import { useAuthStore } from '@/stores/auth.store'
+import { useApolloClient } from '@apollo/client/react'
 import { titleLabel, roleLabel } from '@/hooks/use-firm-members'
 
 export default function AcceptInvitePage() {
@@ -27,6 +30,16 @@ function AcceptInviteInner() {
 
   const { invitation, loading: lookupLoading, error: lookupError } = useInvitationLookup(token)
   const { acceptInviteMutation, loading: accepting } = useAcceptInvite()
+  const { accept: acceptAsUser, loading: acceptingAsUser } = useAcceptInvitation()
+  const apollo = useApolloClient()
+  const hydrated = useSyncExternalStore(
+    (cb) => useAuthStore.persist.onFinishHydration(cb),
+    () => useAuthStore.persist.hasHydrated(),
+    () => false,
+  )
+  const signedInEmail = useAuthStore((s) => (s.isAuthenticated ? s.user?.email ?? null : null))
+  const logout = useAuthStore((s) => s.logout)
+  const [needsSignIn, setNeedsSignIn] = useState(false)
 
   const [serverError, setServerError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -98,8 +111,38 @@ function AcceptInviteInner() {
           : err instanceof Error
             ? err.message
             : null
+      if (message && /already have a Legalite account/i.test(message)) setNeedsSignIn(true)
       setServerError(message ?? 'We could not accept this invitation. Please try again.')
     }
+  }
+
+  const signInHref = `/login?next=${encodeURIComponent(`/accept-invite?token=${token}`)}`
+  const isSignedIn = hydrated && !!signedInEmail
+  const emailMatches =
+    isSignedIn && signedInEmail!.trim().toLowerCase() === invitation.email.trim().toLowerCase()
+
+  const onAcceptAsUser = async () => {
+    setServerError('')
+    try {
+      const payload = await acceptAsUser(token)
+      await apollo.clearStore()
+      toast.success(`You joined ${payload.active_membership?.firm_name ?? invitation.firm_name}.`)
+      router.push('/dashboard')
+    } catch (err: unknown) {
+      const message =
+        err instanceof CombinedGraphQLErrors
+          ? err.errors[0]?.message
+          : err instanceof Error
+            ? err.message
+            : null
+      setServerError(message ?? 'We could not accept this invitation. Please try again.')
+    }
+  }
+
+  const onSwitchAccount = async () => {
+    logout()
+    await apollo.clearStore()
+    router.push(signInHref)
   }
 
   return (
@@ -168,101 +211,158 @@ function AcceptInviteInner() {
         </div>
       )}
 
+      {isSignedIn ? (
+        emailMatches ? (
+          <div className="space-y-4">
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              You&apos;re signed in as <span className="font-semibold text-white">{signedInEmail}</span>.
+              Accept to add {invitation.firm_name} to your account. You can switch between your firms at any time.
+            </p>
+            <button
+              type="button"
+              onClick={() => void onAcceptAsUser()}
+              disabled={acceptingAsUser}
+              className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+              style={{
+                background: 'linear-gradient(135deg,var(--gold),var(--gold-dark))',
+                color: 'var(--navy)',
+                boxShadow: '0 4px 20px rgba(201,151,43,0.35)',
+              }}
+            >
+              {acceptingAsUser ? 'Joining firm…' : `Accept & join ${invitation.firm_name}`}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div
+              className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
+            >
+              <Warning size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--gold-light)' }} />
+              <span>
+                You&apos;re signed in as <span className="font-semibold text-white">{signedInEmail}</span>, but this
+                invitation is for <span className="font-semibold text-white">{invitation.email}</span>. Sign in with
+                that email to accept it.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void onSwitchAccount()}
+              className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all"
+              style={{ background: 'rgba(255,255,255,0.08)', color: 'white', border: '1px solid rgba(255,255,255,0.15)' }}
+            >
+              Sign out and use {invitation.email}
+            </button>
+          </div>
+        )
+      ) : (
+        <>
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Full name */}
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Full Name *
-          </label>
-          <input
-            {...register('name')}
-            placeholder="e.g. Nana Akuffo-Mensah"
-            className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
-            onFocus={(e) => { e.target.style.borderColor = 'var(--gold)'; e.target.style.background = 'rgba(255,255,255,0.08)' }}
-            onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
-          />
-          {errors.name && <p className="text-red-400 text-xs mt-1.5">{errors.name.message}</p>}
-        </div>
-
-        {/* Password */}
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Password *
-          </label>
-          <div className="relative">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Full name */}
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              Full Name *
+            </label>
             <input
-              {...register('password')}
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Create a password"
-              className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all pr-12"
+              {...register('name')}
+              placeholder="e.g. Nana Akuffo-Mensah"
+              className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
               onFocus={(e) => { e.target.style.borderColor = 'var(--gold)'; e.target.style.background = 'rgba(255,255,255,0.08)' }}
               onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2"
-              style={{ color: 'rgba(255,255,255,0.35)' }}
-              tabIndex={-1}
-            >
-              {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-            </button>
+            {errors.name && <p className="text-red-400 text-xs mt-1.5">{errors.name.message}</p>}
           </div>
-          {errors.password && <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>}
-        </div>
-
-        {/* Confirm password */}
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Confirm Password *
-          </label>
-          <div className="relative">
-            <input
-              {...register('confirmPassword')}
-              type={showConfirm ? 'text' : 'password'}
-              placeholder="Repeat your password"
-              className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all pr-12"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
-              onFocus={(e) => { e.target.style.borderColor = 'var(--gold)'; e.target.style.background = 'rgba(255,255,255,0.08)' }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm((p) => !p)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2"
-              style={{ color: 'rgba(255,255,255,0.35)' }}
-              tabIndex={-1}
-            >
-              {showConfirm ? <EyeSlash size={16} /> : <Eye size={16} />}
-            </button>
+  
+          {/* Password */}
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              Password *
+            </label>
+            <div className="relative">
+              <input
+                {...register('password')}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Create a password"
+                className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all pr-12"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--gold)'; e.target.style.background = 'rgba(255,255,255,0.08)' }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2"
+                style={{ color: 'rgba(255,255,255,0.35)' }}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.password && <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>}
           </div>
-          {errors.confirmPassword && <p className="text-red-400 text-xs mt-1.5">{errors.confirmPassword.message}</p>}
-        </div>
+  
+          {/* Confirm password */}
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              Confirm Password *
+            </label>
+            <div className="relative">
+              <input
+                {...register('confirmPassword')}
+                type={showConfirm ? 'text' : 'password'}
+                placeholder="Repeat your password"
+                className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all pr-12"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--gold)'; e.target.style.background = 'rgba(255,255,255,0.08)' }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((p) => !p)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2"
+                style={{ color: 'rgba(255,255,255,0.35)' }}
+                tabIndex={-1}
+              >
+                {showConfirm ? <EyeSlash size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.confirmPassword && <p className="text-red-400 text-xs mt-1.5">{errors.confirmPassword.message}</p>}
+          </div>
+  
+          <button
+            type="submit"
+            disabled={isSubmitting || accepting}
+            className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all mt-1 disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(135deg,var(--gold),var(--gold-dark))',
+              color: 'var(--navy)',
+              boxShadow: '0 4px 20px rgba(201,151,43,0.35)',
+            }}
+          >
+            {isSubmitting || accepting ? 'Joining firm…' : 'Accept & Join Firm'}
+          </button>
+        </form>
 
-        <button
-          type="submit"
-          disabled={isSubmitting || accepting}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all mt-1 disabled:opacity-50"
-          style={{
-            background: 'linear-gradient(135deg,var(--gold),var(--gold-dark))',
-            color: 'var(--navy)',
-            boxShadow: '0 4px 20px rgba(201,151,43,0.35)',
-          }}
-        >
-          {isSubmitting || accepting ? 'Joining firm…' : 'Accept & Join Firm'}
-        </button>
-      </form>
+          {needsSignIn && (
+            <Link
+              href={signInHref}
+              className="mt-4 block w-full rounded-xl py-3.5 text-center text-sm font-semibold"
+              style={{ background: 'rgba(255,255,255,0.08)', color: 'white', border: '1px solid rgba(255,255,255,0.15)' }}
+            >
+              Sign in to accept
+            </Link>
+          )}
 
-      {/* Footer */}
-      <p className="text-sm mt-6" style={{ color: 'rgba(255,255,255,0.35)' }}>
-        Already have an account?{' '}
-        <Link href="/login" className="font-semibold underline underline-offset-2" style={{ color: 'var(--gold-light)' }}>
-          Sign in →
-        </Link>
-      </p>
+          <p className="text-sm mt-6" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            Already have a Legalite account?{' '}
+            <Link href={signInHref} className="font-semibold underline underline-offset-2" style={{ color: 'var(--gold-light)' }}>
+              Sign in to accept
+            </Link>
+          </p>
+        </>
+      )}
     </AuthShell>
   )
 }

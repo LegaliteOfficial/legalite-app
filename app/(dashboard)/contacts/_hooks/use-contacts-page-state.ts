@@ -9,10 +9,17 @@
  * single state object.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useClients } from '@/hooks/use-clients'
 import { COLUMNS } from '../_lib/columns'
-import { loadVisibleColumns, saveVisibleColumns } from '../_lib/storage'
+import {
+  defaultVisibleColumns,
+  parseVisibleColumns,
+  serializeVisibleColumns,
+} from '../_lib/storage'
+import { STORAGE_KEY_COLUMNS } from '../_constants'
+import { usePersistedState } from '@/hooks/use-persisted-state'
+import { useKeyedPage } from '@/hooks/use-keyed-page'
 import type {
   ColumnId,
   ContactRoleFilter,
@@ -29,13 +36,14 @@ export function useContactsPageState() {
   const [activeTab, setActiveTab] = useState<ContactsTab>('contacts')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [search, setSearch] = useState('')
-  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(
-    () => new Set(COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id)),
+  const [visibleColumns, setVisibleColumns] = usePersistedState<Set<ColumnId>>(
+    STORAGE_KEY_COLUMNS,
+    defaultVisibleColumns,
+    parseVisibleColumns,
+    serializeVisibleColumns,
   )
-  const [hydrated, setHydrated] = useState(false)
   const [expandRows, setExpandRows] = useState(false)
   const [pageSize, setPageSize] = useState<25 | 50 | 100>(25)
-  const [page, setPage] = useState(0)
   const [sortBy, setSortBy] = useState<ColumnId | null>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [tagsDialogOpen, setTagsDialogOpen] = useState(false)
@@ -48,22 +56,14 @@ export function useContactsPageState() {
     useState<ContactRoleFilter>(null)
   const [contactTagsFilter, setContactTagsFilter] = useState<string[]>([])
 
-  // Hydrate the column-visibility set on mount (localStorage is
-  // unavailable during SSR so the default fires on first render).
-  useEffect(() => {
-    setVisibleColumns(loadVisibleColumns())
-    setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-    saveVisibleColumns(visibleColumns)
-  }, [visibleColumns, hydrated])
-
-  // Reset pagination when any filter input changes.
-  useEffect(() => {
-    setPage(0)
-  }, [typeFilter, search, pageSize, contactRoleFilter, contactTagsFilter])
+  // Back to page 0 when any filter input changes.
+  const [page, setPage] = useKeyedPage([
+    typeFilter,
+    search,
+    pageSize,
+    contactRoleFilter,
+    contactTagsFilter,
+  ])
 
   const contacts = useMemo<ContactRow[]>(() => {
     return (clients ?? []).map((c) => ({

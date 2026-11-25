@@ -2,6 +2,7 @@
 
 import { Plus, Users } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { useCan } from '@/lib/access'
 
 /**
  * Empty state — renders when the list is genuinely empty AND when the
@@ -17,6 +18,7 @@ export function EmptyState({
   onClearFilters: () => void
   onNewPerson: () => void
 }) {
+  const canCreate = useCan('create-contacts')
   return (
     <div className="px-6 py-16 text-center">
       <div
@@ -44,7 +46,7 @@ export function EmptyState({
         <Button size="sm" className="mt-5" onClick={onClearFilters}>
           Clear all filters
         </Button>
-      ) : (
+      ) : canCreate && (
         <Button size="sm" className="mt-5" onClick={onNewPerson}>
           <Plus size={13} strokeWidth={2} />
           New contact

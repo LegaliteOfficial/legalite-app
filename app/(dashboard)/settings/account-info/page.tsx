@@ -9,29 +9,23 @@
  * history, and account governance. Branding/address live on the Firm
  * profile page, not here.
  *
- * Data is the local subscription store (skipHydration), rehydrated once
- * on mount.
+ * Data comes from the firm record (currentFirm) and the member list.
  */
 
-import { useEffect, useState } from 'react'
+import { RequirePermission } from '@/components/shared/RequirePermission'
+import { useQuery } from '@apollo/client/react'
 import Link from 'next/link'
 import { CaretRight } from '@phosphor-icons/react'
 import { Spinner } from '@/components/shared/Spinner'
-import { useSubscriptionStore } from '@/stores/subscription-local.store'
+import { CurrentFirmQueryDoc } from '@/lib/graphql/firms'
+import { errorMessage } from '@/lib/errors'
 import { AccountOverviewCard } from './_components/AccountOverviewCard'
 import { PlanSection } from './_components/PlanSection'
-import { PaymentMethodCard } from './_components/PaymentMethodCard'
-import { BillingHistoryCard } from './_components/BillingHistoryCard'
 import { AccountFooter } from './_components/AccountFooter'
 
-export default function AccountInfoPage() {
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    void Promise.resolve(useSubscriptionStore.persist.rehydrate()).then(() =>
-      setHydrated(true),
-    )
-  }, [])
+function AccountInfoPageContent() {
+  const { data, loading, error } = useQuery(CurrentFirmQueryDoc)
+  const firm = data?.currentFirm ?? null
 
   return (
     <div
@@ -67,29 +61,37 @@ export default function AccountInfoPage() {
           Account and payment info
         </h1>
         <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          Manage your firm&rsquo;s LegaLite subscription — your plan, payment
-          method, and billing history, all in one place.
+          Your firm&rsquo;s Legalite account: who owns it, the plan it is on, and
+          how to reach the billing team.
         </p>
       </div>
 
-      {!hydrated ? (
+      {error ? (
+        <p className="py-24 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {errorMessage(error, 'The firm account could not be loaded.')}
+        </p>
+      ) : loading && !firm ? (
         <div
           className="flex items-center justify-center gap-2 py-24"
           style={{ color: 'var(--text-secondary)' }}
         >
           <Spinner size={16} /> <span className="text-sm">Loading account…</span>
         </div>
-      ) : (
+      ) : firm ? (
         <div className="max-w-4xl space-y-6">
-          <AccountOverviewCard />
-          <PlanSection />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            <PaymentMethodCard />
-            <AccountFooter />
-          </div>
-          <BillingHistoryCard />
+          <AccountOverviewCard firm={firm} />
+          <PlanSection firm={firm} />
+          <AccountFooter />
         </div>
-      )}
+      ) : null}
     </div>
+  )
+}
+
+export default function AccountInfoPage() {
+  return (
+    <RequirePermission permission="manage-account-info" what="the firm's account information">
+      <AccountInfoPageContent />
+    </RequirePermission>
   )
 }

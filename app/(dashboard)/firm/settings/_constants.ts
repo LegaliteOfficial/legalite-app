@@ -20,11 +20,10 @@ export const GHANA_REGIONS = [
 
 /** Legal-practice structures recognised under Ghanaian practice. */
 export const FIRM_TYPES: { value: string; label: string }[] = [
-  { value: 'sole_practitioner', label: 'Sole practitioner' },
+  { value: 'sole_practice', label: 'Sole practice' },
   { value: 'partnership', label: 'Partnership' },
-  { value: 'llp', label: 'Limited liability partnership' },
-  { value: 'chambers', label: 'Chambers' },
-  { value: 'in_house', label: 'In-house / legal department' },
+  { value: 'chamber', label: 'Chambers' },
+  { value: 'corporate_firm', label: 'Corporate firm' },
 ]
 
 export const FIRM_TYPE_LABEL: Record<string, string> = Object.fromEntries(

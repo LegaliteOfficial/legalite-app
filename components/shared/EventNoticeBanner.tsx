@@ -10,6 +10,7 @@
  * nag across navigations or refreshes.
  */
 
+import { usePersistedState } from '@/hooks/use-persisted-state'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Bell, CalendarDots, X } from '@phosphor-icons/react'
@@ -31,17 +32,14 @@ interface ActiveNotice {
 export function EventNoticeBanner() {
   const { data: events, refetch } = useCalendarEvents()
   const [nowMs, setNowMs] = useState(() => Date.now())
-  const [dismissed, setDismissed] = useState<string[]>([])
-
-  // Load persisted dismissals once on mount.
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY)
-      if (raw) setDismissed(JSON.parse(raw) as string[])
-    } catch {
-      /* ignore */
-    }
-  }, [])
+  // Dismissals last for the browser session.
+  const [dismissed, setDismissed] = usePersistedState<string[]>(
+    STORAGE_KEY,
+    () => [],
+    (raw) => JSON.parse(raw) as string[],
+    JSON.stringify,
+    'session',
+  )
 
   // Tick the clock so events become active/inactive at the right moment.
   useEffect(() => {
@@ -51,7 +49,9 @@ export function EventNoticeBanner() {
 
   // Periodically pull fresh events (created in other sessions, etc.).
   const refetchRef = useRef(refetch)
-  refetchRef.current = refetch
+  useEffect(() => {
+    refetchRef.current = refetch
+  })
   useEffect(() => {
     const t = setInterval(() => void refetchRef.current?.(), REFETCH_MS)
     return () => clearInterval(t)
@@ -76,15 +76,7 @@ export function EventNoticeBanner() {
   }, [events, nowMs, dismissed])
 
   const dismiss = (id: string) => {
-    setDismissed((prev) => {
-      const next = prev.includes(id) ? prev : [...prev, id]
-      try {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        /* ignore */
-      }
-      return next
-    })
+    setDismissed((prev) => (prev.includes(id) ? prev : [...prev, id]))
   }
 
   if (notices.length === 0) return null

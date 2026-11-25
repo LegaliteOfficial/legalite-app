@@ -3,35 +3,31 @@
 /**
  * useTaskReminders
  * ----------------
- * Walks every task with a reminder offset configured and surfaces
- * a toast when the due date crosses into the lead-time window
- * (15 min / 1 hr / 1 day / 3 days before, per the user's pick).
+ * Surfaces an in-app toast when a reminder set on a task comes due.
+ * Reads the tasks (and their reminders) from the tasks API, so it covers
+ * every task the member can see.
  *
- * Mirrors the priority-reminder hook's contract:
  *   - Mounts at the dashboard layout via PriorityRemindersBoot.
- *   - Scans on mount, every 10 minutes, and on any tasks-store
- *     change (so a freshly-saved task gets evaluated immediately).
- *   - Persists "already-shown" reminders in localStorage so the
- *     same toast doesn't repeat on every reload. The dedup key
- *     includes the due timestamp so a rescheduled task earns
- *     fresh reminders.
+ *   - Scans whenever the task list changes and every five minutes.
+ *   - Remembers reminders already shown in localStorage so a toast does
+ *     not repeat on reload. The key includes the reminder time, so a
+ *     rescheduled task earns a fresh reminder.
  */
 
 import { useEffect } from 'react'
+import { useQuery } from '@apollo/client/react'
 import { toast } from 'sonner'
-import {
-  REMINDER_OFFSET_MINUTES,
-  useTasksLocalStore,
-  type LocalTask,
-} from '@/stores/tasks-local.store'
+import { TasksQueryDoc } from '@/lib/graphql/tasks'
+import { useAuthStore } from '@/stores/auth.store'
+import type { TasksQuery } from '@/types/generated/graphql'
 
+type ApiTask = TasksQuery['tasks'][number]
+
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 const SEEN_STORAGE_KEY = 'll:task-reminders-seen'
-
-/**
- * Poll cadence in ms. Shorter than the priority reminder's 15-min
- * window because task lead times are tighter (15-min minimum).
- */
 const POLL_INTERVAL_MS = 5 * 60 * 1000
+/** Reminders more than this late are not shown (the moment has passed). */
+const STALE_AFTER_MS = 6 * 60 * 60 * 1000
 
 function loadSeen(): Set<string> {
   if (typeof window === 'undefined') return new Set()
@@ -46,60 +42,44 @@ function loadSeen(): Set<string> {
 function persistSeen(seen: Set<string>) {
   if (typeof window === 'undefined') return
   try {
-    window.localStorage.setItem(SEEN_STORAGE_KEY, JSON.stringify([...seen]))
+    // Keep the list bounded.
+    window.localStorage.setItem(SEEN_STORAGE_KEY, JSON.stringify([...seen].slice(-500)))
   } catch {
-    /* quota / disabled storage — silently ignore */
+    /* quota / disabled storage */
   }
 }
 
-/** Whole-minute count until the target (negative if past). */
-function minutesUntil(target: Date): number {
-  return Math.floor((target.getTime() - Date.now()) / 60_000)
-}
-
-/**
- * One pass over the in-memory task list. Toasts each
- * (task, offset) pair that:
- *   1. Has a parseable due date
- *   2. Has a non-`none` reminder offset
- *   3. Is in 0..offset minutes from due time, AND we haven't
- *      already shown that pair (within this hearing).
- *   4. Isn't already in Done status (no point reminding about
- *      finished work).
- */
-function runScan(tasks: LocalTask[]): number {
+/** Toast each reminder whose time has arrived and has not been shown yet. */
+function runScan(tasks: readonly ApiTask[]): number {
   const seen = loadSeen()
+  const now = Date.now()
   let fired = 0
   for (const t of tasks) {
-    if (t.status === 'Done') continue
-    if (!t.due_at) continue
-    const offsetMinutes = REMINDER_OFFSET_MINUTES[t.reminder_offset]
-    if (offsetMinutes == null) continue
-    const due = new Date(t.due_at)
-    if (Number.isNaN(due.getTime())) continue
-    const minsLeft = minutesUntil(due)
-    if (minsLeft < 0) continue
-    if (minsLeft > offsetMinutes) continue
+    if (t.status === 'Done' || !t.due_date) continue
+    const due = new Date(t.due_date)
+    if (Number.isNaN(due.getTime()) || due.getTime() < now) continue
+    for (const r of t.reminders ?? []) {
+      const at = new Date(r.remind_at).getTime()
+      if (Number.isNaN(at) || at > now || now - at > STALE_AFTER_MS) continue
+      const key = `${t.id}:${r.id}:${r.remind_at}`
+      if (seen.has(key)) continue
 
-    const key = `${t.id}:${due.toISOString().slice(0, 16)}:${t.reminder_offset}`
-    if (seen.has(key)) continue
-
-    const human = formatLeadTime(minsLeft)
-    const isUrgent = minsLeft <= 30 || t.priority === 'High'
-    const fn = isUrgent ? toast.error : toast.warning
-    fn(`Task due in ${human} — ${t.title}.`, {
-      description: due.toLocaleString('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }),
-      duration: 8000,
-    })
-    seen.add(key)
-    fired += 1
+      const minsLeft = Math.max(0, Math.floor((due.getTime() - now) / 60_000))
+      const urgent = minsLeft <= 30 || t.priority === 'High'
+      ;(urgent ? toast.error : toast.warning)(`Task due in ${formatLeadTime(minsLeft)}: ${t.title}.`, {
+        description: due.toLocaleString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        }),
+        duration: 8000,
+      })
+      seen.add(key)
+      fired += 1
+    }
   }
   if (fired > 0) persistSeen(seen)
   return fired
@@ -118,21 +98,23 @@ function formatLeadTime(minutes: number): string {
 }
 
 export function useTaskReminders() {
+  const signedIn = useAuthStore((s) => Boolean(s.token && s.activeMembership))
+  const { data } = useQuery(TasksQueryDoc, {
+    skip: DEV_BYPASS || !signedIn,
+    pollInterval: POLL_INTERVAL_MS,
+    fetchPolicy: 'cache-and-network',
+  })
+  const tasks = data?.tasks
+
   useEffect(() => {
-    const scan = () => {
-      const tasks = Object.values(useTasksLocalStore.getState().tasks)
-      runScan(tasks)
-    }
+    if (!tasks) return
+    const scan = () => runScan(tasks)
     const handle = window.setTimeout(scan, 0)
-    const interval = window.setInterval(scan, POLL_INTERVAL_MS)
-    // Re-scan immediately when the store changes (new task added,
-    // due date edited, reminder offset changed) so the toast fires
-    // without waiting for the next poll tick.
-    const unsubscribe = useTasksLocalStore.subscribe(scan)
+    // Reminders come due between refetches, so scan on a timer too.
+    const interval = window.setInterval(scan, 60 * 1000)
     return () => {
       window.clearTimeout(handle)
       window.clearInterval(interval)
-      unsubscribe()
     }
-  }, [])
+  }, [tasks])
 }

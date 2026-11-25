@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Plus, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -58,23 +58,26 @@ export function FieldDialog({ open, onOpenChange, field }: FieldDialogProps) {
   const upsertField = useCustomFieldsStore((s) => s.upsertField)
   const [editor, setEditor] = useState<EditorState>(BLANK)
 
-  // Reset the form whenever the dialog opens — to the field being
-  // edited, or a blank slate when creating.
-  useEffect(() => {
-    if (!open) return
-    setEditor(
-      field
-        ? {
-            label: field.label,
-            entity: field.entity,
-            type: field.type,
-            options: field.options,
-            required: field.required,
-            helpText: field.helpText ?? '',
-          }
-        : BLANK,
-    )
-  }, [open, field])
+  // Reset the form whenever the dialog opens: to the field being edited, or
+  // a blank slate when creating. Done while rendering, when `open` flips.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setEditor(
+        field
+          ? {
+              label: field.label,
+              entity: field.entity,
+              type: field.type,
+              options: field.options,
+              required: field.required,
+              helpText: field.helpText ?? '',
+            }
+          : BLANK,
+      )
+    }
+  }
 
   const patch = (next: Partial<EditorState>) =>
     setEditor((prev) => ({ ...prev, ...next }))

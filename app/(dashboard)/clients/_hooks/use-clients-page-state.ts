@@ -10,6 +10,7 @@
  * the JSX shell reads a single state object.
  */
 
+import { useNow } from '@/hooks/use-now'
 import { useMemo, useState } from 'react'
 import { useCases } from '@/hooks/use-cases'
 import {
@@ -96,6 +97,7 @@ export function useClientsPageState() {
   // Client the bill composer drawer is open for ("Create bill" row action).
   const [billClientId, setBillClientId] = useState<string | null>(null)
 
+  const now = useNow()
   const filteredAndSorted = useMemo(() => {
     let list = clients ?? []
     if (search.trim()) {
@@ -134,7 +136,7 @@ export function useClientsPageState() {
     if (createdOnFilter !== 'all') {
       const opt = CREATED_ON_OPTIONS.find((o) => o.key === createdOnFilter)
       if (opt?.days != null) {
-        const cutoff = Date.now() - opt.days * 24 * 60 * 60 * 1000
+        const cutoff = now - opt.days * 24 * 60 * 60 * 1000
         list = list.filter((c) => {
           const t = new Date(c.created_at).getTime()
           return Number.isFinite(t) && t >= cutoff
@@ -161,6 +163,7 @@ export function useClientsPageState() {
     statusFilter,
     createdOnFilter,
     assigneesByClient,
+    now,
   ])
 
   const toggleSort = (key: SortKey) => {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useKeyedPage } from '@/hooks/use-keyed-page'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowUUpLeft,
@@ -165,7 +166,6 @@ export function DocumentsTab({ contactId }: { contactId: string }) {
   const [pageSize, setPageSize] = useState<(typeof DOC_PAGE_SIZES)[number]>(
     25,
   )
-  const [page, setPage] = useState(0)
   const [expandRows, setExpandRows] = useState(false)
   // Folder the user has drilled into (null = library root). The bin view
   // is flat — folders are hidden there — so this only applies to live docs.
@@ -222,6 +222,14 @@ export function DocumentsTab({ contactId }: { contactId: string }) {
   }, [folders, showBin, showFoldersFirst, search, currentFolderId])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const [page, setPage] = useKeyedPage([
+    search,
+    caseFilter,
+    categoryFilter,
+    pageSize,
+    currentFolderId,
+    showBin,
+  ])
   const safePage = Math.min(page, totalPages - 1)
   const start = safePage * pageSize
   const end = Math.min(start + pageSize, filtered.length)
@@ -232,11 +240,6 @@ export function DocumentsTab({ contactId }: { contactId: string }) {
     [visibleCols],
   )
   const colSpan = orderedCols.length + 1
-
-  // Reset paging when filters / scope change.
-  useEffect(() => {
-    setPage(0)
-  }, [search, caseFilter, categoryFilter, pageSize, currentFolderId, showBin])
 
   const hasRows = filtered.length > 0 || visibleFolders.length > 0
 

@@ -2,6 +2,7 @@
 
 import { Plus, UserCircle } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { useCan } from '@/lib/access'
 import type { Case } from '@/types'
 import { CollapsibleCard } from '../CollapsibleCard'
 
@@ -23,6 +24,7 @@ export function CasesCard({
   primaryActionLabel: string
   onPrimaryAction: () => void
 }) {
+  const canCreate = useCan('create-cases')
   return (
     <CollapsibleCard label={title}>
       {cases.length === 0 ? (
@@ -30,10 +32,12 @@ export function CasesCard({
           <p className="text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
             {emptyText}
           </p>
-          <Button size="sm" className="mt-4" onClick={onPrimaryAction}>
-            <Plus size={13} strokeWidth={2} />
-            {primaryActionLabel}
-          </Button>
+          {canCreate && (
+            <Button size="sm" className="mt-4" onClick={onPrimaryAction}>
+              <Plus size={13} strokeWidth={2} />
+              {primaryActionLabel}
+            </Button>
+          )}
         </div>
       ) : (
         <ul className="space-y-2">

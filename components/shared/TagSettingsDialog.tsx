@@ -12,7 +12,7 @@
  * the inline "Manage tags" link inside the TagsField on /cases/new.
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Check, Pencil, Tag as TagIcon, Trash, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
@@ -46,15 +46,17 @@ export function TagSettingsDialog({
   const [editName, setEditName] = useState('')
   const [editColour, setEditColour] = useState<string>(TAG_COLOURS[0])
 
-  // Reset the create-tag inputs every time the dialog opens so the
-  // previous draft doesn't reappear two sessions later.
-  useEffect(() => {
+  // Reset the create-tag inputs every time the dialog opens so the previous
+  // draft doesn't reappear two sessions later. Done while rendering.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
     if (open) {
       setName('')
       setColour(TAG_COLOURS[0])
       setEditingId(null)
     }
-  }, [open])
+  }
 
   const handleCreate = async () => {
     const trimmed = name.trim()

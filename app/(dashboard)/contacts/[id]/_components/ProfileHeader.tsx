@@ -16,8 +16,11 @@ import { initialsOf } from '@/app/(dashboard)/clients/_lib/initials'
 import { useClientRecord } from '../_hooks/use-client-profile'
 import { NotFoundPanel } from './NotFoundPanel'
 import { ProfileHeaderSkeleton } from './skeletons'
+import { useCan } from '@/lib/access'
 
 export function ProfileHeader({ clientId }: { clientId: string }) {
+  const canEdit = useCan('edit-contacts')
+  const canCreateCase = useCan('create-cases')
   const { client, ready } = useClientRecord(clientId)
   const compose = useClientProfileStore((s) => s.compose)
   const openModal = useUIStore((s) => s.openModal)
@@ -109,18 +112,22 @@ export function ProfileHeader({ clientId }: { clientId: string }) {
             <WhatsappLogo size={15} weight="fill" style={{ color: '#1FA855' }} />
             WhatsApp
           </Button>
-          <Button
-            variant="outline"
-            className="h-9 rounded-lg"
-            onClick={() => openModal({ type: 'editClient', id: client.id })}
-          >
-            <PencilSimple size={15} />
-            Edit
-          </Button>
-          <Button className="h-9 rounded-lg" onClick={() => router.push(`/cases/new?client=${client.id}`)}>
-            <Plus size={15} weight="bold" />
-            New matter
-          </Button>
+          {canEdit && (
+            <Button
+              variant="outline"
+              className="h-9 rounded-lg"
+              onClick={() => openModal({ type: 'editClient', id: client.id })}
+            >
+              <PencilSimple size={15} />
+              Edit
+            </Button>
+          )}
+          {canCreateCase && (
+            <Button className="h-9 rounded-lg" onClick={() => router.push(`/cases/new?client=${client.id}`)}>
+              <Plus size={15} weight="bold" />
+              New matter
+            </Button>
+          )}
         </div>
       </div>
     </section>

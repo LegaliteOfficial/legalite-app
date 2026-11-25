@@ -1,5 +1,6 @@
 'use client'
 
+import { useCan } from '@/lib/access'
 import { Bell, Briefcase, PencilSimple, DotsThree, Plus, Trash } from '@phosphor-icons/react'
 import {
   DropdownMenu,
@@ -34,6 +35,7 @@ export function TaskBoardView({
   onDelete: (task: Task) => void
   onAdd: (status: TaskStatus) => void
 }) {
+  const canAdd = useCan('create-tasks')
   const lanes = STATUSES.map((s) => ({
     status: s,
     tasks: tasks.filter((t) => normStatus(t.status) === s),
@@ -60,6 +62,7 @@ export function TaskBoardView({
               >
                 {laneTasks.length}
               </span>
+              {canAdd && (
               <button
                 type="button"
                 onClick={() => onAdd(status)}
@@ -69,6 +72,7 @@ export function TaskBoardView({
               >
                 <Plus size={13} strokeWidth={2} />
               </button>
+              )}
             </div>
 
             {/* Lane body */}
@@ -79,11 +83,12 @@ export function TaskBoardView({
               {laneTasks.length === 0 ? (
                 <button
                   type="button"
+                  disabled={!canAdd}
                   onClick={() => onAdd(status)}
                   className="w-full h-full min-h-[240px] rounded-lg border border-dashed flex items-center justify-center text-[12px] cursor-pointer"
                   style={{ borderColor: 'var(--border-soft)', color: 'var(--text-muted)', background: 'transparent' }}
                 >
-                  Click to add a task
+                  {canAdd ? 'Click to add a task' : 'No tasks'}
                 </button>
               ) : (
                 laneTasks.map((task) => (
@@ -214,6 +219,9 @@ function RowMenu({
   onCycleStatus: () => void
   onDelete: () => void
 }) {
+  const canEdit = useCan('edit-tasks')
+  const canDelete = useCan('delete-tasks')
+  if (!canEdit && !canDelete) return null
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -230,14 +238,18 @@ function RowMenu({
         }
       />
       <DropdownMenuContent align="end" className="w-44">
+        {canEdit && (
         <DropdownMenuItem onClick={onEdit} className="text-[13px] cursor-pointer">
           <PencilSimple size={13} strokeWidth={1.75} />
           Edit
         </DropdownMenuItem>
+        )}
+        {canDelete && (
         <DropdownMenuItem onClick={onDelete} className="text-[13px] cursor-pointer" style={{ color: 'var(--accent-danger)' }}>
           <Trash size={13} strokeWidth={1.75} />
           Delete
         </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -10,6 +10,7 @@
  * questions and never shows an answer, only the question and its grounding.
  */
 
+import { usePrefersReducedMotion } from '@/hooks/use-prefers-reduced-motion'
 import { useEffect, useState } from 'react'
 
 const QUERIES = [
@@ -34,21 +35,23 @@ const HOLD_COMPLETE = 2600
 
 export function ResearchSlip() {
   const [index, setIndex] = useState(0)
-  const [typed, setTyped] = useState(0)
-  const [revealed, setRevealed] = useState(0)
+  // Progress is stored with the question it belongs to, so moving to the next
+  // question starts again from nothing without resetting state in an effect.
+  const [progress, setProgress] = useState({ index: 0, typed: 0, revealed: 0 })
+  const reduced = usePrefersReducedMotion()
 
   const current = QUERIES[index]
+  const fresh = progress.index === index
+  // Reduced motion shows a finished slip and stops.
+  const typed = reduced ? current.question.length : fresh ? progress.typed : 0
+  const revealed = reduced
+    ? current.authorities.length
+    : fresh
+      ? progress.revealed
+      : 0
 
   useEffect(() => {
-    // Respect reduced motion by showing a finished slip and stopping.
-    if (
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      setTyped(current.question.length)
-      setRevealed(current.authorities.length)
-      return
-    }
+    if (reduced) return
 
     let cancelled = false
     const timers: ReturnType<typeof setTimeout>[] = []
@@ -56,18 +59,19 @@ export function ResearchSlip() {
       timers.push(setTimeout(() => !cancelled && fn(), ms))
     }
 
-    setTyped(0)
-    setRevealed(0)
-
     // Draft the question one character at a time.
     for (let i = 1; i <= current.question.length; i += 1) {
-      at(i * TYPE_MS, () => setTyped(i))
+      at(i * TYPE_MS, () =>
+        setProgress((p) => ({ index, typed: i, revealed: p.index === index ? p.revealed : 0 })),
+      )
     }
 
     // Enter each authority underneath once the question is written.
     const typingDone = current.question.length * TYPE_MS + HOLD_AFTER_TYPE
     current.authorities.forEach((_, i) => {
-      at(typingDone + i * AUTHORITY_GAP, () => setRevealed(i + 1))
+      at(typingDone + i * AUTHORITY_GAP, () =>
+        setProgress((p) => ({ index, typed: current.question.length, revealed: Math.max(i + 1, p.index === index ? p.revealed : 0) })),
+      )
     })
 
     // Hold the finished slip, then move to the next question.
@@ -78,7 +82,7 @@ export function ResearchSlip() {
       cancelled = true
       timers.forEach(clearTimeout)
     }
-  }, [index, current.question, current.authorities])
+  }, [index, current.question, current.authorities, reduced])
 
   const text = current.question.slice(0, typed)
   const typingFinished = typed >= current.question.length

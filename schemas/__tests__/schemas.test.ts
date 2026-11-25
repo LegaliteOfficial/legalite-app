@@ -116,14 +116,14 @@ describe('caseSchema', () => {
     }
   })
 
-  it('defaults status to Active', () => {
+  it('defaults status to Open', () => {
     const result = caseSchema.safeParse({
       title: 'Test case',
       client_id: 'uuid-456',
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.status).toBe('Active')
+      expect(result.data.status).toBe('Open')
     }
   })
 
