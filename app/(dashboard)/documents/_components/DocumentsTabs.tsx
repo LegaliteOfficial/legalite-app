@@ -1,5 +1,6 @@
 'use client'
 
+import { useCan } from '@/lib/access'
 import { TAB_DESCRIPTORS } from '../_constants'
 import type { Tab } from '../_types'
 
@@ -13,12 +14,13 @@ export function DocumentsTabs({
   onChange: (tab: Tab) => void
   documentCount: number
 }) {
+  const canViewArchive = useCan('view-archive')
   return (
     <div
       className="mt-6 flex items-center gap-6 border-b"
       style={{ borderColor: 'var(--border-soft)' }}
     >
-      {TAB_DESCRIPTORS.map((tab) => {
+      {TAB_DESCRIPTORS.filter((t) => t.id !== 'archive' || canViewArchive).map((tab) => {
         const isActive = active === tab.id
         return (
           <button

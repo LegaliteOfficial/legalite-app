@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  AcceptInvitationMutationDoc,
   AcceptInviteMutationDoc,
   LoginMutationDoc,
   RegisterOwnerMutationDoc,
@@ -46,6 +47,7 @@ export function useRegisterUser() {
         payload.token,
         payload.active_membership ?? null,
         payload.memberships ?? [],
+        payload.permissions ?? [],
       )
     },
   })
@@ -66,6 +68,7 @@ export function useLoginUser() {
         payload.token,
         payload.active_membership ?? null,
         payload.memberships ?? [],
+        payload.permissions ?? [],
       )
     },
   })
@@ -111,11 +114,36 @@ export function useAcceptInvite() {
         payload.token,
         payload.active_membership ?? null,
         payload.memberships ?? [],
+        payload.permissions ?? [],
       )
     },
   })
 
   return { acceptInviteMutation, loading, error, reset }
+}
+
+// Accepting an invitation as someone who already has an account. They are
+// signed in; the backend checks the invitation was sent to their email and
+// returns a token scoped to the firm they just joined.
+export function useAcceptInvitation() {
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const [mutate, { loading }] = useMutation(AcceptInvitationMutationDoc)
+  return {
+    loading,
+    accept: async (token: string) => {
+      const res = await mutate({ variables: { input: { token } } })
+      const payload = res.data?.acceptInvitation
+      if (!payload) throw new Error('We could not accept this invitation. Please try again.')
+      setAuth(
+        payload.user,
+        payload.token,
+        payload.active_membership ?? null,
+        payload.memberships ?? [],
+        payload.permissions ?? [],
+      )
+      return payload
+    },
+  }
 }
 
 // ── Password reset (public) ───────────────────────────────────────────────

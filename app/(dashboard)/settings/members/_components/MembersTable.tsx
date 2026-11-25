@@ -8,13 +8,16 @@ import {
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import {
-  roleLabel,
   titleLabel,
   useDeactivateMember,
   useReactivateMember,
   type FirmMember,
 } from '@/hooks/use-firm-members'
+import { useAuthStore } from '@/stores/auth.store'
+import { useCan } from '@/lib/access'
+import { errorMessage } from '@/lib/errors'
 import { Avatar } from './shared/Avatar'
+import { MemberAccessDialog } from './MemberAccessDialog'
 import { EmptyState } from './shared/EmptyState'
 import { LoadingRow } from './shared/LoadingRow'
 import { MenuItem } from './shared/MenuItem'
@@ -26,8 +29,11 @@ export function MembersTable({
 }: {
   members: FirmMember[]
   loading: boolean
-  onInvite: () => void
+  onInvite?: () => void
 }) {
+  const canManage = useCan('manage-users')
+  const myId = useAuthStore((s) => s.user?.id)
+  const [editing, setEditing] = useState<FirmMember | null>(null)
   if (loading) return <LoadingRow />
   if (members.length === 0) {
     return (
@@ -72,41 +78,70 @@ export function MembersTable({
               </div>
             </div>
             <span className="text-sm" style={{ color: 'var(--navy)' }}>{titleLabel(m.professional_title)}</span>
-            <span className="text-sm" style={{ color: '#6B7280' }}>{roleLabel(m.firm_role)}</span>
+            <MemberRoles member={m} />
             <StatusBadge status={m.status} />
             <div className="flex justify-end">
-              <MemberRowMenu member={m} />
+              {canManage && m.firm_role !== 'owner' && m.profile_id !== myId ? (
+                <MemberRowMenu member={m} onEditAccess={() => setEditing(m)} />
+              ) : null}
             </div>
           </li>
         ))}
       </ul>
       <TableFooter count={members.length} noun="member" />
     </div>
+    <MemberAccessDialog member={editing} onClose={() => setEditing(null)} />
     </div>
   )
 }
 
-function MemberRowMenu({ member }: { member: FirmMember }) {
+/** The roles a member holds, as compact chips. */
+function MemberRoles({ member }: { member: FirmMember }) {
+  const roles = member.roles ?? []
+  if (roles.length === 0) {
+    return <span className="text-sm" style={{ color: '#9CA3AF' }}>No role</span>
+  }
+  return (
+    <div className="flex min-w-0 flex-wrap gap-1">
+      {roles.map((r) => (
+        <span
+          key={r.id}
+          className="inline-flex max-w-full items-center truncate rounded px-1.5 py-0.5 text-[11.5px] font-medium"
+          style={{
+            background: r.is_system ? 'rgba(13,27,42,0.06)' : 'rgba(201,151,43,0.12)',
+            color: r.is_system ? 'var(--navy)' : 'var(--gold-dark)',
+          }}
+          title={r.name}
+        >
+          {r.name}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function MemberRowMenu({ member, onEditAccess }: { member: FirmMember; onEditAccess: () => void }) {
   const [open, setOpen] = useState(false)
   const deactivate = useDeactivateMember()
   const reactivate = useReactivateMember()
-  const isOwner = member.firm_role === 'owner'
   const isActive = member.status === 'active'
 
   const handleDeactivate = async () => {
+    const id = toast.loading(`Removing ${member.name}'s access...`)
     try {
       await deactivate.mutateAsync(member.id)
-      toast.success(`${member.name} has been deactivated.`)
-    } catch {
-      toast.error('Unable to deactivate this member.')
+      toast.success(`${member.name} no longer has access to the firm.`, { id })
+    } catch (err) {
+      toast.error(errorMessage(err, 'Unable to deactivate this member.'), { id })
     }
   }
   const handleReactivate = async () => {
+    const id = toast.loading(`Restoring ${member.name}'s access...`)
     try {
       await reactivate.mutateAsync(member.id)
-      toast.success(`${member.name} has been reactivated.`)
-    } catch {
-      toast.error('Unable to reactivate this member.')
+      toast.success(`${member.name} has been reactivated.`, { id })
+    } catch (err) {
+      toast.error(errorMessage(err, 'Unable to reactivate this member.'), { id })
     }
   }
 
@@ -124,22 +159,16 @@ function MemberRowMenu({ member }: { member: FirmMember }) {
       </button>
       {open && (
         <div
-          className="absolute right-0 top-9 z-10 w-48 rounded-md border shadow-lg overflow-hidden"
+          className="absolute right-0 top-9 z-10 w-52 rounded-md border shadow-lg overflow-hidden"
           style={{ background: 'white', borderColor: 'var(--border)' }}
         >
-          <MenuItem onClick={() => toast.message('Member detail view — coming next.')}>View profile</MenuItem>
-          <MenuItem
-            onClick={() => toast.message('Role and title editing — coming next.')}
-            tone={isOwner ? 'disabled' : 'default'}
-          >
-            Change role and title
-          </MenuItem>
+          {isActive && <MenuItem onClick={onEditAccess}>Change roles and title</MenuItem>}
           {isActive ? (
-            <MenuItem onClick={handleDeactivate} tone={isOwner ? 'disabled' : 'danger'}>
+            <MenuItem onClick={() => void handleDeactivate()} tone="danger">
               Deactivate
             </MenuItem>
           ) : (
-            <MenuItem onClick={handleReactivate}>Reactivate</MenuItem>
+            <MenuItem onClick={() => void handleReactivate()}>Reactivate</MenuItem>
           )}
         </div>
       )}

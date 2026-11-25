@@ -31,7 +31,7 @@ export default function CalendarPage() {
     () => events?.filter((e) => e.status !== 'cancelled').map(eventToDeadline),
     [events],
   )
-  const state = useCalendarPageState(deadlines)
+  const { scrollerRef, ...state } = useCalendarPageState(deadlines)
 
   return (
     // Single page-wide `--surface-card` so header / toolbar / grid all
@@ -63,7 +63,7 @@ export default function CalendarPage() {
         <div className="flex min-h-0 flex-1 flex-col overflow-x-auto [-webkit-overflow-scrolling:touch]">
           <DayHeaderRow visibleDays={state.visibleDays} now={state.now} />
           <TimeGridBody
-            ref={state.scrollerRef}
+            ref={scrollerRef}
             visibleDays={state.visibleDays}
             now={state.now}
             eventsByDay={state.eventsByDay}

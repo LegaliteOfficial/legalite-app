@@ -15,7 +15,9 @@
  * pre-fetching, no list-level caching.
  */
 
-import { useEffect, useState } from 'react'
+import { FileKindIcon } from '@/components/shared/FileKindIcon'
+import { useAsyncResource } from '@/hooks/use-async-resource'
+
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { DownloadSimple, ArrowSquareOut, FileText, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -23,7 +25,6 @@ import { Spinner } from '@/components/shared/Spinner'
 import type { Attachment } from '@/hooks/use-attachments'
 import {
   getFileKind,
-  iconForKind,
   isPreviewable,
   type FileKind,
 } from '@/lib/attachments/file-kind'
@@ -43,36 +44,21 @@ export function AttachmentPreviewDialog({
   getUrl: (id: string) => Promise<string | undefined>
   onDownload: (a: Attachment) => void
 }) {
-  const [url, setUrl] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   // Fetch the signed URL when the dialog opens for a new attachment.
-  useEffect(() => {
-    if (!open || !attachment) {
-      setUrl(null)
-      setError(null)
-      return
-    }
-    let cancelled = false
-    setUrl(null)
-    setError(null)
-    setLoading(true)
-    getUrl(attachment.id)
-      .then((u) => {
-        if (cancelled) return
-        if (!u) setError('Could not generate a preview link.')
-        else setUrl(u)
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return
-        setError(e instanceof Error ? e.message : 'Preview failed.')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [open, attachment?.id, getUrl])
+  const attachmentId = open && attachment ? attachment.id : null
+  const {
+    value: url,
+    error,
+    loading,
+  } = useAsyncResource<string>(
+    attachmentId,
+    async () => {
+      const u = await getUrl(attachmentId!)
+      if (!u) throw new Error('Could not generate a preview link.')
+      return u
+    },
+    (e) => (e instanceof Error ? e.message : 'Preview failed.'),
+  )
 
   if (!attachment) return null
 
@@ -126,7 +112,6 @@ function PreviewHeader({
   onDownload: () => void
   onClose: () => void
 }) {
-  const Icon = iconForKind(kind)
   return (
     <div
       className="flex items-center justify-between gap-3 px-5 py-3 border-b shrink-0"
@@ -137,7 +122,7 @@ function PreviewHeader({
           className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
           style={{ background: 'var(--surface-sunken)' }}
         >
-          <Icon size={15} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
+          <FileKindIcon kind={kind} size={15} strokeWidth={1.75} style={{ color: 'var(--text-secondary)' }} />
         </div>
         <DialogPrimitive.Title
           className="text-[14px] font-semibold truncate"
@@ -149,7 +134,7 @@ function PreviewHeader({
       <div className="flex items-center gap-2 shrink-0">
         <Button variant="outline" size="sm" onClick={onDownload}>
           <DownloadSimple size={13} strokeWidth={1.75} />
-          DownloadSimple
+          Download
         </Button>
         <button
           onClick={onClose}
@@ -259,37 +244,23 @@ function PreviewBody({
 // ── Text preview — fetches the file and renders it inline ─────────────────
 
 function TextPreview({ url, onDownload }: { url: string; onDownload: () => void }) {
-  const [content, setContent] = useState<string | null>(null)
-  const [truncated, setTruncated] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    setContent(null)
-    setError(null)
-    setTruncated(false)
-    setLoading(true)
-    fetch(url)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Failed to load (${res.status})`)
-        const blob = await res.blob()
-        // Cap text reads at 1 MB so very large logs don't lock the tab.
-        const sliced = blob.size > MAX_TEXT_BYTES ? blob.slice(0, MAX_TEXT_BYTES) : blob
-        const text = await sliced.text()
-        if (cancelled) return
-        setContent(text)
-        setTruncated(blob.size > MAX_TEXT_BYTES)
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return
-        setError(e instanceof Error ? e.message : 'Could not read the file.')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [url])
+  // Cap text reads at 1 MB so very large logs don't lock the tab.
+  const { value, error, loading } = useAsyncResource<{
+    text: string
+    truncated: boolean
+  }>(
+    url,
+    async (signal) => {
+      const res = await fetch(url, { signal })
+      if (!res.ok) throw new Error(`Failed to load (${res.status})`)
+      const blob = await res.blob()
+      const sliced = blob.size > MAX_TEXT_BYTES ? blob.slice(0, MAX_TEXT_BYTES) : blob
+      return { text: await sliced.text(), truncated: blob.size > MAX_TEXT_BYTES }
+    },
+    (e) => (e instanceof Error ? e.message : 'Could not read the file.'),
+  )
+  const content = value?.text ?? null
+  const truncated = value?.truncated ?? false
 
   if (loading) {
     return (
@@ -313,7 +284,7 @@ function TextPreview({ url, onDownload }: { url: string; onDownload: () => void 
             borderColor: 'var(--border-soft)',
           }}
         >
-          Showing the first {Math.round(MAX_TEXT_BYTES / 1024)} KB. DownloadSimple to read the whole file.
+          Showing the first {Math.round(MAX_TEXT_BYTES / 1024)} KB. Download it to read the whole file.
         </div>
       )}
       <pre

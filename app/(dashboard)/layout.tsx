@@ -10,6 +10,7 @@ import { TimeTrackerBoot } from '@/components/shared/TimeTrackerBoot'
 import { EventNoticeBanner } from '@/components/shared/EventNoticeBanner'
 import { EventDuePrompt } from '@/components/shared/EventDuePrompt/EventDuePrompt'
 import { ConfirmHost } from '@/components/shared/ConfirmDialog'
+import { AccessSync } from '@/components/shared/AccessSync'
 
 export default function DashboardLayout({
   children,
@@ -18,6 +19,8 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard>
+      {/* Keeps permissions current when an admin changes roles or access. */}
+      <AccessSync />
       {/* Mount priority-reminder scanner once at the layout level
           so flagged-case hearing reminders fire anywhere inside
           the authenticated app, not just on the dashboard page. */}

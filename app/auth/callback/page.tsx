@@ -71,6 +71,7 @@ function CallbackInner() {
             payload.token,
             payload.active_membership ?? null,
             payload.memberships ?? [],
+            payload.permissions ?? [],
           )
           router.replace('/dashboard')
         } catch (err: unknown) {

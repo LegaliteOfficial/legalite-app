@@ -6,6 +6,7 @@
  * reduced-motion preference by showing instantly.
  */
 
+import { usePrefersReducedMotion } from '@/hooks/use-prefers-reduced-motion'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 type From = 'left' | 'right' | 'up'
@@ -22,19 +23,17 @@ export function Reveal({
   className?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [shown, setShown] = useState(false)
+  const [seen, setSeen] = useState(false)
+  const reduced = usePrefersReducedMotion()
+  const shown = seen || reduced
 
   useEffect(() => {
     const el = ref.current
-    if (!el) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setShown(true)
-      return
-    }
+    if (!el || reduced) return
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setShown(true)
+          setSeen(true)
           observer.disconnect()
         }
       },
@@ -42,7 +41,7 @@ export function Reveal({
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [reduced])
 
   const hidden =
     from === 'left'

@@ -13,7 +13,8 @@
  * emailed on assignment and reminders fire as emails before the due date.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useNow } from '@/hooks/use-now'
+import { useMemo, useState } from 'react'
 import { Plus } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,8 @@ import {
   type TaskPriority,
   type TaskStatus,
 } from './_components/task-meta'
+import { useCan } from '@/lib/access'
+import { usePersistedState } from '@/hooks/use-persisted-state'
 import { confirmAction } from '@/stores/confirm.store'
 
 const VIEW_KEY = 'll:tasks-view'
@@ -47,38 +50,38 @@ export default function TasksPage() {
   const { data: tasks, isLoading } = useTasks()
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
+  const canCreate = useCan('create-tasks')
+  const canEdit = useCan('edit-tasks')
 
   const allTasks = useMemo(() => tasks ?? [], [tasks])
 
   // ── View + filter state ─────────────────────────────────────────
-  const [view, setView] = useState<TaskView>('list')
+  // The view choice is remembered across visits.
+  const [view, setView] = usePersistedState<TaskView>(
+    VIEW_KEY,
+    () => 'list',
+    (raw) => (raw === 'board' ? 'board' : 'list'),
+    (v) => v,
+  )
   const [groupBy, setGroupBy] = useState<GroupBy>('status')
   const [search, setSearch] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<Set<TaskPriority>>(new Set())
   const [assigneeFilter, setAssigneeFilter] = useState<Set<string>>(new Set())
 
-  // Persist the view choice across visits.
-  useEffect(() => {
-    const saved = typeof window !== 'undefined' ? window.localStorage.getItem(VIEW_KEY) : null
-    if (saved === 'list' || saved === 'board') setView(saved)
-  }, [])
-  const changeView = (v: TaskView) => {
-    setView(v)
-    try {
-      window.localStorage.setItem(VIEW_KEY, v)
-    } catch {}
-  }
+  const changeView = setView
 
   const togglePriority = (p: TaskPriority) =>
     setPriorityFilter((prev) => {
       const next = new Set(prev)
-      next.has(p) ? next.delete(p) : next.add(p)
+      if (next.has(p)) next.delete(p)
+      else next.add(p)
       return next
     })
   const toggleAssignee = (id: string) =>
     setAssigneeFilter((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   const clearFilters = () => {
@@ -94,8 +97,10 @@ export default function TasksPage() {
   }>({ open: false, editing: null, defaultStatus: 'Pending' })
   const openCreate = (defaultStatus: TaskStatus) =>
     setComposer({ open: true, editing: null, defaultStatus })
-  const openEdit = (task: Task) =>
+  const openEdit = (task: Task) => {
+    if (!canEdit) return
     setComposer({ open: true, editing: task, defaultStatus: normStatus(task.status) })
+  }
   const closeComposer = () => setComposer((s) => ({ ...s, open: false }))
 
   // ── Assignee options (from tasks) ───────────────────────────────
@@ -165,12 +170,12 @@ export default function TasksPage() {
   }, [groupBy, filtered, assigneeOptions])
 
   // ── Progress strip ──────────────────────────────────────────────
+  const now = useNow()
   const stats = useMemo(() => {
     const total = allTasks.length
     let done = 0
     let inProgress = 0
     let overdue = 0
-    const now = Date.now()
     for (const t of allTasks) {
       const s = normStatus(t.status)
       if (s === 'Done') done++
@@ -178,7 +183,7 @@ export default function TasksPage() {
       if (s !== 'Done' && t.due_date && new Date(t.due_date).getTime() < now) overdue++
     }
     return { total, done, inProgress, overdue, pct: total ? Math.round((done / total) * 100) : 0 }
-  }, [allTasks])
+  }, [allTasks, now])
 
   const activeFilterCount = priorityFilter.size + assigneeFilter.size
 
@@ -202,6 +207,7 @@ export default function TasksPage() {
     if (ok) toast.success(`Deleted "${task.title}".`)
   }
   const handleCycleStatus = async (task: Task) => {
+    if (!canEdit) return
     const next = STATUS_META[normStatus(task.status)].next
     try {
       await updateTask.mutateAsync({ id: task.id, data: { status: next } })
@@ -233,6 +239,7 @@ export default function TasksPage() {
                   : `${stats.total} total · ${stats.inProgress} in progress · ${stats.done} done`}
             </p>
           </div>
+          {canCreate && (
           <Button
             onClick={() => openCreate('Pending')}
             size="lg"
@@ -242,6 +249,7 @@ export default function TasksPage() {
             <Plus size={14} strokeWidth={2.25} />
             Add task
           </Button>
+          )}
         </div>
 
         {/* ─── Progress strip ───────────────────────────────────── */}
@@ -299,7 +307,7 @@ export default function TasksPage() {
               Loading tasks…
             </div>
           ) : !hasTasks ? (
-            <EmptyState onAdd={() => openCreate('Pending')} />
+            <EmptyState onAdd={canCreate ? () => openCreate('Pending') : undefined} />
           ) : nothingMatches ? (
             <div
               className="rounded-xl border p-10 text-center"
@@ -350,7 +358,7 @@ export default function TasksPage() {
   )
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ onAdd }: { onAdd?: () => void }) {
   return (
     <div
       className="rounded-xl border border-dashed p-12 flex flex-col items-center text-center"
@@ -369,15 +377,17 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         Create a task, assign it to teammates, and set email reminders so nothing slips
         before a deadline.
       </p>
-      <Button
-        onClick={onAdd}
-        size="lg"
-        className="mt-4 rounded-lg"
-        style={{ background: 'var(--gold)', color: 'var(--navy)' }}
-      >
-        <Plus size={14} strokeWidth={2.25} />
-        Add your first task
-      </Button>
+      {onAdd && (
+        <Button
+          onClick={onAdd}
+          size="lg"
+          className="mt-4 rounded-lg"
+          style={{ background: 'var(--gold)', color: 'var(--navy)' }}
+        >
+          <Plus size={14} strokeWidth={2.25} />
+          Add your first task
+        </Button>
+      )}
     </div>
   )
 }

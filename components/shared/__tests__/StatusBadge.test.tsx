@@ -4,40 +4,39 @@ import { StatusBadge } from '../StatusBadge'
 
 afterEach(cleanup)
 
+// The badge is a neutral chip; the status is carried by the colour of its dot.
+const dotColor = (container: HTMLElement) =>
+  (container.querySelector('span > span[aria-hidden]') as HTMLElement).style.background
+
 describe('StatusBadge', () => {
   it('renders the status text', () => {
     const { getByText } = render(<StatusBadge status="Active" />)
     expect(getByText('Active')).toBeInTheDocument()
   })
 
-  it('applies green styling for Active status', () => {
+  it('shows a green dot for Active status', () => {
     const { container } = render(<StatusBadge status="Active" />)
-    const badge = container.querySelector('span')!
-    expect(badge.style.color).toContain('46, 125, 79')
+    expect(dotColor(container)).toContain('46, 125, 79')
   })
 
-  it('applies red styling for Overdue status', () => {
+  it('shows a red dot for Overdue status', () => {
     const { container } = render(<StatusBadge status="Overdue" />)
-    const badge = container.querySelector('span')!
-    expect(badge.style.color).toContain('192, 57, 43')
+    expect(dotColor(container)).toContain('192, 57, 43')
   })
 
-  it('applies yellow styling for Pending status', () => {
+  it('shows a gold dot for Pending status', () => {
     const { container } = render(<StatusBadge status="Pending" />)
-    const badge = container.querySelector('span')!
-    expect(badge.style.color).toContain('184, 134, 11')
+    expect(dotColor(container)).toContain('201, 151, 43')
   })
 
-  it('applies blue styling for In Progress status', () => {
+  it('shows a blue dot for In Progress status', () => {
     const { container } = render(<StatusBadge status="In Progress" />)
-    const badge = container.querySelector('span')!
-    expect(badge.style.color).toContain('37, 99, 235')
+    expect(dotColor(container)).toContain('37, 99, 235')
   })
 
-  it('handles unknown status with gray fallback', () => {
+  it('falls back to a grey dot for an unknown status', () => {
     const { container } = render(<StatusBadge status="SomethingElse" />)
-    const badge = container.querySelector('span')!
-    expect(badge.style.color).toContain('107, 114, 128')
+    expect(dotColor(container)).toContain('138, 143, 153')
   })
 
   it('applies additional className when provided', () => {

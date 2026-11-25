@@ -17,7 +17,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { DOCUMENT_TEMPLATES } from '@/lib/templates'
 import { STATUS_META, type DocumentStatus } from '@/lib/documents/status'
 import type { Document } from '@/types'
-import type { LibraryCategory, Tab } from '../_types'
+import { TABS, type LibraryCategory, type Tab } from '../_types'
 import { useStartDocument } from './use-start-document'
 import { confirmAction } from '@/stores/confirm.store'
 
@@ -218,10 +218,18 @@ export function useDocumentsPageState() {
       router.replace(`/documents/${openId}`)
       return
     }
+    // ?tab=<tab> opens a tab directly, e.g. returning from an archive entry.
+    const tab = params.get('tab')
+    if (tab && (TABS as readonly string[]).includes(tab)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTab(tab as Tab)
+      params.delete('tab')
+      const rest = params.toString()
+      window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''))
+    }
     const caseId = params.get('case')
     if (!caseId) return
     // One-time sync from the URL (an external source), not derived state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCaseContextId(caseId)
     params.delete('case')
     const rest = params.toString()

@@ -10,6 +10,7 @@ import { TYPE_BADGE_COMPANIES, TYPE_BADGE_PEOPLE } from '../_constants'
 import { HeaderBtn } from './HeaderBtn'
 import { ContactChannelActions } from '@/components/shared/ContactChannelActions'
 import { BillComposerDialog } from '@/components/shared/BillComposerDialog'
+import { useCan } from '@/lib/access'
 
 /**
  * Sticky page header: avatar + name on the left, Bill / Funds request
@@ -24,6 +25,7 @@ export function ContactPageHeader({
   const router = useRouter()
   const [billOpen, setBillOpen] = useState(false)
   const { openModal } = useUIStore()
+  const canEdit = useCan('edit-contacts')
   const isCompany = contact.contact_type === 'company'
   const tint = isCompany ? TYPE_BADGE_COMPANIES : TYPE_BADGE_PEOPLE
 
@@ -83,6 +85,7 @@ export function ContactPageHeader({
         >
           New client funds request
         </HeaderBtn>
+        {canEdit && (
         <button
           type="button"
           onClick={() => openModal({ type: 'editClient', id: contact.id })}
@@ -102,6 +105,7 @@ export function ContactPageHeader({
         >
           Edit client
         </button>
+        )}
       </div>
 
       <BillComposerDialog

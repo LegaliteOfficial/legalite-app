@@ -208,18 +208,6 @@ export function FirmSettingsForm({
                 options={regionOptions}
               />
             </Field>
-            <Field
-              label="Default jurisdiction"
-              htmlFor="firm-jur"
-              hint="Applied to new matters."
-            >
-              <NativeSelect
-                id="firm-jur"
-                value={draft.default_jurisdiction}
-                onChange={(v) => setField('default_jurisdiction', v)}
-                options={regionOptions}
-              />
-            </Field>
           </div>
         </div>
       </SectionCard>

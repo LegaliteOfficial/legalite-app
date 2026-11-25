@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Plus, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
@@ -46,9 +46,11 @@ export function FilterDrawer({
 
   // Re-sync draft from applied state every open. Without this, dismissing
   // mid-edit then re-opening shows abandoned partial changes.
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
     if (open) setDraft(value)
-  }, [open, value])
+  }
 
   const setField = <K extends keyof CaseFilters>(key: K, val: CaseFilters[K]) => {
     setDraft((d) => ({ ...d, [key]: val || undefined }))

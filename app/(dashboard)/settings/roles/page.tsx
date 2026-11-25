@@ -7,6 +7,7 @@
  * sub-component reads its own slice.
  */
 
+import { RequirePermission } from '@/components/shared/RequirePermission'
 import { Spinner } from '@/components/shared/Spinner'
 import { EmptyState } from './_components/EmptyState'
 import { PaginationFooter } from './_components/PaginationFooter'
@@ -15,7 +16,7 @@ import { RolesTable } from './_components/RolesTable'
 import { RolesToolbar } from './_components/RolesToolbar'
 import { useRolesPageState } from './_hooks/use-roles-page-state'
 
-export default function RolesPage() {
+function RolesPageContent() {
   const state = useRolesPageState()
 
   return (
@@ -65,5 +66,13 @@ export default function RolesPage() {
         />
       </div>
     </div>
+  )
+}
+
+export default function RolesPage() {
+  return (
+    <RequirePermission permission="manage-roles" what="roles and permissions">
+      <RolesPageContent />
+    </RequirePermission>
   )
 }

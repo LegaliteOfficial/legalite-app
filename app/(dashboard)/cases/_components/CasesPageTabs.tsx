@@ -3,6 +3,7 @@
 import { FileText, Plus, Tag } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { useCan } from '@/lib/access'
 import type { CasesTab } from '../_types'
 import { TabButton } from './TabButton'
 
@@ -20,6 +21,7 @@ export function CasesPageTabs({
   onManageTags: () => void
   onNewCase: () => void
 }) {
+  const canCreate = useCan('create-cases')
   return (
     <div
       className="flex flex-col-reverse gap-2 border-b sm:flex-row sm:items-end sm:justify-between"
@@ -53,10 +55,12 @@ export function CasesPageTabs({
           <FileText size={13} strokeWidth={1.75} />
           Case templates
         </Button>
-        <Button onClick={onNewCase} size="sm" className="ml-auto rounded-lg sm:ml-0">
-          <Plus size={13} strokeWidth={2} />
-          New case
-        </Button>
+        {canCreate && (
+          <Button onClick={onNewCase} size="sm" className="ml-auto rounded-lg sm:ml-0">
+            <Plus size={13} strokeWidth={2} />
+            New case
+          </Button>
+        )}
       </div>
     </div>
   )

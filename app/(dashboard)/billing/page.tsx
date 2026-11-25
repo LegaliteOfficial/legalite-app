@@ -29,6 +29,8 @@
  * for the matching mutations; the page contract doesn't change.
  */
 
+import { useNow } from '@/hooks/use-now'
+import { RequirePermission } from '@/components/shared/RequirePermission'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowsDownUp, Bell, BookBookmark, CalendarDots, Check, CaretDown, Coins, CreditCard, PencilSimple, Eye, FileText, Funnel, DotsThree, Plus, Receipt, MagnifyingGlass, PaperPlaneTilt, GearSix, Sparkle, Trash, Users, X } from '@phosphor-icons/react'
@@ -151,7 +153,7 @@ type SortDir = 'asc' | 'desc'
 
 // ── Page ───────────────────────────────────────────────────────────────
 
-export default function BillingPage() {
+function BillingPageContent() {
   const router = useRouter()
 
   // Hydrate the bills-local store once on mount. Skipping hydration
@@ -929,10 +931,11 @@ function BillRow({
   const archive = useBillsLocalStore((s) => s.archiveBill)
   const sendReminder = useBillsLocalStore((s) => s.sendReminder)
 
+  const now = useNow()
   const tabKey = tabKeyFor(bill)
   const style = STATUS_STYLE[tabKey]
   const isOverdue =
-    tabKey === 'Unpaid' && new Date(bill.due_date).getTime() < Date.now()
+    tabKey === 'Unpaid' && new Date(bill.due_date).getTime() < now
 
   return (
     <tr
@@ -2461,3 +2464,11 @@ void outstandingFor
 // `CalendarDots` is reserved for the in-page filter chip work in
 // the next iteration. Keep the import warm so the diff stays tight.
 void CalendarDots
+
+export default function BillingPage() {
+  return (
+    <RequirePermission permission="view-bills" what="billing">
+      <BillingPageContent />
+    </RequirePermission>
+  )
+}

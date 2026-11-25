@@ -18,7 +18,7 @@
  *                         is logged as a conversation opened.
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ChatCircle, Envelope, PaperPlaneTilt, Phone } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useMutation } from '@apollo/client/react'
@@ -116,14 +116,18 @@ export function NewMessageDialog({
     refetchQueries: [MessagesQueryDoc],
   })
 
-  // Reset per opening so a previous draft is never sent by accident.
-  useEffect(() => {
-    if (!open) return
-    setChannel(defaultChannel)
-    setClientId(recipient?.id ?? '')
-    setSubject('')
-    setBody('')
-  }, [open, defaultChannel, recipient?.id])
+  // Reset per opening so a previous draft is never sent by accident. Done
+  // while rendering, when `open` flips to true.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setChannel(defaultChannel)
+      setClientId(recipient?.id ?? '')
+      setSubject('')
+      setBody('')
+    }
+  }
 
   const meta = CHANNELS.find((c) => c.id === channel)!
   const target =

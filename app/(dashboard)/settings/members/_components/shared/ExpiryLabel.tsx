@@ -1,7 +1,10 @@
 'use client'
 
+import { useNow } from '@/hooks/use-now'
+
 export function ExpiryLabel({ expiresAt }: { expiresAt: string }) {
-  const expired = new Date(expiresAt).getTime() < Date.now()
+  const now = useNow()
+  const expired = new Date(expiresAt).getTime() < now
   const formatted = new Date(expiresAt).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',

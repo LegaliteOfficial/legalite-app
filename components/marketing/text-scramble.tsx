@@ -22,7 +22,8 @@ export function TextScramble({ text, speed = 20, trigger = 'hover', className }:
     let complete = 0
     for (let i = 0, n = queue.current.length; i < n; i++) {
       const item = queue.current[i]
-      let { from, to, start, end, char } = item
+      const { from, to, start, end } = item
+      let char = item.char
       if (frameRef.current >= end) {
         complete++
         out += to

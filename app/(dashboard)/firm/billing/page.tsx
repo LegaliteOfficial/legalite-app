@@ -1,5 +1,6 @@
-import { UnderConstruction } from '@/components/shared/UnderConstruction'
+import { redirect } from 'next/navigation'
 
-export default function Page() {
-  return <UnderConstruction path="/firm/billing" />
+/** The firm subscription lives on Account and payment info. */
+export default function FirmBillingPage() {
+  redirect('/settings/account-info')
 }

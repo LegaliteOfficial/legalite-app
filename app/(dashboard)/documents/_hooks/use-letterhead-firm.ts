@@ -2,31 +2,29 @@
 
 /**
  * The active firm's details, shaped for the document letterhead. Reads
- * the `currentFirm` query; in dev bypass falls back to the local firm
- * profile so the letterhead still previews.
+ * the `currentFirm` query. In dev bypass (no backend) a sample firm keeps
+ * the letterhead previewable.
  */
 
 import { useMemo } from 'react'
 import { useQuery } from '@apollo/client/react'
 import { CurrentFirmQueryDoc } from '@/lib/graphql/firms'
-import { useFirmProfileStore } from '@/stores/firm-profile-local.store'
 import type { LetterheadFirm } from '@/lib/documents/design'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
 export function useLetterheadFirm(): LetterheadFirm | null {
   const { data } = useQuery(CurrentFirmQueryDoc, { skip: DEV_BYPASS })
-  const local = useFirmProfileStore((s) => s.profile)
 
   return useMemo(() => {
     if (DEV_BYPASS) {
       return {
-        name: local.name,
+        name: 'Sample Chambers',
         logoUrl: null,
-        addressLines: [local.office_address, local.digital_address].filter(Boolean),
-        phone: local.phone || null,
-        email: local.email || null,
-        website: local.website || null,
+        addressLines: ['1 Example Road, Accra'],
+        phone: null,
+        email: null,
+        website: null,
       }
     }
     const firm = data?.currentFirm
@@ -41,5 +39,5 @@ export function useLetterheadFirm(): LetterheadFirm | null {
       email: firm.email ?? null,
       website: firm.website ?? null,
     }
-  }, [data, local])
+  }, [data])
 }

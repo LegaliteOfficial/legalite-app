@@ -23,6 +23,10 @@ export interface NavItem {
   Icon: Icon
   label: string
   href: string
+  /** Permission slug required to see this item. Omit for everyone. */
+  permission?: string
+  /** Alternatively, any one of these slugs is enough. */
+  anyPermission?: string[]
 }
 
 export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
@@ -32,9 +36,9 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { id: 'dashboard', Icon: SquaresFour, label: 'Dashboard', href: '/dashboard' },
       { id: 'clients', Icon: Users, label: 'Clients', href: '/clients' },
       { id: 'cases', Icon: Scales, label: 'Cases', href: '/cases' },
-      { id: 'tasks', Icon: CheckSquare, label: 'Tasks', href: '/tasks' },
+      { id: 'tasks', Icon: CheckSquare, label: 'Tasks', href: '/tasks', anyPermission: ['view-assigned-tasks', 'view-all-tasks'] },
       { id: 'contacts', Icon: IdentificationCard, label: 'Contacts', href: '/contacts' },
-      { id: 'documents', Icon: FileText, label: 'Documents', href: '/documents' },
+      { id: 'documents', Icon: FileText, label: 'Documents', href: '/documents', permission: 'view-documents' },
       { id: 'calendar', Icon: CalendarIcon, label: 'Calendar', href: '/calendar' },
       { id: 'deadline', Icon: Timer, label: 'Deadline engine', href: '/deadline' },
     ],
@@ -43,7 +47,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: 'Intelligence',
     items: [
       { id: 'ai', Icon: Sparkle, label: 'AI assistant', href: '/ai' },
-      { id: 'billing', Icon: CreditCard, label: 'Billing', href: '/billing' },
+      { id: 'billing', Icon: CreditCard, label: 'Billing', href: '/billing', permission: 'view-bills' },
     ],
   },
   {
@@ -64,4 +68,13 @@ export function isNavActive(pathname: string, href: string): boolean {
 /** The nav item a path belongs to, if any. */
 export function navItemFor(pathname: string): NavItem | undefined {
   return NAV_ITEMS.find((i) => isNavActive(pathname, i.href))
+}
+
+/** Items the member may see, given their permissions in the active firm. */
+export function visibleNavItems(items: NavItem[], can: (slug: string) => boolean): NavItem[] {
+  return items.filter(
+    (i) =>
+      (!i.permission || can(i.permission)) &&
+      (!i.anyPermission || i.anyPermission.some(can)),
+  )
 }

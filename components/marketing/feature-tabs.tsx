@@ -34,16 +34,18 @@ const ROTATION_MS = 5000
 
 export function FeatureTabs() {
   const [active, setActive] = useState(0)
-  const [progress, setProgress] = useState(0)
-  const startRef = useRef<number>(Date.now())
+  // Progress belongs to the tab it was measured for, so switching tabs
+  // restarts the bar without resetting state inside the effect.
+  const [measured, setMeasured] = useState({ tab: 0, pct: 0 })
+  const progress = measured.tab === active ? measured.pct : 0
+  const startRef = useRef<number>(0)
 
   useEffect(() => {
     startRef.current = Date.now()
-    setProgress(0)
     const tick = setInterval(() => {
       const elapsed = Date.now() - startRef.current
       const pct = Math.min(100, (elapsed / ROTATION_MS) * 100)
-      setProgress(pct)
+      setMeasured({ tab: active, pct })
       if (elapsed >= ROTATION_MS) {
         setActive((a) => (a + 1) % TABS.length)
       }

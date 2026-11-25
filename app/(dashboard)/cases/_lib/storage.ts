@@ -4,17 +4,16 @@
  */
 
 import type { ColumnId } from '../_types'
-import { STORAGE_KEY_COLUMNS } from '../_constants'
 import { COLUMNS } from './columns'
 
 const defaultVisibleSet = () =>
   new Set(COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id))
 
-export function loadVisibleColumns(): Set<ColumnId> {
-  if (typeof window === 'undefined') return defaultVisibleSet()
+export const defaultVisibleColumns = defaultVisibleSet
+
+/** Reads the saved column list; unknown or unreadable data gives the defaults. */
+export function parseVisibleColumns(raw: string): Set<ColumnId> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY_COLUMNS)
-    if (!raw) return defaultVisibleSet()
     const parsed = JSON.parse(raw) as ColumnId[]
     // Drop IDs that no longer exist in COLUMNS so the picker doesn't hold
     // stale entries after a schema change.
@@ -27,14 +26,6 @@ export function loadVisibleColumns(): Set<ColumnId> {
   }
 }
 
-export function persistVisibleColumns(visible: Set<ColumnId>): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(
-      STORAGE_KEY_COLUMNS,
-      JSON.stringify(Array.from(visible)),
-    )
-  } catch {
-    /* localStorage full or disabled — non-critical, drop silently */
-  }
+export function serializeVisibleColumns(visible: Set<ColumnId>): string {
+  return JSON.stringify(Array.from(visible))
 }

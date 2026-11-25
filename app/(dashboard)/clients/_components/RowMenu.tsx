@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useCan } from '@/lib/access'
 
 /**
  * Three-dot trigger that opens the per-row actions popover. Stops
@@ -38,6 +39,9 @@ export function RowMenu({
   onCreateBill: () => void
   onDelete: () => void
 }) {
+  const canEdit = useCan('edit-contacts')
+  const canDelete = useCan('delete-contacts')
+  const canCreateCase = useCan('create-cases')
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -61,20 +65,20 @@ export function RowMenu({
           <Eye size={13} strokeWidth={1.75} />
           View
         </DropdownMenuItem>
-        <DropdownMenuItem
+        {canEdit && <DropdownMenuItem
           onClick={onEdit}
           className="text-[13px] cursor-pointer"
         >
           <PencilSimple size={13} strokeWidth={1.75} />
           Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem
+        </DropdownMenuItem>}
+        {canCreateCase && <DropdownMenuItem
           onClick={onAssignCase}
           className="text-[13px] cursor-pointer"
         >
           <UserIcon size={13} strokeWidth={1.75} />
           Assign case
-        </DropdownMenuItem>
+        </DropdownMenuItem>}
         {/* Start a billable-hour timer for this client. Opens the
             StartTimerDialog (mounted at the page level), which walks
             through the rate gate if needed before starting. */}
@@ -94,14 +98,14 @@ export function RowMenu({
           <Receipt size={13} strokeWidth={1.75} />
           Create bill
         </DropdownMenuItem>
-        <DropdownMenuItem
+        {canDelete && <DropdownMenuItem
           onClick={onDelete}
           className="text-[13px] cursor-pointer"
           style={{ color: 'var(--accent-danger)' }}
         >
           <Trash size={13} strokeWidth={1.75} />
           Delete
-        </DropdownMenuItem>
+        </DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
   )

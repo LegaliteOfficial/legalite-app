@@ -16,7 +16,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
 type Documents = {
     "\n  fragment AuthUserFields on AuthUser {\n    id\n    email\n    name\n    role\n    first_name\n    last_name\n    gba_number\n    supreme_court_enrollment_no\n    practising_license_no\n    digital_address\n    verification_status\n    created_at\n  }\n": typeof types.AuthUserFieldsFragmentDoc,
     "\n  fragment FirmMembershipFields on FirmMembership {\n    firm_id\n    firm_name\n    firm_slug\n    firm_role\n    professional_title\n    status\n  }\n": typeof types.FirmMembershipFieldsFragmentDoc,
-    "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n  }\n": typeof types.AuthPayloadFieldsFragmentDoc,
+    "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n    permissions\n  }\n": typeof types.AuthPayloadFieldsFragmentDoc,
     "\n  fragment FirmFields on Firm {\n    id\n    name\n    slug\n    firm_type\n    registration_number\n    tin\n    year_established\n    email\n    phone\n    website\n    office_address\n    digital_address\n    city\n    region\n    logo_url\n    description\n    plan\n    status\n    owner_profile_id\n    created_at\n    updated_at\n  }\n": typeof types.FirmFieldsFragmentDoc,
     "\n  fragment TagFields on Tag {\n    id\n    firm_id\n    name\n    color\n    created_at\n    updated_at\n  }\n": typeof types.TagFieldsFragmentDoc,
     "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    contact_type\n    organization\n    job_title\n    website\n    roles\n    tags {\n      ...TagFields\n    }\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n": typeof types.ClientFieldsFragmentDoc,
@@ -71,6 +71,11 @@ type Documents = {
     "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n": typeof types.MeDocument,
     "\n  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n    requestPasswordReset(input: $input) {\n      message\n    }\n  }\n": typeof types.RequestPasswordResetDocument,
     "\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n": typeof types.ResetPasswordDocument,
+    "\n  query MyAccess {\n    myAccess {\n      firm_id\n      active\n      firm_role\n      professional_title\n      permissions\n    }\n  }\n": typeof types.MyAccessDocument,
+    "\n  mutation AcceptInvitation($input: LookupInvitationInput!) {\n    acceptInvitation(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": typeof types.AcceptInvitationDocument,
+    "\n  query CalendarFeedStatus {\n    calendarFeedStatus {\n      active\n      created_at\n      last_used_at\n    }\n  }\n": typeof types.CalendarFeedStatusDocument,
+    "\n  mutation CreateCalendarFeedLink {\n    createCalendarFeedLink {\n      url\n    }\n  }\n": typeof types.CreateCalendarFeedLinkDocument,
+    "\n  mutation RevokeCalendarFeedLink {\n    revokeCalendarFeedLink\n  }\n": typeof types.RevokeCalendarFeedLinkDocument,
     "\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CalendarEventsDocument,
     "\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CalendarEventDocument,
     "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": typeof types.CreateCalendarEventDocument,
@@ -142,7 +147,7 @@ type Documents = {
     "\n  mutation UpdateLibraryItem($id: ID!, $input: UpdateLibraryItemInput!) {\n    updateLibraryItem(id: $id, input: $input) {\n      ...LibraryItemFields\n    }\n  }\n": typeof types.UpdateLibraryItemDocument,
     "\n  mutation ToggleLibraryItemFavorite($id: ID!) {\n    toggleLibraryItemFavorite(id: $id) {\n      id\n      is_favorite\n    }\n  }\n": typeof types.ToggleLibraryItemFavoriteDocument,
     "\n  mutation DeleteLibraryItem($id: ID!) {\n    deleteLibraryItem(id: $id)\n  }\n": typeof types.DeleteLibraryItemDocument,
-    "\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n    }\n  }\n": typeof types.FirmMembersDocument,
+    "\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n      roles {\n        id\n        name\n        slug\n        is_system\n      }\n    }\n  }\n": typeof types.FirmMembersDocument,
     "\n  mutation ChangeMemberRole($input: ChangeMemberRoleInput!) {\n    changeMemberRole(input: $input) {\n      id\n      firm_role\n      professional_title\n      status\n      name\n      email\n    }\n  }\n": typeof types.ChangeMemberRoleDocument,
     "\n  mutation ChangeProfessionalTitle($input: ChangeProfessionalTitleInput!) {\n    changeProfessionalTitle(input: $input) {\n      id\n      firm_role\n      professional_title\n    }\n  }\n": typeof types.ChangeProfessionalTitleDocument,
     "\n  mutation DeactivateMember($member_id: ID!) {\n    deactivateMember(member_id: $member_id) {\n      id\n      status\n    }\n  }\n": typeof types.DeactivateMemberDocument,
@@ -179,7 +184,7 @@ type Documents = {
 const documents: Documents = {
     "\n  fragment AuthUserFields on AuthUser {\n    id\n    email\n    name\n    role\n    first_name\n    last_name\n    gba_number\n    supreme_court_enrollment_no\n    practising_license_no\n    digital_address\n    verification_status\n    created_at\n  }\n": types.AuthUserFieldsFragmentDoc,
     "\n  fragment FirmMembershipFields on FirmMembership {\n    firm_id\n    firm_name\n    firm_slug\n    firm_role\n    professional_title\n    status\n  }\n": types.FirmMembershipFieldsFragmentDoc,
-    "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n  }\n": types.AuthPayloadFieldsFragmentDoc,
+    "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n    permissions\n  }\n": types.AuthPayloadFieldsFragmentDoc,
     "\n  fragment FirmFields on Firm {\n    id\n    name\n    slug\n    firm_type\n    registration_number\n    tin\n    year_established\n    email\n    phone\n    website\n    office_address\n    digital_address\n    city\n    region\n    logo_url\n    description\n    plan\n    status\n    owner_profile_id\n    created_at\n    updated_at\n  }\n": types.FirmFieldsFragmentDoc,
     "\n  fragment TagFields on Tag {\n    id\n    firm_id\n    name\n    color\n    created_at\n    updated_at\n  }\n": types.TagFieldsFragmentDoc,
     "\n  fragment ClientFields on Client {\n    id\n    firm_id\n    user_id\n    client_code\n    full_name\n    contact_type\n    organization\n    job_title\n    website\n    roles\n    tags {\n      ...TagFields\n    }\n    email\n    phone\n    ghana_card\n    date_of_birth\n    address\n    status\n    notes\n    created_at\n    updated_at\n  }\n": types.ClientFieldsFragmentDoc,
@@ -234,6 +239,11 @@ const documents: Documents = {
     "\n  query Me {\n    me {\n      ...AuthUserFields\n    }\n  }\n": types.MeDocument,
     "\n  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n    requestPasswordReset(input: $input) {\n      message\n    }\n  }\n": types.RequestPasswordResetDocument,
     "\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n": types.ResetPasswordDocument,
+    "\n  query MyAccess {\n    myAccess {\n      firm_id\n      active\n      firm_role\n      professional_title\n      permissions\n    }\n  }\n": types.MyAccessDocument,
+    "\n  mutation AcceptInvitation($input: LookupInvitationInput!) {\n    acceptInvitation(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n": types.AcceptInvitationDocument,
+    "\n  query CalendarFeedStatus {\n    calendarFeedStatus {\n      active\n      created_at\n      last_used_at\n    }\n  }\n": types.CalendarFeedStatusDocument,
+    "\n  mutation CreateCalendarFeedLink {\n    createCalendarFeedLink {\n      url\n    }\n  }\n": types.CreateCalendarFeedLinkDocument,
+    "\n  mutation RevokeCalendarFeedLink {\n    revokeCalendarFeedLink\n  }\n": types.RevokeCalendarFeedLinkDocument,
     "\n  query CalendarEvents($from: String, $to: String) {\n    calendarEvents(from: $from, to: $to) {\n      ...CalendarEventFields\n    }\n  }\n": types.CalendarEventsDocument,
     "\n  query CalendarEvent($id: ID!) {\n    calendarEvent(id: $id) {\n      ...CalendarEventFields\n    }\n  }\n": types.CalendarEventDocument,
     "\n  mutation CreateCalendarEvent($input: CreateCalendarEventInput!) {\n    createCalendarEvent(input: $input) {\n      ...CalendarEventFields\n    }\n  }\n": types.CreateCalendarEventDocument,
@@ -305,7 +315,7 @@ const documents: Documents = {
     "\n  mutation UpdateLibraryItem($id: ID!, $input: UpdateLibraryItemInput!) {\n    updateLibraryItem(id: $id, input: $input) {\n      ...LibraryItemFields\n    }\n  }\n": types.UpdateLibraryItemDocument,
     "\n  mutation ToggleLibraryItemFavorite($id: ID!) {\n    toggleLibraryItemFavorite(id: $id) {\n      id\n      is_favorite\n    }\n  }\n": types.ToggleLibraryItemFavoriteDocument,
     "\n  mutation DeleteLibraryItem($id: ID!) {\n    deleteLibraryItem(id: $id)\n  }\n": types.DeleteLibraryItemDocument,
-    "\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n    }\n  }\n": types.FirmMembersDocument,
+    "\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n      roles {\n        id\n        name\n        slug\n        is_system\n      }\n    }\n  }\n": types.FirmMembersDocument,
     "\n  mutation ChangeMemberRole($input: ChangeMemberRoleInput!) {\n    changeMemberRole(input: $input) {\n      id\n      firm_role\n      professional_title\n      status\n      name\n      email\n    }\n  }\n": types.ChangeMemberRoleDocument,
     "\n  mutation ChangeProfessionalTitle($input: ChangeProfessionalTitleInput!) {\n    changeProfessionalTitle(input: $input) {\n      id\n      firm_role\n      professional_title\n    }\n  }\n": types.ChangeProfessionalTitleDocument,
     "\n  mutation DeactivateMember($member_id: ID!) {\n    deactivateMember(member_id: $member_id) {\n      id\n      status\n    }\n  }\n": types.DeactivateMemberDocument,
@@ -365,7 +375,7 @@ export function graphql(source: "\n  fragment FirmMembershipFields on FirmMember
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n  }\n"): (typeof documents)["\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n  }\n"];
+export function graphql(source: "\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n    permissions\n  }\n"): (typeof documents)["\n  fragment AuthPayloadFields on AuthPayload {\n    token\n    user {\n      ...AuthUserFields\n    }\n    active_membership {\n      ...FirmMembershipFields\n    }\n    memberships {\n      ...FirmMembershipFields\n    }\n    permissions\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -582,6 +592,26 @@ export function graphql(source: "\n  mutation RequestPasswordReset($input: Reque
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation ResetPassword($input: ResetPasswordInput!) {\n    resetPassword(input: $input) {\n      message\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query MyAccess {\n    myAccess {\n      firm_id\n      active\n      firm_role\n      professional_title\n      permissions\n    }\n  }\n"): (typeof documents)["\n  query MyAccess {\n    myAccess {\n      firm_id\n      active\n      firm_role\n      professional_title\n      permissions\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AcceptInvitation($input: LookupInvitationInput!) {\n    acceptInvitation(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n"): (typeof documents)["\n  mutation AcceptInvitation($input: LookupInvitationInput!) {\n    acceptInvitation(input: $input) {\n      ...AuthPayloadFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CalendarFeedStatus {\n    calendarFeedStatus {\n      active\n      created_at\n      last_used_at\n    }\n  }\n"): (typeof documents)["\n  query CalendarFeedStatus {\n    calendarFeedStatus {\n      active\n      created_at\n      last_used_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateCalendarFeedLink {\n    createCalendarFeedLink {\n      url\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCalendarFeedLink {\n    createCalendarFeedLink {\n      url\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeCalendarFeedLink {\n    revokeCalendarFeedLink\n  }\n"): (typeof documents)["\n  mutation RevokeCalendarFeedLink {\n    revokeCalendarFeedLink\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -869,7 +899,7 @@ export function graphql(source: "\n  mutation DeleteLibraryItem($id: ID!) {\n   
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n    }\n  }\n"): (typeof documents)["\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n    }\n  }\n"];
+export function graphql(source: "\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n      roles {\n        id\n        name\n        slug\n        is_system\n      }\n    }\n  }\n"): (typeof documents)["\n  query FirmMembers {\n    firmMembers {\n      id\n      firm_id\n      profile_id\n      firm_role\n      professional_title\n      employment_type\n      status\n      name\n      email\n      gba_number\n      verification_status\n      joined_at\n      left_at\n      roles {\n        id\n        name\n        slug\n        is_system\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

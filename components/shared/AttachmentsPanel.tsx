@@ -13,7 +13,8 @@ import {
   type Attachment,
   type EntityType,
 } from '@/hooks/use-attachments'
-import { getFileKind, iconForKind } from '@/lib/attachments/file-kind'
+import { getFileKind } from '@/lib/attachments/file-kind'
+import { FileKindIcon } from '@/components/shared/FileKindIcon'
 
 /**
  * Reusable files panel for a client or case detail view. Uploads stream
@@ -202,7 +203,6 @@ function AttachmentRow({
   onDelete: () => void
 }) {
   const kind = getFileKind(attachment.file_name, attachment.file_type)
-  const Icon = iconForKind(kind)
   return (
     <li
       onClick={onPreview}
@@ -212,7 +212,7 @@ function AttachmentRow({
         className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
         style={{ background: 'rgba(13,27,42,0.06)' }}
       >
-        <Icon size={16} strokeWidth={2} style={{ color: 'var(--navy)' }} />
+        <FileKindIcon kind={kind} size={16} strokeWidth={2} style={{ color: 'var(--navy)' }} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold truncate" style={{ color: 'var(--navy)' }}>

@@ -36,7 +36,12 @@ describe('DataTable', () => {
 
   it('shows default empty message when data is empty', () => {
     render(<DataTable columns={columns} data={[]} />)
-    expect(screen.getByText('No data yet.')).toBeInTheDocument()
+    expect(screen.getByText('No records found')).toBeInTheDocument()
+  })
+
+  it('shows the empty description when provided', () => {
+    render(<DataTable columns={columns} data={[]} emptyDescription="Add one to get started." />)
+    expect(screen.getByText('Add one to get started.')).toBeInTheDocument()
   })
 
   it('shows custom empty message when provided', () => {
@@ -73,6 +78,6 @@ describe('DataTable', () => {
     ]
 
     render(<DataTable columns={colsWithExtra} data={dataWithMissing as (TestRow & { phone?: string })[]} />)
-    expect(screen.getByText('-')).toBeInTheDocument()
+    expect(screen.getByText('—')).toBeInTheDocument()
   })
 })

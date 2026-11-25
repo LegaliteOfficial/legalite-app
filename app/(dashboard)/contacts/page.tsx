@@ -14,6 +14,7 @@ import { Plus, Tag } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { MobileListItem, InitialsMark } from '@/components/shared/MobileList'
 import { Button } from '@/components/ui/button'
+import { useCan } from '@/lib/access'
 import { PageSkeleton } from '@/components/shared/PageSkeleton'
 import { ClientForm } from '@/components/shared/ClientForm'
 import { DeleteDialog } from '@/components/shared/DeleteDialog'
@@ -34,6 +35,7 @@ export default function ContactsPage() {
   const router = useRouter()
   const { openModal } = useUIStore()
   const state = useContactsPageState()
+  const canCreate = useCan('create-contacts')
 
   if (state.isLoading) return <PageSkeleton />
   if (state.error) {
@@ -48,7 +50,6 @@ export default function ContactsPage() {
 
   const onConflictsTab = () => {
     state.setActiveTab('conflicts')
-    toast.info('Conflict checks engine is coming next.')
   }
 
   return (
@@ -105,6 +106,7 @@ export default function ContactsPage() {
                   <Tag size={13} strokeWidth={1.75} />
                   Manage tags
                 </Button>
+                {canCreate && (<>
                 <Button
                   size="sm"
                   variant="outline"
@@ -120,6 +122,7 @@ export default function ContactsPage() {
                   <Plus size={13} strokeWidth={2} />
                   New company
                 </Button>
+                </>)}
               </div>
             </div>
 

@@ -70,3 +70,25 @@ export const ResetPasswordMutationDoc = graphql(/* GraphQL */ `
     }
   }
 `)
+
+/** What the signed-in user can do in their active firm, read fresh. */
+export const MyAccessQueryDoc = graphql(/* GraphQL */ `
+  query MyAccess {
+    myAccess {
+      firm_id
+      active
+      firm_role
+      professional_title
+      permissions
+    }
+  }
+`)
+
+/** Accept an invitation as a signed-in user who already has an account. */
+export const AcceptInvitationMutationDoc = graphql(/* GraphQL */ `
+  mutation AcceptInvitation($input: LookupInvitationInput!) {
+    acceptInvitation(input: $input) {
+      ...AuthPayloadFields
+    }
+  }
+`)

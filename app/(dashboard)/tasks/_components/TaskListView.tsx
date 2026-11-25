@@ -1,5 +1,6 @@
 'use client'
 
+import { useCan } from '@/lib/access'
 import { useState } from 'react'
 import { Briefcase, Bell, CaretRight, PencilSimple, DotsThree, Plus, Trash } from '@phosphor-icons/react'
 import {
@@ -44,11 +45,13 @@ export function TaskListView({
   onDelete: (task: Task) => void
   onAdd: (group: TaskGroup) => void
 }) {
+  const canAdd = useCan('create-tasks')
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const toggle = (id: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
 
@@ -87,6 +90,7 @@ export function TaskListView({
               <span className="text-[12px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
                 {group.tasks.length}
               </span>
+              {canAdd && (
               <button
                 type="button"
                 onClick={() => onAdd(group)}
@@ -96,6 +100,7 @@ export function TaskListView({
               >
                 <Plus size={14} strokeWidth={2} />
               </button>
+              )}
             </div>
 
             {/* Rows */}
@@ -225,6 +230,9 @@ function RowMenu({
   onCycleStatus: () => void
   onDelete: () => void
 }) {
+  const canEdit = useCan('edit-tasks')
+  const canDelete = useCan('delete-tasks')
+  if (!canEdit && !canDelete) return null
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -241,6 +249,8 @@ function RowMenu({
         }
       />
       <DropdownMenuContent align="end" className="w-44">
+        {canEdit && (
+          <>
         <DropdownMenuItem onClick={onEdit} className="text-[13px] cursor-pointer">
           <PencilSimple size={13} strokeWidth={1.75} />
           Edit
@@ -249,6 +259,9 @@ function RowMenu({
           <CaretRight size={13} strokeWidth={1.75} />
           Advance status
         </DropdownMenuItem>
+          </>
+        )}
+        {canDelete && (
         <DropdownMenuItem
           onClick={onDelete}
           className="text-[13px] cursor-pointer"
@@ -257,6 +270,7 @@ function RowMenu({
           <Trash size={13} strokeWidth={1.75} />
           Delete
         </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

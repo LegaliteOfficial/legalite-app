@@ -7,6 +7,7 @@ import {
   Envelope,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { errorMessage } from '@/lib/errors'
 import {
   roleLabel,
   titleLabel,
@@ -87,20 +88,38 @@ function InvitationRowMenu({ invitation }: { invitation: PendingInvitation }) {
   const resend = useResendInvitation()
   const revoke = useRevokeInvitation()
 
+  // Resending rotates the link (the old one stops working), emails the new
+  // one and copies it so it can also be shared directly.
   const handleResend = async () => {
+    const id = toast.loading(`Resending the invitation to ${invitation.email}...`)
     try {
-      await resend.mutateAsync(invitation.id)
-      toast.success(`Invitation resent to ${invitation.email}.`)
-    } catch {
-      toast.error('Unable to resend this invitation.')
+      const issued = await resend.mutateAsync(invitation.id)
+      let copied = false
+      if (issued?.accept_url) {
+        try {
+          await navigator.clipboard.writeText(issued.accept_url)
+          copied = true
+        } catch {
+          // Clipboard can be unavailable; the email still went out.
+        }
+      }
+      toast.success(
+        copied
+          ? `Invitation resent to ${invitation.email}. The new link is copied.`
+          : `Invitation resent to ${invitation.email}.`,
+        { id },
+      )
+    } catch (err) {
+      toast.error(errorMessage(err, 'Unable to resend this invitation.'), { id })
     }
   }
   const handleRevoke = async () => {
+    const id = toast.loading('Revoking the invitation...')
     try {
       await revoke.mutateAsync(invitation.id)
-      toast.success(`Invitation to ${invitation.email} revoked.`)
-    } catch {
-      toast.error('Unable to revoke this invitation.')
+      toast.success(`Invitation to ${invitation.email} revoked.`, { id })
+    } catch (err) {
+      toast.error(errorMessage(err, 'Unable to revoke this invitation.'), { id })
     }
   }
 
@@ -121,8 +140,8 @@ function InvitationRowMenu({ invitation }: { invitation: PendingInvitation }) {
           className="absolute right-0 top-9 z-10 w-44 rounded-md border shadow-lg overflow-hidden"
           style={{ background: 'white', borderColor: 'var(--border)' }}
         >
-          <MenuItem onClick={handleResend}>Resend invitation</MenuItem>
-          <MenuItem onClick={handleRevoke} tone="danger">Revoke invitation</MenuItem>
+          <MenuItem onClick={() => void handleResend()}>Resend and copy link</MenuItem>
+          <MenuItem onClick={() => void handleRevoke()} tone="danger">Revoke invitation</MenuItem>
         </div>
       )}
     </div>

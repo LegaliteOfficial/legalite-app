@@ -2,6 +2,7 @@
 
 import { Pencil, Trash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { useCan } from '@/lib/access'
 import { PriorityButton } from '@/components/shared/PriorityButton'
 import type { Case } from '@/types'
 import type { ColumnDef } from '../_types'
@@ -27,6 +28,8 @@ export function CasesTableRow({
   onDelete: (id: string, name: string) => void
 }) {
   const padding = expandRows ? 'py-3.5' : 'py-2'
+  const canEdit = useCan('edit-case-properties')
+  const canDelete = useCan('delete-cases')
 
   return (
     <tr
@@ -81,22 +84,22 @@ export function CasesTableRow({
             }}
           />
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
+            {canEdit && <Button
               variant="ghost"
               size="icon-sm"
               onClick={() => onEdit(row.id)}
               aria-label="Edit case"
             >
               <Pencil size={13} style={{ color: 'var(--text-muted)' }} />
-            </Button>
-            <Button
+            </Button>}
+            {canDelete && <Button
               variant="ghost"
               size="icon-sm"
               onClick={() => onDelete(row.id, row.title)}
               aria-label="Delete case"
             >
               <Trash size={13} style={{ color: 'var(--text-muted)' }} />
-            </Button>
+            </Button>}
           </div>
         </div>
       </td>

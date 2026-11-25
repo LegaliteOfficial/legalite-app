@@ -24,6 +24,12 @@ export const FirmMembersQueryDoc = graphql(/* GraphQL */ `
       verification_status
       joined_at
       left_at
+      roles {
+        id
+        name
+        slug
+        is_system
+      }
     }
   }
 `)

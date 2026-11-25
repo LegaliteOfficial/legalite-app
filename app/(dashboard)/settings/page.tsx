@@ -4,12 +4,16 @@ import Link from 'next/link'
 import { ArrowRight } from '@phosphor-icons/react'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Card } from '@/components/ui/card'
+import { useAuthStore } from '@/stores/auth.store'
+import { DEV_BYPASS, hasPermission } from '@/lib/access'
 
 type Item = {
   label: string
   description: string
   href: string
   badge?: string
+  /** Shown only to members holding this permission. */
+  permission?: string
 }
 
 type Column = {
@@ -18,10 +22,10 @@ type Column = {
 }
 
 const SYSTEM_ITEMS: Item[] = [
-  { label: 'Account and payment info', description: 'Manage your firm account, plan, and payment details.',                                                    href: '/settings/account-info' },
+  { label: 'Account and payment info', description: 'Manage your firm account, plan, and payment details.',                                                    href: '/settings/account-info', permission: 'manage-account-info' },
   { label: 'Firm members',             description: 'Invite, remove, and manage everyone in your firm.',                                                       href: '/settings/members' },
-  { label: 'Roles and permissions',    description: 'Configure firm roles and professional titles for your team.', badge: 'New',                                href: '/settings/roles' },
-  { label: 'Custom fields',            description: 'Create custom fields for clients, cases, and matters.',                                                   href: '/settings/custom-fields' },
+  { label: 'Roles and permissions',    description: 'Configure firm roles and professional titles for your team.', badge: 'New',                                href: '/settings/roles', permission: 'manage-roles' },
+  { label: 'Custom fields',            description: 'Create custom fields for clients, cases, and matters.',                                                   href: '/settings/custom-fields', permission: 'manage-custom-fields' },
   { label: 'Recovery bin',             description: 'Recover recently deleted matters, clients, tasks, and documents.',                                        href: '/settings/recovery-bin' },
 ]
 
@@ -31,8 +35,8 @@ const PERSONAL_ITEMS: Item[] = [
 ]
 
 const FIRM_ITEMS: Item[] = [
-  { label: 'Firm profile',           description: 'Firm name, address, branding, and default jurisdiction.',                                  href: '/firm/settings' },
-  { label: 'Practice areas',         description: 'Manage the practice areas and matter types your firm handles.',                    href: '/settings/practice-areas' },
+  { label: 'Firm profile',           description: 'Firm name, registration, address and branding.',                                  href: '/firm/settings', permission: 'manage-account-info' },
+  { label: 'Practice areas',         description: 'Choose the areas of law you practise and your main one.',                    href: '/settings/practice-areas' },
   { label: 'AI settings',            description: 'Configure citation style, default mode, and firm knowledge base options.',         href: '/settings/ai' },
 ]
 
@@ -43,6 +47,13 @@ const COLUMNS: Column[] = [
 ]
 
 export default function SettingsHubPage() {
+  const permissions = useAuthStore((s) => s.permissions)
+  const isOwner = useAuthStore((s) => s.activeMembership?.firm_role === 'owner')
+  const visible = (item: Item) =>
+    DEV_BYPASS || !item.permission || hasPermission(permissions ?? [], item.permission)
+  const columns = COLUMNS.map((c) => ({ ...c, items: c.items.filter(visible) })).filter(
+    (c) => c.items.length > 0,
+  )
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="px-6 py-5">
@@ -52,7 +63,7 @@ export default function SettingsHubPage() {
         />
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-x-10 gap-y-10">
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <div key={col.title}>
               <h2
                 className="text-[10.5px] font-medium tracking-[0.12em] uppercase mb-4 pb-3 border-b"
@@ -71,16 +82,17 @@ export default function SettingsHubPage() {
           ))}
         </div>
 
-        <Card padding="md" className="mt-10 flex items-center gap-4">
+        {(isOwner || DEV_BYPASS) && (
+        <Card padding="md" className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
           <div className="flex-1 text-[13.5px]" style={{ color: 'var(--text-primary)' }}>
             <span className="font-medium">You are the firm owner.</span>{' '}
             <span style={{ color: 'var(--text-secondary)' }}>
               You can administer the{' '}
-              <Link href="/firm/billing" className="font-medium hover:underline underline-offset-2" style={{ color: 'var(--gold)' }}>
+              <Link href="/settings/account-info" className="font-medium hover:underline underline-offset-2" style={{ color: 'var(--gold)' }}>
                 firm subscription
               </Link>{' '}
               and have sole control of the{' '}
-              <Link href="/firm/calendar" className="font-medium hover:underline underline-offset-2" style={{ color: 'var(--gold)' }}>
+              <Link href="/calendar" className="font-medium hover:underline underline-offset-2" style={{ color: 'var(--gold)' }}>
                 firm calendar
               </Link>
               .
@@ -97,9 +109,10 @@ export default function SettingsHubPage() {
             onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-overlay)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface-card)')}
           >
-            Transfer role
+            Transfer ownership
           </Link>
         </Card>
+        )}
 
         <div className="mt-6">
           <Link

@@ -7,12 +7,21 @@
 
 import { use } from 'react'
 import Link from 'next/link'
+import { RequirePermission } from '@/components/shared/RequirePermission'
 import { ArrowLeft, ArrowSquareOut, FileX } from '@phosphor-icons/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDocument } from '@/hooks/use-documents'
 import { Studio } from '../_components/studio/Studio'
 
-export default function DocumentStudioPage({ params }: { params: Promise<{ id: string }> }) {
+export default function DocumentStudioPage(props: { params: Promise<{ id: string }> }) {
+  return (
+    <RequirePermission permission="view-documents" what="documents">
+      <DocumentStudioPageInner {...props} />
+    </RequirePermission>
+  )
+}
+
+function DocumentStudioPageInner({ params }: { params: Promise<{ id: string }> }) {
   // Next 16 passes params as a Promise; unwrap it with use().
   const { id } = use(params)
   const { data: doc, isLoading, error } = useDocument(id)

@@ -81,6 +81,7 @@ import {
   URGENCY_STYLE,
   type CaseTab,
 } from './_lib/case-details'
+import { useCan } from '@/lib/access'
 
 const STATUS: Record<CaseStatus, { dot: string; bg: string; fg: string; hint: string }> = {
   Open: { dot: '#12B76A', bg: 'rgba(18,183,106,0.12)', fg: '#067647', hint: 'Active work' },
@@ -151,6 +152,8 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
     [id, updateMutation],
   )
 
+  const canEdit = useCan('edit-case-properties')
+  const canDelete = useCan('delete-cases')
   if (isLoading) return <PageSkeleton />
   if (error || !kase) {
     return (
@@ -343,16 +346,22 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
                   }
                 />
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => router.push(`/cases/${id}/edit`)}>
-                    <PencilSimple size={14} /> Edit all fields
-                  </DropdownMenuItem>
+                  {canEdit && (
+                    <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => router.push(`/cases/${id}/edit`)}>
+                      <PencilSimple size={14} /> Edit all fields
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => void copyLink()}>
                     <Copy size={14} /> Copy link
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer text-[13px]" style={{ color: '#B42318' }} onClick={() => void deleteCase()}>
-                    <Trash size={14} /> Delete case
-                  </DropdownMenuItem>
+                  {canDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="cursor-pointer text-[13px]" style={{ color: '#B42318' }} onClick={() => void deleteCase()}>
+                        <Trash size={14} /> Delete case
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

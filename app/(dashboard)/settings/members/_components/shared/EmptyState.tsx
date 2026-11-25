@@ -12,7 +12,8 @@ export function EmptyState({
   icon: React.ReactNode
   title: string
   body: string
-  action: () => void
+  /** Omitted when the viewer is not allowed to take the action. */
+  action?: () => void
   actionLabel: string
 }) {
   return (
@@ -35,6 +36,7 @@ export function EmptyState({
       >
         {body}
       </p>
+      {action && (
       <button
         type="button"
         onClick={action}
@@ -43,6 +45,7 @@ export function EmptyState({
       >
         <UserPlus size={14} strokeWidth={2.5} /> {actionLabel}
       </button>
+      )}
     </div>
   )
 }

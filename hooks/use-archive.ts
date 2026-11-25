@@ -52,12 +52,20 @@ export function useArchiveEntries(search: string, documentType: string | null) {
   }
 }
 
+/** One archive entry. Polls while the document is still being read. */
 export function useArchiveEntry(id: string | null) {
-  const { data, loading, error, refetch } = useQuery(ArchiveEntryQueryDoc, {
+  const { data, loading, error, refetch, startPolling, stopPolling } = useQuery(ArchiveEntryQueryDoc, {
     variables: { id: id ?? '' },
     skip: !id || DEV_BYPASS,
   })
-  return { entry: data?.archiveEntry ?? null, isLoading: loading, error, refetch }
+  const processing = data?.archiveEntry?.status === 'processing'
+  useEffect(() => {
+    if (!id || DEV_BYPASS) return
+    if (processing) startPolling(PROCESSING_POLL_MS)
+    else stopPolling()
+    return () => stopPolling()
+  }, [id, processing, startPolling, stopPolling])
+  return { entry: data?.archiveEntry ?? null, isLoading: loading && !data, error, refetch }
 }
 
 export function useArchiveDownload() {
@@ -75,7 +83,7 @@ export function useArchiveDownload() {
 
 export function useReprocessArchiveEntry() {
   const [mutate, state] = useMutation(ReprocessArchiveEntryMutationDoc, {
-    refetchQueries: [ArchiveEntriesQueryDoc],
+    refetchQueries: [ArchiveEntriesQueryDoc, ArchiveEntryQueryDoc],
   })
   return {
     isPending: state.loading,
