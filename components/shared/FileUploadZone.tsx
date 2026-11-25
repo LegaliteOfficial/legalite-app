@@ -10,6 +10,10 @@ interface FileUploadZoneProps {
   onUpload: (file: File) => Promise<void>
   isUploading?: boolean
   category: 'book' | 'article' | 'document'
+  /** Accept several files at once; they upload one after another. */
+  multiple?: boolean
+  label?: string
+  sublabel?: string
 }
 
 const CATEGORY_CONFIG = {
@@ -27,7 +31,7 @@ const CATEGORY_CONFIG = {
   },
   document: {
     label: 'Drop your documents here',
-    sublabel: 'PDF, JPG, PNG, DOCX up to 50MB',
+    sublabel: 'PDF, DOCX, TXT, JPG, PNG up to 50MB',
     accent: '#C9972B',
     bg: 'rgba(201,151,43,0.04)',
   },
@@ -39,41 +43,55 @@ export function FileUploadZone({
   onUpload,
   isUploading = false,
   category,
+  multiple = false,
+  label,
+  sublabel,
 }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const config = CATEGORY_CONFIG[category]
 
-  const handleFile = useCallback(
-    async (file: File) => {
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
+
+  const handleFiles = useCallback(
+    async (list: FileList | null | undefined) => {
       setError(null)
-      if (file.size > maxSizeMB * 1024 * 1024) {
-        setError(`File too large. Maximum size is ${maxSizeMB}MB.`)
-        return
+      const files = Array.from(list ?? []).slice(0, multiple ? 50 : 1)
+      if (files.length === 0) return
+      const tooBig = files.filter((f) => f.size > maxSizeMB * 1024 * 1024)
+      const ok = files.filter((f) => f.size <= maxSizeMB * 1024 * 1024)
+      if (tooBig.length > 0) {
+        setError(
+          tooBig.length === 1
+            ? `${tooBig[0].name} is too large. Maximum size is ${maxSizeMB}MB.`
+            : `${tooBig.length} files are larger than ${maxSizeMB}MB and were skipped.`,
+        )
       }
-      await onUpload(file)
+      for (let i = 0; i < ok.length; i++) {
+        if (ok.length > 1) setProgress({ done: i, total: ok.length })
+        await onUpload(ok[i])
+      }
+      setProgress(null)
     },
-    [maxSizeMB, onUpload],
+    [maxSizeMB, multiple, onUpload],
   )
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragging(false)
-      const file = e.dataTransfer.files[0]
-      if (file) handleFile(file)
+      if (!isUploading) void handleFiles(e.dataTransfer.files)
     },
-    [handleFile],
+    [handleFiles, isUploading],
   )
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (file) handleFile(file)
+      void handleFiles(e.target.files)
       if (inputRef.current) inputRef.current.value = ''
     },
-    [handleFile],
+    [handleFiles],
   )
 
   return (
@@ -81,7 +99,7 @@ export function FileUploadZone({
       onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
-      onClick={() => !isUploading && inputRef.current?.click()}
+      onClick={() => !isUploading && !progress && inputRef.current?.click()}
       className="relative rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all"
       style={{
         borderColor: isDragging ? config.accent : 'var(--border)',
@@ -92,16 +110,17 @@ export function FileUploadZone({
         ref={inputRef}
         type="file"
         accept={accept}
+        multiple={multiple}
         onChange={handleChange}
         className="hidden"
         disabled={isUploading}
       />
 
-      {isUploading ? (
+      {isUploading || progress ? (
         <div className="flex flex-col items-center gap-2 py-2">
           <Spinner size={24} />
           <p className="text-sm font-medium" style={{ color: config.accent }}>
-            Uploading...
+            {progress ? `Uploading ${progress.done + 1} of ${progress.total}...` : 'Uploading...'}
           </p>
         </div>
       ) : (
@@ -113,10 +132,10 @@ export function FileUploadZone({
             <UploadSimple size={18} style={{ color: config.accent }} />
           </div>
           <p className="text-sm font-medium" style={{ color: 'var(--navy)' }}>
-            {config.label}
+            {label ?? config.label}
           </p>
           <p className="text-[11px]" style={{ color: '#9CA3AF' }}>
-            {config.sublabel} — or click to browse
+            {sublabel ?? config.sublabel} — or click to browse
           </p>
         </div>
       )}

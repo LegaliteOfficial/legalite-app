@@ -2,7 +2,7 @@
  * Static category metadata + tab list for the documents route.
  */
 
-import { BookOpen, Briefcase, FileText, Gavel, House, SquaresFour, Scales, Users } from '@phosphor-icons/react'
+import { Archive, BookOpen, Briefcase, FileText, Gavel, House, SquaresFour, Scales, Users } from '@phosphor-icons/react'
 import type {
   Tab,
   TemplateCategory,
@@ -47,13 +47,14 @@ export const TAB_DESCRIPTORS: ReadonlyArray<{
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'templates', label: 'Templates', icon: SquaresFour },
   { id: 'library',   label: 'Legal library', icon: BookOpen },
+  { id: 'archive',   label: 'Firm archive', icon: Archive },
 ]
 
 /** Per-library-category upload accept attribute. */
 export const LIBRARY_ACCEPT: Record<string, string> = {
   book: '.pdf,.epub,.docx',
-  article: '.pdf,.docx,.txt',
-  document: '.pdf,.jpg,.jpeg,.png,.docx',
+  article: '.pdf,.docx,.txt,.md',
+  document: '.pdf,.docx,.txt,.md,.epub,.jpg,.jpeg,.png,.webp',
 }
 
 /** Per-library-category upload size cap (MB). Articles are smaller to

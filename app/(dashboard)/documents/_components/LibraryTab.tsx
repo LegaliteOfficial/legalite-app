@@ -116,7 +116,11 @@ export function LibraryTab({
           maxSizeMB={LIBRARY_MAX_MB[category]}
           onUpload={onUpload}
           isUploading={isUploading}
+          multiple
         />
+        <p className="mt-2 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+          Uploads are also added to your firm archive, where Legalite reads, checks and indexes them.
+        </p>
       </div>
 
       {isLoading ? (
@@ -172,7 +176,7 @@ function EmptyLibrary({ category }: { category: LibraryCategory }) {
         No {CATEGORY_NOUNS[category]} yet
       </p>
       <p className="text-[12px]" style={{ color: '#9CA3AF' }}>
-        UploadSimple your first {category} using the drop zone above.
+        Upload your first {category} using the drop zone above.
       </p>
     </div>
   )

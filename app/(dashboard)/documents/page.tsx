@@ -17,6 +17,7 @@ import { CaseContextBanner } from './_components/CaseContextBanner'
 import { DocumentsErrorPanel } from './_components/DocumentsErrorPanel'
 import { DocumentsTabs } from './_components/DocumentsTabs'
 import { LibraryTab } from './_components/LibraryTab'
+import { ArchiveTab } from './_components/archive/ArchiveTab'
 import { MyTemplates } from './_components/MyTemplates'
 import { TemplatesTab } from './_components/TemplatesTab'
 import { DocumentsList } from './_components/home/DocumentsList'
@@ -27,6 +28,7 @@ const TAB_LABELS: Record<string, string> = {
   documents: 'Documents',
   templates: 'Templates',
   library: 'Legal library',
+  archive: 'Firm archive',
 }
 
 export default function DocumentsPage() {
@@ -123,6 +125,14 @@ export default function DocumentsPage() {
               onDownload={state.handleLibraryDownload}
               onDelete={state.handleLibraryDelete}
               onFavorite={state.handleLibraryFavorite}
+            />
+          )}
+
+          {state.activeTab === 'archive' && (
+            <ArchiveTab
+              cases={state.documentCases ?? []}
+              onUpload={(file) => state.uploadToLibrary(file, 'document')}
+              isUploading={state.isUploadingLibrary}
             />
           )}
         </div>
