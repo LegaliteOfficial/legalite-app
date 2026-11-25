@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useLazyQuery } from '@apollo/client/react'
-import { createBrowserClient } from '@supabase/ssr'
 import {
   AttachmentsQueryDoc,
   AttachmentDownloadUrlQueryDoc,
@@ -8,10 +7,10 @@ import {
   CreateAttachmentUploadUrlMutationDoc,
   DeleteAttachmentMutationDoc,
 } from '@/lib/graphql/attachments'
+import { uploadToSignedUrl } from '@/lib/storage-upload'
 import type { AttachmentsQuery } from '@/types/generated/graphql'
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
-const BUCKET = 'attachments'
 
 export type EntityType = 'client' | 'case'
 export type Attachment = AttachmentsQuery['attachments'][number]
@@ -37,10 +36,7 @@ export function useAttachments(entityType: EntityType, entityId?: string) {
  * issues a one-time signed upload URL; the browser streams the bytes to it,
  * then the metadata row is recorded over GraphQL. Returns the created
  * Attachment so the caller can optimistically prepend it.
- *
- * The Supabase client is built lazily inside `mutateAsync` so pages mounting
- * <AttachmentsPanel/> render fine even when the Supabase env vars are absent
- * (e.g. DEV_BYPASS) — the requirement only surfaces on an actual upload.
+ * No Supabase client or anon key is involved in the browser.
  */
 export function useUploadAttachment() {
   const [createUploadUrl] = useMutation(CreateAttachmentUploadUrlMutationDoc)
@@ -65,14 +61,6 @@ export function useUploadAttachment() {
           'File uploads are disabled in dev bypass mode. Connect a Supabase project to enable them.',
         )
       }
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      if (!url || !anonKey) {
-        throw new Error(
-          'Supabase project URL / anon key are not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY before uploading.',
-        )
-      }
-
       setIsPending(true)
       try {
         // 1) Ask the backend (service role) for a signed upload target.
@@ -89,13 +77,7 @@ export function useUploadAttachment() {
         if (!upload) throw new Error('Could not start the upload. Please try again.')
 
         // 2) Stream the bytes to the signed URL — no Storage RLS involved.
-        const supabase = createBrowserClient(url, anonKey)
-        const { error } = await supabase.storage
-          .from(BUCKET)
-          .uploadToSignedUrl(upload.path, upload.token, file, {
-            contentType: file.type || undefined,
-          })
-        if (error) throw new Error(`Upload failed: ${error.message}`)
+        await uploadToSignedUrl(upload.signed_url, file)
 
         // 3) Record the metadata row.
         const res = await createAttachment({

@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useLazyQuery } from '@apollo/client/react'
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
 import {
   CreateLibraryItemMutationDoc,
   CreateLibraryUploadTargetMutationDoc,
@@ -10,6 +9,7 @@ import {
   ToggleLibraryItemFavoriteMutationDoc,
   UpdateLibraryItemMutationDoc,
 } from '@/lib/graphql/library'
+import { uploadToSignedUrl } from '@/lib/storage-upload'
 
 export interface LibraryItem {
   id: string
@@ -145,10 +145,7 @@ export function useDownloadLibraryItem() {
 // (service role) and the browser streams the bytes straight to Storage.
 // Password logins have no Supabase session, so the old anonymous upload
 // into the bucket was refused by Storage; the signed URL needs no session.
-//
-// The Supabase client is constructed lazily inside `mutateAsync` so pages
-// using this hook still render when the Supabase env vars are missing (e.g.
-// DEV_BYPASS); the requirement only surfaces on an actual upload.
+// No Supabase client or anon key is involved in the browser.
 export function useUploadLibraryFile() {
   const [createTarget] = useMutation(CreateLibraryUploadTargetMutationDoc)
   const [isPending, setIsPending] = useState(false)
@@ -161,27 +158,13 @@ export function useUploadLibraryFile() {
           'File uploads are disabled in dev bypass mode. Connect a Supabase project to enable them.',
         )
       }
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      if (!url || !anonKey) {
-        throw new Error(
-          'Supabase project URL / anon key are not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY before uploading.',
-        )
-      }
-
       setIsPending(true)
       try {
         const res = await createTarget({ variables: { category, fileName: file.name } })
         const target = res.data?.createLibraryUploadTarget
         if (!target) throw new Error('Could not start the upload. Please try again.')
 
-        const supabase = createBrowserClient(url, anonKey)
-        const { error } = await supabase.storage
-          .from('library')
-          .uploadToSignedUrl(target.path, target.token, file, {
-            contentType: file.type || undefined,
-          })
-        if (error) throw new Error(`Upload failed: ${error.message}`)
+        await uploadToSignedUrl(target.signed_url, file)
 
         return {
           file_url: target.public_url,
