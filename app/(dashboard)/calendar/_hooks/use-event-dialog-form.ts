@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { isPastStart, PAST_EVENT_MESSAGE } from '@/lib/calendar/past'
 import {
   useCreateCalendarEvent,
   useDeleteCalendarEvent,
@@ -200,9 +201,20 @@ export function useEventDialogForm({
 
   const handleSave = async () => {
     if (!canSave) return
+    const start = new Date(`${date}T${startTime}:00`)
+    // Editing a past event's details is fine; moving it into the past is not.
+    // Compared to the minute: the form has no seconds field.
+    const toMinute = (t: number) => Math.floor(t / 60_000)
+    const startChanged =
+      !(mode === 'edit' && editing) ||
+      toMinute(start.getTime()) !==
+        toMinute(new Date(fullEvent?.start_time ?? editing.due_date).getTime())
+    if (startChanged && isPastStart(start)) {
+      toast.error(PAST_EVENT_MESSAGE)
+      return
+    }
     setSubmitting(true)
     try {
-      const start = new Date(`${date}T${startTime}:00`)
       let end = new Date(`${date}T${endTime}:00`)
       if (end.getTime() <= start.getTime()) {
         end = new Date(start.getTime() + DEFAULT_EVENT_MINUTES * 60 * 1000)

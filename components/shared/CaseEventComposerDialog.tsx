@@ -30,6 +30,7 @@
 import { useEffect, useState } from 'react'
 import { Check } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { isPastStart, PAST_EVENT_MESSAGE, todayInputValue } from '@/lib/calendar/past'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -123,10 +124,13 @@ export function CaseEventComposerDialog({
 
   const handleSave = async () => {
     if (!canSave) return
+    const start = new Date(`${date}T${time || '09:00'}:00`)
+    if (isPastStart(start)) {
+      toast.error(PAST_EVENT_MESSAGE)
+      return
+    }
     setSubmitting(true)
     try {
-      const t = time || '09:00'
-      const start = new Date(`${date}T${t}:00`)
       await createMutation.mutateAsync({
         title: title.trim(),
         description: description.trim() || undefined,
@@ -211,6 +215,7 @@ export function CaseEventComposerDialog({
               <Input
                 id="case-event-date"
                 type="date"
+                min={todayInputValue()}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />

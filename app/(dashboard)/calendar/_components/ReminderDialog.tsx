@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Bell, Briefcase, Users } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { isPastStart, todayInputValue } from '@/lib/calendar/past'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -66,6 +67,10 @@ export function ReminderDialog({
 
   const handleSave = async () => {
     if (!canSave) return
+    if (isPastStart(new Date(`${date}T${time}:00`))) {
+      toast.error('Reminders cannot be set for a time that has passed.')
+      return
+    }
 
     let validEmails: string[] = []
     if (channel === 'email') {
@@ -157,7 +162,7 @@ export function ReminderDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="rem-date" className="text-[13px]">Date</Label>
-              <Input id="rem-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <Input id="rem-date" type="date" min={todayInputValue()} value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="rem-time" className="text-[13px]">Time</Label>
