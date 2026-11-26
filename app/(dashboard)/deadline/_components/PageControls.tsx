@@ -6,7 +6,6 @@
  */
 
 import { useEffect } from 'react'
-import { Plus } from '@phosphor-icons/react'
 import { useApolloClient } from '@apollo/client/react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -73,17 +72,7 @@ export function ScopeToggle() {
   )
 }
 
-export function AddDeadlineButton() {
-  const openCreate = useDeadlineEngineStore((s) => s.openCreate)
-  return (
-    <Button onClick={openCreate} size="lg" className="rounded-lg">
-      <Plus size={14} weight="bold" />
-      Add deadline
-    </Button>
-  )
-}
-
-/** Create / edit dialog plus the delete confirmation. */
+/** Edit dialog plus the delete confirmation. */
 export function DeadlineDialogs() {
   const form = useDeadlineEngineStore((s) => s.form)
   const closeForm = useDeadlineEngineStore((s) => s.closeForm)

@@ -40,7 +40,6 @@ interface DeadlineEngineState {
   setFocusDay: (day: DayFocus) => void
   setBusyKey: (key: string | null) => void
   retry: () => void
-  openCreate: () => void
   openEdit: (deadline: Deadline) => void
   closeForm: () => void
   setPendingDelete: (item: AttentionItem | null) => void
@@ -65,7 +64,6 @@ export const useDeadlineEngineStore = create<DeadlineEngineState>((set) => ({
   setBusyKey: (busyKey) => set({ busyKey }),
   retry: () => set((s) => ({ retryNonce: s.retryNonce + 1 })),
   // A fresh `key` remounts the dialog so its form seeds from `deadline`.
-  openCreate: () => set((s) => ({ form: { open: true, deadline: null, key: s.form.key + 1 } })),
   openEdit: (deadline) => set((s) => ({ form: { open: true, deadline, key: s.form.key + 1 } })),
   closeForm: () => set((s) => ({ form: { ...s.form, open: false } })),
   setPendingDelete: (pendingDelete) => set({ pendingDelete }),

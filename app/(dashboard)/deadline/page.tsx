@@ -20,7 +20,6 @@ import { AttentionList } from './_components/AttentionList'
 import { PastActivity } from './_components/PastActivity'
 import { NotificationsCard, OutcomePanel, SourceBreakdown } from './_components/SidePanels'
 import {
-  AddDeadlineButton,
   DeadlineDialogs,
   FeedErrorBoundary,
   FeedLifecycle,
@@ -40,12 +39,7 @@ export default function DeadlinePage() {
       <div className="px-6 py-5">
         <PageHeader
           title="Deadline engine"
-          actions={
-            <>
-              <ScopeToggle />
-              <AddDeadlineButton />
-            </>
-          }
+          actions={<ScopeToggle />}
         >
           <FeedErrorBoundary label="your summary">
             <Suspense fallback={<HeaderSummarySkeleton />}>

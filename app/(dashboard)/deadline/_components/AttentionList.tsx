@@ -7,8 +7,7 @@
  */
 
 import { useMemo } from 'react'
-import { ClockCountdown, Plus, SealCheck, X } from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
+import { ClockCountdown, SealCheck, X } from '@phosphor-icons/react'
 import { startOfDay, useAttentionItems, type AttentionItem } from '@/hooks/use-attention-feed'
 import { useDeadlines } from '@/hooks/use-deadlines'
 import { PAST_DUE_FOCUS, useDeadlineEngineStore } from '@/stores/deadline-engine.store'
@@ -26,7 +25,6 @@ export function AttentionList() {
   const setKindFilter = useDeadlineEngineStore((s) => s.setKindFilter)
   const setFocusDay = useDeadlineEngineStore((s) => s.setFocusDay)
   const toggleShowSnoozed = useDeadlineEngineStore((s) => s.toggleShowSnoozed)
-  const openCreate = useDeadlineEngineStore((s) => s.openCreate)
   const openEdit = useDeadlineEngineStore((s) => s.openEdit)
   const setPendingDelete = useDeadlineEngineStore((s) => s.setPendingDelete)
   const { complete, snooze, unsnooze } = useAttentionActions()
@@ -108,7 +106,7 @@ export function AttentionList() {
           onUnsnooze={unsnooze}
         />
       ) : (
-        <EmptyList filtered={filtered} onAdd={openCreate} />
+        <EmptyList filtered={filtered} />
       )}
     </div>
   )
@@ -133,7 +131,7 @@ function FilterChip({ label, onClear }: { label: string; onClear: () => void }) 
   )
 }
 
-function EmptyList({ filtered, onAdd }: { filtered: boolean; onAdd: () => void }) {
+function EmptyList({ filtered }: { filtered: boolean }) {
   return (
     <div
       className="rounded-2xl border border-dashed px-6 py-14 text-center"
@@ -151,14 +149,8 @@ function EmptyList({ filtered, onAdd }: { filtered: boolean; onAdd: () => void }
       <p className="mx-auto mt-1 max-w-sm text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
         {filtered
           ? 'Clear the filters to see everything that needs attention.'
-          : 'Deadlines, hearings, court dates, tasks and invoices due in the next thirty days are listed here automatically.'}
+          : 'Tasks, events, hearings, court dates and invoices from across the workspace are listed here automatically when they fall due.'}
       </p>
-      {!filtered && (
-        <Button variant="outline" className="mt-4 rounded-lg" onClick={onAdd}>
-          <Plus size={13} weight="bold" />
-          Add a deadline
-        </Button>
-      )}
     </div>
   )
 }
