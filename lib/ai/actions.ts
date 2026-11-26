@@ -43,7 +43,7 @@ export interface ActionResult {
 const REFETCH: Record<ProposedAction['type'], string[]> = {
   create_case: ['Cases', 'Clients', 'DashboardStats'],
   create_client: ['Clients', 'DashboardStats'],
-  create_deadline: ['Deadlines', 'DeadlineStats', 'AttentionFeed', 'CalendarEvents', 'Tasks'],
+  create_deadline: ['Deadlines', 'DeadlineStats', 'AttentionFeed'],
   create_task: ['Tasks', 'DashboardStats'],
   create_document: ['Documents', 'DocumentFolders', 'DashboardStats'],
   create_event: ['CalendarEvents', 'PendingDueEvents', 'AttentionFeed'],

@@ -17,6 +17,7 @@ import { Suspense } from 'react'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { DocketBrief } from './_components/DocketBrief'
 import { AttentionList } from './_components/AttentionList'
+import { PastActivity } from './_components/PastActivity'
 import { NotificationsCard, OutcomePanel, SourceBreakdown } from './_components/SidePanels'
 import {
   AddDeadlineButton,
@@ -67,6 +68,9 @@ export default function DeadlinePage() {
               <Suspense fallback={<AttentionListSkeleton />}>
                 <AttentionList />
               </Suspense>
+            </FeedErrorBoundary>
+            <FeedErrorBoundary label="your past schedule">
+              <PastActivity />
             </FeedErrorBoundary>
           </div>
 

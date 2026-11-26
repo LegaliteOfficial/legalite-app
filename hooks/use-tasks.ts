@@ -80,7 +80,7 @@ export function useCreateTask() {
 
 export function useUpdateTask() {
   const [mutate, state] = useMutation(UpdateTaskMutationDoc, {
-    refetchQueries: [TasksQueryDoc, 'DashboardStats', 'AttentionFeed', 'Deadlines'],
+    refetchQueries: [TasksQueryDoc, 'DashboardStats', 'AttentionFeed'],
   })
   return {
     isPending: state.loading,
