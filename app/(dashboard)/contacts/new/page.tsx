@@ -521,7 +521,7 @@ function NewContactPageInner() {
       const primaryWebsite =
         form.websites.find((w) => w.is_primary)?.url || form.websites[0]?.url || ''
 
-      await createMutation.mutateAsync({
+      const created = await createMutation.mutateAsync({
         full_name: composedFullName || 'Untitled contact',
         contact_type: form.contact_type,
         // A person's employer; for a company the name lives in full_name.
@@ -536,7 +536,11 @@ function NewContactPageInner() {
         notes: '',
       })
 
-      toast.success('Contact created.')
+      toast.success(
+        created?.client_code
+          ? `Contact created as ${created.client_code}.`
+          : 'Contact created.',
+      )
       if (alsoCreateMatter) {
         toast.info('Continuing to new case…')
         router.push('/cases/new')

@@ -12,7 +12,6 @@ import type {
   CreateCaseInput,
   UpdateCaseInput,
 } from '@/types/generated/graphql'
-import { nextCaseCode } from '@/lib/reference-code'
 
 /**
  * Wire shape returned by the legalite-backend Cases query. The backend now
@@ -225,21 +224,17 @@ export function useCreateCase() {
   const [mutate, state] = useMutation(CreateCaseMutationDoc, {
     refetchQueries: [CasesQueryDoc, 'DashboardStats'],
   })
-  // The case code is derived from the codes already in the cache, so the
-  // sequence continues rather than restarting. When the backend starts
-  // assigning codes this should stop sending one.
-  const { data: existing } = useQuery(CasesQueryDoc, {
-    fetchPolicy: 'cache-first',
-    errorPolicy: 'all',
-  })
-
+  // The server assigns the case ID (LL-YYYY-NNNN) when none is sent. Minting
+  // it here from the cached list let two saves produce the same code.
   const withCode = (data: CaseFormData) => {
-    const input = toCaseInput(data)
-    if (input.case_code) return input
-    return {
-      ...input,
-      case_code: nextCaseCode((existing?.cases ?? []).map((c) => c.case_code)),
+    // Dev bypass has no signed-in user and only sample clients, so the
+    // backend would reject the save with an unhelpful network error.
+    if (DEV_BYPASS) {
+      throw new Error(
+        'saving is turned off while NEXT_PUBLIC_DEV_BYPASS_AUTH is true. Set it to false and sign in.',
+      )
     }
+    return toCaseInput(data)
   }
 
   return {

@@ -30,6 +30,16 @@ type DeadlineInput = Partial<Omit<Deadline, 'id' | 'user_id' | 'created_at' | 'u
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
+// The backend mirrors each deadline onto the calendar and the task board, so
+// a deadline write also changes those lists.
+const DEADLINE_REFETCH = [
+  DeadlinesQueryDoc,
+  DeadlineStatsQueryDoc,
+  'AttentionFeed',
+  'CalendarEvents',
+  'Tasks',
+]
+
 export function useDeadlines(status?: string) {
   const { data, loading, error, refetch } = useQuery(DeadlinesQueryDoc, {
     variables: { status: status ?? null, upcoming: null },
@@ -76,7 +86,7 @@ export function useDeadlineStats() {
 
 export function useCreateDeadline() {
   const [mutate, state] = useMutation(CreateDeadlineMutationDoc, {
-    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc, 'AttentionFeed'],
+    refetchQueries: DEADLINE_REFETCH,
   })
   return {
     isPending: state.loading,
@@ -112,7 +122,7 @@ export function useCreateDeadline() {
 
 export function useUpdateDeadline() {
   const [mutate, state] = useMutation(UpdateDeadlineMutationDoc, {
-    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc, 'AttentionFeed'],
+    refetchQueries: DEADLINE_REFETCH,
   })
   return {
     isPending: state.loading,
@@ -146,7 +156,7 @@ export function useUpdateDeadline() {
 
 export function useDeleteDeadline() {
   const [mutate, state] = useMutation(DeleteDeadlineMutationDoc, {
-    refetchQueries: [DeadlinesQueryDoc, DeadlineStatsQueryDoc, 'AttentionFeed'],
+    refetchQueries: DEADLINE_REFETCH,
   })
   return {
     isPending: state.loading,

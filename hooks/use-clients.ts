@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from '@apollo/client/react'
-import { nextClientCode } from '@/lib/reference-code'
 import {
   ClientQueryDoc,
   ClientsQueryDoc,
@@ -153,26 +152,10 @@ export function useCreateClient() {
   const [mutate, state] = useMutation(CreateClientMutationDoc, {
     refetchQueries: [ClientsQueryDoc, 'DashboardStats'],
   })
-  // The client code continues from the codes already in the cache rather
-  // than restarting. Mirrors useCreateCase; when the backend starts
-  // assigning codes this should stop sending one.
-  const { data: existing } = useQuery(ClientsQueryDoc, {
-    fetchPolicy: 'cache-first',
-    errorPolicy: 'all',
-    skip: DEV_BYPASS,
-  })
-
-  const withCode = (data: ClientFormData) => {
-    const input = toClientInput(data)
-    // An explicit code wins, so importing records that already carry one
-    // does not get it overwritten.
-    if (input.client_code) return input
-    const source = DEV_BYPASS ? DEV_SAMPLE_CLIENTS : (existing?.clients ?? [])
-    return {
-      ...input,
-      client_code: nextClientCode(source.map((c) => c.client_code)),
-    }
-  }
+  // The server assigns the client ID (CL-YYYY-NNNN) when none is sent, so
+  // every create path gets one and the sequence is read from the database
+  // rather than from whatever this browser happens to have cached.
+  const withCode = (data: ClientFormData) => toClientInput(data)
 
   return {
     isPending: state.loading,

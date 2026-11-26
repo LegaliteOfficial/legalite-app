@@ -174,6 +174,8 @@ export function aggregateUtilisation(
     // Neither a draft nor one awaiting approval has been sent, so neither
     // is money the firm has actually asked for.
     if (bill.status === 'Draft' || bill.status === 'PendingApproval') continue
+    // Archived is how a bill is deleted; it is no longer money owed.
+    if (bill.status === 'Archived') continue
 
     invoiced += bill.total
     collected += bill.paid
@@ -198,7 +200,9 @@ export function aggregateUtilisation(
   }
   for (const e of entries) note(e.started_at)
   for (const b of bills) {
-    if (b.status !== 'Draft' && b.status !== 'PendingApproval') note(b.issue_date)
+    if (b.status !== 'Draft' && b.status !== 'PendingApproval' && b.status !== 'Archived') {
+      note(b.issue_date)
+    }
   }
 
   return {

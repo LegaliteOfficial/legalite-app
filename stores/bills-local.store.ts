@@ -558,7 +558,7 @@ interface BillsLocalStore {
   reseedDev: () => void
 }
 
-const SEEDED_INITIAL: Pick<
+type BillsData = Pick<
   BillsLocalStore,
   | 'bills'
   | 'payments'
@@ -566,7 +566,39 @@ const SEEDED_INITIAL: Pick<
   | 'fund_balances'
   | 'fund_movements'
   | 'revision'
-> = {
+>
+
+/**
+ * The sample records exist only for DEV_BYPASS demos. Outside that mode the
+ * store starts empty: seeding defaults here meant every page that read the
+ * store before hydrating showed the samples, and any write made from such a
+ * page persisted them back over the user's own bills.
+ */
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+
+const EMPTY_INITIAL: BillsData = {
+  bills: {},
+  payments: {},
+  fund_requests: {},
+  fund_balances: {},
+  fund_movements: {},
+  revision: 0,
+}
+
+/** Sample records are tied to the `dev-client-*` sample clients. */
+export function isSampleRecord(record: { client_id: string }): boolean {
+  return record.client_id.startsWith('dev-client-')
+}
+
+function withoutSamples<T extends { client_id: string }>(
+  map: Record<string, T> | undefined,
+): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(map ?? {}).filter(([, v]) => !isSampleRecord(v)),
+  )
+}
+
+const SEEDED_INITIAL: BillsData = {
   bills: Object.fromEntries(DEV_SEED_BILLS.map((b) => [b.id, b])),
   payments: Object.fromEntries(DEV_SEED_PAYMENTS.map((p) => [p.id, p])),
   fund_requests: Object.fromEntries(
@@ -597,7 +629,7 @@ function nextBillNumber(bills: Record<string, Bill>): string {
 export const useBillsLocalStore = create<BillsLocalStore>()(
   persist(
     (set, get) => ({
-      ...SEEDED_INITIAL,
+      ...(DEV_BYPASS ? SEEDED_INITIAL : EMPTY_INITIAL),
 
       createBill: (input) => {
         const id = `bill-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -774,24 +806,15 @@ export const useBillsLocalStore = create<BillsLocalStore>()(
             state.bills[id] = { ...b, reminders: [] }
           }
         }
-        // Same idea for client-funds tables — older storage from
-        // before this field landed gets seeded with the dev sample
-        // so the Client Funds tab has data on first hydrate.
-        if (
-          !state.fund_balances ||
-          Object.keys(state.fund_balances).length === 0
-        ) {
-          state.fund_balances = Object.fromEntries(
-            DEV_SEED_FUND_BALANCES.map((b) => [b.client_id, b]),
-          )
-        }
-        if (
-          !state.fund_movements ||
-          Object.keys(state.fund_movements).length === 0
-        ) {
-          state.fund_movements = Object.fromEntries(
-            DEV_SEED_FUND_MOVEMENTS.map((m) => [m.id, m]),
-          )
+        // Earlier builds seeded sample bills into every browser and wrote
+        // them back to storage, so users kept seeing placeholders they had
+        // deleted. Drop them on load; only DEV_BYPASS demos keep samples.
+        if (!DEV_BYPASS) {
+          state.bills = withoutSamples(state.bills)
+          state.payments = withoutSamples(state.payments)
+          state.fund_requests = withoutSamples(state.fund_requests)
+          state.fund_balances = withoutSamples(state.fund_balances)
+          state.fund_movements = withoutSamples(state.fund_movements)
         }
         state.revision = state.revision + 1
       },

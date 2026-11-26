@@ -50,7 +50,7 @@ export function useCaseEditorState({
   const createMutation = useCreateCase()
   const updateMutation = useUpdateCase()
   const setCaseAssignments = useSetCaseAssignments()
-  const { data: clients } = useClients()
+  const { data: clients, refetch: refetchClients } = useClients()
   const { data: firmMembers } = useFirmMembers()
   const firmUserOptions = useFirmUserOptions()
 
@@ -86,6 +86,28 @@ export function useCaseEditorState({
   const setField: SetField = useCallback((key, val) => {
     setForm((f) => ({ ...f, [key]: val }))
   }, [])
+
+  // "Add a new contact" opens the contact form in another tab. Refresh the
+  // client list when the user comes back, otherwise the contact they just
+  // created never appears and the case cannot be saved without reloading
+  // the page (and losing everything typed so far).
+  useEffect(() => {
+    const onReturn = () => {
+      if (document.visibilityState !== 'visible') return
+      // A failed background refresh keeps the list already shown.
+      try {
+        void Promise.resolve(refetchClients()).catch(() => undefined)
+      } catch {
+        // Skipped query (dev bypass): nothing to refresh.
+      }
+    }
+    document.addEventListener('visibilitychange', onReturn)
+    window.addEventListener('focus', onReturn)
+    return () => {
+      document.removeEventListener('visibilitychange', onReturn)
+      window.removeEventListener('focus', onReturn)
+    }
+  }, [refetchClients])
 
   // Cancel returns to the case detail when editing, the list when creating.
   const cancelTarget = isEdit && caseId ? `/cases/${caseId}` : '/cases'
@@ -144,7 +166,16 @@ export function useCaseEditorState({
   const handleSave = useCallback(
     async (alsoRunConflictCheck: boolean) => {
       if (!canSave) {
-        toast.error('Add a client and a case description before saving.')
+        const hasClient = form.client_ids.some((id) => !!id)
+        const hasDescription = form.description.trim().length > 0
+        toast.error(
+          !hasClient && !hasDescription
+            ? 'Choose a client and add a case description before saving.'
+            : !hasClient
+              ? 'Choose a client before saving.'
+              : 'Add a case description before saving.',
+        )
+        scrollToSection(hasClient ? 'case-details' : 'clients')
         return
       }
       setSubmitting(true)
@@ -217,6 +248,7 @@ export function useCaseEditorState({
     },
     [
       canSave,
+      scrollToSection,
       form,
       isEdit,
       caseId,

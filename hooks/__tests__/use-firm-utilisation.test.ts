@@ -228,6 +228,17 @@ describe('aggregateUtilisation — billing', () => {
     expect(r.billing.overdueCount).toBe(1)
   })
 
+  it('excludes archived (deleted) bills', () => {
+    const r = aggregateUtilisation(
+      [],
+      [bill({ status: 'Archived' }), bill({ id: 'b2', total: 300, balance_due: 300 })],
+      2026,
+      NOW,
+    )
+    expect(r.billing.invoiced).toBe(300)
+    expect(r.billing.openCount).toBe(1)
+  })
+
   it('ignores bills issued in another year', () => {
     const r = aggregateUtilisation([], [bill({ issue_date: '2025-03-01T00:00:00Z' })], 2026, NOW)
     expect(r.billing.invoiced).toBe(0)
