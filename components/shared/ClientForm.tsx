@@ -191,7 +191,11 @@ export function ClientForm() {
         // populated id under DEV_BYPASS — guard the rate write so we
         // don't strand it under an empty key.
         if (created?.id) persistRateFor(created.id)
-        toast.success('New client added to your directory.')
+        toast.success(
+          created?.client_code
+            ? `New client added to your directory as ${created.client_code}.`
+            : 'New client added to your directory.',
+        )
       }
       closeModal()
     } catch {

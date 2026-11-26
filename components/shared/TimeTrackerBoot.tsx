@@ -31,6 +31,7 @@
 
 import { useEffect } from 'react'
 import { useTimeTrackerStore } from '@/stores/time-tracker-local.store'
+import { useBillsLocalStore } from '@/stores/bills-local.store'
 import { CheckInDialog } from '@/components/shared/CheckInDialog'
 import { ActiveTimerWidget } from '@/components/shared/ActiveTimerWidget'
 import { useLowBalanceAlerts } from '@/hooks/use-low-balance-alerts'
@@ -39,6 +40,10 @@ export function TimeTrackerBoot() {
   // Manual rehydrate — same pattern as PriorityRemindersBoot.
   useEffect(() => {
     void useTimeTrackerStore.persist.rehydrate()
+    // Bills are read app-wide (firm dashboard, low-balance alerts, client
+    // pages). Hydrating only on /billing left every other page on the
+    // store's defaults, and a write from there overwrote the saved bills.
+    void useBillsLocalStore.persist.rehydrate()
   }, [])
 
   // Low-balance toast watcher. Fires when a client's

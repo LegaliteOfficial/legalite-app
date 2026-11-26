@@ -183,7 +183,7 @@ export const COLUMNS: ColumnDef[] = [
   {
     id: 'client_code',
     label: 'Client ID',
-    defaultVisible: false,
+    defaultVisible: true,
     minWidth: 120,
     sortable: true,
     sortValue: (row) => row.client_code ?? '',

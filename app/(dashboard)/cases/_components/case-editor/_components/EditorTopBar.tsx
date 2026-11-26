@@ -93,7 +93,11 @@ function Actions({
       <Button
         size="sm"
         onClick={() => onSave(false)}
-        disabled={submitting || !canSave}
+        // Kept clickable when required fields are missing: a disabled
+        // button gave no hint why the case would not save, while the save
+        // handler names the missing field.
+        disabled={submitting}
+        aria-disabled={!canSave || undefined}
       >
         {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Save case'}
       </Button>
