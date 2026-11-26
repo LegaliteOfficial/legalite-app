@@ -5,30 +5,25 @@
  * ---------
  * Client-side guard for dashboard routes.
  *
- * The auth token lives in localStorage (via Zustand `persist`), so we can't
- * gate this in Next.js middleware (which runs on the edge with no DOM).
- * Instead we mount the guard at the layout level and:
+ * The access token lives in memory only; the refresh token is an HttpOnly
+ * cookie the page cannot read. The store persists just a "this browser is
+ * signed in" flag, so after a reload the guard:
  *
- *  1. Wait for Zustand `persist` to hydrate from localStorage using its
- *     built-in `useAuthStore.persist.hasHydrated()` reactive hook —
- *     no manual setHydrated effect (React 19 lint flags that).
- *  2. If no token after hydration, redirect to /login.
- *  3. If a token IS present, validate it once via `GET /auth/me`.
- *     - Only a real `401 Unauthorized` clears the token (token genuinely
- *       invalid: signed by a rotated JWT_SECRET, deleted user, etc.).
- *     - Other errors (500 from a cold backend, network, CORS hiccup) are
- *       treated as "token presumed valid" so a transient API blip doesn't
- *       bounce the user out on every refresh.
- *  4. Render a centred loader until we know the auth status — prevents a
- *     flash of dashboard content for unauthenticated visitors.
+ *  1. Waits for the Zustand store to hydrate.
+ *  2. Not signed in: redirects to /login.
+ *  3. Signed in but no access token yet: asks /api/auth/refresh for one.
+ *     - Session ended (signed out elsewhere, expired, revoked): the local
+ *       sign-in is cleared and the redirect in step 2 runs.
+ *     - API unreachable (cold start, network): shows the loader and tries
+ *       again shortly, so a blip does not sign anyone out.
+ *  4. Renders a centred loader until there is a token, so signed-out
+ *     visitors never see a flash of dashboard content.
  */
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useApolloClient } from '@apollo/client/react'
-import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useAuthStore } from '@/stores/auth.store'
-import { MeQueryDoc } from '@/lib/graphql/auth'
+import { refreshAccessToken } from '@/lib/auth/session-client'
 
 /** Subscribe to Zustand persist hydration without setState-in-effect. */
 function useStoreHydration(): boolean {
@@ -43,6 +38,8 @@ function useStoreHydration(): boolean {
 // (.env.local: NEXT_PUBLIC_DEV_BYPASS_AUTH) once real auth works.
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
 
+const RETRY_MS = 5_000
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (DEV_BYPASS) return <>{children}</>
   return <RealAuthGuard>{children}</RealAuthGuard>
@@ -51,53 +48,41 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 function RealAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { isAuthenticated, token, logout } = useAuthStore()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const token = useAuthStore((s) => s.token)
   const hydrated = useStoreHydration()
-  const apollo = useApolloClient()
-  // Track which token we've already validated against the API. When this
-  // matches the current token we know the token is good.
-  const [validatedToken, setValidatedToken] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
+  const [unreachable, setUnreachable] = useState(false)
 
+  // Signed in but no access token in memory (fresh page load): get one.
   useEffect(() => {
-    if (!hydrated) return
-    if (!isAuthenticated || !token) return // missing token → handled by redirect effect below
-    if (validatedToken === token) return // already validated this exact token
+    if (!hydrated || !isAuthenticated || token) return
     let cancelled = false
-    apollo
-      .query({ query: MeQueryDoc, fetchPolicy: 'network-only' })
-      .then(() => {
-        if (!cancelled) setValidatedToken(token)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        const isUnauthenticated =
-          err instanceof CombinedGraphQLErrors &&
-          err.errors.some((e) => e.extensions?.code === 'UNAUTHENTICATED')
-        if (isUnauthenticated) {
-          // Token is genuinely invalid → clear it.
-          logout()
-        } else {
-          // Network error, cold start, CORS — assume token still valid
-          // and let the user proceed.
-          setValidatedToken(token)
-        }
-      })
-    return () => { cancelled = true }
-  }, [hydrated, isAuthenticated, token, validatedToken, logout, apollo])
+    let timer: ReturnType<typeof setTimeout> | undefined
+    void refreshAccessToken().then((outcome) => {
+      if (cancelled) return
+      setUnreachable(outcome === 'unavailable')
+      if (outcome === 'unavailable') {
+        timer = setTimeout(() => setAttempt((n) => n + 1), RETRY_MS)
+      }
+    })
+    return () => {
+      cancelled = true
+      if (timer) clearTimeout(timer)
+    }
+  }, [hydrated, isAuthenticated, token, attempt])
 
-  // Redirect to login when we've finished hydrating and there's no token.
+  // Redirect to login when we've finished hydrating and there's no sign-in.
   useEffect(() => {
-    if (!hydrated) return
-    if (isAuthenticated && token) return
+    if (!hydrated || isAuthenticated) return
     const next = pathname && pathname !== '/login' ? `?next=${encodeURIComponent(pathname)}` : ''
     router.replace(`/login${next}`)
-  }, [hydrated, isAuthenticated, token, pathname, router])
+  }, [hydrated, isAuthenticated, pathname, router])
 
-  const isValid = isAuthenticated && token && validatedToken === token
-  if (!hydrated || !isValid) {
+  if (!hydrated || !isAuthenticated || !token) {
     return (
       <div
-        className="flex h-screen items-center justify-center"
+        className="flex h-screen flex-col items-center justify-center gap-4"
         style={{ background: 'var(--cream)' }}
       >
         <div
@@ -107,6 +92,11 @@ function RealAuthGuard({ children }: { children: React.ReactNode }) {
             borderTopColor: 'var(--gold)',
           }}
         />
+        {unreachable && isAuthenticated && (
+          <p className="text-sm text-muted-foreground">
+            We could not reach Legalite. Trying again...
+          </p>
+        )}
       </div>
     )
   }

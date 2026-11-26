@@ -2,9 +2,19 @@ import { z } from 'zod'
 
 // ── Auth schemas ─────────────────────────────────────────────────────────
 
+export const MIN_PASSWORD_LENGTH = 12
+
+/** Rule for any password being set (signup, invitation, reset, change). */
+export const newPassword = z
+  .string()
+  .min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
+  .max(128, 'Password must be at most 128 characters')
+
 export const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  // Existing accounts may predate the 12-character rule, so sign-in only
+  // requires a value. New passwords are checked by newPassword below.
+  password: z.string().min(1, 'Enter your password'),
 })
 
 // Owner registration — the public signup form. Every signup creates a firm;
@@ -15,7 +25,7 @@ export const registerOwnerSchema = z
   .object({
     name: z.string().min(1, 'Full name is required'),
     email: z.string().email('Enter a valid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: newPassword,
     confirmPassword: z.string(),
     firm_name: z
       .string()
@@ -49,7 +59,7 @@ export const acceptInviteSchema = z
   .object({
     token: z.string().min(1),
     name: z.string().min(1, 'Full name is required'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: newPassword,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

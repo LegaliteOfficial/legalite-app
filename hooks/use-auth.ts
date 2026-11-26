@@ -1,21 +1,21 @@
 'use client'
 
+import { useCallback, useState } from 'react'
 import {
-  AcceptInvitationMutationDoc,
-  AcceptInviteMutationDoc,
-  LoginMutationDoc,
-  RegisterOwnerMutationDoc,
   RequestPasswordResetMutationDoc,
   ResetPasswordMutationDoc,
 } from '@/lib/graphql/auth'
 import { InvitationLookupQueryDoc } from '@/lib/graphql/invitations'
-import { useAuthStore } from '@/stores/auth.store'
+import {
+  applyAuthPayload,
+  callAuth,
+  getAccessToken,
+  type AuthAction,
+  type AuthPayload,
+} from '@/lib/auth/session-client'
 import type {
-  AcceptInviteMutation,
   AcceptInviteMutationVariables,
-  LoginMutation,
   LoginMutationVariables,
-  RegisterOwnerMutation,
   RegisterOwnerMutationVariables,
   RequestPasswordResetMutation,
   RequestPasswordResetMutationVariables,
@@ -24,56 +24,50 @@ import type {
 } from '@/types/generated/graphql'
 import { useMutation, useQuery } from '@apollo/client/react'
 
-// The two hooks below own the "write to the auth store on success" side
-// effect so every caller doesn't have to remember it. onCompleted runs
-// when the GraphQL response succeeds; onError fires on network or
-// GraphQL errors and lets Apollo reject the awaited mutation so the
-// component's try/catch can render a user-facing message.
-//
-// We do NOT throw inside onError — Apollo already rejects the awaited
-// promise when `errorPolicy: 'none'` (the default). Throwing here would
-// double-report and trip React's strict-mode error overlay.
+// Sign-in hooks call the app's own /api/auth routes, not the API directly,
+// so the refresh token is set as an HttpOnly cookie the page cannot read
+// (see lib/auth/bff.ts). Each hook stores the result in the auth store and
+// keeps the `{ data: { <field>: payload } }` shape callers already use.
+// Failures reject with an Error whose message is safe to show.
+
+function useAuthAction<Field extends string, Vars extends { input: unknown }>(
+  action: AuthAction,
+  field: Field,
+) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const run = useCallback(
+    async ({ variables }: { variables: Vars }): Promise<{ data: Record<Field, AuthPayload> }> => {
+      setLoading(true)
+      setError(null)
+      try {
+        const payload = await callAuth(action, { input: variables.input })
+        applyAuthPayload(payload)
+        return { data: { [field]: payload } as Record<Field, AuthPayload> }
+      } catch (err) {
+        setError(err as Error)
+        throw err
+      } finally {
+        setLoading(false)
+      }
+    },
+    [action, field],
+  )
+  const reset = useCallback(() => setError(null), [])
+  return { run, loading, error, reset }
+}
 
 export function useRegisterUser() {
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const [registerMutation, { loading, error, reset }] = useMutation<
-    RegisterOwnerMutation,
-    RegisterOwnerMutationVariables
-  >(RegisterOwnerMutationDoc, {
-    onCompleted: (data) => {
-      const payload = data.registerOwner
-      setAuth(
-        payload.user,
-        payload.token,
-        payload.active_membership ?? null,
-        payload.memberships ?? [],
-        payload.permissions ?? [],
-      )
-    },
-  })
-
-  return { registerMutation, loading, error, reset }
+  const { run, loading, error, reset } = useAuthAction<'registerOwner', RegisterOwnerMutationVariables>(
+    'register',
+    'registerOwner',
+  )
+  return { registerMutation: run, loading, error, reset }
 }
 
 export function useLoginUser() {
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const [loginMutation, { loading, error, reset }] = useMutation<
-    LoginMutation,
-    LoginMutationVariables
-  >(LoginMutationDoc, {
-    onCompleted: (data) => {
-      const payload = data.login
-      setAuth(
-        payload.user,
-        payload.token,
-        payload.active_membership ?? null,
-        payload.memberships ?? [],
-        payload.permissions ?? [],
-      )
-    },
-  })
-
-  return { loginMutation, loading, error, reset }
+  const { run, loading, error, reset } = useAuthAction<'login', LoginMutationVariables>('login', 'login')
+  return { loginMutation: run, loading, error, reset }
 }
 
 // ── Invitation acceptance (recipient side) ───────────────────────────────────
@@ -82,8 +76,7 @@ export function useLoginUser() {
 // email link before they have an account. `useInvitationLookup` reads the
 // invitation (firm, role, title, invited email) from the token so the page can
 // show what they're joining, and `useAcceptInvite` creates their account +
-// membership and logs them straight in by writing to the auth store — same
-// side-effect contract as useLoginUser / useRegisterUser above.
+// membership and signs them straight in.
 
 export function useInvitationLookup(token: string | undefined) {
   const { data, loading, error } = useQuery(InvitationLookupQueryDoc, {
@@ -102,46 +95,38 @@ export function useInvitationLookup(token: string | undefined) {
 }
 
 export function useAcceptInvite() {
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const [acceptInviteMutation, { loading, error, reset }] = useMutation<
-    AcceptInviteMutation,
-    AcceptInviteMutationVariables
-  >(AcceptInviteMutationDoc, {
-    onCompleted: (data) => {
-      const payload = data.acceptInvite
-      setAuth(
-        payload.user,
-        payload.token,
-        payload.active_membership ?? null,
-        payload.memberships ?? [],
-        payload.permissions ?? [],
-      )
-    },
-  })
+  const { run, loading, error, reset } = useAuthAction<'acceptInvite', AcceptInviteMutationVariables>(
+    'accept-invite',
+    'acceptInvite',
+  )
+  return { acceptInviteMutation: run, loading, error, reset }
+}
 
-  return { acceptInviteMutation, loading, error, reset }
+/** Run an auth action that acts on the current session (needs its token). */
+export async function callSessionAction(
+  action: 'accept-invitation' | 'switch-firm',
+  input: Record<string, unknown>,
+): Promise<AuthPayload> {
+  const accessToken = await getAccessToken()
+  const payload = await callAuth(action, { input, accessToken })
+  applyAuthPayload(payload)
+  return payload
 }
 
 // Accepting an invitation as someone who already has an account. They are
 // signed in; the backend checks the invitation was sent to their email and
 // returns a token scoped to the firm they just joined.
 export function useAcceptInvitation() {
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const [mutate, { loading }] = useMutation(AcceptInvitationMutationDoc)
+  const [loading, setLoading] = useState(false)
   return {
     loading,
     accept: async (token: string) => {
-      const res = await mutate({ variables: { input: { token } } })
-      const payload = res.data?.acceptInvitation
-      if (!payload) throw new Error('We could not accept this invitation. Please try again.')
-      setAuth(
-        payload.user,
-        payload.token,
-        payload.active_membership ?? null,
-        payload.memberships ?? [],
-        payload.permissions ?? [],
-      )
-      return payload
+      setLoading(true)
+      try {
+        return await callSessionAction('accept-invitation', { token })
+      } finally {
+        setLoading(false)
+      }
     },
   }
 }

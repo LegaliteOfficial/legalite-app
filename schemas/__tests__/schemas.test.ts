@@ -6,6 +6,9 @@ import {
   invoiceSchema,
   documentSchema,
   loginSchema,
+  registerOwnerSchema,
+  acceptInviteSchema,
+  newPassword,
 } from '../index'
 
 // ── clientSchema ────────────────────────────────────────────────────────
@@ -327,16 +330,24 @@ describe('loginSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('requires password with min 6 characters', () => {
+  it('requires a password', () => {
     const result = loginSchema.safeParse({
       email: 'user@example.com',
-      password: '12345',
+      password: '',
     })
     expect(result.success).toBe(false)
     if (!result.success) {
       const pwError = result.error.issues.find((i) => i.path.includes('password'))
-      expect(pwError?.message).toBe('Password must be at least 6 characters')
+      expect(pwError?.message).toBe('Enter your password')
     }
+  })
+
+  it('still accepts a short password from an existing account', () => {
+    const result = loginSchema.safeParse({
+      email: 'user@example.com',
+      password: '12345',
+    })
+    expect(result.success).toBe(true)
   })
 
   it('accepts exactly 6 character password', () => {
@@ -345,5 +356,36 @@ describe('loginSchema', () => {
       password: '123456',
     })
     expect(result.success).toBe(true)
+  })
+})
+
+describe('newPassword (signup, invitation, reset)', () => {
+  it('rejects passwords under 12 characters', () => {
+    const result = registerOwnerSchema.safeParse({
+      name: 'Ama Owusu',
+      email: 'ama@example.com',
+      password: 'short-pass1',
+      confirmPassword: 'short-pass1',
+      firm_name: 'Owusu Chambers',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const pwError = result.error.issues.find((i) => i.path.includes('password'))
+      expect(pwError?.message).toBe('Password must be at least 12 characters')
+    }
+  })
+
+  it('accepts a 12 character password', () => {
+    const result = acceptInviteSchema.safeParse({
+      token: 't',
+      name: 'Ama Owusu',
+      password: 'twelve-chars',
+      confirmPassword: 'twelve-chars',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects passwords over 128 characters', () => {
+    expect(newPassword.safeParse('a'.repeat(129)).success).toBe(false)
   })
 })

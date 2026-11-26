@@ -40,6 +40,7 @@ import { REWRITE_ACTIONS, type DraftSource, type ReviewIssue } from '@/lib/ai/dr
 import { sanitizeAiHtml } from '@/lib/documents/text'
 import { findQuote, revealRange } from './editor-text'
 import type { DraftAssistant } from './use-draft-assistant'
+import { htmlToText } from '@/lib/security/sanitize-html'
 
 export type AiTab = 'draft' | 'review' | 'ask'
 
@@ -341,9 +342,7 @@ function CopyButton({ html }: { html: string }) {
       className="h-7 rounded-lg"
       onClick={async () => {
         try {
-          const div = document.createElement('div')
-          div.innerHTML = html
-          await navigator.clipboard.writeText(div.innerText)
+          await navigator.clipboard.writeText(htmlToText(html))
           toast.success('Copied.')
         } catch {
           toast.error('Could not copy to the clipboard.')

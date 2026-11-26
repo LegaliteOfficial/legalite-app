@@ -41,6 +41,7 @@ import {
 } from '@/lib/templates'
 import type { Client, Case } from '@/types'
 import { toast } from 'sonner'
+import { sanitizeHtml } from '@/lib/security/sanitize-html'
 
 interface TemplateAssemblyProps {
   template: DocumentTemplate
@@ -208,7 +209,9 @@ export function TemplateAssembly({ template, onBack, onSaved, initialCaseId }: T
       fields.draft_title || '',
       fields,
     )
-    setEditorHTML(html)
+    // Field values come from client and case records, so the generated
+    // HTML is sanitised before it reaches the editable preview.
+    setEditorHTML(sanitizeHtml(html))
   }, [template.id, fields])
 
   // ── Field handlers ────────────────────────────────────────────────────

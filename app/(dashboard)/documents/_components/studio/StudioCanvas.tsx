@@ -26,6 +26,7 @@ import {
   type DocumentDesign,
   type LetterheadFirm,
 } from '@/lib/documents/design'
+import { sanitizeHtml } from '@/lib/security/sanitize-html'
 
 /** Every studio font, so switching fonts in the toolbar is instant. */
 const ALL_FONTS_HREF = googleFontsHref(DOCUMENT_FONTS.map((f) => f.id))
@@ -72,8 +73,8 @@ ${ROOT} .selectedCell::after { content: ''; position: absolute; inset: 0; backgr
     [design, m.left, m.right],
   )
 
-  const letterhead = useMemo(() => buildLetterheadHtml(design, firm), [design, firm])
-  const watermark = useMemo(() => buildWatermarkHtml(design), [design])
+  const letterhead = useMemo(() => sanitizeHtml(buildLetterheadHtml(design, firm)), [design, firm])
+  const watermark = useMemo(() => sanitizeHtml(buildWatermarkHtml(design)), [design])
   const pageNumberSample =
     design.footer.pageNumbers === 'page' ? '1' : design.footer.pageNumbers === 'pageOfTotal' ? 'Page 1 of 3' : ''
 

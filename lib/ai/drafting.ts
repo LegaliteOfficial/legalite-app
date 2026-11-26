@@ -12,7 +12,7 @@
  *   error          terminal; `message` is safe to show
  */
 
-import { readToken } from '@/lib/apollo'
+import { getAccessToken } from '@/lib/auth/session-client'
 import { AiServiceError } from './client'
 
 const AI_BASE_URL = process.env.NEXT_PUBLIC_LEGALITE_AI_URL
@@ -87,12 +87,12 @@ export const REWRITE_ACTIONS: ReadonlyArray<{ id: RewriteAction; label: string; 
   { id: 'add_authority', label: 'Add authority', hint: 'Cite statutes from the library' },
 ]
 
-function headers(): Record<string, string> {
+async function headers(): Promise<Record<string, string>> {
   const h: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'text/event-stream',
   }
-  const token = readToken()
+  const token = await getAccessToken()
   if (token) h.Authorization = `Bearer ${token}`
   return h
 }
@@ -112,7 +112,7 @@ export async function* draftStream(
   try {
     res = await fetch(`${AI_BASE_URL}/draft`, {
       method: 'POST',
-      headers: headers(),
+      headers: await headers(),
       body: JSON.stringify(payload),
       signal: options.signal,
     })

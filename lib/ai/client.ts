@@ -8,7 +8,7 @@ import type {
   FeedbackCreate,
   FeedbackResponse,
 } from './types'
-import { readToken } from '@/lib/apollo'
+import { getAccessToken } from '@/lib/auth/session-client'
 
 /**
  * Client for the LegaLite AI FastAPI service.
@@ -50,12 +50,12 @@ export class AiServiceError extends Error {
  * on to the NestJS backend, which validates it and applies the user's
  * permissions. Anonymous use still works without it.
  */
-function askHeaders(accept: string): Record<string, string> {
+async function askHeaders(accept: string): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: accept,
   }
-  const token = readToken()
+  const token = await getAccessToken()
   if (token) headers.Authorization = `Bearer ${token}`
   return headers
 }
@@ -83,7 +83,7 @@ export async function ask(
   try {
     res = await fetch(`${AI_BASE_URL}/ask`, {
       method: 'POST',
-      headers: askHeaders('application/json'),
+      headers: await askHeaders('application/json'),
       body: JSON.stringify(payload),
       signal: options.signal,
     })
@@ -143,7 +143,7 @@ export async function* askStream(
   try {
     res = await fetch(`${AI_BASE_URL}/ask?stream=true`, {
       method: 'POST',
-      headers: askHeaders('text/event-stream'),
+      headers: await askHeaders('text/event-stream'),
       body: JSON.stringify(payload),
       signal: options.signal,
     })
