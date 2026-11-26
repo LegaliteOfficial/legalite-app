@@ -60,6 +60,7 @@ import {
 import type { Case, Document, DocumentFolder } from '@/types'
 import { GhostDialogBtn, PrimaryDialogBtn } from '../DialogButtons'
 import { PagerBtn } from '../PagerBtn'
+import { sanitizeHtml } from '@/lib/security/sanitize-html'
 
 // ── Documents tab ──────────────────────────────────────────────────────
 
@@ -2164,9 +2165,9 @@ function DocumentPreviewDialog({
                 <div
                   className="prose prose-sm max-w-none text-[13.5px] leading-relaxed"
                   style={{ color: 'var(--text-primary)' }}
-                  // Content is the HTML our own Tiptap editor produced, stored
-                  // server-side. Rendered read-only here.
-                  dangerouslySetInnerHTML={{ __html: doc.content }}
+                  // Stored HTML is untrusted (any API client can write it), so
+                  // it is sanitised before rendering.
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(doc.content) }}
                 />
               ) : (
                 <p

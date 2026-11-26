@@ -9,6 +9,7 @@ import { SaveButton } from './primitives/SaveButton'
 import { SectionLabel } from './primitives/SectionLabel'
 import { ToggleRow } from './primitives/ToggleRow'
 import type { AccountState } from '../_hooks/use-account-state'
+import { MIN_PASSWORD_LENGTH } from '@/schemas'
 
 export function SecuritySection({ state }: { state: AccountState }) {
   const {
@@ -64,7 +65,7 @@ export function SecuritySection({ state }: { state: AccountState }) {
                 onChange={(e) =>
                   setPasswords((p) => ({ ...p, new_password: e.target.value }))
                 }
-                placeholder="Minimum 6 characters"
+                placeholder={`Minimum ${MIN_PASSWORD_LENGTH} characters`}
                 className="h-10 pr-10"
               />
               <button

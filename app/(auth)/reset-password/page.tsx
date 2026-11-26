@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { Eye, EyeSlash } from '@phosphor-icons/react'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useResetPassword } from '@/hooks/use-auth'
+import { MIN_PASSWORD_LENGTH } from '@/schemas'
 
 type Phase = 'ready' | 'saving' | 'done' | 'invalid'
 
@@ -40,8 +41,8 @@ function ResetInner() {
       setPhase('invalid')
       return
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
       return
     }
     if (password !== confirm) {
@@ -164,7 +165,7 @@ function ResetInner() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="At least 6 characters"
+                  placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
                   autoFocus
                   className="w-full px-4 py-3.5 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all pr-12"
                   style={inputStyle}

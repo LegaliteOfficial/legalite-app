@@ -18,22 +18,19 @@
  *      verifier, no server lookup).
  *   3. Post the session access_token to our backend /auth/google to get
  *      our app's JWT.
- *   4. Persist that JWT in Zustand and bounce to /dashboard.
+ *   4. The app's /api/auth/google route signs in with it: the refresh token
+ *      goes into an HttpOnly cookie, the access token into memory.
  */
 
 import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/supabase'
-import { useAuthStore } from '@/stores/auth.store'
-import { useMutation } from '@apollo/client/react'
-import { GoogleAuthMutationDoc } from '@/lib/graphql/auth'
+import { applyAuthPayload, callAuth } from '@/lib/auth/session-client'
 
 function CallbackInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { setAuth } = useAuthStore()
   const called = useRef(false)
-  const [googleAuth] = useMutation(GoogleAuthMutationDoc)
 
   useEffect(() => {
     if (called.current) return
@@ -61,18 +58,12 @@ function CallbackInner() {
           return
         }
         try {
-          const res = await googleAuth({
-            variables: { input: { accessToken: data.session.access_token } },
+          const payload = await callAuth('google', {
+            input: { accessToken: data.session.access_token },
           })
-          const payload = res.data?.googleAuth
-          if (!payload) throw new Error('Empty googleAuth response')
-          setAuth(
-            payload.user,
-            payload.token,
-            payload.active_membership ?? null,
-            payload.memberships ?? [],
-            payload.permissions ?? [],
-          )
+          applyAuthPayload(payload)
+          // The Supabase session was only needed to prove the Google sign-in.
+          void supabase.auth.signOut({ scope: 'local' }).catch(() => undefined)
           router.replace('/dashboard')
         } catch (err: unknown) {
           const reason =
@@ -85,7 +76,7 @@ function CallbackInner() {
           err instanceof Error ? err.message : 'exchange_threw'
         router.replace(`/login?error=oauth_failed&reason=${encodeURIComponent(reason).slice(0, 200)}`)
       })
-  }, [router, searchParams, setAuth, googleAuth])
+  }, [router, searchParams])
 
   return null
 }

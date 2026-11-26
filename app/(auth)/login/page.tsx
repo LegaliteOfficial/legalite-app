@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginFormData } from '@/schemas'
 import { useAuthStore } from '@/stores/auth.store'
-import { useMutation, useApolloClient } from '@apollo/client/react'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -13,7 +12,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeSlash } from '@phosphor-icons/react'
 import { useLoginUser } from '@/hooks/use-auth'
-import { MeDocument } from '@/types/generated/graphql'
+import { refreshAccessToken } from '@/lib/auth/session-client'
 
 // Wrap the form in Suspense so useSearchParams works during prerender
 // (Next.js requires this for any client component that reads search params).
@@ -28,41 +27,34 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { setAuth, isAuthenticated, token, logout } = useAuthStore()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const token = useAuthStore((s) => s.token)
   const [serverError, setServerError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const apollo = useApolloClient()
-  const { loginMutation, loading, error } = useLoginUser()
+  const { loginMutation, loading } = useLoginUser()
 
-  // If we have a persisted token, validate it against the API before
-  // redirecting away from /login. Only an UNAUTHENTICATED GraphQL error
-  // clears the token — network errors, 500s, or cold-start blips let the
-  // user proceed so a flaky backend doesn't make login look broken.
+  // Already signed in on this browser: make sure the session is still live
+  // (a new access token from the refresh cookie), then go on. A session that
+  // ended is cleared and the form shows; an unreachable API leaves the person
+  // on the form rather than bouncing them around.
   useEffect(() => {
-    if (!isAuthenticated || !token) return
+    if (!isAuthenticated) return
     let cancelled = false
     const goToNext = () => {
       if (cancelled) return
       const next = searchParams?.get('next') ?? '/dashboard'
       router.replace(next)
     }
-    apollo
-      .query({ query: MeDocument, fetchPolicy: 'network-only' })
-      .then(goToNext)
-      .catch((err: unknown) => {
-        if (cancelled) return
-        const isUnauthenticated =
-          err instanceof CombinedGraphQLErrors &&
-          err.errors.some((e) => e.extensions?.code === 'UNAUTHENTICATED')
-        if (isUnauthenticated) {
-          logout()
-        } else {
-          goToNext()
-        }
+    if (token) {
+      goToNext()
+    } else {
+      void refreshAccessToken().then((outcome) => {
+        if (outcome === 'ok') goToNext()
       })
+    }
     return () => { cancelled = true }
-  }, [isAuthenticated, token, router, searchParams, logout, apollo])
+  }, [isAuthenticated, token, router, searchParams])
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
@@ -83,11 +75,8 @@ function LoginForm() {
     setServerError('')
     try {
       await loginMutation({ variables: { input: data } })
-
-      if (!error) {
-        const next = searchParams?.get('next') ?? '/dashboard'
-        router.push(next)
-      }
+      const next = searchParams?.get('next') ?? '/dashboard'
+      router.push(next)
 
     } catch (err: unknown) {
       const message =

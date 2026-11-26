@@ -11,7 +11,7 @@
  * is dropped rather than failing the whole export.
  */
 
-import { readToken } from '@/lib/apollo'
+import { getAccessToken } from '@/lib/auth/session-client'
 import {
   buildFooterTemplate,
   buildHeaderTemplate,
@@ -74,7 +74,7 @@ export async function renderDocumentPdf({
   design: DocumentDesign
   firm: LetterheadFirm | null
 }): Promise<Blob> {
-  const token = readToken()
+  const token = await getAccessToken()
   if (!token) throw new PdfExportError('Sign in again to export PDFs.')
 
   const [body, logo] = await Promise.all([

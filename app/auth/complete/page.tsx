@@ -2,16 +2,12 @@
 
 import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuthStore } from '@/stores/auth.store'
-import { useMutation } from '@apollo/client/react'
-import { GoogleAuthMutationDoc } from '@/lib/graphql/auth'
+import { applyAuthPayload, callAuth } from '@/lib/auth/session-client'
 
 function AuthCompleteInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { setAuth } = useAuthStore()
   const called = useRef(false)
-  const [googleAuth] = useMutation(GoogleAuthMutationDoc)
 
   useEffect(() => {
     if (called.current) return
@@ -24,24 +20,15 @@ function AuthCompleteInner() {
       return
     }
 
-    googleAuth({ variables: { input: { accessToken: token } } })
-      .then((res) => {
-        const payload = res.data?.googleAuth
-        if (!payload) throw new Error('Empty googleAuth response')
-        setAuth(
-          payload.user,
-          payload.token,
-          payload.active_membership ?? null,
-          payload.memberships ?? [],
-          payload.permissions ?? [],
-        )
+    callAuth('google', { input: { accessToken: token } })
+      .then((payload) => {
+        applyAuthPayload(payload)
         router.replace('/dashboard')
       })
-      .catch((err) => {
-        console.error('API auth error:', err)
-        router.replace('/login')
+      .catch(() => {
+        router.replace('/login?error=oauth_failed')
       })
-  }, [router, searchParams, setAuth, googleAuth])
+  }, [router, searchParams])
 
   return null
 }

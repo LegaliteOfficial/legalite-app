@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from '@/stores/auth.store'
 import { VALID_SECTIONS } from '../_constants'
 import type { SectionId } from '../_types'
+import { MIN_PASSWORD_LENGTH } from '@/schemas'
 
 /**
  * Account-settings page state. Owns:
@@ -130,8 +131,8 @@ export function useAccountState() {
       toast.error('Please enter your current password.')
       return
     }
-    if (passwords.new_password.length < 6) {
-      toast.error('New password must be at least 6 characters.')
+    if (passwords.new_password.length < MIN_PASSWORD_LENGTH) {
+      toast.error(`New password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
       return
     }
     if (passwords.new_password !== passwords.confirm_password) {
